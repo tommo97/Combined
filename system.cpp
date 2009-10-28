@@ -487,9 +487,9 @@ void SYSTEM::ReadNeuGetBodies() {
     Vect3 ORIGIN[2], ATTITUDE, VELOCITY[2], RATES[2];
 
     ORIGIN[0] = Vect3(0, 0, 0);
-    ORIGIN[1] = Vect3(2.5, 0, 0);
+    ORIGIN[1] = Vect3(0, 15, 0);
     RATES[0] = Vect3(-7.5,0.,0.);
-    RATES[1] = Vect3( 5, 0, 0);
+    RATES[1] = Vect3(7.5, 0, 0);
     VELOCITY[0] = VELOCITY[1] = Vect3(-10., 0., 0.);
     // These are the BODY rates about BODY axis
 
