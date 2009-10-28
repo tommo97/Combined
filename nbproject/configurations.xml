@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="62">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <df name="Combined" root=".">
+      <df name="make">
+      </df>
+      <df name="output">
+        <df name="18911">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="18942">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="18969">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="19016">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="19029">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="19069">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="19099">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="19106">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="19148">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="19158">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="19168">
+          <in>dump_000000.m</in>
+        </df>
+        <df name="19299">
+          <in>dump_000000.m</in>
+        </df>
+      </df>
+      <in>GeomGen2.m</in>
+      <in>GetViewParams.m</in>
+      <in>GetVortSurface.m</in>
+      <in>Laplacian27Pt.m</in>
+      <in>ReadDomain.m</in>
+      <in>array.hpp</in>
+      <in>body.cpp</in>
+      <in>body.hpp</in>
+      <in>branch.cpp</in>
+      <in>branch.hpp</in>
+      <in>cell.cpp</in>
+      <in>cell.hpp</in>
+      <in>createfigure.m</in>
+      <in>dump_reader.m</in>
+      <in>extract.m</in>
+      <in>gotonewest.m</in>
+      <in>includes.hpp</in>
+      <in>io.cpp</in>
+      <in>io.hpp</in>
+      <in>main.cpp</in>
+      <in>makenewest.m</in>
+      <in>newmain.cpp</in>
+      <in>node.cpp</in>
+      <in>node.hpp</in>
+      <in>panel.cpp</in>
+      <in>panel.hpp</in>
+      <in>pgesv.hpp</in>
+      <in>read_panels.m</in>
+      <in>ssh.m</in>
+      <in>system.cpp</in>
+      <in>system.hpp</in>
+      <in>test.m</in>
+      <in>time_integrator.cpp</in>
+      <in>time_integrator.hpp</in>
+      <in>tree.cpp</in>
+      <in>tree.hpp</in>
+      <in>types.cpp</in>
+      <in>types.hpp</in>
+      <in>vect34.hpp</in>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false">
+      <itemPath>Makefile-Combined.mk</itemPath>
+      <itemPath>makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject|build|test|output|MatVort|neu_files)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile-Combined.mk</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>$(MAKE) -f Makefile</buildCommand>
+          <cleanCommand>$(MAKE) -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+          <ccTool>
+            <incDir>
+              <pElem>.</pElem>
+            </incDir>
+          </ccTool>
+        </makeTool>
+      </makefileType>
+      <item path="body.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="branch.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="cell.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="extract.m" ex="true" tool="0">
+      </item>
+      <item path="io.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="main.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="node.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="panel.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="read_panels.m" ex="true" tool="0">
+      </item>
+      <item path="ssh.m" ex="true" tool="0">
+      </item>
+      <item path="system.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="test.m" ex="true" tool="0">
+      </item>
+      <item path="time_integrator.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="tree.cpp" ex="false" tool="1">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/gsl</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="types.cpp" ex="false" tool="1">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
