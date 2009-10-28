@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef TYPES_INCL
 #define TYPES_INCL
 
-#define VERSION " 1.0 $Rev:     $ "
+#define VERSION " 1.0 $Rev$ "
 
 #define WRITE_TO_SCREEN true
 #define WRITE_TO_FILE true
