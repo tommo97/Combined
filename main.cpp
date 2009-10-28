@@ -89,8 +89,8 @@ int main(int argc, char *argv[]) {
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
-    globalSystem->uinf = 0.0;//11.258330249197703;
-    globalSystem->vinf = 0.0;//7.5;
+    globalSystem->uinf = 0.0;
+    globalSystem->vinf = 0.0;
     globalSystem->winf = 0.0;
 
     globalSystem->Initialise();

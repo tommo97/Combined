@@ -1,6 +1,6 @@
 close all; clear all; clear mex;
 files = dir('f*.dat');
-val = 5;
+val = 1;
 s = size(files,1);
 makemovie = false;
 fname = files(s).name;

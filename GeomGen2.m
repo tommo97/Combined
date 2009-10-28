@@ -33,10 +33,10 @@ th0 = (3-THETA(end));
 pitch_axis = 0.3; % chord
 
 numbodies = 2;
-nblades = [3 3];
+nblades = [3 4];
 Origin{1} = [0 0 0];
-Origin{2} = [50 10 0];
-Reflect = [1 1];
+Origin{2} = [2.5 0 0];
+Reflect = [1 -1];
 M1 = [];
 M2 = [];
 cnt = 0;

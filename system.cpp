@@ -484,12 +484,13 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
 /**************************************************************/
 void SYSTEM::ReadNeuGetBodies() {
-    Vect3 Rmax, ORIGIN[2], ATTITUDE, VELOCITY[2], RATES[2];
+    Vect3 ORIGIN[2], ATTITUDE, VELOCITY[2], RATES[2];
 
     ORIGIN[0] = Vect3(0, 0, 0);
-    ORIGIN[1] = Vect3(50, 10, 0);
-    RATES[0] = RATES[1] = Vect3(-7.5, 0, 0);
-    VELOCITY[0] = VELOCITY[1] = Vect3(-10, -.75, 0);
+    ORIGIN[1] = Vect3(2.5, 0, 0);
+    RATES[0] = Vect3(-7.5,0.,0.);
+    RATES[1] = Vect3( 5, 0, 0);
+    VELOCITY[0] = VELOCITY[1] = Vect3(-10., 0., 0.);
     // These are the BODY rates about BODY axis
 
     Array <Vect3> X;
