@@ -266,7 +266,6 @@ void TIME_STEPPER::Euler(FVMCell * cell) {
     for (int q = 0; q < globalSystem->NumTransVars; ++q)
     {
         cell->TransVars[q] += dt * cell->TransDerivs[q];
-        cell->Omega += dt * cell->TransDerivs[q];
         cell->TransDerivs[q] = 0.;
     }
 }

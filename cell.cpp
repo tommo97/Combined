@@ -51,6 +51,17 @@ void FVMCell::Integrate() {
         TransDerivs[q] += VectMultMatrixTranspose(VelTensor, TransVars[q]);
     }
     globalTimeStepper->Integrate(this);
+    Omega = Vect3(0.,0.,0.);
+    for (int q = 0; q < globlaSystem->NumTransVars; ++q) {
+        if (fabs(TransVars[q].x) < VORTICITY_CUTOFF)
+            TransVars[q].x = 0.0;
+        if (fabs(TransVars[q].y) < VORTICITY_CUTOFF)
+            TransVars[q].y = 0.0;
+        if (fabs(TransVars[q].z) < VORTICITY_CUTOFF)
+            TransVars[q].z = 0.0;
+        Omega += TransVars[q];
+    }
+
     if (Omega.Mag() > VORTICITY_CUTOFF)
         HasLoad = true;
 }
