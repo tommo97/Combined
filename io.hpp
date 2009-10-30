@@ -85,6 +85,8 @@ public:
 
     void write_vels_and_pressures();
 
+    void read_input(string infname);
+
     void write_m();
 
     void write_forces();

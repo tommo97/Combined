@@ -23,7 +23,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 
 
 #include "io.hpp"
@@ -50,11 +50,11 @@ IO::IO() {
     ProcessID = temp.str();
     temp >> globalSystem->ProcessID;
 #ifdef use_NCURSES
-        top_header = "\t\t%%CPU %%MEM COMMAND             TIME   PID";
+    top_header = "\t\t%%CPU %%MEM COMMAND             TIME   PID";
 #else
-        top_header = "\t\t%CPU %MEM COMMAND             TIME   PID";
+    top_header = "\t\t%CPU %MEM COMMAND             TIME   PID";
 #endif
-        top_command = "ps -p " + ProcessID + " -o pcpu,pmem,comm,time,pid | grep " + ProcessID;
+    top_command = "ps -p " + ProcessID + " -o pcpu,pmem,comm,time,pid | grep " + ProcessID;
     top_data = " ";
     step_header = "\rstep   s/steps\t  dt /sim t  \tWC t /CPU t\t\tCFL\t\t# cells";
 
@@ -339,7 +339,81 @@ void IO::read_neu(const char* infname, Array <Vect3> &X, Array <Array <int> > &P
         }
     }
 }
+//%       Comment line - ignored
+//#       Input line - returned to screen and transcript
+//INPUT:          coax.neu;
+//PMAX:           3;
+//SCALE:          3;
+//NAME:           coax;
+//NUMBODIES:      2;
+//CGBODY:         [0.0 0.0 0.0] [2.5 0.0 0.0];
+//RATEBODY:       [-7.5 0.0 0.0] [7.5 0.0 0.0];
+//VELBODY:        [-10.0 0.0 0.0] [-10.0 0.0 0.0];
 
+
+static Array <Vect3> ReadVectorsFromLine(string);
+
+Array <Vect3> ReadVectorsFromLine(string line) {
+    Array <Vect3> output;
+    size_t open = line.find_first_of("[");
+    while (open != string::npos) {
+        //  Read to first closing bracket
+        string vect;
+        size_t close = line.find_first_of("]", open + 1);
+        for (int i = open + 1; i < close; ++i)
+            vect.push_back(line[i]);
+
+        line.erase(0, close + 1);
+        istringstream strm(vect);
+        Vect3 temp;
+        strm >> temp.x >> temp.y >> temp.z;
+        output.push_back(temp);
+        open = line.find_first_of("[");
+    }
+    return output;
+}
+
+static string ChopLine(string);
+
+string ChopLine(string line) {
+    line.erase(0, line.find_first_of(":") + 1);
+    line.erase(line.find_first_of(";"), line.length());
+    return line;
+}
+
+void IO::read_input(string infname) {
+    ifstream input;
+    input.open(infname.c_str());
+    if (!input) {
+        if (WRITE_TO_SCREEN) cout << "Unable to open input file: " << infname << endl;
+        return;
+    }
+    if (input.is_open()) {
+        while (!input.eof()) {
+            string line;
+            getline(input, line);
+            istringstream strm;
+            if (!line.empty()) {
+                if ((line[0] != '%') && (line[0] != '//')) {
+                    if ((line[0] == '#') && WRITE_TO_SCREEN)
+                        cout << line << endl;
+                    else
+                        strm.str(ChopLine(line));
+
+                    if (line[0] == 'I') strm >> globalSystem->NeuFile;
+                    if (line[0] == 'P') strm >> globalSystem->MaxP;
+                    if (line[0] == 'S') strm >> globalSystem->GambitScale;
+                    if (line[0] == 'N') strm >> globalSystem->CaseName;
+                    if (line[1] == 'U') {strm >> globalSystem->NumBodies; cout << line << endl;}
+                    if (line[0] == 'C') globalSystem->ORIGIN = ReadVectorsFromLine(ChopLine(line));
+                    if (line[0] == 'R') globalSystem->RATES = ReadVectorsFromLine(ChopLine(line));
+                    if (line[0] == 'V') globalSystem->VELOCITY = ReadVectorsFromLine(ChopLine(line));
+                    if (line[0] == 'A') globalSystem->ATTITUDE = ReadVectorsFromLine(ChopLine(line));
+                }
+            }
+        }
+    }
+}
 /**************************************************************/
 void IO::read_dat(char* infname, Array <Vect3> &x, Array <Vect3> &omega) {
     ifstream input;
@@ -400,41 +474,42 @@ void IO::create_image(string outname) {
     suffix = "Written image: " + outname;
 }
 #endif
+
 /**************************************************************/
-void IO::stat_step()
-{
-        stringstream out_stream;
+void IO::stat_step() {
+    stringstream out_stream;
 
 #ifndef use_NCURSES
-        if (globalTimeStepper->n % HEADER_OUTPUT == 0){
+    if (globalTimeStepper->n % HEADER_OUTPUT == 0) {
 #ifdef TOP
-            top_data = "\t\t" + globalGetStdoutFromCommand(top_command);
-            out_stream << top_header << endl << top_data << endl;
+        top_data = "\t\t" + globalGetStdoutFromCommand(top_command);
+        out_stream << top_header << endl << top_data << endl;
 #endif
-            out_stream << step_header << endl;
-        }
+        out_stream << step_header << endl;
+    }
 #endif
-            out_stream.setf(ios::fixed, ios::floatfield);
-            out_stream.precision(4);
-            out_stream << globalTimeStepper->n << "\t" << globalSystem->NumSubSteps << "\t" << globalTimeStepper->dt << "/" << globalTimeStepper->t;
-            out_stream.precision(3);
-            out_stream << "\t" << (REAL) (ticks() - globalTimer) / 1000;
-            out_stream << "/" << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-            globalTimeStepper->cpu_t = ticks();
+    out_stream.setf(ios::fixed, ios::floatfield);
+    out_stream.precision(4);
+    out_stream << globalTimeStepper->n << "\t" << globalSystem->NumSubSteps << "\t" << globalTimeStepper->dt << "/" << globalTimeStepper->t;
+    out_stream.precision(3);
+    out_stream << "\t" << (REAL) (ticks() - globalTimer) / 1000;
+    out_stream << "/" << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+    globalTimeStepper->cpu_t = ticks();
 
-            out_stream << "\t" << globalTimeStepper->CFL;
+    out_stream << "\t" << globalTimeStepper->CFL;
 
-            out_stream << "\t" << globalNum_FVMCELLS;
-            if (globalTimeStepper->dump_next) {
-                out_stream << "\t<-W";
-            } else {
-                out_stream << "\t   ";
-            }
-            step_data = out_stream.str();
+    out_stream << "\t" << globalNum_FVMCELLS;
+    if (globalTimeStepper->dump_next) {
+        out_stream << "\t<-W";
+    } else {
+        out_stream << "\t   ";
+    }
+    step_data = out_stream.str();
 
-            if (WRITE_TO_SCREEN) display_stat_step();
-//            if (WRITE_TO_FILE) write_stat_step();
+    if (WRITE_TO_SCREEN) display_stat_step();
+    //            if (WRITE_TO_FILE) write_stat_step();
 }
+
 /**************************************************************/
 void IO::display_stat_step() {
     if (WRITE_TO_SCREEN) {
@@ -442,30 +517,30 @@ void IO::display_stat_step() {
 
 
 #ifdef use_NCURSES
-            if (lines.size() > HEADER_OUTPUT) lines.pop_back();
-            lines.push_front(step_data);
-            mvprintw(5, 0, "%s", step_header->c_str());
-            int count = 0;
-            for (list<string>::iterator it = lines.begin(); it != lines.end(); ++it) {
-                mvprintw(6 + count, 0, "%s", it->c_str());
-                count++;
-            }
-            mvprintw(6 + HEADER_OUTPUT + 3, 0, "%s", suffix.c_str());
+        if (lines.size() > HEADER_OUTPUT) lines.pop_back();
+        lines.push_front(step_data);
+        mvprintw(5, 0, "%s", step_header->c_str());
+        int count = 0;
+        for (list<string>::iterator it = lines.begin(); it != lines.end(); ++it) {
+            mvprintw(6 + count, 0, "%s", it->c_str());
+            count++;
+        }
+        mvprintw(6 + HEADER_OUTPUT + 3, 0, "%s", suffix.c_str());
 
 #ifdef TOP
-            mvprintw(19, 0, top_header.c_str());
-            mvprintw(20, 0, top_data.c_str());
+        mvprintw(19, 0, top_header.c_str());
+        mvprintw(20, 0, top_data.c_str());
 #endif
 
-            //for (int i = 0; i < lines.size(); ++i) mvprintw(4+i,0,"%s",out.c_str());
-            //mvprintw(4,0,"%s",out.c_str());
-            refresh();
+        //for (int i = 0; i < lines.size(); ++i) mvprintw(4+i,0,"%s",out.c_str());
+        //mvprintw(4,0,"%s",out.c_str());
+        refresh();
 #else
-            if (WRITE_TO_SCREEN) cout << step_data.c_str() << endl;
+        if (WRITE_TO_SCREEN) cout << step_data.c_str() << endl;
 #endif
-        }
+    }
 
-    
+
 }
 
 /**************************************************************/
@@ -487,8 +562,7 @@ void IO::write_file(stringstream &outstream, string OutName, string ext) {
         if (FileNames[i] == OutName)
             ID = i;
 
-    if (ID==-1)
-    {
+    if (ID == -1) {
         FileNames.push_back(OutName);
         NumFiles.push_back(0);
         ID = NumFiles.size() - 1;
@@ -502,16 +576,15 @@ void IO::write_file(stringstream &outstream, string OutName, string ext) {
 
 
     int pad = 6 - num.str().length();
-    fname += string(pad,'0') + num.str() + "." + ext;
+    fname += globalSystem->CaseName + string(pad, '0') + num.str() + "." + ext;
     num_file++;
-    cout << fname << endl;
+    if (WRITE_TO_SCREEN) cout << fname << endl;
     fstream filestr;
 
-    filestr.open (fname.c_str(), fstream::in | fstream::out | fstream::app);
+    filestr.open(fname.c_str(), fstream::in | fstream::out | fstream::app);
     if (filestr.is_open())
         filestr << outstream.str() << endl;
-    else
-    {
+    else {
         if (WRITE_TO_SCREEN) cout << "Unable to open output file: " << fname << endl;
         throw NO_FILE;
     }

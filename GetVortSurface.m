@@ -1,6 +1,6 @@
 close all; clear all; clear mex;
 files = dir('f*.dat');
-val = 1;
+val = 7.5;
 s = size(files,1);
 makemovie = false;
 fname = files(s).name;
@@ -9,7 +9,7 @@ fig = figure('Position',[0 -50 fullscreen(3)/4 fullscreen(4)/2]);
 set(fig,'DoubleBuffer','on');
 extract(fname,val);
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
-view(-38.5,16); axis equal off; lighting phong; camlight headlight; drawnow;
+view(38.5,16); axis equal off; lighting phong; camlight headlight; drawnow;
 ViewParams = GetViewParams;
 
 

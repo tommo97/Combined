@@ -52,7 +52,38 @@ void FVMCell::Integrate() {
     }
     globalTimeStepper->Integrate(this);
     Omega = Vect3(0.,0.,0.);
-    for (int q = 0; q < globlaSystem->NumTransVars; ++q) {
+
+
+    //  Normalise/obliterate the vorticities in the cell
+    for (int q1 = 0; q1 < globalSystem->NumTransVars; ++q1)
+        for (int q2 = 0; q2 < globalSystem->NumTransVars; ++q2)
+            if (q1 != q2) {
+                if (SIGN(TransVars[q1].x) != SIGN(TransVars[q2].x)) {
+                    if (fabs(TransVars[q1].x) > fabs(TransVars[q2].x))
+                    {
+                        TransVars[q1].x += TransVars[q2].x;
+                        TransVars[q2].x = 0;
+                    }
+                }
+                if (SIGN(TransVars[q1].y) != SIGN(TransVars[q2].y)) {
+                    if (fabs(TransVars[q1].y) > fabs(TransVars[q2].y))
+                    {
+                        TransVars[q1].y += TransVars[q2].y;
+                        TransVars[q2].y = 0;
+                    }
+                }
+                if (SIGN(TransVars[q1].z) != SIGN(TransVars[q2].z)) {
+                    if (fabs(TransVars[q1].z) > fabs(TransVars[q2].z))
+                    {
+                        TransVars[q1].z += TransVars[q2].z;
+                        TransVars[q2].z = 0;
+                    }
+                }
+
+            }
+
+
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
         if (fabs(TransVars[q].x) < VORTICITY_CUTOFF)
             TransVars[q].x = 0.0;
         if (fabs(TransVars[q].y) < VORTICITY_CUTOFF)
@@ -61,7 +92,6 @@ void FVMCell::Integrate() {
             TransVars[q].z = 0.0;
         Omega += TransVars[q];
     }
-
     if (Omega.Mag() > VORTICITY_CUTOFF)
         HasLoad = true;
 }

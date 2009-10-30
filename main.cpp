@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
         case 2:
         {
-            globalSystem->NeuFile = dir + argv[1];
+            globalIO->read_input(argv[1]);
             break;
         }
 

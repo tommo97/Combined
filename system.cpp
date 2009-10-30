@@ -109,8 +109,6 @@ void SYSTEM::Initialise() {
     Rho /= GambitScale * GambitScale*GambitScale; //  Density falls as volume increases
     Mu /= GambitScale; //   Dynamic Viscocity kg/ms (should this be times scale?)
     Nu = Mu / Rho;
-    Array <Vect3> OMEGAS;
-    OMEGAS.push_back(Vect3(0, 0, 0));
 
     globalIO = new IO();
     globalTimeStepper = new TIME_STEPPER();
@@ -484,14 +482,6 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
 /**************************************************************/
 void SYSTEM::ReadNeuGetBodies() {
-    Vect3 ORIGIN[2], ATTITUDE, VELOCITY[2], RATES[2];
-
-    ORIGIN[0] = Vect3(0, 0, 0);
-    ORIGIN[1] = Vect3(2.5, 0, 0);
-    RATES[0] = Vect3(-7.5,0.,0.);
-    RATES[1] = Vect3(7.5, 0, 0);
-    VELOCITY[0] = VELOCITY[1] = Vect3(-10., 0., 0.);
-    // These are the BODY rates about BODY axis
 
     Array <Vect3> X;
     ARRAY2(int) PNLS, GROUPS, BCS;
@@ -546,7 +536,12 @@ void SYSTEM::ReadNeuGetBodies() {
         }
     }
 
-    NumBodies = (int) GROUPS.size();
+    if (NumBodies != (int) GROUPS.size())
+    {
+        if (WRITE_TO_SCREEN) cout << "Error: expected " << NumBodies << " bodies, found " << GROUPS.size() << endl;
+        throw GENERAL_ERROR;
+
+    }
 
 
     for (int i = 0; i < NumBodies; ++i) {
@@ -557,7 +552,7 @@ void SYSTEM::ReadNeuGetBodies() {
         if (WRITE_TO_SCREEN) cout << "making body " << endl;
 #endif
 
-        BODY *Btemp = new BODY(ORIGIN[i], ATTITUDE, VELOCITY[i], RATES[i], NAMES[i], this);
+        BODY *Btemp = new BODY(ORIGIN[i], ATTITUDE[i], VELOCITY[i], RATES[i], NAMES[i], this);
         Btemp->BodyID = i;
 #ifndef use_NCURSES
         if (WRITE_TO_SCREEN) cout << "done. Getting panels:" << endl;

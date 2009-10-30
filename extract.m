@@ -37,8 +37,8 @@ for q = 1:num_vort
         V(subs(i,1),subs(i,2), subs(i,3)) =  vals(i);
     end
     Y = Y - min(Y(:));
-
-    V = smooth3(V,'gaussian',[5 5 5],0.65);   
+    %V = V.^3;
+    %V = smooth3(V,'gaussian',[5 5 5],0.65);   
     if n ~= 1
         YI = YI - min(YI(:));
         VI =  interp3(X,Y,Z,V,XI,YI,ZI,'cubic');
@@ -48,7 +48,18 @@ for q = 1:num_vort
         YI = Y;
         ZI = Z;
     end
- 
+    
+    
+%     [x,y,z,v] = subvolume(XI,YI,ZI,VI,[nan,0,nan,nan,nan,nan]);
+%     p1 = patch(isosurface(x,y,z,v, val),...
+%         'FaceColor','red','EdgeColor','none');
+%     isonormals(x,y,z,v,p1);
+%     v = v.^(1/3);
+%     v = smooth3(v,'gaussian',[5 5 5],0.65);   
+%     p2 = patch(isocaps(x,y,z,v, val^(1/3)),...
+%         'FaceColor','interp','EdgeColor','none');
+    
+%  
     p = patch(isosurface(XI,YI,ZI,VI,val),'FaceColor',colour{q},...
         'EdgeColor','none','FaceLighting','phong');
     isonormals(XI,YI,ZI,VI,p);

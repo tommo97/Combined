@@ -43,7 +43,7 @@ public:
   bool LiftingLineMode, ZeroBodyRelativeMotion;
   REAL dtInit, uinf, vinf, winf, GambitScale, Del2;
   REAL Mu,Nu,Rho,Temp;
-  string NeuFile, OS;
+  string NeuFile, OS, CaseName;
   Vect3 Vinf;
   SYSTEM(int);
   ~SYSTEM();
@@ -52,6 +52,8 @@ public:
   Array <BODY*> Bodies;
   Array <PANEL*> AllBodyPanels;
   Array <POINT*> BodyPoints;
+
+  Array <Vect3> ATTITUDE, VELOCITY, ORIGIN, RATES;
 
 #ifdef USEGSL
   gsl_matrix * globalA;     //  A (doublet) influence coefficient matrix for this body
@@ -102,6 +104,11 @@ public:
   void WriteDomain();
   void WriteVorticity();
   void WritePanelVels();
+
+    enum exception {
+        GENERAL_ERROR
+    };
+
 };
 
 #endif
