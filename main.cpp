@@ -86,25 +86,17 @@ int main(int argc, char *argv[]) {
 
     }
 
+    globalIO->PrepOutputDir();
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
     globalSystem->uinf = 0.0;
     globalSystem->vinf = 0.0;
     globalSystem->winf = 0.0;
-
     globalSystem->Initialise();
 
     globalSystem->TimeStep();
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
 #endif
-}
-/**************************************************************/
-void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
-
-    REAL mult, nrm;
-    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
-    mult = -1 / (four_pi * nrm * nrm * nrm);
-    vel += mult * diff.Cross(omega);
 }

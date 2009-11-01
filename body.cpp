@@ -312,8 +312,10 @@ void BODY::GetPanels(Array <int> &GROUP, Array <PANEL*> &PANELS) {
 
     if (NumFaces == BoundaryFaces.size()) {
 #ifndef use_NCURSES
-        if (WRITE_TO_SCREEN) cout << "[" << endl << "Number of wake shedding elements = number of elements";
-        if (WRITE_TO_SCREEN) cout << endl << "Using Lifting Line Mode" << endl << "]" << endl;
+        if (WRITE_TO_SCREEN) cout << "┌\t\t\t\t\t\t\t\t┐" << endl;
+        if (WRITE_TO_SCREEN) cout << "|\tNumber of wake shedding elements = number of elements\t|" << endl;
+        if (WRITE_TO_SCREEN) cout << "|\tUsing Lifting Line Mode\t\t\t\t\t|" << endl;
+        if (WRITE_TO_SCREEN) cout << "└\t\t\t\t\t\t\t\t┘" << endl;
 #endif
         globalSystem->LiftingLineMode = true;
         for (int i = 0; i < (int) BoundaryFaces.size(); ++i) {
@@ -533,8 +535,8 @@ void BODY::DissolveWake(REAL dt) {
         // 	Include freestream
         ProtoWake[i]->CollocationPoint->vV = Vinf - Vkin; // + AllBodyPanels[i]->CollocationPoint->vVfmm;
         //  Iterate over all wake panels
-//        for (int J = 0; J < (int) globalSystem->Bodies.size(); ++J)
-//            ProtoWake[i]->CollocationPoint->vV += globalSystem->Bodies[J]->GetWakeVel(Pos + CG.vP);
+        for (int J = 0; J < (int) globalSystem->Bodies.size(); ++J)
+            ProtoWake[i]->CollocationPoint->vV += globalSystem->Bodies[J]->GetWakeVel(Pos + CG.vP);
 
     }
 

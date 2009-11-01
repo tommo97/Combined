@@ -156,8 +156,8 @@ void TIME_STEPPER::time_loop() {
     if (first_step) {
         globalSystem->SetupGlobalInfluenceMatrices();
         dt = globalSystem->dtInit;
-
-        globalSystem->BodySubStep(dt, 10);
+        globalSystem->NumSubSteps = 10;
+        globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
         globalIO->write_m();
         globalSystem->PutWakesInTree();
         globalOctree->Reset();

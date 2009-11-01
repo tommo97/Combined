@@ -52,7 +52,7 @@ public:
 //    vector <REAL> x, y, z;
 //    Array < Array <REAL> > domain;
 //    Gnuplot *Plot;
-    string pad, filename, directory, image_type, file_type, out_name, suffix;
+    string pad, filename, directory, image_type, file_type, out_name, suffix, OS;
     string top_header, top_data, top_command;
     string ProcessID, header, step_data, step_header;
     ofstream currentOfstream;
@@ -68,6 +68,8 @@ public:
     void print_header();
 
     void print_line();
+
+    void PrepOutputDir();
 
     void print_header(ostream&);
 

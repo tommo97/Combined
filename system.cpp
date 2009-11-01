@@ -72,7 +72,6 @@ SYSTEM::~SYSTEM() {
 
 /**************************************************************/
 SYSTEM::SYSTEM(int NT) {
-    OS = getenv("OSTYPE");
     LiftingLineMode = false;
     SysDumpInterval = 0; //  Used to dump the result of system calls
     uinf = vinf = winf = 0;
@@ -91,12 +90,10 @@ SYSTEM::SYSTEM(int NT) {
 #endif
     srand((unsigned) time(NULL));
 
-#ifndef use_NCURSES
-    if (WRITE_TO_SCREEN) cout << "Platform identified itself as: " << getenv("OSTYPE");
-    if (WRITE_TO_SCREEN) cout << " " << VERS << "; Number of threads: " << NumThreads << endl;
-#endif
+
 
     globalSystem = this;
+    globalIO = new IO();
 
 }
 
@@ -106,20 +103,15 @@ void SYSTEM::Initialise() {
     vinf *= GambitScale;
     winf *= GambitScale;
     Vinf = Vect3(uinf, vinf, winf);
-    Rho /= GambitScale * GambitScale*GambitScale; //  Density falls as volume increases
-    Mu /= GambitScale; //   Dynamic Viscocity kg/ms (should this be times scale?)
-    Nu = Mu / Rho;
-
-    globalIO = new IO();
+    Nu = GambitScale * GambitScale * Mu / Rho;
+    
     globalTimeStepper = new TIME_STEPPER();
-
 
     ReadNeuGetBodies();
 
     NumTransVars = NumBodies;
 
     globalOctree = new OCTREE();
-
 
     for (int i = 0; i < NumBodies; ++i)
         Bodies[i]->InitNascentWake(dtInit / NumSubSteps);
@@ -757,8 +749,11 @@ void SYSTEM::PutWakesInTree() {
 
 /**************************************************************/
 void SYSTEM::GetFaceVels() {
-    for (int i = 0; i < NumBodies; ++i)
-        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+        for (int i = 0; i < NumBodies; ++i)
 #ifdef COLLAPSE_TO_FACES
             for (int k = 0; k < 6; ++k)
                 if ((k == 0) || (k == 2) || (k == 4) || !globalOctree->AllCells[j]->Neighb[k])

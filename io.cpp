@@ -29,6 +29,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "io.hpp"
 //#include "gnuplot_i.hpp" //Gnuplot class handles POSIX-Pipe-communication with Gnuplot
 
+template <class T>
+inline string to_string(const T& t) {
+    stringstream ss;
+    ss << t;
+    return ss.str();
+}
+
 IO::IO() {
     num_file = 0;
     num_dat = 0;
@@ -48,6 +55,7 @@ IO::IO() {
 
     temp << getpid();
     ProcessID = temp.str();
+    OS = getenv("OSTYPE");
     temp >> globalSystem->ProcessID;
 #ifdef use_NCURSES
     top_header = "\t\t%%CPU %%MEM COMMAND             TIME   PID";
@@ -58,47 +66,7 @@ IO::IO() {
     top_data = " ";
     step_header = "\rstep   s/steps\t  dt /sim t  \tWC t /CPU t\t\tCFL\t\t# cells";
 
-    directory = "output/" + temp.str() + "/";
-    out_name = "_output_pid" + temp.str();
-    file_type = ".dat";
-    image_type = ".png";
-    string command0 = "touch output/test";
-    globalGetStdoutFromCommand(command0);
-    i = system(command0.c_str());
-    //  Check to see if there is a directory called output/
-    if (i == 0) {
-        string command1 = "rm output/test";
-        j += system(command1.c_str());
-    } else {
-        if (WRITE_TO_FILE) out_stream << "\nDirectory does not exist, creating...";
-        string command2 = "mkdir output/";
-        j += system(command2.c_str());
-        //j += system ("cp read_data.m output_lamb2");
-    }
-    //  Now check to see if in that directory there already exists an output directory with the same ID is we are trying to make
-    string command3 = "touch " + directory + "test";
-    i = system(command3.c_str());
-    if (i == 0) {
-        string command4 = "rm " + directory + "test";
-        j += system(command4.c_str());
-
-    } else {
-#ifndef use_NCURSES
-        if (WRITE_TO_FILE) out_stream << "\nDirectory " << directory << " does not exist, creating...";
-#endif
-        string command5 = "mkdir " + directory;
-        j += system(command5.c_str());
-        //j += system ("cp read_data.m output_lamb2");
-    }
-
-    if (j == 0) {
-#ifndef use_NCURSES
-        if (WRITE_TO_FILE) out_stream << "Success!" << endl;
-#endif
-    } else {
-        if (WRITE_TO_FILE) out_stream << endl << "Unable to access output directory, aborting" << endl;
-        throw NO_FILE;
-    }
+    
     string out = out_stream.str();
     suffix = "";
 #ifdef use_NCURSES
@@ -106,7 +74,9 @@ IO::IO() {
     refresh();
 #else
     if (WRITE_TO_SCREEN) cout << out.c_str() << endl;
-#endif
+    if (WRITE_TO_SCREEN) cout << "Platform identified itself as: " << OS;
+    if (WRITE_TO_SCREEN) cout << " " << VERS << "; Number of threads: " << globalSystem->NumThreads << endl;
+    #endif
 }
 
 /**************************************************************/
@@ -381,6 +351,53 @@ string ChopLine(string line) {
     return line;
 }
 
+void IO::PrepOutputDir()
+{
+    int i = 0, j = 0;
+    stringstream out_stream;
+    directory = "output/" + to_string(globalSystem->ProcessID) + globalSystem->CaseName + "/";
+    out_name = "_output_pid" + to_string(globalSystem->ProcessID);
+    file_type = ".dat";
+    image_type = ".png";
+    string command0 = "touch output/test";
+    globalGetStdoutFromCommand(command0);
+    i = system(command0.c_str());
+    //  Check to see if there is a directory called output/
+    if (i == 0) {
+        string command1 = "rm output/test";
+        j += system(command1.c_str());
+    } else {
+        if (WRITE_TO_FILE) out_stream << "\nDirectory does not exist, creating...";
+        string command2 = "mkdir output/";
+        j += system(command2.c_str());
+        //j += system ("cp read_data.m output_lamb2");
+    }
+    //  Now check to see if in that directory there already exists an output directory with the same ID is we are trying to make
+    string command3 = "touch " + directory + "test";
+    i = system(command3.c_str());
+    if (i == 0) {
+        string command4 = "rm " + directory + "test";
+        j += system(command4.c_str());
+
+    } else {
+#ifndef use_NCURSES
+        if (WRITE_TO_FILE) out_stream << "\nDirectory " << directory << " does not exist, creating...";
+#endif
+        string command5 = "mkdir " + directory;
+        j += system(command5.c_str());
+        //j += system ("cp read_data.m output_lamb2");
+    }
+
+    if (j == 0) {
+#ifndef use_NCURSES
+        if (WRITE_TO_FILE) out_stream << "Success!" << endl;
+#endif
+    } else {
+        if (WRITE_TO_FILE) out_stream << endl << "Unable to access output directory, aborting" << endl;
+        throw NO_FILE;
+    }
+}
+
 void IO::read_input(string infname) {
     ifstream input;
     input.open(infname.c_str());
@@ -401,10 +418,10 @@ void IO::read_input(string infname) {
                         strm.str(ChopLine(line));
 
                     if (line[0] == 'I') strm >> globalSystem->NeuFile;
-                    if (line[0] == 'P') strm >> globalSystem->MaxP;
+                    if (line[0] == 'P') {strm >> globalSystem->MaxP; cout << line << " " << globalSystem->MaxP << endl;}
                     if (line[0] == 'S') strm >> globalSystem->GambitScale;
                     if (line[0] == 'N') strm >> globalSystem->CaseName;
-                    if (line[1] == 'U') {strm >> globalSystem->NumBodies; cout << line << endl;}
+                    if (line[0] == 'B') {strm >> globalSystem->NumBodies; cout << line << " " << globalSystem->NumBodies << endl;}
                     if (line[0] == 'C') globalSystem->ORIGIN = ReadVectorsFromLine(ChopLine(line));
                     if (line[0] == 'R') globalSystem->RATES = ReadVectorsFromLine(ChopLine(line));
                     if (line[0] == 'V') globalSystem->VELOCITY = ReadVectorsFromLine(ChopLine(line));
@@ -576,7 +593,7 @@ void IO::write_file(stringstream &outstream, string OutName, string ext) {
 
 
     int pad = 6 - num.str().length();
-    fname += globalSystem->CaseName + string(pad, '0') + num.str() + "." + ext;
+    fname += "_" + globalSystem->CaseName + string(pad, '0') + num.str() + "." + ext;
     num_file++;
     if (WRITE_TO_SCREEN) cout << fname << endl;
     fstream filestr;

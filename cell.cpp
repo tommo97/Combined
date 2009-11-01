@@ -46,10 +46,10 @@ FVMCell::FVMCell(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Fac
 /**************************************************************/
 void FVMCell::Integrate() {
     HasLoad = false;
-    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        TransDerivs[q] += globalSystem->Nu * Laplacian[q];
-        TransDerivs[q] += VectMultMatrixTranspose(VelTensor, TransVars[q]);
-    }
+//    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+//        TransDerivs[q] += globalSystem->Nu * Laplacian[q];
+//        TransDerivs[q] += VectMultMatrixTranspose(VelTensor, TransVars[q]);
+//    }
     globalTimeStepper->Integrate(this);
     Omega = Vect3(0.,0.,0.);
 

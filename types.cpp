@@ -88,3 +88,11 @@ string globalGetStdoutFromCommand(string cmd)
   // exit
   return data;
 }
+/**************************************************************/
+void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
+
+    REAL mult, nrm;
+    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
+    mult = -1 / (four_pi * nrm * nrm * nrm);
+    vel += mult * diff.Cross(omega);
+}
