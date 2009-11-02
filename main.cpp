@@ -40,40 +40,40 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
 
 
-    string dir = "./neu_files/";
+    string dir1 = "./neu_files/", dir2 = "./case_files/";
 
     //  Some default values
     globalSystem->GambitScale = 1;
     globalSystem->MaxP = 3;
     globalSystem->dtInit = 0.01;
     globalSystem->Del2 = 0.25;
-    globalSystem->NeuFile = dir + "0012.neu";
+    globalSystem->NeuFile = dir1 + "0012.neu";
 
 
     switch (argc) {
 
         case 2:
         {
-            globalIO->read_input(argv[1]);
+            globalIO->read_input(dir2 + argv[1]);
             break;
         }
 
         case 3:
         {
-            globalSystem->NeuFile = dir + argv[1];
+            globalSystem->NeuFile = dir1 + argv[1];
             globalSystem->GambitScale = atof(argv[2]);
             break;
         }
         case 4:
         {
-            globalSystem->NeuFile = dir + argv[1];
+            globalSystem->NeuFile = dir1 + argv[1];
             globalSystem->GambitScale = atof(argv[2]);
             globalSystem->MaxP = atoi(argv[3]);
             break;
         }
                 case 5:
         {
-            globalSystem->NeuFile = dir + argv[1];
+            globalSystem->NeuFile = dir1 + argv[1];
             globalSystem->GambitScale = atof(argv[2]);
             globalSystem->MaxP = atoi(argv[3]);
             globalSystem->dtInit = atof(argv[4]);
