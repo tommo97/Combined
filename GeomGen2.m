@@ -15,8 +15,8 @@ MaxP = 3;
 Scale = 3;          %   Scaling is done in the simulation
 Vels{1} = [-10 0 0];
 Vels{2} = [-10 0 0];
-Origin{1} = [0 0 0];
-Origin{2} = [30 5 0];
+Origin{1} = [0 -6 0];
+Origin{2} = [0 6 0];
 Attitudes{1} = [0 0 rand];
 Attitudes{2} = [0 0 pi-rand];
 Rates{1} = [-7.5 0 0];
@@ -25,7 +25,7 @@ Rates{2} = [7.5 0 0];
 
 
 
-name = 'downwind';
+name = 'Seagen';
 fname = [dir1 name '.neu'];
 fid = fopen(fname, 'wt');
 fid_cas = fopen([dir2 name '.cas'],'wt');
@@ -238,5 +238,5 @@ fprintf(fid_run,'%s\n','#PBS -m bea');
 fprintf(fid_run,'%s\n\n','#PBS -M tom.mccombes@strath.ac.uk');
 fprintf(fid_run,'%s\n','cd $PBS_O_WORKDIR');
 fprintf(fid_run,'%s\n','nprocs=`wc -l $PBS_NODEFILE | awk ''{ print $1 }''`');
-fprintf(fid_run,'%s%s%s%s\n','/home/lap05140/./main ',name,' > dump',name);
+fprintf(fid_run,'%s%s%s%s\n','/home/lap05140/./main ',name,'.cas > dump',name);
 
