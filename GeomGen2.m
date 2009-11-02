@@ -2,7 +2,7 @@ clear all; close all
 cd ~/Desktop/Combined
 dir1 = './neu_files/';
 dir2 = './case_files/';
-
+dir3 = './run_files/';
 
 %%  Geometry Parameters
 cutout = 1.257;
@@ -10,12 +10,13 @@ numbodies = 2;
 nblades = [2 2];
 Reflect = [1 -1];
 %%  Simulation Parameters
+num_procs = 4;
 MaxP = 3;
 Scale = 3;          %   Scaling is done in the simulation
 Vels{1} = [-10 0 0];
 Vels{2} = [-10 0 0];
-Origin{1} = [0 6 0];
-Origin{2} = [0 -6 0];
+Origin{1} = [0 0 0];
+Origin{2} = [30 5 0];
 Attitudes{1} = [0 0 rand];
 Attitudes{2} = [0 0 pi-rand];
 Rates{1} = [-7.5 0 0];
@@ -24,11 +25,11 @@ Rates{2} = [7.5 0 0];
 
 
 
-name = 'Seagen';
+name = 'downwind';
 fname = [dir1 name '.neu'];
 fid = fopen(fname, 'wt');
 fid_cas = fopen([dir2 name '.cas'],'wt');
-
+fid_run = fopen([dir3 name],'wt');
 
 v = ver;
 for k=1:length(v)
@@ -229,4 +230,13 @@ end
 fclose(fid_cas);
 
 system(['cat ' dir2 name '.cas']);
+
+%%  Make a runfile
+fprintf(fid_run,'%s\n','#!/bin/sh');
+fprintf(fid_run,'%s%g\n','#PBS -l nodes=1:ppn=',num_procs);
+fprintf(fid_run,'%s\n','#PBS -m bea');
+fprintf(fid_run,'%s\n\n','#PBS -M tom.mccombes@strath.ac.uk');
+fprintf(fid_run,'%s\n','cd $PBS_O_WORKDIR');
+fprintf(fid_run,'%s\n','nprocs=`wc -l $PBS_NODEFILE | awk ''{ print $1 }''`');
+fprintf(fid_run,'%s%s%s%s\n','/home/lap05140/./main ',name,' > dump',name);
 
