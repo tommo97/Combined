@@ -8,7 +8,7 @@ dir3 = './run_files/';
 cutout = 1.257;
 numbodies = 2;
 nblades = [2 2];
-Reflect = [1 -1];
+Reflect = [1 1];
 %%  Simulation Parameters
 num_procs = 4;
 MaxP = 3;
@@ -16,16 +16,16 @@ Scale = 3;          %   Scaling is done in the simulation
 Vels{1} = [-10 0 0];
 Vels{2} = [-10 0 0];
 Origin{1} = [0 0 0];
-Origin{2} = [30 5 0];
+Origin{2} = [50 5 0];
 Attitudes{1} = [0 0 rand];
 Attitudes{2} = [0 0 pi-rand];
 Rates{1} = [-7.5 0 0];
-Rates{2} = [7.5 0 0];
+Rates{2} = [-7.5 0 0];
 
 
 
 
-name = 'downwind';
+name = 'further_downwind';
 fname = [dir1 name '.neu'];
 fid = fopen(fname, 'wt');
 fid_cas = fopen([dir2 name '.cas'],'wt');
