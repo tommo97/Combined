@@ -5,4 +5,4 @@
 
 cd $PBS_O_WORKDIR
 nprocs=`wc -l $PBS_NODEFILE | awk '{ print $1 }'`
-/home/lap05140/./main downwind.cas > dumpdownwind
+/home/lap05140/./main downwind.cas > dump_downwind
