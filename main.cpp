@@ -100,3 +100,11 @@ int main(int argc, char *argv[]) {
     if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
 #endif
 }
+/**************************************************************/
+void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
+
+    REAL mult, nrm;
+    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
+    mult = -1 / (four_pi * nrm * nrm * nrm);
+    vel += mult * diff.Cross(omega);
+}

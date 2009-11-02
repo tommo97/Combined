@@ -7,25 +7,25 @@ dir1 = '~/Desktop/Combined/neu_files/'
 %%  Geometry Parameters
 cutout = 1.257;
 numbodies = 2;
-nblades = [3 4];
+nblades = [2 2];
 Reflect = [1 -1];
 %%  Simulation Parameters
 MaxP = 3;
 Scale = 3;          %   Scaling is done in the simulation
 Vels{1} = [-10 0 0];
 Vels{2} = [-10 0 0];
-Origin{1} = [0 0 0];
-Origin{2} = [2.5 0 0];
-Attitudes{1} = [0 0 0];
-Attitudes{2} = [0 0 0];
-Rates{1} = [0 0 0];
-Rates{2} = [0 0 0];
+Origin{1} = [0 6 0];
+Origin{2} = [0 -6 0];
+Attitudes{1} = [0 0 rand];
+Attitudes{2} = [0 0 pi-rand];
+Rates{1} = [-7.5 0 0];
+Rates{2} = [7.5 0 0];
 
 
 
 
-name = 'coax';
-fname = [name '.neu']
+name = 'Seagen';
+fname = [name '.neu'];
 fid = fopen(fname, 'wt');
 fid_cas = fopen([name '.cas'],'wt');
 
@@ -78,7 +78,7 @@ n = 30;
 radius = max(RADIUS);
 
 
-th0 = (3-THETA(end));
+th0 = -(3-THETA(end));
 pitch_axis = 0.3; % chord
 
 
@@ -93,7 +93,7 @@ for q = 1:numbodies
     g{q}.start = cnt + 1;
     for i = 1:nblades(q)
         count = count + 1;
-        psi = (i-1)*dpsi;
+        psi = deg2rad((i-1)*dpsi);
         
         rads = linspace(cutout,radius,n)';
         C = interp1(RADIUS,CHORD,rads,'cubic');
@@ -110,8 +110,8 @@ for q = 1:numbodies
         ydata1 = ydata0;
         zdata1 = xdata0.*sind(th);
         
-        xdata2 = xdata1*cosd(psi) - ydata1*sind(psi);
-        ydata2 = xdata1*sind(psi) + ydata1*cosd(psi);
+        xdata2 = xdata1*cos(psi + Attitudes{q}(3)) - ydata1*sin(psi + Attitudes{q}(3));
+        ydata2 = xdata1*sin(psi + Attitudes{q}(3)) + ydata1*cos(psi + Attitudes{q}(3));
         zdata2 = zdata1;
         
         
@@ -158,8 +158,8 @@ nGrps = numbodies;
 nBCs = 1;
 Empty = 0;
 
-
-
+Attitudes{1} = [0 0 0];
+Attitudes{2} = [0 0 0];
 
 fprintf(fid,'        CONTROL INFO 2.4.6\n** GAMBIT NEUTRAL FILE\n%s\n',name);
 fprintf(fid,'PROGRAM:                MATLAB     VERSION:  %s\n', version);
@@ -210,7 +210,7 @@ CaseData = struct([]);
 CaseData = AddVal2Case(CaseData,'INPUT',fname,'string');
 CaseData = AddVal2Case(CaseData,'PMAX',MaxP,'int');
 CaseData = AddVal2Case(CaseData,'SCALE',Scale,'double');
-CaseData = AddVal2Case(CaseData,'NUMBODIES',numbodies,'int');
+CaseData = AddVal2Case(CaseData,'BODYNUM',numbodies,'int');
 CaseData = AddVal2Case(CaseData,'ATTITUDES', Attitudes,'double');
 CaseData = AddVal2Case(CaseData,'CGBODIES',Origin, 'double');
 CaseData = AddVal2Case(CaseData,'RATEBODIES',Rates,'double');
@@ -228,4 +228,5 @@ end
 
 fclose(fid_cas);
 
+system(['cat ' name '.cas']);
 
