@@ -154,9 +154,9 @@ string StringToUpper(string strToConvert) {//change each element of the string t
 }
 
 /**************************************************************/
-void IO::read_neu(const char* infname, Array <Vect3> &X, Array <Array <int> > &PNLS, Array < Array < int > > &GROUPS, Array < Array < int > > &BCS, Array <string> &NAMES) {
+void IO::read_neu(string infname, Array <Vect3> &X, Array <Array <int> > &PNLS, Array < Array < int > > &GROUPS, Array < Array < int > > &BCS, Array <string> &NAMES) {
     ifstream input;
-    input.open(infname);
+    input.open(infname.c_str());
     if (!input) {
 #ifndef use_NCURSES  
         if (WRITE_TO_SCREEN) cout << "Unable to open file: " << infname << endl;
@@ -355,6 +355,7 @@ void IO::PrepOutputDir()
 {
     int i = 0, j = 0;
     stringstream out_stream;
+
     directory = "output/" + to_string(globalSystem->ProcessID) + globalSystem->CaseName + "/";
     out_name = "_output_pid" + to_string(globalSystem->ProcessID);
     file_type = ".dat";
@@ -572,7 +573,7 @@ void IO::print_stat_step(ostream & out) {
 }
 
 /**************************************************************/
-void IO::write_file(stringstream &outstream, string OutName, string ext) {
+void IO::write_file(stringstream &outstream, string OutName, string ext, bool disp) {
 
     int ID = -1;
     for (int i = 0; i < NumFiles.size(); ++i)
@@ -595,7 +596,7 @@ void IO::write_file(stringstream &outstream, string OutName, string ext) {
     int pad = 6 - num.str().length();
     fname += "_" + globalSystem->CaseName + string(pad, '0') + num.str() + "." + ext;
     num_file++;
-    if (WRITE_TO_SCREEN) cout << fname << endl;
+    if (WRITE_TO_SCREEN && disp) cout << fname << endl;
     fstream filestr;
 
     filestr.open(fname.c_str(), fstream::in | fstream::out | fstream::app);

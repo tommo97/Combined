@@ -63,7 +63,7 @@ public:
     #endif
     list <string> lines;
 
-    void read_neu(const char* infname, Array <Vect3> &X, Array <Array <int> > &PNLS, Array < Array <int> > &GROUPS, Array < Array < int > > &BCS, Array <string> &);
+    void read_neu(string infname, Array <Vect3> &X, Array <Array <int> > &PNLS, Array < Array <int> > &GROUPS, Array < Array < int > > &BCS, Array <string> &);
 
     void print_header();
 
@@ -81,7 +81,7 @@ public:
 
     void read_dat(char* infname, Array <Vect3> &x, Array <Vect3> &omega);
 
-    void write_file(stringstream &, string outfname, string ext);
+    void write_file(stringstream &, string outfname, string ext, bool);
 
     void write_dat();
 

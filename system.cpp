@@ -453,7 +453,7 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
 
 
-
+        WriteBodies();
         //        if (SubStep % 1 == 0) globalIO->write_m();
 #ifndef USE_NCURSES
         // #ifdef DEBUG
@@ -478,7 +478,8 @@ void SYSTEM::ReadNeuGetBodies() {
     Array <Vect3> X;
     ARRAY2(int) PNLS, GROUPS, BCS;
     Array <string> NAMES;
-    globalIO->read_neu(NeuFile.data(), X, PNLS, GROUPS, BCS, NAMES);
+    string neu_file = "./neu_files/" + NeuFile;
+    globalIO->read_neu(neu_file, X, PNLS, GROUPS, BCS, NAMES);
 
 
     for (int i = 0; i < (int) X.size(); ++i) {
@@ -814,7 +815,7 @@ void SYSTEM::WriteDomain() {
                 outstream << i + 1 << "\t" << j + 1 << "\t" << k + 1 << "\t" << X << "\t" << V + Vinf << endl;
             }
 
-    globalIO->write_file(outstream, string("data"), string("dat"));
+    globalIO->write_file(outstream, string("data"), string("dat"), true);
 }
 
 /**************************************************************/
@@ -829,9 +830,56 @@ void SYSTEM::WriteVorticity() {
         }
 
 
-    globalIO->write_file(outstream, string("f"), string("dat"));
+    globalIO->write_file(outstream, string("f"), string("dat"), true);
 }
 
+/**************************************************************/
+void SYSTEM::WriteBodies() {
+    stringstream outstream;
+    for (int i = 0; i < Bodies.size(); ++i){
+    	outstream << "Body(" << i+1 << ").Name = '" << Bodies[i]->Name << "';" << endl;
+    	outstream << "Body(" << i+1 << ").Body.Position = [" << Vect3(0.) << "];" << endl;
+    	outstream << "Body(" << i+1 << ").Body.Velocity = [" << Bodies[i]->CG.vV << "];" << endl;
+    	outstream << "Body(" << i+1 << ").Body.Attitude = [" << Vect3(0.) << "];" << endl;
+    	outstream << "Body(" << i+1 << ").Body.Rates = [" << Bodies[i]->BodyRates << "];" << endl;
+    	outstream << "Body(" << i+1 << ").Global.Position = [" << Bodies[i]->CG.vP << "];" << endl;
+    	outstream << "Body(" << i+1 << ").Global.Velocity = [" << Bodies[i]->CG.vV << "];" << endl;
+    	outstream << "Body(" << i+1 << ").Global.Attitude = [" << Bodies[i]->EulerAngles << "];" << endl;
+    	outstream << "Body(" << i+1 << ").Global.Rates = [" << Bodies[i]->EulerRates << "];" << endl;
+    	outstream << "Body(" << i+1 << ").Faces.C1.Body = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+    	outstream << "Body(" << i+1 << ").Faces.C2.Body = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+    	outstream << "Body(" << i+1 << ").Faces.C3.Body = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+    	outstream << "Body(" << i+1 << ").Faces.C4.Body = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+    	outstream << "Body(" << i+1 << ").Faces.C1.Global = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+    	outstream << "Body(" << i+1 << ").Faces.C2.Global = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+    	outstream << "Body(" << i+1 << ").Faces.C3.Global = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+    	outstream << "Body(" << i+1 << ").Faces.C4.Global = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+    	outstream << "Body(" << i+1 << ").Faces.Gamma = zeros(" << Bodies[i]->Faces.size() << ",1);" << endl;
+       	outstream << "Body(" << i+1 << ").Faces.Sigma = zeros(" << Bodies[i]->Faces.size() << ",1);" << endl;
+       	outstream << "Body(" << i+1 << ").Faces.Mu = zeros(" << Bodies[i]->Faces.size() << ",1);" << endl;
+       	outstream << "Body(" << i+1 << ").Faces.Alpha = zeros(" << Bodies[i]->Faces.size() << ",1);" << endl;
+       	outstream << "Body(" << i+1 << ").Faces.Global.VFMM = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+       	outstream << "Body(" << i+1 << ").Faces.Global.VInterp = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+       	outstream << "Body(" << i+1 << ").Faces.Global.VWake = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
+    	for (int j = 0; j < Bodies[i]->Faces.size(); ++j)
+    	{
+    		outstream << "Body(" << i+1 << ").Faces.C1.Body(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vO << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.C2.Body(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C2->vO << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.C3.Body(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C3->vO << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.C4.Body(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C4->vO << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.C1.Global(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vP << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.C2.Global(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vP << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.C3.Global(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vP << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.C4.Global(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vP << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.Gamma(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->gamma << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.Mu(" << j + 1<< ",:) = [" << *(Bodies[i]->Faces[j]->sigma) << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.Sigma(" << j + 1<< ",:) = [" << *(Bodies[i]->Faces[j]->mu) << "];" << endl;
+
+    	}
+    }
+
+    globalIO->write_file(outstream, string("BodyData"), string("m"), false);
+}
 /**************************************************************/
 void SYSTEM::WritePanelVels() {
     //  Here we want to find the extents of the domain
@@ -871,5 +919,5 @@ void SYSTEM::WritePanelVels() {
                 outstream << i + 1 << "\t" << j + 1 << "\t" << k + 1 << "\t" << X << "\t" << V + Vinf << endl;
             }
 
-    globalIO->write_file(outstream, string("panel_vels"), string("dat"));
+    globalIO->write_file(outstream, string("panel_vels"), string("dat"),false);
 }

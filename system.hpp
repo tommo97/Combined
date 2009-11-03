@@ -104,7 +104,7 @@ public:
   void WriteDomain();
   void WriteVorticity();
   void WritePanelVels();
-
+  void WriteBodies();
     enum exception {
         GENERAL_ERROR
     };
