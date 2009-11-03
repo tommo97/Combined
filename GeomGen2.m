@@ -3,7 +3,7 @@ cd ~/Desktop/Combined
 dir1 = './neu_files/';
 dir2 = './case_files/';
 dir3 = './run_files/';
-
+commit = true;
 %%  Geometry Parameters
 cutout = 1.257;
 numbodies = 2;
@@ -12,20 +12,20 @@ Reflect = [1 1];
 %%  Simulation Parameters
 num_procs = 4;
 MaxP = 3;
-Scale = 3;          %   Scaling is done in the simulation
+Scale = 5;          %   Scaling is done in the simulation
 Vels{1} = [-10 0 0];
 Vels{2} = [-10 0 0];
 Origin{1} = [0 0 0];
-Origin{2} = [50 5 0];
-Attitudes{1} = [0 0 rand];
-Attitudes{2} = [0 0 pi-rand];
+Origin{2} = [25 10 0];
+Attitudes{1} = [0 0 0];
+Attitudes{2} = [0 0 pi];
 Rates{1} = [-7.5 0 0];
 Rates{2} = [-7.5 0 0];
 
 
 
 
-name = 'further_downwind';
+name = 'better_downwind';
 fname = [dir1 name '.neu'];
 fid = fopen(fname, 'wt');
 fid_cas = fopen([dir2 name '.cas'],'wt');
@@ -129,9 +129,9 @@ for q = 1:numbodies
         
         
         C = xdata;
-
+        
         C(:) = (1:numel(xdata)) + (count-1) * numel(xdata);
-
+        
         
         X = [xdata(:) ydata(:) zdata(:)];
         
@@ -146,10 +146,10 @@ for q = 1:numbodies
         M1 = [M1; X];   %   This holds the positions of the points
         M2 = [M2; [c1 c2 c3 c4]];   %   This hols the panel corners
         
-       cnt = cnt + numel(c1);
+        cnt = cnt + numel(c1);
     end
-
-        g{q}.end = cnt;
+    
+    g{q}.end = cnt;
 end
 
 scatter3(0,0,0); axis tight; view(3);
@@ -240,3 +240,10 @@ fprintf(fid_run,'%s\n','cd $PBS_O_WORKDIR');
 fprintf(fid_run,'%s\n','nprocs=`wc -l $PBS_NODEFILE | awk ''{ print $1 }''`');
 fprintf(fid_run,'%s%s%s%s\n','/home/lap05140/./main ',name,'.cas > dump_',name);
 
+
+%%  Commit them
+if commit
+    system(['svn add ' dir1 name '.neu ' dir2 name '.cas ' dir3 name]);
+    system(['svn commit ' dir1 name '.neu ' dir2 name '.cas ' dir3 name ' -m "MATLAB'...
+        ' automatic commit of case/data/runfile for ' name '"']);
+end
