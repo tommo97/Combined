@@ -50,17 +50,17 @@ for q = 1:num_vort
     end
     
     
-    [x,y,z,v] = subvolume(XI,YI,ZI,VI,[nan,nan,nan,nan,nan,0]);
-    p1 = patch(isosurface(x,y,z,v, val),...
-        'FaceColor',colour{q},'EdgeColor','none');
-    isonormals(x,y,z,v,p1);
-    %v = v.^(1/3);
-    %v = smooth3(v,'gaussian',[5 5 5],0.65);   
-    p2 = patch(isocaps(x,y,z,v, val),...
-        'FaceColor','interp','EdgeColor','none','DiffuseStrength',1.0);
+%     [x,y,z,v] = subvolume(XI,YI,ZI,VI,[nan,nan,nan,nan,nan,0]);
+%     p1 = patch(isosurface(x,y,z,v, val),...
+%         'FaceColor',colour{q},'EdgeColor','none');
+%     isonormals(x,y,z,v,p1);
+%     %v = v.^(1/3);
+%     %v = smooth3(v,'gaussian',[5 5 5],0.65);   
+%     p2 = patch(isocaps(x,y,z,v, val),...
+%         'FaceColor','interp','EdgeColor','none','DiffuseStrength',1.0);
     
  
-%     p = patch(isosurface(XI,YI,ZI,VI,val),'FaceColor',colour{q},...
-%         'EdgeColor','none','FaceLighting','phong');
-%     isonormals(XI,YI,ZI,VI,p);
+    p = patch(isosurface(XI,YI,ZI,VI,val),'FaceColor',colour{q},...
+        'EdgeColor','none','FaceLighting','phong');
+    isonormals(XI,YI,ZI,VI,p);
 end;

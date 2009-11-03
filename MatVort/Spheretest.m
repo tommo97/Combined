@@ -23,7 +23,7 @@ for i = 1:size(Sphere.x,1) - 1
         
         Sphere.c2.x(i,j) = c2(1);
         Sphere.c2.y(i,j) = c2(2);
-        Sphere.c3.z(i,j) = c2(3);
+        Sphere.c2.z(i,j) = c2(3);
         
         Sphere.c3.x(i,j) = c3(1);
         Sphere.c3.y(i,j) = c3(2);
@@ -68,10 +68,21 @@ for i = 1:numel(Sphere.CP.x)
         snm = [Sphere.n.x(j) Sphere.n.y(j) Sphere.n.z(j)];
         src = src + .25*snm;
         ome = snm;
+        
+        c1 = [Sphere.c1.x(j) Sphere.c1.y(j) Sphere.c1.z(j)];
+        c2 = [Sphere.c2.x(j) Sphere.c2.y(j) Sphere.c2.z(j)];
+        c3 = [Sphere.c3.x(j) Sphere.c3.y(j) Sphere.c3.z(j)];
+        c4 = [Sphere.c4.x(j) Sphere.c4.y(j) Sphere.c4.z(j)];
         V = DirectVel(src - trg, ome);
-        B(i,j) = sqrt(V(1)*V(1) + V(2)*V(2) + V(3)*V(3));
-        A(i,j) = tnm(1)*V(1) + tnm(2)*V(2) + tnm(3)*V(3);
+        V1 = LinVel(c1,c2,trg,1);
+        V2 = LinVel(c2,c3,trg,1);
+        V3 = LinVel(c3,c4,trg,1);
+        V4 = LinVel(c4,c1,trg,1);
+        V = V1 + V2 + V3 + V4;
+        %B(i,j) = sqrt(V(1)*V(1) + V(2)*V(2) + V(3)*V(3));
+        A(i,j) = n(1)*V(1) + n(2)*V(2) + n(3)*V(3);
     end
+    disp([i numel(Sphere.CP.x)]);
 end
 
 Sphere.RHS = zeros(size(Sphere.x,1) - 1,size(Sphere.y,1) - 1);
@@ -84,11 +95,15 @@ for i = 1:size(Sphere.x,1) - 1
     end
 end
     
-
+E = A;
+E(end,:) = 1;
     
 rhs = Sphere.RHS(:);
-gam = A\rhs;
+
+RHS = rhs;
+RHS(end) = 0;
+gam = E\RHS;
 
 Sphere.Gamma = zeros(size(Sphere.RHS));
 Sphere.Gamma(:) = gam;
-%surf(Sphere.x, Sphere.y, Sphere.z, Sphere.Gamma);
+surf(Sphere.x, Sphere.y, Sphere.z, Sphere.Gamma);

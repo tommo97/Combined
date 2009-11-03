@@ -21,4 +21,4 @@ K = Mult.*((R0R1./MagR1) - (R0R2./MagR2));
 K(MagC < 1e-16) = 0;
 K(MagR1 < 1e-16) = 0;
 K(MagR2 < 1e-16) = 0;
-V = -[K K K].*C;
+V = [K K K].*C;

@@ -1,6 +1,6 @@
 function V = DirectVel(diff, omega)
 
-DEL2 = 0.25;
+DEL2 = 0.0;
 
 nrm = sqrt(DEL2 + diff(1)*diff(1) + diff(2)*diff(2) + diff(3)*diff(3));
 

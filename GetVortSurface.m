@@ -1,6 +1,6 @@
 close all; clear all; clear mex;
-files = dir('f_*.dat');
-val = 1.;
+files = dir('f_b*.dat');
+val = 5.;
 s = size(files,1);
 
 % while s < 100
@@ -12,7 +12,7 @@ s = size(files,1);
 
 
 
-makemovie = true;
+makemovie = false;
 fname = files(s).name;
 fullscreen = get(0,'ScreenSize');
 fig = figure('Position',[0 0 1200 1200*16/10]);
@@ -25,14 +25,14 @@ view([0 90]);
 axis([-30 50 0 250 -75 75]);
 axis equal off;
 
-set(gca,'CameraUpVector',[-1 0 0])
+%set(gca,'CameraUpVector',[-1 0 0])
 % axis equal tight; lighting phong; camlight right;
 %zoom(1.8);
 caxis([val 10])
 drawnow
 ViewParams = GetViewParams;
-
-%view(38.5,16);
+camlight right
+view(38.5,16);
 
 
 if makemovie
