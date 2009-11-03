@@ -101,6 +101,7 @@ int main(int argc, char *argv[]) {
     if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
 #endif
 }
+
 /**************************************************************/
 void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
 

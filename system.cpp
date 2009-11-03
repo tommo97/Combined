@@ -310,7 +310,7 @@ void SYSTEM::GetGlobalRHS() {
     for (int i = 0; i < (int) AllBodyPanels.size(); ++i) {
 
         AllBodyPanels[i]->GetCollocationPoint();
-        Vect3 Pos = AllBodyPanels[i]->CollocationPoint->vO;
+        Vect3 Pos = AllBodyPanels[i]->CollocationPoint->vP - AllBodyPanels[i]->Owner->CG.vP;
         // 	Get point kinematic velocity - rotational part first
         Vect3 Vrot = AllBodyPanels[i]->Owner->BodyRates.Cross(Pos);
         // 	Add to translational velocity....
@@ -327,10 +327,7 @@ void SYSTEM::GetGlobalRHS() {
 
         REAL Vt1 = V.Dot(AllBodyPanels[i]->TRANS[0]), Vt2 = V.Dot(AllBodyPanels[i]->TRANS[1]);
 
-        AllBodyPanels[i]->alpha = atan(Vn / Vt1)*180 / pi;
-
-
-
+        AllBodyPanels[i]->alpha = atan(Vn / -Vt1);
 
         *(AllBodyPanels[i]->sigma) = -Vn;
 #ifdef USEGSL
@@ -874,6 +871,7 @@ void SYSTEM::WriteBodies() {
     		outstream << "Body(" << i+1 << ").Faces.Gamma(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->gamma << "];" << endl;
     		outstream << "Body(" << i+1 << ").Faces.Mu(" << j + 1<< ",:) = [" << *(Bodies[i]->Faces[j]->sigma) << "];" << endl;
     		outstream << "Body(" << i+1 << ").Faces.Sigma(" << j + 1<< ",:) = [" << *(Bodies[i]->Faces[j]->mu) << "];" << endl;
+    		outstream << "Body(" << i+1 << ").Faces.Alpha(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->alpha << "];" << endl;
 
     	}
     }

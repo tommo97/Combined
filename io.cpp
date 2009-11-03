@@ -357,38 +357,18 @@ void IO::PrepOutputDir()
     stringstream out_stream;
 
     directory = "output/" + to_string(globalSystem->ProcessID) + globalSystem->CaseName + "/";
+
+    string command = "mkdir -p " + directory;
+    string output = globalGetStdoutFromCommand(command);
+    cout << command << " " << output << endl;
+
+
     out_name = "_output_pid" + to_string(globalSystem->ProcessID);
     file_type = ".dat";
     image_type = ".png";
-    string command0 = "touch output/test";
-    globalGetStdoutFromCommand(command0);
-    i = system(command0.c_str());
-    //  Check to see if there is a directory called output/
-    if (i == 0) {
-        string command1 = "rm output/test";
-        j += system(command1.c_str());
-    } else {
-        if (WRITE_TO_FILE) out_stream << "\nDirectory does not exist, creating...";
-        string command2 = "mkdir output/";
-        j += system(command2.c_str());
-        //j += system ("cp read_data.m output_lamb2");
-    }
-    //  Now check to see if in that directory there already exists an output directory with the same ID is we are trying to make
-    string command3 = "touch " + directory + "test";
-    i = system(command3.c_str());
-    if (i == 0) {
-        string command4 = "rm " + directory + "test";
-        j += system(command4.c_str());
 
-    } else {
-#ifndef use_NCURSES
-        if (WRITE_TO_FILE) out_stream << "\nDirectory " << directory << " does not exist, creating...";
-#endif
-        string command5 = "mkdir " + directory;
-        j += system(command5.c_str());
-        //j += system ("cp read_data.m output_lamb2");
-    }
-
+    string check = "touch -c " + directory + "test";
+    j = system(check.c_str());
     if (j == 0) {
 #ifndef use_NCURSES
         if (WRITE_TO_FILE) out_stream << "Success!" << endl;
