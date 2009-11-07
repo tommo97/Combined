@@ -23,7 +23,8 @@ end
 
 num_vort = (size(data,2) - 6)/3;
 colour{1} = [1 0 0];
-colour{2} = [1 1 0];
+colour{2} = [0 1 0];
+colour{3} = [0 0 1];
 
 for q = 1:num_vort
     %val = val - q;

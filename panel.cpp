@@ -60,6 +60,8 @@ PANEL::PANEL(POINT *P1, POINT *P2, POINT *P3, POINT *P4) : C1(P1), C2(P2), C3(P3
     Owner = NULL;
     mu_prev = gamma_prev = 0.0;
     Vfmm = Vect3(0.,0.,0.);
+    Theta = 0.;
+    Ds = 0.;
 }
 
 /**************************************************************/
@@ -286,7 +288,7 @@ Vect3 PANEL::LineVelocity(Vect3 lineStart, Vect3 lineEnd, Vect3 pTarget, const R
     Vect3 R1 = pTarget - lineStart, R2 = pTarget - lineEnd, C = R1.Cross(R2);
     REAL MagC = C.Mag(), MagR1 = R1.Mag(), MagR2 = R2.Mag();
     Vect3 Vout;
-    if ((MagR1 > _EPS) && (MagR2 > _EPS) && (MagC > _EPS)) {
+    if ((MagR1 > 0.) && (MagR2 > 0.) && (MagC > 0.)) {
         Vect3 R0 = lineEnd - lineStart;
         REAL Mult = gamma_in / (MagC * MagC * four_pi);
         REAL K = Mult * ((R0.Dot(R1) / MagR1) - (R0.Dot(R2) / MagR2));

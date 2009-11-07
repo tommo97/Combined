@@ -78,7 +78,7 @@ for i=1:n
     gamma(i) = gamma(i) *  span;
     cl(i) = gamma(i)/(0.5*c(i));
 end
-cl
+cl;
 %
 % Plot the circulation distribution from root to tip with labels
 %

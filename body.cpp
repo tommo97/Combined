@@ -206,33 +206,23 @@ void BODY::InitNascentWake(REAL dt) {
             X2 = new POINT;
             X3 = new POINT;
             X4 = new POINT;
-            X1->vV = X2->vV = X3->vV = X4->vV = vVinf;
-            //	Rotate to previous position
-            MoveBody(-dt * DS);
-            Vect3 vx1, vx2, vx3, vx4;
-            if (globalSystem->LiftingLineMode) {
-                //                vx4 = src->C2->vP;
-                //                vx3 = src->C3->vP;
-                vx4 = src->edgeX1->vP;
-                vx3 = src->edgeX2->vP;
-            } else {
-                vx4 = src->edgeX2->vP;
-                vx3 = src->edgeX1->vP;
-            }
-            //	Rotate back
-            MoveBody(dt * DS);
-            if (globalSystem->LiftingLineMode) {
-                //                vx1 = src->C2->vP;
-                //                vx2 = src->C3->vP;
-                vx1 = src->edgeX1->vP;
-                vx2 = src->edgeX2->vP;
-            } else {
-                vx1 = src->edgeX2->vP;
-                vx2 = src->edgeX1->vP;
-            }
-            //	Convect x1 and x2
-            vx3 += (DS * dt) * vVinf;
-            vx4 += (DS * dt) * vVinf;
+			X1->vV = X2->vV = X3->vV = X4->vV = vVinf;
+			//	Rotate to previous position
+			MoveBody(-dt * DS);
+			Vect3 vx1, vx2, vx3, vx4;
+
+			vx4 = src->edgeX1->vP;
+			vx3 = src->edgeX2->vP;
+
+			//	Rotate back
+			MoveBody(dt * DS);
+
+			vx1 = src->edgeX1->vP;
+			vx2 = src->edgeX2->vP;
+
+			//	Convect x1 and x2
+			vx3 += (DS * dt) * vVinf;
+			vx4 += (DS * dt) * vVinf;
             //	Put positions into POINTs
 
             X1->vP = vx1;
@@ -381,7 +371,7 @@ void BODY::WriteSurface(ostream& out_stream) {
         out_stream.setf(ios::fixed, ios::floatfield);
         out_stream << "hold all" << endl;
         for (int j = 0; j < NumFaces; ++j){
-            SURFW((1.0)*Faces[j]->C1->vP, (1.0)*Faces[j]->C2->vP, (1.0)*Faces[j]->C3->vP, (1.0)*Faces[j]->C4->vP, (1.0)*Faces[j]->gamma, out_stream);
+            SURFW((1.0)*Faces[j]->C1->vP, (1.0)*Faces[j]->C2->vP, (1.0)*Faces[j]->C3->vP, (1.0)*Faces[j]->C4->vP, Faces[j]->gamma, out_stream);
 //            out_stream << "scatter3(" << Faces[j]->C1->vP.x << "," << Faces[j]->C1->vP.y << "," << Faces[j]->C1->vP.z << ",'s');" << endl;
 //            out_stream << "scatter3(" << Faces[j]->C2->vP.x << "," << Faces[j]->C2->vP.y << "," << Faces[j]->C2->vP.z << ",'f');" << endl;
 //            out_stream << "scatter3(" << Faces[j]->C3->vP.x << "," << Faces[j]->C3->vP.y << "," << Faces[j]->C3->vP.z << ",'.');" << endl;
@@ -399,7 +389,7 @@ void BODY::WriteWake(ostream& out_stream) {
     }
     if (WRITE_TO_FILE)
         for (int j = 0; j < nSpanPanels; ++j)
-            SURFW(ProtoWake[j]->C1->vP, ProtoWake[j]->C2->vP, ProtoWake[j]->C3->vP, ProtoWake[j]->C4->vP, ProtoWake[j]->gamma, out_stream);
+            SURFW(ProtoWake[j]->C1->vP, ProtoWake[j]->C2->vP, ProtoWake[j]->C3->vP, ProtoWake[j]->C4->vP, 0.0*ProtoWake[j]->gamma, out_stream);
 
 
     out_stream << "X0 = [ ";
@@ -487,16 +477,17 @@ Vect3 BODY::GetVel(Vect3 Target) {
 
     for (int i = 0; i < WakePoints.size(); ++i)
         for (int j = 0; j < WakePoints[i].size(); ++j)
-            globalDirectVel(WakePoints[i][j]->vP - Target, WakePoints[i][j]->vO, V);
+            globalDirectVel(Target - WakePoints[i][j]->vP, WakePoints[i][j]->vO, V);
+
 
     for (int l = 0; l < (int) Faces.size(); ++l) {
         if (!globalSystem->LiftingLineMode) {
             W -= Faces[l]->SourceVel(Target);
         }
-        W -= Faces[l]->BodyPanelVelocity(Target, globalSystem->Del2);
+        W -= Faces[l]->BodyPanelVelocity(Target);//, globalSystem->Del2);
     }
 
-    return U + V + W;
+    return V;//U + V + W;
 }
 
 /**************************************************************/
@@ -536,13 +527,9 @@ void BODY::DissolveWake(REAL dt) {
         ProtoWake[i]->CollocationPoint->vV = Vinf - Vkin; // + AllBodyPanels[i]->CollocationPoint->vVfmm;
         //  Iterate over all wake panels
         for (int J = 0; J < (int) globalSystem->Bodies.size(); ++J)
-            ProtoWake[i]->CollocationPoint->vV += globalSystem->Bodies[J]->GetWakeVel(Pos + CG.vP);
+            ProtoWake[i]->CollocationPoint->vV += globalSystem->Bodies[J]->GetVel(Pos + CG.vP);
 
     }
-
-
-
-
 
     for (int i = 0; i < ProtoWake.size(); ++i) {
         PANEL *temp_pan = ProtoWake[i];
@@ -578,8 +565,7 @@ void BODY::DissolveWake(REAL dt) {
         for (int i = 0; i < R.size(); ++i) {
             r[i] = R[i];
             g[i] = G[i];
-            dOdt[i] = ((G[i] - GP[i])/dt)*DR[i];
-            
+            dOdt[i] = ((G[i] - GP[i])/dt)*DR[i];	//	the DR is to give the direction to the vorticity
         }
         gsl_interp_accel *acc
                 = gsl_interp_accel_alloc();

@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     globalSystem->GambitScale = 1;
     globalSystem->MaxP = 3;
     globalSystem->dtInit = 0.01;
-    globalSystem->Del2 = 0.25;
+    globalSystem->Del2 = .25;
     globalSystem->NeuFile = dir1 + "0012.neu";
 
 
@@ -61,20 +61,20 @@ int main(int argc, char *argv[]) {
 
         case 3:
         {
-            globalSystem->NeuFile = dir1 + argv[1];
+            globalSystem->NeuFile = argv[1];
             globalSystem->GambitScale = atof(argv[2]);
             break;
         }
         case 4:
         {
-            globalSystem->NeuFile = dir1 + argv[1];
+            globalSystem->NeuFile = argv[1];
             globalSystem->GambitScale = atof(argv[2]);
             globalSystem->MaxP = atoi(argv[3]);
             break;
         }
                 case 5:
         {
-            globalSystem->NeuFile = dir1 + argv[1];
+            globalSystem->NeuFile = argv[1];
             globalSystem->GambitScale = atof(argv[2]);
             globalSystem->MaxP = atoi(argv[3]);
             globalSystem->dtInit = atof(argv[4]);
@@ -88,6 +88,7 @@ int main(int argc, char *argv[]) {
     }
 
     globalIO->PrepOutputDir();
+    globalIO->WriteBinary();
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
@@ -95,6 +96,7 @@ int main(int argc, char *argv[]) {
     globalSystem->vinf = 0.0;
     globalSystem->winf = 0.0;
     globalSystem->Initialise();
+    globalSystem->TimeStep();
 
     globalSystem->TimeStep();
 #ifndef use_NCURSES
@@ -109,4 +111,13 @@ void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
     nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
     mult = -1 / (four_pi * nrm * nrm * nrm);
     vel += mult * diff.Cross(omega);
+}
+
+/**************************************************************/
+Vect3 globalDirectVel(Vect3 diff, Vect3 omega) {
+
+    REAL mult, nrm;
+    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
+    mult = -1 / (four_pi * nrm * nrm * nrm);
+    return mult * diff.Cross(omega);
 }

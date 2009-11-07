@@ -303,4 +303,6 @@ public:
 
 /**************************************************************/
 void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel);
+Vect3 globalDirectVel(Vect3 diff, Vect3 omega);
+
 #endif /* if !defined(TYPES_INCL) */

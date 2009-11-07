@@ -1,5 +1,5 @@
 close all; clear all; clear mex;
-files = dir('f_b*.dat');
+files = dir('f_*.dat');
 val = 5.;
 s = size(files,1);
 
@@ -21,17 +21,18 @@ extract(fname,val);
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 hold all
 scatter3([0 0 0 0],[0 0 410 410],[-20 20 -20 20],[1 1 1 1],'white');
-view([0 90]);
+%view([0 90]);
+%view(3);
 axis([-30 50 0 250 -75 75]);
 axis equal off;
 
 %set(gca,'CameraUpVector',[-1 0 0])
-% axis equal tight; lighting phong; camlight right;
+axis equal tight; lighting phong; camlight right;
 %zoom(1.8);
 caxis([val 10])
 drawnow
 ViewParams = GetViewParams;
-camlight right
+%camlight right
 view(38.5,16);
 
 
@@ -54,19 +55,21 @@ if makemovie
         view(38.5,16);
         axis equal tight off; lighting phong; camlight right;
         %zoom(1.5);
-        view([0 90]);
+        %view([0 90]);
+        
 axis([-30 50 0 250 -75 75]);
 axis equal off;
 
-set(gca,'CameraUpVector',[-1 0 0])
+%set(gca,'CameraUpVector',[-1 0 0])
         drawnow
         caxis([val 10]);
+        view(38.5,16);
         drawnow;
         frame = getframe(fig);
         aviobj = addframe(aviobj,frame);
     end
     aviobj = close(aviobj); close all
-    command = ['mencoder temp.avi -oac mp3lame -lameopts cbr:br=128:vol=0 -srate 48000 -aid 1 -ovc lavc -sws 0 -lavcopts  threads=2:vcodec=mpeg4:vbitrate=940:keyint=240:vqmin=2:vqmax=15 -ofps 15.00 -vf scale=800:600 -noodml -ffourcc DIVX  -o output.avi'];
+    command = ['mencoder temp.avi -oac mp3lame -lameopts cbr:br=128:vol=0 -srate 48000 -aid 1 -ovc lavc -sws 0 -lavcopts  threads=2:vcodec=mpeg4:vbitrate=940:keyint=240:vqmin=2:vqmax=15 -ofps 15.00 -vf scale=1024:768 -noodml -ffourcc DIVX  -o output.avi'];
     system(command);
     
 end

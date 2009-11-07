@@ -53,7 +53,7 @@ public:
 
     PanelNeighbSet <bool> doSide;
 
-    PanelNeighbSet <REAL> gammaSide;
+    PanelNeighbSet <REAL> gammaSide, Ds, Theta;
         
     PANEL *OtherBoundarySurface, *Wake, *Shedder;
 

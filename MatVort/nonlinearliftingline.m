@@ -21,17 +21,17 @@ thetatip= 12;%1.815;%input('Please input tip twist angle in degrees   ');
 %%  Define some points
 
 %   Span lies along y axis, chord parallel to x axis
-n = 100;
+n = 101;
 cutout = 0;%1.257;
 
 
 
 
-RADIUS = linspace(0,span);
+RADIUS = linspace(0,span,n);
 
-CHORD = linspace(croot,ctip);
+CHORD = linspace(croot,ctip,n);
 
-THETA = linspace(thetaroot,thetatip);
+THETA = linspace(thetaroot,thetatip,n);
 
 radius = max(RADIUS);
 th0 = 0;% (3-THETA(end));
@@ -116,20 +116,24 @@ res = ones(5,1);
 uinfmag = sqrt(dot(uinf,uinf));
 mult = 1/(4*pi*uinfmag);
 gamma_input = 0.5*uinfmag.*C.*Cl;
-gamma_input =  sin(linspace(0,pi,n-1))';
-y = R - 0.5*10;
+gamma_input =  sin(linspace(0,pi,n-1))' + .1;
 while ~isdone
     %%  Calculate a new induced alpha
     %   Simpson quadrature
    
     abcissa = R;
    
-    f = gradient(gamma_input,dr);
+    
+    %f = gradient(gamma_input,dr);
+    
+    temp_g = interp1(R,gamma_input,RADIUS,'cubic',0);
+    f = diff(temp_g)./diff(RADIUS);
+    f = f';
     
     alpha_i = zeros(size(alpha_g));
     for i = 1:length(R);
-        DR = y(i) - y ;
         
+        DR = R(i) - R;
         fmod = f./DR;
         %%  remove singularity
         if i==1
@@ -161,11 +165,13 @@ while ~isdone
     
     count = count + 1;
     
-    gamma_input = gamma_input + 0.05*(gamma_new - gamma_input);
+    gamma_input = gamma_input + 0.01*(gamma_new - gamma_input);
     disp([count res(end)]);
 end
 
 hold all
-plot(R./max(R),gamma_input);
+plot(2*(.5-R./max(R)),Cl);
+axis([0 1 0 2])
+
 
 

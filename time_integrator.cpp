@@ -154,38 +154,42 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
 void TIME_STEPPER::time_loop() {
 
     if (first_step) {
-        globalSystem->SetupGlobalInfluenceMatrices();
-        dt = globalSystem->dtInit;
-        globalSystem->NumSubSteps = 10;
+    	globalSystem->NumSubSteps = 10;
+    	globalSystem->dtInit = .5;
+		for (int i = 0; i < globalSystem->NumBodies; ++i)
+			globalSystem->Bodies[i]->InitNascentWake(globalSystem->dtInit / globalSystem->NumSubSteps);
+		globalSystem->SetupGlobalInfluenceMatrices();
+		dt = globalSystem->dtInit;
+
         globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
         globalIO->write_m();
-        globalSystem->PutWakesInTree();
-        globalOctree->Reset();
-        globalOctree->InitVelsGetLaplacian();
-        globalOctree->GetVels();
+//        globalSystem->PutWakesInTree();
+//        globalOctree->Reset();
+//        globalOctree->InitVelsGetLaplacian();
+//        globalOctree->GetVels();
         first_step = false;
     }
 
-    time_step();
-    globalIO->stat_step();
-
-    globalOctree->FVM(); //  t = t0
-    globalOctree->Integrate(); //  t = t0 -> t1
-
-    globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
-
-    globalSystem->PutWakesInTree();
-    globalOctree->Reset();
-    globalOctree->InitVelsGetLaplacian();
-    globalOctree->GetVels();
-    globalSystem->GetPanelFMMVelocities();  //  t = t1
-    globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
-
-    if (globalTimeStepper->dump_next){
-//        globalSystem->WriteDomain();
-        globalSystem->WriteVorticity();
-//        globalOctree->Reset();
-    }
+//    time_step();
+//    globalIO->stat_step();
+//
+//    globalOctree->FVM(); //  t = t0
+//    globalOctree->Integrate(); //  t = t0 -> t1
+//
+//    globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
+//
+//    globalSystem->PutWakesInTree();
+//    globalOctree->Reset();
+//    globalOctree->InitVelsGetLaplacian();
+//    globalOctree->GetVels();
+//    globalSystem->GetPanelFMMVelocities();  //  t = t1
+//    globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
+//
+//    if (globalTimeStepper->dump_next){
+////        globalSystem->WriteDomain();
+//        globalSystem->WriteVorticity();
+////        globalOctree->Reset();
+//    }
 
 }
 /**************************************************************/

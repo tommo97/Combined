@@ -21,7 +21,7 @@ for i = 1:size(subs,1)
     W(subs(i,1),subs(i,2),subs(i,3)) = data(i,9);
 end
     
-U = U + 5;
+U = U + 10;
 
 X = X - min(X(:));
 

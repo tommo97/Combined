@@ -104,7 +104,8 @@ void SYSTEM::Initialise() {
     winf *= GambitScale;
     Vinf = Vect3(uinf, vinf, winf);
     Nu = GambitScale * GambitScale * Mu / Rho;
-    
+    Del2 *= GambitScale*GambitScale;
+    cout << GambitScale << endl;
     globalTimeStepper = new TIME_STEPPER();
 
     ReadNeuGetBodies();
@@ -113,19 +114,21 @@ void SYSTEM::Initialise() {
 
     globalOctree = new OCTREE();
 
-    for (int i = 0; i < NumBodies; ++i)
-        Bodies[i]->InitNascentWake(dtInit / NumSubSteps);
+
+
+    if (WRITE_TO_SCREEN) cout << "rho: " << Rho << "; mu: " << Mu << "; nu: " << Nu << endl;
+    if (WRITE_TO_SCREEN) cout << "Scale Factor: " << GambitScale << endl;
 
     globalTimeStepper->time_step();
 
 
-    cout << Rho << " " << Mu << " " << Nu << endl;
+
 }
 
 /**************************************************************/
 void SYSTEM::TimeStep() {
 
-    while (globalTimeStepper->t < globalTimeStepper->max_t)
+//    while (globalTimeStepper->t < globalTimeStepper->max_t)
         globalTimeStepper->time_loop();
 
     if (WRITE_TO_SCREEN) cout << "Finished at sim time: " << globalTimeStepper->t << endl;
@@ -186,7 +189,7 @@ void SYSTEM::SetupGlobalInfluenceMatrices() {
 #endif
     }
 
-
+//    PrintInfluenceMatrices();
 
 }
 
@@ -194,19 +197,15 @@ void SYSTEM::SetupGlobalInfluenceMatrices() {
 void SYSTEM::UpdateGlobalInfluenceMatrices() {
     long int t = ticks();
 #ifndef use_NCURSES
-    //    if (WRITE_TO_SCREEN) cout << "Calculating influence coefficients..." << endl;
+        if (WRITE_TO_SCREEN) cout << "Calculating influence coefficients..." << endl;
 #endif
-    //  Temporarily change globalSystem->Del2
 
-    REAL hold = globalSystem->Del2;
-    globalSystem->Del2 = 0.;
     for (int i = 0; i < (int) AllBodyPanels.size(); ++i) {
         for (int j = 0; j < (int) AllBodyPanels.size(); ++j) {
             REAL a = 0, b = 0;
             if (!LiftingLineMode) {
                 REAL PHI[2] = {0.};
                 AllBodyPanels[j]->SourceDoubletPotential(AllBodyPanels[i]->CollocationPoint, 1, 1, PHI);
-
                 a = PHI[0];
                 b = PHI[1];
                 if (AllBodyPanels[j]->isBound) {
@@ -221,7 +220,6 @@ void SYSTEM::UpdateGlobalInfluenceMatrices() {
                 b = 0.0;
                 if (i == j)
                     b = 1.0;
-
             }
 
 #ifdef USEGSL
@@ -249,9 +247,6 @@ void SYSTEM::UpdateGlobalInfluenceMatrices() {
     //    if (WRITE_TO_SCREEN) cout << " time elapsed: " << ticks() - t << endl;
 #endif
 #endif
-
-
-    globalSystem->Del2 = hold;
 }
 
 /**************************************************************/
@@ -419,12 +414,12 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
         for (int i = 0; i < NumBodies; ++i) {
 
             for (int j = 0; j < Bodies[i]->WakePoints.size(); ++j) {
-#ifdef _OPENMP
-#pragma omp parallel for default(none) shared(i,j,dt) private(Vwake, Vbody)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for default(none) shared(i,j,dt) private(Vwake, Vbody)
+//#endif
                 for (int k = 0; k < Bodies[i]->WakePoints[j].size(); ++k) {
-//                    for (int l = 0; l < NumBodies; ++l)
-//                        Vbody = Bodies[l]->GetVel(Bodies[i]->WakePoints[j][k]->vP);
+                    for (int l = 0; l < NumBodies; ++l)
+                        Vbody = Bodies[l]->GetVel(Bodies[i]->WakePoints[j][k]->vP);
 
                     Bodies[i]->WakePoints[j][k]->vV = (Vinf + Vbody);
 //                    Bodies[i]->WakePoints[j][k]->vV += globalOctree->TreeVel(Bodies[i]->WakePoints[j][k]->vP);
@@ -451,7 +446,7 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
 
         WriteBodies();
-        //        if (SubStep % 1 == 0) globalIO->write_m();
+//                if (SubStep % 1 == 0) globalIO->write_m();
 #ifndef USE_NCURSES
         // #ifdef DEBUG
         //        if (WRITE_TO_SCREEN) {
@@ -497,7 +492,7 @@ void SYSTEM::ReadNeuGetBodies() {
         P4->vO = P4->vP;
 
         PANEL *temp = new PANEL(P1, P2, P3, P4);
-
+        temp->ID = i+1;
         AllBodyPanels.push_back(temp);
 
     }
@@ -591,24 +586,28 @@ void SYSTEM::ReadNeuGetBodies() {
         if (AllBodyPanels[i]->Neighb.L) {
             REAL N1N2 = AllBodyPanels[i]->TRANS[2].Dot(AllBodyPanels[i]->Neighb.L->TRANS[2]);
             REAL costheta = N1N2 / (AllBodyPanels[i]->TRANS[2].Mag() * AllBodyPanels[i]->Neighb.L->TRANS[2].Mag());
+            AllBodyPanels[i]->Theta.L = costheta;
             costheta = min(fabs(costheta), 1.0);
             //                cout << "L " << costheta << " " << acos(costheta) << " " << RAD2DEG(acos(costheta)) << endl;
         }
         if (AllBodyPanels[i]->Neighb.R) {
             REAL N1N2 = AllBodyPanels[i]->TRANS[2].Dot(AllBodyPanels[i]->Neighb.R->TRANS[2]);
             REAL costheta = N1N2 / (AllBodyPanels[i]->TRANS[2].Mag() * AllBodyPanels[i]->Neighb.R->TRANS[2].Mag());
+            AllBodyPanels[i]->Theta.R = costheta;
             costheta = min(fabs(costheta), 1.0);
             //                cout << "R " << costheta << " " << acos(costheta) << " " << RAD2DEG(acos(costheta)) << endl;
         }
         if (AllBodyPanels[i]->Neighb.T) {
             REAL N1N2 = AllBodyPanels[i]->TRANS[2].Dot(AllBodyPanels[i]->Neighb.T->TRANS[2]);
             REAL costheta = N1N2 / (AllBodyPanels[i]->TRANS[2].Mag() * AllBodyPanels[i]->Neighb.T->TRANS[2].Mag());
+            AllBodyPanels[i]->Theta.T = costheta;
             costheta = min(fabs(costheta), 1.0);
             //                cout << "T " << costheta << " " << acos(costheta) << " " << RAD2DEG(acos(costheta)) << endl;
         }
         if (AllBodyPanels[i]->Neighb.B) {
             REAL N1N2 = AllBodyPanels[i]->TRANS[2].Dot(AllBodyPanels[i]->Neighb.B->TRANS[2]);
             REAL costheta = N1N2 / (AllBodyPanels[i]->TRANS[2].Mag() * AllBodyPanels[i]->Neighb.B->TRANS[2].Mag());
+            AllBodyPanels[i]->Theta.B = costheta;
             costheta = min(fabs(costheta), 1.0);
             //                cout << "B " << costheta << " " << acos(costheta) << " " << RAD2DEG(acos(costheta)) << endl;
         }
@@ -713,21 +712,23 @@ void SYSTEM::PrintBodiesVels() {
 /**************************************************************/
 void SYSTEM::PrintBodiesAndWakes() {
 #ifndef use_NCURSES
+    if (WRITE_TO_SCREEN) cout << "lighting phong" << endl << "set(gcf,'Renderer','OpenGL')" << endl;
+
     for (int i = 0; i < NumBodies; ++i) {
         Bodies[i]->PrintSurface();
         Bodies[i]->PrintWake();
     }
-    if (WRITE_TO_SCREEN) cout << "lighting phong" << endl << "set(gcf,'Renderer','zbuffer')" << endl;
 #endif
 }
 
 /**************************************************************/
 void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
+    if (WRITE_TO_FILE) out_stream << "lighting phong" << endl << "set(gcf,'Renderer','OpenGL')" << endl;
+
     for (int i = 0; i < NumBodies; ++i) {
         Bodies[i]->WriteSurface(out_stream);
         Bodies[i]->WriteWake(out_stream);
     }
-    if (WRITE_TO_FILE) out_stream << "lighting phong" << endl << "set(gcf,'Renderer','zbuffer')" << endl;
 }
 
 /**************************************************************/
@@ -832,51 +833,81 @@ void SYSTEM::WriteVorticity() {
 
 /**************************************************************/
 void SYSTEM::WriteBodies() {
-    stringstream outstream;
-    for (int i = 0; i < Bodies.size(); ++i){
-    	outstream << "Body(" << i+1 << ").Name = '" << Bodies[i]->Name << "';" << endl;
-    	outstream << "Body(" << i+1 << ").Body.Position = [" << Vect3(0.) << "];" << endl;
-    	outstream << "Body(" << i+1 << ").Body.Velocity = [" << Bodies[i]->CG.vV << "];" << endl;
-    	outstream << "Body(" << i+1 << ").Body.Attitude = [" << Vect3(0.) << "];" << endl;
-    	outstream << "Body(" << i+1 << ").Body.Rates = [" << Bodies[i]->BodyRates << "];" << endl;
-    	outstream << "Body(" << i+1 << ").Global.Position = [" << Bodies[i]->CG.vP << "];" << endl;
-    	outstream << "Body(" << i+1 << ").Global.Velocity = [" << Bodies[i]->CG.vV << "];" << endl;
-    	outstream << "Body(" << i+1 << ").Global.Attitude = [" << Bodies[i]->EulerAngles << "];" << endl;
-    	outstream << "Body(" << i+1 << ").Global.Rates = [" << Bodies[i]->EulerRates << "];" << endl;
-    	outstream << "Body(" << i+1 << ").Faces.C1.Body = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-    	outstream << "Body(" << i+1 << ").Faces.C2.Body = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-    	outstream << "Body(" << i+1 << ").Faces.C3.Body = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-    	outstream << "Body(" << i+1 << ").Faces.C4.Body = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-    	outstream << "Body(" << i+1 << ").Faces.C1.Global = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-    	outstream << "Body(" << i+1 << ").Faces.C2.Global = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-    	outstream << "Body(" << i+1 << ").Faces.C3.Global = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-    	outstream << "Body(" << i+1 << ").Faces.C4.Global = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-    	outstream << "Body(" << i+1 << ").Faces.Gamma = zeros(" << Bodies[i]->Faces.size() << ",1);" << endl;
-       	outstream << "Body(" << i+1 << ").Faces.Sigma = zeros(" << Bodies[i]->Faces.size() << ",1);" << endl;
-       	outstream << "Body(" << i+1 << ").Faces.Mu = zeros(" << Bodies[i]->Faces.size() << ",1);" << endl;
-       	outstream << "Body(" << i+1 << ").Faces.Alpha = zeros(" << Bodies[i]->Faces.size() << ",1);" << endl;
-       	outstream << "Body(" << i+1 << ").Faces.Global.VFMM = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-       	outstream << "Body(" << i+1 << ").Faces.Global.VInterp = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-       	outstream << "Body(" << i+1 << ").Faces.Global.VWake = zeros(" << Bodies[i]->Faces.size() << ",3);" << endl;
-    	for (int j = 0; j < Bodies[i]->Faces.size(); ++j)
-    	{
-    		outstream << "Body(" << i+1 << ").Faces.C1.Body(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vO << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.C2.Body(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C2->vO << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.C3.Body(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C3->vO << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.C4.Body(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C4->vO << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.C1.Global(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vP << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.C2.Global(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vP << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.C3.Global(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vP << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.C4.Global(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->C1->vP << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.Gamma(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->gamma << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.Mu(" << j + 1<< ",:) = [" << *(Bodies[i]->Faces[j]->sigma) << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.Sigma(" << j + 1<< ",:) = [" << *(Bodies[i]->Faces[j]->mu) << "];" << endl;
-    		outstream << "Body(" << i+1 << ").Faces.Alpha(" << j + 1<< ",:) = [" << Bodies[i]->Faces[j]->alpha << "];" << endl;
+
+    	ofstream fout("BodyData.bin", ios::out | ios::binary | ios::ate);
+    	if (!fout) {
+    		cout << "Cannot open file.\n";
+    	}
+    	int NumBodies = Bodies.size();
+
+    	fout.write((char *) &NumBodies, sizeof(int));
+
+    	for (int i = 0; i < NumBodies; ++i) {
+
+
+
+    		int NumFaces = Bodies[i]->Faces.size();
+    		int NameLength = Bodies[i]->Name.length();
+    		fout.write((char *) &NameLength, sizeof(int));
+    		fout.write((char *) Bodies[i]->Name.c_str(), sizeof(char[NameLength]));
+    		fout.write((char *) &NumFaces, sizeof(int));
+    		fout.write((char *) &Bodies[i]->CG.vP, sizeof(Vect3));
+    		fout.write((char *) &Bodies[i]->CG.vV, sizeof(Vect3));
+    		fout.write((char *) &Bodies[i]->EulerAngles, sizeof(Vect3));
+    		fout.write((char *) &Bodies[i]->BodyRates, sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->C1->vO, sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->C2->vO, sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->C3->vO, sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->C4->vO, sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->C1->vP, sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->C2->vP, sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->C3->vP, sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->C4->vP, sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->TRANS[0], sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->TRANS[1], sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    			fout.write((char *) &Bodies[i]->Faces[j]->TRANS[2], sizeof(Vect3));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    		    			fout.write((char *) &Bodies[i]->Faces[j]->Area, sizeof(REAL));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    		    			fout.write((char *) &Bodies[i]->Faces[j]->gamma, sizeof(REAL));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    		    		    			fout.write((char *) &Bodies[i]->Faces[j]->gamma_prev, sizeof(REAL));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    		    		    			fout.write((char *) &*(Bodies[i]->Faces[j]->mu), sizeof(REAL));
+
+    		for (int j = 0; j < NumFaces; ++j)
+    		    		    			fout.write((char *) &*(Bodies[i]->Faces[j]->sigma), sizeof(REAL));
 
     	}
-    }
 
-    globalIO->write_file(outstream, string("BodyData"), string("m"), false);
+    	fout.close();
+//    globalIO->write_binary_file(outstream, string("BodyData"), string("m"), false);
 }
 /**************************************************************/
 void SYSTEM::WritePanelVels() {
