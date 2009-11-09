@@ -705,6 +705,7 @@ void IO::write_GMSH() {
 
 /**************************************************************/
 void IO::WriteBinary() {
+/*
 	struct Body {
 		char Name[80];
 		int NPanels;
@@ -787,4 +788,5 @@ void IO::WriteBinary() {
 				fout.write((char *) &geom[i][j][k].z, sizeof(REAL));
 
 	fout.close();
+*/
 }
