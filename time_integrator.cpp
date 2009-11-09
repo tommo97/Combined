@@ -163,33 +163,33 @@ void TIME_STEPPER::time_loop() {
 
         globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
         globalIO->write_m();
-//        globalSystem->PutWakesInTree();
-//        globalOctree->Reset();
-//        globalOctree->InitVelsGetLaplacian();
-//        globalOctree->GetVels();
+        globalSystem->PutWakesInTree();
+        globalOctree->Reset();
+        globalOctree->InitVelsGetLaplacian();
+        globalOctree->GetVels();
         first_step = false;
     }
 
-//    time_step();
-//    globalIO->stat_step();
-//
-//    globalOctree->FVM(); //  t = t0
-//    globalOctree->Integrate(); //  t = t0 -> t1
-//
-//    globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
-//
-//    globalSystem->PutWakesInTree();
-//    globalOctree->Reset();
-//    globalOctree->InitVelsGetLaplacian();
-//    globalOctree->GetVels();
-//    globalSystem->GetPanelFMMVelocities();  //  t = t1
-//    globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
-//
-//    if (globalTimeStepper->dump_next){
-////        globalSystem->WriteDomain();
-//        globalSystem->WriteVorticity();
-////        globalOctree->Reset();
-//    }
+    time_step();
+    globalIO->stat_step();
+
+    globalOctree->FVM(); //  t = t0
+    globalOctree->Integrate(); //  t = t0 -> t1
+
+    globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
+
+    globalSystem->PutWakesInTree();
+    globalOctree->Reset();
+    globalOctree->InitVelsGetLaplacian();
+    globalOctree->GetVels();
+    globalSystem->GetPanelFMMVelocities();  //  t = t1
+    globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
+
+    if (globalTimeStepper->dump_next){
+//        globalSystem->WriteDomain();
+        globalSystem->WriteVorticity();
+//        globalOctree->Reset();
+    }
 
 }
 /**************************************************************/

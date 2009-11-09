@@ -748,19 +748,24 @@ void SYSTEM::PutWakesInTree() {
 
 /**************************************************************/
 void SYSTEM::GetFaceVels() {
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-        for (int i = 0; i < NumBodies; ++i)
-#ifdef COLLAPSE_TO_FACES
-            for (int k = 0; k < 6; ++k)
-                if ((k == 0) || (k == 2) || (k == 4) || !globalOctree->AllCells[j]->Neighb[k])
-                    globalOctree->AllCells[j]->FaceVels[k] +=
-                        Bodies[i]->GetVel(globalOctree->AllCells[j]->Position + Node::NeighbOffset[k]);
-#else
-            globalOctree->AllCells[j]->Velocity += Bodies[i]->GetVel(globalOctree->AllCells[j]->Position);
-#endif
+	for (int i = 0; i < NumBodies; ++i)
+		for (int j = 0; j < Bodies[i]->NumFaces; ++j)
+			globalOctree->Root->RecursivePanelVel(*(Bodies[i]->Faces[i]));
+
+	globalOctree->Root->RecursivePassPanelVelsDown();
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
+//    for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+//        for (int i = 0; i < NumBodies; ++i)
+//#ifdef COLLAPSE_TO_FACES
+//            for (int k = 0; k < 6; ++k)
+//                if ((k == 0) || (k == 2) || (k == 4) || !globalOctree->AllCells[j]->Neighb[k])
+//                    globalOctree->AllCells[j]->FaceVels[k] +=
+//                        Bodies[i]->GetVel(globalOctree->AllCells[j]->Position + Node::NeighbOffset[k]);
+//#else
+//            globalOctree->AllCells[j]->Velocity += Bodies[i]->GetVel(globalOctree->AllCells[j]->Position);
+//#endif
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif

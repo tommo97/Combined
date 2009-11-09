@@ -64,6 +64,10 @@ public:
     void GetVelField();
     void SetFieldsZero();
     void ReList();
+    void SetVelsZero()
+    {
+    	Velocity = 0.;
+    }
 };
 
 

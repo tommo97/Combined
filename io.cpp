@@ -788,4 +788,3 @@ void IO::WriteBinary() {
 
 	fout.close();
 }
-

@@ -28,40 +28,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 #include "tree.hpp"
-
+/**************************************************************/
 OCTREE::OCTREE() {
     Root = new Branch();
     Node::Root = Root;
     Root->UpdateMomentMults();
 }
-
+/**************************************************************/
 OCTREE::~OCTREE()
 {
     delete Root;
 }
-
+/**************************************************************/
 void OCTREE::InitVelsGetLaplacian() {
+	Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
     for (int i = 0; i < AllCells.size(); ++i){
-        AllCells[i]->SetVelsZero();
         AllCells[i]->GetLaplacian();
     }
 }
-
+/**************************************************************/
 void OCTREE::Prune() {
     Root->ApplyRecursively(&Node::DoNothing, &Node::DoNothing, &Node::Prune);
 }
-
+/**************************************************************/
 void OCTREE::GetSRad() {
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::ReportSpectralRadius, &Node::DoNothing);
 }
-
+/**************************************************************/
 void OCTREE::ClearNodes() {
     Root->ClearChildren();
 }
-
+/**************************************************************/
 void OCTREE::Reset() {
     Prune();
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
@@ -82,7 +82,7 @@ void OCTREE::Reset() {
     AllCells.assign(globalNum_FVMCELLS, NULL);
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::ReList, &Branch::ReList);
 }
-
+/**************************************************************/
 void OCTREE::FVM() {
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::O2UW, &Node::DoNothing);
@@ -114,7 +114,7 @@ void OCTREE::FVM() {
 //    }
 #endif
 }
-
+/**************************************************************/
 void OCTREE::Integrate() {
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::GetBEV, &Node::DoNothing);
@@ -142,7 +142,7 @@ void OCTREE::Integrate() {
 
 #endif
 }
-
+/**************************************************************/
 void OCTREE::GetVels() {
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::SetVelsZero, &Node::DoNothing);
@@ -192,7 +192,7 @@ void OCTREE::GetVels() {
 //    for (int i = 0; i < AllCells.size(); ++i)
 //        AllCells[i]->Report();
 }
-
+/**************************************************************/
 Vect3 OCTREE::TreeVel(Vect3 P) {
     OctreeCapsule C(P, Vect3(0,0,0), false);
     C.IP = true;
