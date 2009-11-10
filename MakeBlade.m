@@ -41,28 +41,28 @@ LowerS.z = repmat(LSz,[Blade.NSpan 1]);
 thetas = Blade.th0 + repmat(interp1(Blade.RADIUS,Blade.THETA,y,'cubic'),[1 Blade.NChord]);
 chords = repmat(interp1(Blade.RADIUS,Blade.CHORD,y,'cubic'),[1 Blade.NChord]);
 
-Upper.x = chords.*(UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
-Upper.y = UpperS.y;
-Upper.z = chords.*(UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas));
+Blade.Upper.x = chords.*(UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
+Blade.Upper.y = UpperS.y;
+Blade.Upper.z = chords.*(UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas));
 
-Lower.x = chords.*(LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
-Lower.y = LowerS.y;
-Lower.z = chords.*(LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas));
+Blade.Lower.x = chords.*(LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
+Blade.Lower.y = LowerS.y;
+Blade.Lower.z = chords.*(LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas));
 
 %%  Close ends
-Blade.Upper.x = [.5*(Upper.x(1,:) + Lower.x(1,:));...
-    Upper.x; .5*(Upper.x(end,:) + Lower.x(end,:))];
-Blade.Upper.y = [.5*(Upper.y(1,:) + Lower.y(1,:));...
-    Upper.y; .5*(Upper.y(end,:) + Lower.y(end,:))];
-Blade.Upper.z = [.5*(Upper.z(1,:) + Lower.z(1,:));...
-    Upper.z; .5*(Upper.z(end,:) + Lower.z(end,:))];
-
-Blade.Lower.x = [.5*(Upper.x(1,:) + Lower.x(1,:));...
-    Lower.x; .5*(Upper.x(end,:) + Lower.x(end,:))];
-Blade.Lower.y = [.5*(Upper.y(1,:) + Lower.y(1,:));...
-    Lower.y; .5*(Upper.y(end,:) + Lower.y(end,:))];
-Blade.Lower.z = [.5*(Upper.z(1,:) + Lower.z(1,:));...
-    Lower.z; .5*(Upper.z(end,:) + Lower.z(end,:))];
+% Blade.Upper.x = [.5*(Upper.x(1,:) + Lower.x(1,:));...
+%     Upper.x; .5*(Upper.x(end,:) + Lower.x(end,:))];
+% Blade.Upper.y = [.5*(Upper.y(1,:) + Lower.y(1,:));...
+%     Upper.y; .5*(Upper.y(end,:) + Lower.y(end,:))];
+% Blade.Upper.z = [.5*(Upper.z(1,:) + Lower.z(1,:));...
+%     Upper.z; .5*(Upper.z(end,:) + Lower.z(end,:))];
+% 
+% Blade.Lower.x = [.5*(Upper.x(1,:) + Lower.x(1,:));...
+%     Lower.x; .5*(Upper.x(end,:) + Lower.x(end,:))];
+% Blade.Lower.y = [.5*(Upper.y(1,:) + Lower.y(1,:));...
+%     Lower.y; .5*(Upper.y(end,:) + Lower.y(end,:))];
+% Blade.Lower.z = [.5*(Upper.z(1,:) + Lower.z(1,:));...
+%     Lower.z; .5*(Upper.z(end,:) + Lower.z(end,:))];
 %%  Wrap around
 Blade.Surface.Local.z = [fliplr(Blade.Lower.z) Blade.Upper.z(:,2:end-1)];
 Blade.Surface.Local.x = [fliplr(Blade.Lower.x) Blade.Upper.x(:,2:end-1)];
@@ -90,6 +90,6 @@ Blade.Panels.c3.Local = Blade.N.Local(2:end,2:end);
 Blade.Panels.c4.Local = Blade.N.Local(2:end,1:end-1);
 Blade.nPnls = numel(Blade.Panels.ID.Local);
 Blade.nPts = numel(Blade.X);
-Blade.Panels.WakeShedders.LS.Local = Blade.Panels.ID.Local(2:end-1,1);
-Blade.Panels.WakeShedders.US.Local = Blade.Panels.ID.Local(2:end-1,end);
+Blade.Panels.WakeShedders.LS.Local = Blade.Panels.ID.Local(1:end,1);
+Blade.Panels.WakeShedders.US.Local = Blade.Panels.ID.Local(1:end,end);
 

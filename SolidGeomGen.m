@@ -23,38 +23,38 @@ fname = [name '.neu'];
 
 %%  Geometry Parameters - Positions/Vels/Attitudes etc
 
-th0 = -3;
+th0 = 180;
 
-Vels{1} = [-10 0 0];
+Vels{1} = [-10 0 -2];
 Origin{1} = [0 0 0];
-Attitudes{1} = [pi/2 0 pi];
-Rates{1} = [0 0 7.5];
+Attitudes{1} = [0 0 pi];
+Rates{1} = [0 0 0];
 
 Vels{2} = [-10 0 0];
 Origin{2} = [0 0 0];
 Attitudes{2} = [deg2rad(180)+pi/2 0 pi];
-Rates{2} = [0 0 7.5];
+Rates{2} = [7.5 0 0];
 
 Vels{3} = [-10 0 0];
 Origin{3} = [0 0 0];
 Attitudes{3} = [deg2rad(240) 0 pi];
-Rates{3} = [0 0 7.5];
+Rates{3} = [7.5 0 0];
 
 
 %%  Geometry Parameters - make a template/skeleton blade
 NRELBlade.Attitude = [0 pi/2 0];
 NRELBlade.Origin = [0 0 0];
-NRELBlade.th0 = 90 + th0;
+NRELBlade.th0 =  th0;
 NRELBlade.PitchAxis = 0.3;
 %   Aerofoil
-NRELBlade.NChord = 10;
-NRELBlade.NSpan = 12;
+NRELBlade.NChord = 20;
+NRELBlade.NSpan = 20;
 %%  Aerofoil
 x = cumtrapz(1 - cos(linspace(0,pi,NRELBlade.NChord)).^2)/max(cumtrapz(1 - cos(linspace(0,pi,NRELBlade.NChord)).^2));
-x = linspace(0,1,NRELBlade.NChord);
+%x = linspace(0,1,NRELBlade.NChord);
 [Aerofoil z] = NRELFoil(x);
 
-NRELBlade.FOIL = z.S809;
+NRELBlade.FOIL = z.N0012;
 
 %%  NRELBlade -- NREL data
 RADIUS=[0.45;0.66;0.883;1.008;1.067;1.133;1.257;1.343;1.51;1.648;1.952;2.257;...
@@ -63,6 +63,11 @@ CHORD=[0.218;0.218;0.183;0.349;0.441;0.544;0.737;0.728;0.711;0.697;0.666;0.636;.
     0.627;0.605;0.574;0.543;0.542;0.512;0.482;0.457;0.451;0.42;0.389;0.381;0.358;0.355;0.355];
 THETA=[0;0;0;6.7;9.9;13.4;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
     3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-1.815;-1.815];
+
+
+RADIUS = linspace(0,10);
+THETA = 10*zeros(size(RADIUS));
+CHORD = 1*ones(size(RADIUS));
 
 NRELBlade.RADIUS = RADIUS;
 NRELBlade.CHORD = CHORD;
@@ -75,7 +80,7 @@ NRELBlade.THETA = THETA;
 hold on
 NumPanels = 0;
 NumPoints = 0;
-for i = 1:2
+for i = 1:1
     Blade = NRELBlade;
     Blade.Attitude = Attitudes{i};
     Blade.Velocity = Vels{i};
@@ -95,6 +100,7 @@ for i = 1:2
     Bodies{i}.Panels.WakeShedders.LS.Global = Bodies{i}.Panels.WakeShedders.LS.Local + NumPanels;
     NumPanels = NumPanels + numel(Bodies{i}.Panels.ID.Local);
     NumPoints = NumPoints + numel(Bodies{i}.X);
+    Attitudes{i} = [0 0 0];
 end
 
 %%  Prepare output to neutral file

@@ -54,7 +54,7 @@ lzmag = sqrt(dot(lz,lz,2));
 Bodies{i}.Faces.Area = .5*lzmag;
 Bodies{i}.Faces.LocalAxis.X.Body = [lx(:,1)./lxmag, lx(:,2)./lxmag, lx(:,3)./lxmag];
 Bodies{i}.Faces.LocalAxis.Z.Body = [lz(:,1)./lzmag, lz(:,2)./lzmag, lz(:,3)./lzmag];
-Bodies{i}.Faces.LocalAxis.Y.Body = cross(Bodies{i}.Faces.LocalAxis.Z.Body, Bodies{i}.Faces.LocalAxis.X.Body);
+Bodies{i}.Faces.LocalAxis.Y.Body = cross(Bodies{i}.Faces.LocalAxis.X.Body, Bodies{i}.Faces.LocalAxis.Z.Body);
 scatter3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3));
 quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
     Bodies{i}.Faces.LocalAxis.X.Body(:,1),Bodies{i}.Faces.LocalAxis.X.Body(:,2),Bodies{i}.Faces.LocalAxis.X.Body(:,3));
