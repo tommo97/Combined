@@ -3,6 +3,7 @@ cd ~/Desktop/Workspace/Combined
 
 dir2 = './case_files/';
 dir3 = './run_files/';
+dir4 = './mat_files/';
 commit = false;
 
 
@@ -17,7 +18,7 @@ Scale = 5;          %   Scaling is done in the simulation
 
 
 
-name = 'NREL_';
+name = 'Elliptic_';
 fname = [name '.neu'];
 
 
@@ -47,11 +48,11 @@ NRELBlade.Origin = [0 0 0];
 NRELBlade.th0 =  th0;
 NRELBlade.PitchAxis = 0.3;
 %   Aerofoil
-NRELBlade.NChord = 20;
-NRELBlade.NSpan = 20;
+NRELBlade.NChord = 10;
+NRELBlade.NSpan = 25;
 %%  Aerofoil
-x = cumtrapz(1 - cos(linspace(0,pi,NRELBlade.NChord)).^2)/max(cumtrapz(1 - cos(linspace(0,pi,NRELBlade.NChord)).^2));
-%x = linspace(0,1,NRELBlade.NChord);
+
+x = BellShape(0,1,NRELBlade.NChord,5);
 [Aerofoil z] = NRELFoil(x);
 
 NRELBlade.FOIL = z.N0012;
@@ -65,9 +66,14 @@ THETA=[0;0;0;6.7;9.9;13.4;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
     3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-1.815;-1.815];
 
 
-RADIUS = linspace(0,10);
+RADIUS = 5 + 5 * cos(linspace(0,pi));
 THETA = 10*zeros(size(RADIUS));
+
+
 CHORD = 1*ones(size(RADIUS));
+
+th = linspace(0,pi);
+CHORD = 2*sin(linspace(0,pi)) + .1;
 
 NRELBlade.RADIUS = RADIUS;
 NRELBlade.CHORD = CHORD;
@@ -86,11 +92,18 @@ for i = 1:1
     Blade.Velocity = Vels{i};
     Blade.Rates = Rates{i};
     Blade.Origin = Origin{i};
-    Bodies{i} = MakeBlade(Blade); 
-    surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local));
-    
-    Bodies{i}.Panels.ID.Global = Bodies{i}.Panels.ID.Local + NumPanels;
-    
+    Bodies{i} = MakeBlade(Blade);
+    S = zeros(size(Bodies{i}.X(Bodies{i}.N.Local)));
+    for j = 1:size(S,2)
+        S(:,j) = j;
+    end
+    surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),S);
+    hold on
+    surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.US.N.Local));
+    surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.LS.N.Local));
+    surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.US.N.Local));
+    surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.LS.N.Local));
+%     
     Bodies{i}.N.Global = Bodies{i}.N.Local + NumPoints;
     Bodies{i}.Panels.c1.Global = Bodies{i}.Panels.c1.Local + NumPoints;
     Bodies{i}.Panels.c2.Global = Bodies{i}.Panels.c2.Local + NumPoints;
@@ -98,7 +111,7 @@ for i = 1:1
     Bodies{i}.Panels.c4.Global = Bodies{i}.Panels.c4.Local + NumPoints;
     Bodies{i}.Panels.WakeShedders.US.Global = Bodies{i}.Panels.WakeShedders.US.Local + NumPanels;
     Bodies{i}.Panels.WakeShedders.LS.Global = Bodies{i}.Panels.WakeShedders.LS.Local + NumPanels;
-    NumPanels = NumPanels + numel(Bodies{i}.Panels.ID.Local);
+    NumPanels = NumPanels + numel(Bodies{i}.Panels.c1.Local);
     NumPoints = NumPoints + numel(Bodies{i}.X);
     Attitudes{i} = [0 0 0];
 end
@@ -156,6 +169,7 @@ if commit
         ' automatic commit of case/data/runfile for ' name '"']);
 end
 
+save([dir4 name '.mat'],'Bodies')
 
 axis equal tight
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');

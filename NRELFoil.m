@@ -63,5 +63,6 @@ z.S814.X = xin;
 z.S809.US = interp1(Aerofoil.S809.US.x,Aerofoil.S809.US.z,xin,'cubic');
 z.S809.LS = interp1(Aerofoil.S809.LS.x,Aerofoil.S809.LS.z,xin,'cubic');
 z.S809.X = xin;
+
 function y = N00xx(x)
     y = 5*[.2969, -.1260, -.3516, .2843, -.1015]*[sqrt(x);x;x.^2;x.^3;x.^4];

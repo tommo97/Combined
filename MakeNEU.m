@@ -105,6 +105,5 @@ end
 
 fprintf(fid,'\nENDOFSECTION\n BOUNDARY CONDITIONS 2.4.6\n\t\t\t\t%s\t1\t%g\t0\t6\n','WAKE',numel(W));
 fprintf(fid,'\t%g\t%g\t%g\n',W');
-disp(W);
 fprintf(fid,'ENDOFSECTION\n');
 fclose(fid);

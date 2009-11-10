@@ -1,9 +1,9 @@
-function test_ends()
+%function test_ends()
 %%  Aerofoil
 close all; clear all;
 n = 25;
 x = cumtrapz(1 - cos(linspace(0,pi,n)).^2)/max(cumtrapz(1 - cos(linspace(0,pi,n)).^2));
-%x = linspace(0,1,n);
+x = linspace(0,1,n);
 [Aerofoil z] = NRELFoil(x);
 d = cos(linspace(0,pi,n-1));
 

@@ -1,12 +1,12 @@
-fclose all;clear all;clc;
-
+fclose all;clear all;clc; close all;
+tic
 
 %%  Read in binary data
 fid = fopen('BodyData.bin', 'r');
 hold all
-
+load('./mat_files/Elliptic_.mat')
 NumBodies = fread(fid,1,'int');
-Bodies = cell(NumBodies,1);
+
 for i = 1:NumBodies
     %   The following line reads the integer with the length of the name,
     %   then reads that number of character for the name
@@ -55,16 +55,21 @@ Bodies{i}.Faces.Area = .5*lzmag;
 Bodies{i}.Faces.LocalAxis.X.Body = [lx(:,1)./lxmag, lx(:,2)./lxmag, lx(:,3)./lxmag];
 Bodies{i}.Faces.LocalAxis.Z.Body = [lz(:,1)./lzmag, lz(:,2)./lzmag, lz(:,3)./lzmag];
 Bodies{i}.Faces.LocalAxis.Y.Body = cross(Bodies{i}.Faces.LocalAxis.X.Body, Bodies{i}.Faces.LocalAxis.Z.Body);
-scatter3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3));
-quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-    Bodies{i}.Faces.LocalAxis.X.Body(:,1),Bodies{i}.Faces.LocalAxis.X.Body(:,2),Bodies{i}.Faces.LocalAxis.X.Body(:,3));
-quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-    Bodies{i}.Faces.LocalAxis.Y.Body(:,1),Bodies{i}.Faces.LocalAxis.Y.Body(:,2),Bodies{i}.Faces.LocalAxis.Y.Body(:,3));
-quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-    Bodies{i}.Faces.LocalAxis.Z.Body(:,1),Bodies{i}.Faces.LocalAxis.Z.Body(:,2),Bodies{i}.Faces.LocalAxis.Z.Body(:,3));
+% scatter3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3));
+% quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
+%     Bodies{i}.Faces.LocalAxis.X.Body(:,1),Bodies{i}.Faces.LocalAxis.X.Body(:,2),Bodies{i}.Faces.LocalAxis.X.Body(:,3));
+% quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
+%     Bodies{i}.Faces.LocalAxis.Y.Body(:,1),Bodies{i}.Faces.LocalAxis.Y.Body(:,2),Bodies{i}.Faces.LocalAxis.Y.Body(:,3));
+% quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
+%     Bodies{i}.Faces.LocalAxis.Z.Body(:,1),Bodies{i}.Faces.LocalAxis.Z.Body(:,2),Bodies{i}.Faces.LocalAxis.Z.Body(:,3));
+
+Bodies{i}.GammaDist = zeros(size(Bodies{1}.Panels.MainPans));
+Bodies{1}.GammaDist(:) = Bodies{i}.Faces.Gamma(1:max(Bodies{i}.Panels.MainPans(:)));
+surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),Bodies{i}.GammaDist);
 end
 
-
+axis equal;
 axis equal
 
 
+toc

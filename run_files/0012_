@@ -1,8 +1,0 @@
-#!/bin/sh
-#PBS -l nodes=1:ppn=4
-#PBS -m bea
-#PBS -M tom.mccombes@strath.ac.uk
-
-cd $PBS_O_WORKDIR
-nprocs=`wc -l $PBS_NODEFILE | awk '{ print $1 }'`
-/home/lap05140/./main 0012_.cas > dump_0012_
