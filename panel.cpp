@@ -61,7 +61,7 @@ PANEL::PANEL(POINT *P1, POINT *P2, POINT *P3, POINT *P4) : C1(P1), C2(P2), C3(P3
     mu_prev = gamma_prev = 0.0;
     Vfmm = Vect3(0.,0.,0.);
     Theta = 0.;
-    Ds = 0.;
+    Ds = Vn = 0.;
 }
 
 /**************************************************************/
@@ -136,17 +136,15 @@ void PANEL::GetNewGlobalPosition() {
     C4->vP = Owner->CG.vP + VectMultMatrix(Owner->TRANS, C4->vO);
 }
 
-/**************************************************************/
 void PANEL::GetCollocationPoint() {
     //      Centre point of panel (aka PV of panel centre from global origin)
-    Vect3 Centroid = 0.25 * (C1->vP + C2->vP + C3->vP + C4->vP);
-    CollocationPoint->vP = Centroid;
-//    if (globalSystem->LiftingLineMode)
-//        CollocationPoint->vP = .5*(Centroid + .5*(C1->vP+C4->vP));
+
+    Centroid = 0.25 * (C1->vP + C2->vP + C3->vP + C4->vP);
+
     //   First diagonal
-    Vect3 D1 = C3->vP - C1->vP;
+    Vect3 D1 = C2->vP - C4->vP;
     //   Second diagonal
-    Vect3 D2 = C4->vP - C2->vP;
+    Vect3 D2 = C3->vP - C1->vP;
     //   TRANS[2]
     Vect3 CR = D1.Cross(D2);
     //   local Z (aka unit normal)
@@ -155,29 +153,28 @@ void PANEL::GetCollocationPoint() {
 
     Area = 0.5 * CR.Mag();
 
-    //   PVs to midpoint of line 3,4 from panel centre (equivalent to 0.5*(Xcg[2]+Xcg[3])-CollocationPoint
-    Vect3 BR = 0.5 * (C3->vP + C4->vP) - CollocationPoint->vP;
-
-    chord = (.5*(C1->vP+C4->vP) - .5*(C2->vP+C3->vP)).Mag();
+    Vect3 BR = .5*(C1->vP + C4->vP) - .5*(C2->vP + C3->vP);
     //  Unit vectors of the same
     TRANS[1] = BR / BR.Mag();
     //    Get local X
     TRANS[0] = TRANS[1].Cross(TRANS[2]);
+
     MaxDiagonal = max(D1.Mag(), D2.Mag());
 
-    tang1 = .5*((C2->vP - C1->vP) + (C3->vP - C4->vP));
-    tang2 = .5*((C4->vP - C1->vP) + (C3->vP - C2->vP));
+    CollocationPoint->vP = Centroid - _EPS2 * CR;
+
 
     GetEdgeInfo();
 }
 
 /**************************************************************/
-void PANEL::SourceDoubletPotential(POINT *IP, REAL Mu, REAL Sigma, REAL Phi[]) {
+void PANEL::SourceDoubletPotential(POINT *IP, REAL Mu, REAL Sigma, REAL Phi[])
+{
     //      PV from panel centre to POI in local frame
-    Vect3 P = VectMultMatrix(TRANS, IP->vP - CollocationPoint->vP);
+    Vect3 P = VectMultMatrix(TRANS, IP->vP - Centroid);
     REAL MagP = P.Mag();
 
-    if (MagP < FarField * MaxDiagonal) {
+//    if (MagP < FarField * MaxDiagonal) {
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
         REAL Pz2 = P.z * P.z;
 
@@ -185,33 +182,75 @@ void PANEL::SourceDoubletPotential(POINT *IP, REAL Mu, REAL Sigma, REAL Phi[]) {
         Vect4 w(dX1.y * dX1.y, dX2.y * dX2.y, dX3.y * dX3.y, dX4.y * dX4.y);
         Vect4 h(dX1.x * dX1.y, dX2.x * dX2.y, dX3.x * dX3.y, dX4.x * dX4.y);
 
-        
+
         Vect4 r = sqrt(e + w);
 
         REAL aPz = sqrt(Pz2);
 
-        Vect4 T = atan2(M * e - h, aPz * r) - atan2(M * permute_1(e) - permute_1(h), aPz * permute_1(r));
+        Vect4 alpha, beta, Pzr;
 
-        Phi[0] = -Mu * sum(T) / (four_pi);
+        Pzr = P.z * r;
 
+        alpha = (M * e - h) / Pzr;
+        beta = (M * permute_1(e) - permute_1(h)) / permute_1(Pzr);
+        Vect4 Num = alpha - beta;
+        Vect4 Denom = alpha * beta + 1;
+
+        REAL T = 0;
+
+//        if (MagP == 0)
+//            Phi[0] = -two_pi;
+//        else
+//            Phi[0] = Mu / 2;
+
+
+//        if (aPz > 0) {
+//            //  This is basically all the arctan terms rolled into one atan2 call using double angle formulas
+//            //  atan2 does not seem to cascade.....
+//            Vect4 Pzr = P.z * r;
+//            Vect4 alpha = (M * e - h) / Pzr;
+//            Vect4 beta = (M * permute_1(e) - permute_1(h)) / permute_1(Pzr);
+//            Vect4 delta = alpha - beta;
+//            Vect4 A = (alpha - beta) / (1 + alpha * beta);
+//            REAL X = (A.a + A.b) / (1 - A.a * A.b);
+//            REAL Y = (A.c + A.d) / (1 - A.c * A.d);
+//            T = atan((X + Y)/(1 - X * Y));
+//            Phi[0] = Mu * T / (four_pi);
+//        }
+
+
+//        REAL temp = T;
+
+
+
+        if (aPz > 0) {
+            T = 0;
+            if (Num.a != 0.) T += atan2(Num.a, Denom.a);
+            if (Num.b != 0.) T += atan2(Num.b, Denom.b);
+            if (Num.c != 0.) T += atan2(Num.c, Denom.c);
+            if (Num.d != 0.) T += atan2(Num.d, Denom.d);
+            Phi[0] = Mu * T / (four_pi);
+        }
+
+//        if (fabs(temp - T) > 1e-3)  cout << T << " " << temp << endl;
         REAL B = 0;
-        B += (D.a == 0.0) ? 0.0 : ((dX1.x * DY.a - dX1.y * DX.a) * log((r.a + r.b + D.a) / (r.a + r.b - D.a))) / D.a;
-        B += (D.b == 0.0) ? 0.0 : ((dX2.x * DY.b - dX2.y * DX.b) * log((r.b + r.c + D.b) / (r.b + r.c - D.b))) / D.b;
-        B += (D.c == 0.0) ? 0.0 : ((dX3.x * DY.c - dX3.y * DX.c) * log((r.c + r.d + D.c) / (r.c + r.d - D.c))) / D.c;
-        B += (D.d == 0.0) ? 0.0 : ((dX4.x * DY.d - dX4.y * DX.d) * log((r.d + r.a + D.d) / (r.d + r.a - D.d))) / D.d;
+        B += (D.a == 0. && (r.a + r.b - D.a) > 0.) ? 0.0 : ((dX1.x * DY.a - dX1.y * DX.a) * log((r.a + r.b + D.a) / (r.a + r.b - D.a))) / D.a;
+        B += (D.b == 0. && (r.b + r.c - D.b) > 0.) ? 0.0 : ((dX2.x * DY.b - dX2.y * DX.b) * log((r.b + r.c + D.b) / (r.b + r.c - D.b))) / D.b;
+        B += (D.c == 0. && (r.c + r.d - D.c) > 0.) ? 0.0 : ((dX3.x * DY.c - dX3.y * DX.c) * log((r.c + r.d + D.c) / (r.c + r.d - D.c))) / D.c;
+        B += (D.d == 0. && (r.d + r.a - D.d) > 0.) ? 0.0 : ((dX4.x * DY.d - dX4.y * DX.d) * log((r.d + r.a + D.d) / (r.d + r.a - D.d))) / D.d;
 
-        Phi[1] = -Sigma * (B + aPz * sum(T)) / (four_pi);
-    } else {
-        Phi[0] = Mu * Area * fabs(P.z) / (MagP * MagP * MagP * four_pi);
-        Phi[1] = Sigma * Area / (MagP * four_pi);
-    }
+        Phi[1] = Sigma * (B - P.z * T) / (four_pi);
+//    } else {
+//        Phi[0] = - Mu * Area * fabs(P.z) / (MagP * MagP * MagP * four_pi);
+//        Phi[1] = - Sigma * Area / (MagP * four_pi);
+//    }
 }
 
 /**************************************************************/
-Vect3 PANEL::SourceVel(Vect3 pTarget, REAL Sigma) {
+Vect3 PANEL::SourceVel(Vect3 pTarget) {
     //      PV from panel centre to POI in local frame
-    Vect3 P = VectMultMatrix(TRANS, pTarget - CollocationPoint->vP);
-    REAL MagP = P.Mag(), Mult = Sigma / four_pi;
+    Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
+    REAL MagP = P.Mag(), Mult = *sigma / four_pi;
 
     if (MagP < FarField * MaxDiagonal) {
 
@@ -225,39 +264,51 @@ Vect3 PANEL::SourceVel(Vect3 pTarget, REAL Sigma) {
 
         Vect4 r = sqrt(e + w);
 
+        Vect4 alpha, beta, Pzr;
         REAL aPz = sqrt(Pz2);
-        Vect4 T = atan2(M * e - h, aPz * r) - atan2(M * permute_1(e) - permute_1(h), aPz * permute_1(r));
+
+        Pzr = P.z * r;
+        alpha = (M * e - h) / Pzr;
+        beta = (M * permute_1(e) - permute_1(h)) / permute_1(Pzr);
+        Vect4 Num = alpha - beta;
+        Vect4 Denom = alpha * beta + 1;
+
+        REAL T = 0;
+
+        if (aPz > 0) {
+            T = 0;
+            if (Num.a != 0.) T += atan2(Num.a, Denom.a);
+            if (Num.b != 0.) T += atan2(Num.b, Denom.b);
+            if (Num.c != 0.) T += atan2(Num.c, Denom.c);
+            if (Num.d != 0.) T += atan2(Num.d, Denom.d);
+        }
+
         Vect4 B((D.a == 0.0) ? 0.0 : log((r.a + r.b - D.a) / (r.a + r.b + D.a)) / D.a,
                 (D.b == 0.0) ? 0.0 : log((r.b + r.c - D.b) / (r.b + r.c + D.b)) / D.b,
                 (D.c == 0.0) ? 0.0 : log((r.c + r.d - D.c) / (r.c + r.d + D.c)) / D.c,
                 (D.d == 0.0) ? 0.0 : log((r.d + r.a - D.d) / (r.d + r.a + D.d)) / D.d);
 
         //  This return value has been changed......
-        return VectMultMatrixTranspose(TRANS, Vect3(sum(B * DY) * Mult, sum(B * DX) * Mult, sum(T) * Mult));
+        return VectMultMatrixTranspose(TRANS, Vect3(sum(B * DY) * Mult, sum(B * DX) * Mult, T * Mult));
     } else
         return VectMultMatrixTranspose(TRANS, Mult * Area * P / (MagP * MagP * MagP));
 
-}
-/**************************************************************/
-Vect3 PANEL::SourceVel(Vect3 pTarget)
-{
-    return SourceVel(pTarget, *(this->sigma));
 }
 /**************************************************************/
 void PANEL::WakeNeighbSet() {
     doSide = true;
     gammaSide = gamma;
     
-        if (Neighb.B) {
-            doSide.B = false;
-            Neighb.B->gammaSide.T = Neighb.B->gamma - gamma;
-        }
-        if (Neighb.R) {
-            doSide.R = false;
-            Neighb.R->gammaSide.L = Neighb.R->gamma - gamma;
-        }
-        if (Neighb.L) gammaSide.L -= Neighb.L->gamma;
-        if (Neighb.T) gammaSide.T -= Neighb.T->gamma;
+//        if (Neighb.B) {
+//            doSide.B = false;
+//            Neighb.B->gammaSide.T = Neighb.B->gamma - gamma;
+//        }
+//        if (Neighb.R) {
+//            doSide.R = false;
+//            Neighb.R->gammaSide.L = Neighb.R->gamma - gamma;
+//        }
+//        if (Neighb.L) gammaSide.L -= Neighb.L->gamma;
+//        if (Neighb.T) gammaSide.T -= Neighb.T->gamma;
 }
 
 /**************************************************************/

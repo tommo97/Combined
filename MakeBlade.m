@@ -29,7 +29,7 @@ Rmax = max(Blade.RADIUS);
 
 
 y = BellShape(Rmin,Rmax,Blade.NSpan,5)';
-
+%y = linspace(Rmin,Rmax,Blade.NSpan)'
 
 
 
@@ -54,19 +54,26 @@ Blade.Lower.x = chords.*(LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
 Blade.Lower.y = LowerS.y;
 Blade.Lower.z = chords.*(LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas));
 
+Blade.Upper.x = Blade.Upper.x - min(min(Blade.Upper.x(:),min(Blade.Lower.x(:))));
+Blade.Lower.x = Blade.Lower.x - min(min(Blade.Upper.x(:),min(Blade.Lower.x(:))));
 %%  Close ends - make some caps
 d = cos(linspace(0,pi,Blade.NChord-1));
 
 xi = .5*(Blade.Upper.x(1,:) + Blade.Lower.x(1,:));
-yi = .5*(Blade.Upper.y(1,:) + Blade.Lower.y(1,:));
+yi = .5*(Blade.Upper.y(1,:) + Blade.Lower.y(1,:));% - 0.1*sin(linspace(0,pi,Blade.NChord));
 zi = .5*(Blade.Upper.z(1,:) + Blade.Lower.z(1,:));
 
 xo = .5*(Blade.Upper.x(end,:) + Blade.Lower.x(end,:));
-yo = .5*(Blade.Upper.y(end,:) + Blade.Lower.y(end,:));
+yo = .5*(Blade.Upper.y(end,:) + Blade.Lower.y(end,:));% + 0.1*sin(linspace(0,pi,Blade.NChord));
 zo = .5*(Blade.Upper.z(end,:) + Blade.Lower.z(end,:));
 
 xi = [xi(1) xi(2:end)+linspace(1,0,Blade.NChord-1).*d.*diff(xi)];
 xo = [xo(1) xo(2:end)+linspace(1,0,Blade.NChord-1).*d.*diff(xo)];
+
+% 
+% xi = [xi(1) xi(1)+1.25*(xi(2)-xi(1)) xi(3:end-2) xi(end)+1.25*(xi(end-1)-xi(end)) xi(end)];
+% xo = [xo(1) xo(1)+1.25*(xo(2)-xo(1)) xo(3:end-2) xo(end)+1.25*(xo(end-1)-xo(end)) xo(end)];
+% 
 
 Blade.US.Local.x = [xi;Blade.Upper.x;xo];
 Blade.US.Local.y = [yi;Blade.Upper.y;yo];
@@ -132,13 +139,6 @@ Blade.Z = X(m,3);
 Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
 %   Tips
 
-fliplr(LS.UN(1:2,2:end-1)) 
-US.UN(1:2,:)
-t1 = flipud([   166   144   122   119    98    76    54    51;
-   186   164   142   120    96    74    52    30]);
-t2 = [30    51    54    76    98   119   122   144   166   186;
-    10    29    50    73    95   118   141   163   185   196];
-
 Blade.Tip.Inboard.US.N.Local = US.UN(1:2,:);
 Blade.Tip.Outboard.US.N.Local = US.UN(end-1:end,:);
 Blade.Tip.Inboard.LS.N.Local = LS.UN(1:2,2:end-1);
@@ -149,11 +149,12 @@ Blade.Tip.Outboard.LS.N.Local = LS.UN(end-1:end,2:end-1);
 MainPans = zeros(size(Blade.N.Local) - 1);
 
 MainPans(:) = 1:numel(MainPans);
+
 [tc1 tc2 tc3 tc4] = fcorner(Blade.N.Local);
 [tiu1 tiu2 tiu3 tiu4] = fcorner(Blade.Tip.Inboard.US.N.Local);
-[til1 til2 til3 til4] = fcorner(Blade.Tip.Inboard.LS.N.Local);
+[til4 til3 til2 til1] = fcorner(Blade.Tip.Inboard.LS.N.Local);
 [tou1 tou2 tou3 tou4] = fcorner(Blade.Tip.Outboard.US.N.Local);
-[tol1 tol2 tol3 tol4] = fcorner(Blade.Tip.Outboard.LS.N.Local);
+[tol4 tol3 tol2 tol1] = fcorner(Blade.Tip.Outboard.LS.N.Local);
 
 
 

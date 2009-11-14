@@ -154,7 +154,7 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
 void TIME_STEPPER::time_loop() {
 
     if (first_step) {
-    	globalSystem->NumSubSteps = 50;
+    	globalSystem->NumSubSteps = 2;
     	globalSystem->dtInit = .5;
 		for (int i = 0; i < globalSystem->NumBodies; ++i)
 			globalSystem->Bodies[i]->InitNascentWake(globalSystem->dtInit / globalSystem->NumSubSteps);

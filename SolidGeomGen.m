@@ -13,12 +13,12 @@ split = true;
 %%  Simulation Parameters
 num_procs = 4;
 MaxP = 3;
-Scale = 5;          %   Scaling is done in the simulation
+Scale = 1;          %   Scaling is done in the simulation
 
 
 
 
-name = 'Elliptic_';
+name = 'Straight_';
 fname = [name '.neu'];
 
 
@@ -26,7 +26,7 @@ fname = [name '.neu'];
 
 th0 = 180;
 
-Vels{1} = [-10 0 -2];
+Vels{1} = [-10 0 .1];
 Origin{1} = [0 0 0];
 Attitudes{1} = [0 0 pi];
 Rates{1} = [0 0 0];
@@ -48,11 +48,12 @@ NRELBlade.Origin = [0 0 0];
 NRELBlade.th0 =  th0;
 NRELBlade.PitchAxis = 0.3;
 %   Aerofoil
-NRELBlade.NChord = 10;
-NRELBlade.NSpan = 25;
+NRELBlade.NChord = 25;
+NRELBlade.NSpan = 26;
 %%  Aerofoil
 
 x = BellShape(0,1,NRELBlade.NChord,5);
+%x = linspace(0,1,NRELBlade.NChord);
 [Aerofoil z] = NRELFoil(x);
 
 NRELBlade.FOIL = z.N0012;
@@ -66,14 +67,14 @@ THETA=[0;0;0;6.7;9.9;13.4;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
     3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-1.815;-1.815];
 
 
-RADIUS = 5 + 5 * cos(linspace(0,pi));
+RADIUS = linspace(-5,5);
 THETA = 10*zeros(size(RADIUS));
 
 
 CHORD = 1*ones(size(RADIUS));
 
 th = linspace(0,pi);
-CHORD = 2*sin(linspace(0,pi)) + .1;
+%CHORD = 2*sin(linspace(0,pi)) + .1;
 
 NRELBlade.RADIUS = RADIUS;
 NRELBlade.CHORD = CHORD;
@@ -97,13 +98,13 @@ for i = 1:1
     for j = 1:size(S,2)
         S(:,j) = j;
     end
-    surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),S);
+    %surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),S);
     hold on
-    surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.US.N.Local));
-    surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.LS.N.Local));
-    surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.US.N.Local));
-    surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.LS.N.Local));
-%     
+%     surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.US.N.Local));
+%     surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.LS.N.Local));
+%     surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.US.N.Local));
+%     surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.LS.N.Local));
+    %
     Bodies{i}.N.Global = Bodies{i}.N.Local + NumPoints;
     Bodies{i}.Panels.c1.Global = Bodies{i}.Panels.c1.Local + NumPoints;
     Bodies{i}.Panels.c2.Global = Bodies{i}.Panels.c2.Local + NumPoints;
@@ -114,6 +115,56 @@ for i = 1:1
     NumPanels = NumPanels + numel(Bodies{i}.Panels.c1.Local);
     NumPoints = NumPoints + numel(Bodies{i}.X);
     Attitudes{i} = [0 0 0];
+    %   The following are some TINY errors, they serve to make the
+    %   influence coefficient matrices non-singular. Why and how are
+    %   unknown to me...
+    %     Bodies{i}.X = Bodies{i}.X + rand*1e-16;
+    %     Bodies{i}.Y = Bodies{i}.Y + rand*1e-16;
+    %     Bodies{i}.Z = Bodies{i}.Z + rand*1e-16;
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    Bodies{i}.Faces.C1.Body = [Bodies{i}.X(Bodies{i}.Panels.c1.Global) Bodies{i}.Y(Bodies{i}.Panels.c1.Global) Bodies{i}.Z(Bodies{i}.Panels.c1.Global)];
+    Bodies{i}.Faces.C2.Body = [Bodies{i}.X(Bodies{i}.Panels.c2.Global) Bodies{i}.Y(Bodies{i}.Panels.c2.Global) Bodies{i}.Z(Bodies{i}.Panels.c2.Global)];
+    Bodies{i}.Faces.C3.Body = [Bodies{i}.X(Bodies{i}.Panels.c3.Global) Bodies{i}.Y(Bodies{i}.Panels.c3.Global) Bodies{i}.Z(Bodies{i}.Panels.c3.Global)];
+    Bodies{i}.Faces.C4.Body = [Bodies{i}.X(Bodies{i}.Panels.c4.Global) Bodies{i}.Y(Bodies{i}.Panels.c4.Global) Bodies{i}.Z(Bodies{i}.Panels.c4.Global)];
+    
+    Bodies{i}.Faces.CP.Body = .25*(Bodies{i}.Faces.C1.Body + Bodies{i}.Faces.C2.Body +...
+        Bodies{i}.Faces.C3.Body + Bodies{i}.Faces.C4.Body);
+    Bodies{i}.Faces.D1.Body = Bodies{i}.Faces.C3.Body - Bodies{i}.Faces.C1.Body;
+    Bodies{i}.Faces.D2.Body = Bodies{i}.Faces.C4.Body - Bodies{i}.Faces.C2.Body;
+    
+    
+    ly =  .5*(Bodies{i}.Faces.C1.Body+Bodies{i}.Faces.C4.Body) - .5*(Bodies{i}.Faces.C2.Body+Bodies{i}.Faces.C3.Body);
+    lymag = sqrt(dot(ly,ly,2));
+    lz = cross(Bodies{i}.Faces.C2.Body-Bodies{i}.Faces.C4.Body, Bodies{i}.Faces.C3.Body-Bodies{i}.Faces.C1.Body);
+    lzmag = sqrt(dot(lz,lz,2));
+    Bodies{i}.Faces.Area = .5*lzmag;
+    Bodies{i}.Faces.LocalAxis.Y.Body = [ly(:,1)./lymag, ly(:,2)./lymag, ly(:,3)./lymag];
+    Bodies{i}.Faces.LocalAxis.Z.Body = [lz(:,1)./lzmag, lz(:,2)./lzmag, lz(:,3)./lzmag];
+    Bodies{i}.Faces.LocalAxis.X.Body = cross(Bodies{i}.Faces.LocalAxis.Y.Body, Bodies{i}.Faces.LocalAxis.Z.Body);
+    scatter3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3));
+    quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
+        Bodies{i}.Faces.LocalAxis.X.Body(:,1),Bodies{i}.Faces.LocalAxis.X.Body(:,2),Bodies{i}.Faces.LocalAxis.X.Body(:,3),'green');
+    quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
+        Bodies{i}.Faces.LocalAxis.Y.Body(:,1),Bodies{i}.Faces.LocalAxis.Y.Body(:,2),Bodies{i}.Faces.LocalAxis.Y.Body(:,3),'red');
+    quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
+        Bodies{i}.Faces.LocalAxis.Z.Body(:,1),Bodies{i}.Faces.LocalAxis.Z.Body(:,2),Bodies{i}.Faces.LocalAxis.Z.Body(:,3),'blue');
+    
+    
+    
+    
+    
+    
+    
+    
 end
 
 %%  Prepare output to neutral file

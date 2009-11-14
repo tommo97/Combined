@@ -199,7 +199,6 @@ void SYSTEM::UpdateGlobalInfluenceMatrices() {
 #ifndef use_NCURSES
         if (WRITE_TO_SCREEN) cout << "Calculating influence coefficients..." << endl;
 #endif
-
     for (int i = 0; i < (int) AllBodyPanels.size(); ++i) {
         for (int j = 0; j < (int) AllBodyPanels.size(); ++j) {
             REAL a = 0, b = 0;
@@ -229,6 +228,8 @@ void SYSTEM::UpdateGlobalInfluenceMatrices() {
             A[i][j] = a;
             B[i][j] = b;
 #endif
+
+//            cout << i+1 << " " << j+1 << " " << a << " " << b << endl;
         }
     }
 #ifndef use_NCURSES
@@ -318,7 +319,9 @@ void SYSTEM::GetGlobalRHS() {
 
         AllBodyPanels[i]->CollocationPoint->vV = V;
 
-        REAL Vn = V.Dot(AllBodyPanels[i]->TRANS[2]);
+
+
+        REAL Vn = AllBodyPanels[i]->Vn = V.Dot(AllBodyPanels[i]->TRANS[2]);
 
         REAL Vt1 = V.Dot(AllBodyPanels[i]->TRANS[0]), Vt2 = V.Dot(AllBodyPanels[i]->TRANS[1]);
 
@@ -334,7 +337,10 @@ void SYSTEM::GetGlobalRHS() {
     }
 
 #ifndef USEGSL
-    for (int i = 0; i < NumBodyPanels; ++i) for (int j = 0; j < NumBodyPanels; ++j) rhs[i] += B[i][j] * sigma[j];
+    for (int i = 0; i < NumBodyPanels; ++i)
+    	for (int j = 0; j < NumBodyPanels; ++j){
+    		rhs[i] += B[i][j] * sigma[j];
+    	}
 #else
     REAL alpha = 1.0, beta = 0.0;
 #ifdef DOUBLE_PRECISION
@@ -353,39 +359,36 @@ void SYSTEM::LinAlg() {
         AllBodyPanels[i]->mu_prev = AllBodyPanels[i]->gamma_prev = *(AllBodyPanels[i]->mu);
     }
 
-#ifndef use_NCURSES
-#ifdef DEBUG
-    long int t = ticks();
-#endif
-#endif
-
 #ifdef USEGSL
     gsl_linalg_LU_solve(globalA, globalP, globalRHS, globalMu);
 #else
     pgesv(A, rhs, NumBodyPanels, mu);
 #endif
-#ifndef use_NCURSES
-#ifdef DEBUG
-    if (WRITE_TO_SCREEN) cout << "Linear algebra took: " << ticks() - t << endl;
-#endif
-#endif
+
     for (int i = 0; i < (int) AllBodyPanels.size(); ++i)
         AllBodyPanels[i]->gamma = *(AllBodyPanels[i]->mu);
-
 
     for (int i = 0; i < NumBodies; ++i)
         for (int j = 0; j < (int) Bodies[i]->ProtoWake.size(); ++j) {
             Bodies[i]->ProtoWake[j]->gamma_prev = Bodies[i]->ProtoWake[j]->gamma;
             if (!LiftingLineMode)
+            {
                 Bodies[i]->ProtoWake[j]->gamma = Bodies[i]->ProtoWake[j]->Shedder->OtherBoundarySurface->gamma -
                     Bodies[i]->ProtoWake[j]->Shedder->gamma;
+            }
             else
                 Bodies[i]->ProtoWake[j]->gamma = Bodies[i]->ProtoWake[j]->Shedder->gamma;
         }
 
+    for (int i = 0; i < Bodies[0]->BoundaryFaces.size(); ++i){
+    	cout << Bodies[0]->BoundaryFaces[i]->gamma << " " <<  Bodies[0]->BoundaryFaces[i]->OtherBoundarySurface->gamma;
+    	cout << " " << Bodies[0]->BoundaryFaces[i]->OtherBoundarySurface->Vn << " " << Bodies[0]->BoundaryFaces[i]->Vn << endl;
+    }
+
     for (int i = 0; i < NumBodies; ++i)
         for (int j = 0; j < (int) Bodies[i]->ProtoWake.size(); ++j)
             Bodies[i]->ProtoWake[j]->WakeNeighbSet();
+
 }
 
 /**************************************************************/
@@ -393,14 +396,6 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
     unsigned long int t0 = ticks();
     REAL dt = delta_t / n_steps;
-    //    cout << "dt " << dt << " " << n_steps << endl;
-
-
-    //    for (int i = 0; i < (int) AllBodyPanels.size(); ++i)
-    //        AllBodyPanels[i]->VelInterp = globalLinspace(AllBodyPanels[i]->CollocationPoint->vVfmm[0],AllBodyPanels[i]->CollocationPoint->vVfmm[1],n_steps);
-
-
-
 
     for (int SubStep = 1; SubStep <= n_steps; ++SubStep) {
 
@@ -444,7 +439,7 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
             Bodies[j]->DissolveWake(dt);
 
 
-
+        globalIO->write_m();
         WriteBodies();
 //                if (SubStep % 1 == 0) globalIO->write_m();
 #ifndef USE_NCURSES

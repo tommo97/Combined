@@ -297,8 +297,6 @@ void BODY::GetPanels(Array <int> &GROUP, Array <PANEL*> &PANELS) {
             }
         }
     }
-    //	Now for each top panel, create a proto-wake panel
-
 
     if (NumFaces == BoundaryFaces.size()) {
 #ifndef use_NCURSES
@@ -506,8 +504,8 @@ Vect3 BODY::GetWakeVel(Vect3 Target) {
 
 /**************************************************************/
 void BODY::DissolveWake(REAL dt) {
-    Array <REAL> R, G, GP;
-    Array <Vect3> DR, V, X;
+    Array <REAL> R, RR, G, GG, GP, GPGP;
+    Array <Vect3> DR, DRDR, V, VV, X, XX;
     Vect3 Start, End;
 
     Vect3 Vinf(globalSystem->uinf, globalSystem->vinf, globalSystem->winf);
@@ -533,9 +531,13 @@ void BODY::DissolveWake(REAL dt) {
 
     for (int i = 0; i < ProtoWake.size(); ++i) {
         PANEL *temp_pan = ProtoWake[i];
-
+        Vect3 S1,S2;
         if (!ProtoWake[i]->Neighb.B) {
-            Start = .5 * (temp_pan->C4->vP + temp_pan->C1->vP);
+            Start = S1 = .5 * (temp_pan->C4->vP + temp_pan->C1->vP);
+            S2 = .5 * (temp_pan->C2->vP + temp_pan->C3->vP);
+            XX.push_back(S1);
+            XX.push_back(S2);
+            DRDR.push_back((S2-S1));
             R.push_back((temp_pan->CollocationPoint->vP - Start).Mag());
             G.push_back(temp_pan->gamma);
             GP.push_back(temp_pan->gamma_prev);
@@ -544,6 +546,10 @@ void BODY::DissolveWake(REAL dt) {
             X.push_back(temp_pan->CollocationPoint->vP);
             while ((temp_pan->Neighb.T) && (temp_pan->Neighb.T!=temp_pan)) {
                 temp_pan = temp_pan->Neighb.T;
+                S1 = .5 * (temp_pan->C4->vP + temp_pan->C1->vP);
+                S2 = .5 * (temp_pan->C2->vP + temp_pan->C3->vP);
+                XX.push_back(S2);
+                DRDR.push_back((S2-S1));
                 R.push_back(R.back() + (temp_pan->CollocationPoint->vP - temp_pan->Neighb.B->CollocationPoint->vP).Mag());
                 G.push_back(temp_pan->gamma);
                 GP.push_back(temp_pan->gamma_prev);
@@ -555,24 +561,37 @@ void BODY::DissolveWake(REAL dt) {
         }
     }
 
+    GG.push_back(0);
+    RR.push_back(0);
+    for (int i = 0; i < V.size()-1; ++i){
+    	GG.push_back(.5*(G[i]+G[i+1]));
+    	RR.push_back(RR.back() + DRDR[i].Mag());
+    }
+
+    GG.push_back(0);
+    RR.push_back(RR.back() + DRDR.back().Mag());
+
 
         int n = R.size();
         Array <Vect3> dOdt(n), UdelGamma(n), Om(n);
     {
-
-
-        REAL r[n], g[n];
-        for (int i = 0; i < R.size(); ++i) {
-            r[i] = R[i];
-            g[i] = G[i];
+        REAL r[n+1], g[n+1];
+        for (int i = 0; i < R.size(); ++i)
             dOdt[i] = ((G[i] - GP[i])/dt)*DR[i];	//	the DR is to give the direction to the vorticity
+
+        for (int i = 0; i < n+1; ++i)
+        {
+            r[i] = RR[i];
+            g[i] = GG[i];
         }
+
+
         gsl_interp_accel *acc
                 = gsl_interp_accel_alloc();
         gsl_spline *spline
-                = gsl_spline_alloc(gsl_interp_akima, R.size());
+                = gsl_spline_alloc(gsl_interp_akima,n+1);
 
-        gsl_spline_init(spline, r, g, n);
+        gsl_spline_init(spline, r, g, n+1);
         for (int i = 0; i < n; ++i) {
             UdelGamma[i] = gsl_spline_eval_deriv(spline, R[i], acc) * V[i] * globalSystem->GambitScale;
             Om[i] = dt*(UdelGamma[i] - dOdt[i]);
@@ -580,7 +599,7 @@ void BODY::DissolveWake(REAL dt) {
 
         gsl_spline_free(spline);
         gsl_interp_accel_free(acc);
-        
+
     }
         Array <POINT*> new_points;
     //  Release a particle into the freestream
