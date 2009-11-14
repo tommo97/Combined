@@ -1,6 +1,6 @@
 close all; clear all; clear mex;
-files = dir('f_*.dat');
-val = 5.;
+files = dir('f_be*.dat');
+val = 7.5;
 s = size(files,1);
 
 % while s < 100

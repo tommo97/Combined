@@ -380,10 +380,10 @@ void SYSTEM::LinAlg() {
                 Bodies[i]->ProtoWake[j]->gamma = Bodies[i]->ProtoWake[j]->Shedder->gamma;
         }
 
-    for (int i = 0; i < Bodies[0]->BoundaryFaces.size(); ++i){
-    	cout << Bodies[0]->BoundaryFaces[i]->gamma << " " <<  Bodies[0]->BoundaryFaces[i]->OtherBoundarySurface->gamma;
-    	cout << " " << Bodies[0]->BoundaryFaces[i]->OtherBoundarySurface->Vn << " " << Bodies[0]->BoundaryFaces[i]->Vn << endl;
-    }
+//    for (int i = 0; i < Bodies[0]->BoundaryFaces.size(); ++i){
+//    	cout << Bodies[0]->BoundaryFaces[i]->gamma << " " <<  Bodies[0]->BoundaryFaces[i]->OtherBoundarySurface->gamma;
+//    	cout << " " << Bodies[0]->BoundaryFaces[i]->OtherBoundarySurface->Vn << " " << Bodies[0]->BoundaryFaces[i]->Vn << endl;
+//    }
 
     for (int i = 0; i < NumBodies; ++i)
         for (int j = 0; j < (int) Bodies[i]->ProtoWake.size(); ++j)
@@ -439,8 +439,8 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
             Bodies[j]->DissolveWake(dt);
 
 
-        globalIO->write_m();
-        WriteBodies();
+//        globalIO->write_m();
+//        WriteBodies();
 //                if (SubStep % 1 == 0) globalIO->write_m();
 #ifndef USE_NCURSES
         // #ifdef DEBUG
@@ -721,7 +721,7 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
     if (WRITE_TO_FILE) out_stream << "lighting phong" << endl << "set(gcf,'Renderer','OpenGL')" << endl;
 
     for (int i = 0; i < NumBodies; ++i) {
-        Bodies[i]->WriteSurface(out_stream);
+//        Bodies[i]->WriteSurface(out_stream);
         Bodies[i]->WriteWake(out_stream);
     }
 }
@@ -904,6 +904,8 @@ void SYSTEM::WriteBodies() {
     		for (int j = 0; j < NumFaces; ++j)
     		    		    			fout.write((char *) &*(Bodies[i]->Faces[j]->sigma), sizeof(REAL));
 
+    		for (int j = 0; j < NumFaces; ++j)
+									fout.write((char *) &Bodies[i]->Faces[j]->CPVel, sizeof(Vect3));
     	}
 
     	fout.close();

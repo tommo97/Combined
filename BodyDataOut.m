@@ -1,6 +1,6 @@
 fclose all;clear all;clc; close all;
 tic
-cd /home/tom/Desktop/Workspace/Combined;
+cd ~/Desktop/Workspace/Combined;
 %%  Read in binary data
 fid = fopen('BodyData.bin', 'r');
 hold all
@@ -86,7 +86,7 @@ for i = 1:NumBodies
     xmid = x(12,:);
     cmid = xmid/max(xmid);
     plot(cmid,-CPmid)
-    surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),Vpert);
+    %surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),Vpert);
     %hold all
     %scatter3(Bodies{1}.Panels.CP.Body.x(:),Bodies{1}.Panels.CP.Body.y(:),Bodies{1}.Panels.CP.Body.z(:));
 end

@@ -26,7 +26,7 @@ fname = [name '.neu'];
 
 th0 = 180;
 
-Vels{1} = [-10 0 .1];
+Vels{1} = [10 0 -2];
 Origin{1} = [0 0 0];
 Attitudes{1} = [0 0 pi];
 Rates{1} = [0 0 0];
@@ -56,7 +56,7 @@ x = BellShape(0,1,NRELBlade.NChord,5);
 %x = linspace(0,1,NRELBlade.NChord);
 [Aerofoil z] = NRELFoil(x);
 
-NRELBlade.FOIL = z.N0012;
+NRELBlade.FOIL = z.S809;
 
 %%  NRELBlade -- NREL data
 RADIUS=[0.45;0.66;0.883;1.008;1.067;1.133;1.257;1.343;1.51;1.648;1.952;2.257;...
@@ -74,7 +74,7 @@ THETA = 10*zeros(size(RADIUS));
 CHORD = 1*ones(size(RADIUS));
 
 th = linspace(0,pi);
-%CHORD = 2*sin(linspace(0,pi)) + .1;
+%CHORD = 2*sqrt(sin(linspace(0,pi))) + .1;
 
 NRELBlade.RADIUS = RADIUS;
 NRELBlade.CHORD = CHORD;
@@ -98,12 +98,12 @@ for i = 1:1
     for j = 1:size(S,2)
         S(:,j) = j;
     end
-    %surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),S);
+    surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),S);
     hold on
-%     surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.US.N.Local));
-%     surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.LS.N.Local));
-%     surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.US.N.Local));
-%     surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.LS.N.Local));
+     surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.US.N.Local));
+     surf(Bodies{i}.X(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Inboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Inboard.LS.N.Local));
+     surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.US.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.US.N.Local));
+     surf(Bodies{i}.X(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Y(Bodies{i}.Tip.Outboard.LS.N.Local),Bodies{i}.Z(Bodies{i}.Tip.Outboard.LS.N.Local));
     %
     Bodies{i}.N.Global = Bodies{i}.N.Local + NumPoints;
     Bodies{i}.Panels.c1.Global = Bodies{i}.Panels.c1.Local + NumPoints;
@@ -150,14 +150,14 @@ for i = 1:1
     Bodies{i}.Faces.LocalAxis.Y.Body = [ly(:,1)./lymag, ly(:,2)./lymag, ly(:,3)./lymag];
     Bodies{i}.Faces.LocalAxis.Z.Body = [lz(:,1)./lzmag, lz(:,2)./lzmag, lz(:,3)./lzmag];
     Bodies{i}.Faces.LocalAxis.X.Body = cross(Bodies{i}.Faces.LocalAxis.Y.Body, Bodies{i}.Faces.LocalAxis.Z.Body);
-    scatter3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3));
-    quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-        Bodies{i}.Faces.LocalAxis.X.Body(:,1),Bodies{i}.Faces.LocalAxis.X.Body(:,2),Bodies{i}.Faces.LocalAxis.X.Body(:,3),'green');
-    quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-        Bodies{i}.Faces.LocalAxis.Y.Body(:,1),Bodies{i}.Faces.LocalAxis.Y.Body(:,2),Bodies{i}.Faces.LocalAxis.Y.Body(:,3),'red');
-    quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-        Bodies{i}.Faces.LocalAxis.Z.Body(:,1),Bodies{i}.Faces.LocalAxis.Z.Body(:,2),Bodies{i}.Faces.LocalAxis.Z.Body(:,3),'blue');
-    
+%    scatter3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3));
+%     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
+%         Bodies{i}.Faces.LocalAxis.X.Body(:,1),Bodies{i}.Faces.LocalAxis.X.Body(:,2),Bodies{i}.Faces.LocalAxis.X.Body(:,3),'green');
+%     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
+%         Bodies{i}.Faces.LocalAxis.Y.Body(:,1),Bodies{i}.Faces.LocalAxis.Y.Body(:,2),Bodies{i}.Faces.LocalAxis.Y.Body(:,3),'red');
+%     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
+%         Bodies{i}.Faces.LocalAxis.Z.Body(:,1),Bodies{i}.Faces.LocalAxis.Z.Body(:,2),Bodies{i}.Faces.LocalAxis.Z.Body(:,3),'blue');
+%     
     
     
     

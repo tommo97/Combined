@@ -154,8 +154,8 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
 void TIME_STEPPER::time_loop() {
 
     if (first_step) {
-    	globalSystem->NumSubSteps = 2;
-    	globalSystem->dtInit = .5;
+    	globalSystem->NumSubSteps = 50;
+    	globalSystem->dtInit = 1;
 		for (int i = 0; i < globalSystem->NumBodies; ++i)
 			globalSystem->Bodies[i]->InitNascentWake(globalSystem->dtInit / globalSystem->NumSubSteps);
 		globalSystem->SetupGlobalInfluenceMatrices();
@@ -163,6 +163,7 @@ void TIME_STEPPER::time_loop() {
 
         globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
         globalIO->write_m();
+        globalSystem->WriteBodies();
 //        globalSystem->PutWakesInTree();
 //        globalOctree->Reset();
 //        globalOctree->InitVelsGetLaplacian();

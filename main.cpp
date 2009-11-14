@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     globalSystem->GambitScale = 1;
     globalSystem->MaxP = 3;
     globalSystem->dtInit = 0.01;
-    globalSystem->Del2 = .25;
+    globalSystem->Del2 = 1e-3;
     globalSystem->NeuFile = dir1 + "0012.neu";
 
 
