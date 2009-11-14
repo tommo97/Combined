@@ -116,8 +116,8 @@ CC_COMMON_FLAGS = -c $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_FLAG) $(OPT_FLAGS)
 
 
 platform = Linux
-  ifeq ($(HOSTNAME), chameleon)
-   LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/GotoBLAS -lfreetype -lgoto_prescott-r1.26 -llapack -lblas  -latlas -lgsl  -lg2c
+  ifeq ($(HOSTNAME), Chameleon)
+   LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lgsl -llapack -lcblas -latlas -lgfortran 
   endif
   ifeq ($(HOSTNAME), masternode)
    LD_FLAGS= $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lgsl -lcblas -latlas -lgoto_opteron-r1.26 -lgfortran
