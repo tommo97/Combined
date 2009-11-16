@@ -211,7 +211,7 @@ void SYSTEM::UpdateGlobalInfluenceMatrices() {
                     PHI[0] = 0.0;
                     PHI[1] = 0.0;
                     AllBodyPanels[j]->Wake->SourceDoubletPotential(AllBodyPanels[i]->CollocationPoint, 1, 0, PHI);
-                    a += (AllBodyPanels[j]->isTop) ? PHI[0] : - PHI[0];
+                    a -= (AllBodyPanels[j]->isTop) ? PHI[0] : - PHI[0];
                 }
             } else {
                 Vect3 V = AllBodyPanels[j]->BodyPanelVelocity(AllBodyPanels[i]->CollocationPoint->vP, 1.0);
@@ -252,52 +252,9 @@ void SYSTEM::UpdateGlobalInfluenceMatrices() {
 
 /**************************************************************/
 void SYSTEM::GetPressures(REAL dt) {
-    for (int i = 0; i < (int) AllBodyPanels.size(); ++i) {
-        AllBodyPanels[i]->GetCollocationPoint();
-        Vect3 Pos = AllBodyPanels[i]->CollocationPoint->vP;
-        // 	Get point kinematic velocity - rotational part first
-        Vect3 Vrot = AllBodyPanels[i]->Owner->EulerRates.Cross(Pos);
-        // 	Add to translational velocity....
-        Vect3 Vkin = AllBodyPanels[i]->Owner->CG.vV + Vrot;
-        // 	Include freestream
-        Vect3 V = Vinf - Vkin; // + AllBodyPanels[i]->CollocationPoint->vVfmm;
-        for (int J = 0; J < (int) NumBodies; ++J)
-            V += Bodies[J]->GetVel(Pos);
-
-
-        REAL Vref2 = V.Dot(V);
-
-
-
-        Vect3 Vlocal = VectMultMatrix(AllBodyPanels[i]->TRANS, V);
-        //        if (WRITE_TO_SCREEN) cout << V.Dot(AllBodyPanels[i]->TRANS[2]) << " " << Vlocal << endl;
-
-        if (Pos.y == 0.) {
-            // if (WRITE_TO_SCREEN) cout << AllBodyPanels[i]->CollocationPoint->vP << " " << V << " " << AllBodyPanels[i]->TRANS[2] << endl;
-
-        }
-
-        REAL dmu_dt = (*(AllBodyPanels[i]->mu) - (AllBodyPanels[i]->mu_prev)) / dt; //	Get dphi_by_dt
-
-        REAL CP = 1.0 - (V.Dot(V) / Vref2) - (2.0 * dmu_dt / Vref2);
-
-
-        REAL mult = -CP * 0.5 * _RHO * Vref2 * AllBodyPanels[i]->Area;
-
-        Vect3 deltaF = mult * AllBodyPanels[i]->TRANS[2];
-        //        AllBodyPanels[i]->dFORCE_HISTORY.push_back(deltaF);
-
-        AllBodyPanels[i]->Owner->vFORCE += deltaF;
-        AllBodyPanels[i]->Owner->vTORQUE += deltaF.Cross(Pos - AllBodyPanels[i]->Owner->CG.vP);
-    }
-    for (int I = 0; I < NumBodies; ++I) {
-        Bodies[I]->ForceRecords.push_back(Bodies[I]->vFORCE);
-        Bodies[I]->TorqueRecords.push_back(Bodies[I]->vTORQUE);
-        if (WRITE_TO_SCREEN) cout << Bodies[I]->vFORCE << " ";
-        if (WRITE_TO_SCREEN) cout << Bodies[I]->vTORQUE << endl;
-    }
+	for (int i = 0; i < AllBodyPanels.size(); ++i)
+		AllBodyPanels[i]->GetCp(dt);
 }
-
 /**************************************************************/
 void SYSTEM::GetGlobalRHS() {
 #ifdef _OPENMP
@@ -318,6 +275,7 @@ void SYSTEM::GetGlobalRHS() {
             V += Bodies[J]->GetWakeVel(Pos);
 
         AllBodyPanels[i]->CollocationPoint->vV = V;
+        AllBodyPanels[i]->Vkin = Vkin;
 
 
 
@@ -432,6 +390,11 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
         GetGlobalRHS();
         LinAlg();
+
+
+        for (int j = 0; j < Bodies[0]->NumFaces; ++j)
+                	Bodies[0]->Faces[j]->GetCp(dt);
+
 
 
 
@@ -581,30 +544,26 @@ void SYSTEM::ReadNeuGetBodies() {
         if (AllBodyPanels[i]->Neighb.L) {
             REAL N1N2 = AllBodyPanels[i]->TRANS[2].Dot(AllBodyPanels[i]->Neighb.L->TRANS[2]);
             REAL costheta = N1N2 / (AllBodyPanels[i]->TRANS[2].Mag() * AllBodyPanels[i]->Neighb.L->TRANS[2].Mag());
-            AllBodyPanels[i]->Theta.L = costheta;
-            costheta = min(fabs(costheta), 1.0);
-            //                cout << "L " << costheta << " " << acos(costheta) << " " << RAD2DEG(acos(costheta)) << endl;
+            if (fabs(costheta) > 1) costheta = fabs(costheta)/costheta;
+            AllBodyPanels[i]->Theta.L = fabs(acos(costheta));
         }
         if (AllBodyPanels[i]->Neighb.R) {
             REAL N1N2 = AllBodyPanels[i]->TRANS[2].Dot(AllBodyPanels[i]->Neighb.R->TRANS[2]);
             REAL costheta = N1N2 / (AllBodyPanels[i]->TRANS[2].Mag() * AllBodyPanels[i]->Neighb.R->TRANS[2].Mag());
-            AllBodyPanels[i]->Theta.R = costheta;
-            costheta = min(fabs(costheta), 1.0);
-            //                cout << "R " << costheta << " " << acos(costheta) << " " << RAD2DEG(acos(costheta)) << endl;
+            if (fabs(costheta) > 1) costheta = fabs(costheta)/costheta;
+            AllBodyPanels[i]->Theta.R = fabs(acos(costheta));
         }
         if (AllBodyPanels[i]->Neighb.T) {
             REAL N1N2 = AllBodyPanels[i]->TRANS[2].Dot(AllBodyPanels[i]->Neighb.T->TRANS[2]);
             REAL costheta = N1N2 / (AllBodyPanels[i]->TRANS[2].Mag() * AllBodyPanels[i]->Neighb.T->TRANS[2].Mag());
-            AllBodyPanels[i]->Theta.T = costheta;
-            costheta = min(fabs(costheta), 1.0);
-            //                cout << "T " << costheta << " " << acos(costheta) << " " << RAD2DEG(acos(costheta)) << endl;
+            if (fabs(costheta) > 1) costheta = fabs(costheta)/costheta;
+            AllBodyPanels[i]->Theta.T = fabs(acos(costheta));
         }
         if (AllBodyPanels[i]->Neighb.B) {
             REAL N1N2 = AllBodyPanels[i]->TRANS[2].Dot(AllBodyPanels[i]->Neighb.B->TRANS[2]);
             REAL costheta = N1N2 / (AllBodyPanels[i]->TRANS[2].Mag() * AllBodyPanels[i]->Neighb.B->TRANS[2].Mag());
-            AllBodyPanels[i]->Theta.B = costheta;
-            costheta = min(fabs(costheta), 1.0);
-            //                cout << "B " << costheta << " " << acos(costheta) << " " << RAD2DEG(acos(costheta)) << endl;
+            if (fabs(costheta) > 1) costheta = fabs(costheta)/costheta;
+            AllBodyPanels[i]->Theta.B = fabs(acos(costheta));
         }
 
     }
@@ -721,7 +680,7 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
     if (WRITE_TO_FILE) out_stream << "lighting phong" << endl << "set(gcf,'Renderer','OpenGL')" << endl;
 
     for (int i = 0; i < NumBodies; ++i) {
-//        Bodies[i]->WriteSurface(out_stream);
+        Bodies[i]->WriteSurface(out_stream);
         Bodies[i]->WriteWake(out_stream);
     }
 }
@@ -905,7 +864,7 @@ void SYSTEM::WriteBodies() {
     		    		    			fout.write((char *) &*(Bodies[i]->Faces[j]->sigma), sizeof(REAL));
 
     		for (int j = 0; j < NumFaces; ++j)
-									fout.write((char *) &Bodies[i]->Faces[j]->CPVel, sizeof(Vect3));
+									fout.write((char *) &Bodies[i]->Faces[j]->Cpress, sizeof(REAL));
     	}
 
     	fout.close();

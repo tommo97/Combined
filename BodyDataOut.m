@@ -4,7 +4,7 @@ cd ~/Desktop/Workspace/Combined;
 %%  Read in binary data
 fid = fopen('BodyData.bin', 'r');
 hold all
-load('./mat_files/Straight_.mat')
+load('./mat_files/Elliptic_.mat')
 NumBodies = fread(fid,1,'int');
 
 for i = 1:NumBodies
@@ -32,6 +32,7 @@ for i = 1:NumBodies
     Bodies{i}.Faces.Gamma_Prev = fread(fid,Bodies{i}.NumPanels,'double');
     Bodies{i}.Faces.Mu = fread(fid,Bodies{i}.NumPanels,'double');
     Bodies{i}.Faces.Sigma = fread(fid,Bodies{i}.NumPanels,'double');
+    Bodies{i}.Faces.Cpress = fread(fid,Bodies{i}.NumPanels,'double')';
 end
 
 
@@ -41,57 +42,40 @@ set(gcf,'Renderer','OpenGL')
 
 %%  Begin Postprocessing
 for i = 1:NumBodies
-%     scatter3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3));
-%     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-%         Bodies{i}.Faces.LocalAxis.X.Body(:,1),Bodies{i}.Faces.LocalAxis.X.Body(:,2),Bodies{i}.Faces.LocalAxis.X.Body(:,3),'green');
-%     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-%         Bodies{i}.Faces.LocalAxis.Y.Body(:,1),Bodies{i}.Faces.LocalAxis.Y.Body(:,2),Bodies{i}.Faces.LocalAxis.Y.Body(:,3),'red');
-%     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-%         Bodies{i}.Faces.LocalAxis.Z.Body(:,1),Bodies{i}.Faces.LocalAxis.Z.Body(:,2),Bodies{i}.Faces.LocalAxis.Z.Body(:,3),'blue');
-%     
+    inds = [1:max(Bodies{i}.Panels.MainPans(:))]';
+
+
+    Bodies{i}.CPdist = zeros(size(Bodies{1}.Panels.MainPans));
+
     Bodies{i}.GammaDist = zeros(size(Bodies{1}.Panels.MainPans));
-    Bodies{i}.Panels.DX = zeros(size(Bodies{1}.Panels.MainPans));
-    Bodies{i}.Panels.DY = zeros(size(Bodies{1}.Panels.MainPans));
-    Bodies{i}.Panels.DZ = zeros(size(Bodies{1}.Panels.MainPans));
-    Bodies{i}.Panels.De1 = zeros(size(Bodies{1}.Panels.MainPans));
-    Bodies{i}.Panels.De2 = zeros(size(Bodies{1}.Panels.MainPans));
-    Bodies{i}.GammaDist(:) = Bodies{i}.Faces.Gamma(1:max(Bodies{i}.Panels.MainPans(:)));
     
+
+    Bodies{i}.CPdist(:) = Bodies{i}.Faces.Cpress(inds);
+    Bodies{i}.GammaDist(:) = Bodies{i}.Faces.Gamma(inds);
     Bodies{i}.Panels.CP.Body.x = zeros(size(Bodies{i}.Panels.MainPans));
-    Bodies{i}.Panels.CP.Body.x(:) = Bodies{i}.Faces.CP.Body(Bodies{i}.Panels.MainPans(:),1);
+    Bodies{i}.Panels.CP.Body.x(:) = Bodies{i}.Faces.CP.Body(inds,1);
     
     Bodies{i}.Panels.CP.Body.y = zeros(size(Bodies{i}.Panels.MainPans));
-    Bodies{i}.Panels.CP.Body.y(:) = Bodies{i}.Faces.CP.Body(Bodies{i}.Panels.MainPans(:),2);
+    Bodies{i}.Panels.CP.Body.y(:) = Bodies{i}.Faces.CP.Body(inds,2);
     
     Bodies{i}.Panels.CP.Body.z = zeros(size(Bodies{i}.Panels.MainPans));
-    Bodies{i}.Panels.CP.Body.z(:) = Bodies{i}.Faces.CP.Body(Bodies{i}.Panels.MainPans(:),3);
+    Bodies{i}.Panels.CP.Body.z(:) = Bodies{i}.Faces.CP.Body(inds,3);
     
     %   Now we can get gradients in a "chordwise" and "spanwise" direction
     
-    [dxi dxj] = gradient(Bodies{i}.Panels.CP.Body.x);
-    [dyi dyj] = gradient(Bodies{i}.Panels.CP.Body.y);
-    [dzi dzj] = gradient(Bodies{i}.Panels.CP.Body.z);
-    
-    dsi = sqrt(dxi.*dxi + dyi.*dyi + dzi.*dzi);
-    dsj = sqrt(dxj.*dxj + dyj.*dyj + dzj.*dzj);
-    [dgammai dgammaj] = gradient(Bodies{i}.GammaDist);
-    dgammadsi = dgammai./dsi;
-    dgammadsj = dgammaj./dsj;
-    Uinf = Bodies{i}.Velocity;
-    Vpert = sqrt(dgammadsi.*dgammadsi + dgammadsj.*dgammadsj);
-    VBody = Vpert;
-    Cp = 1 - VBody.*VBody./sqrt(dot(Uinf,Uinf));
-    CPmid = Cp(12,:);
+   
+    CPmid = Bodies{i}.CPdist(4,:);
     x = Bodies{i}.Panels.CP.Body.x;
-    xmid = x(12,:);
-    cmid = xmid/max(xmid);
+    xmid = x(4,:);
+    cmid = (xmid - min(xmid));
+    cmid = cmid/max(abs(cmid));
     plot(cmid,-CPmid)
-    %surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),Vpert);
+    %surf(Bodies{i}.X(Bodies{i}.N.Local),Bodies{i}.Y(Bodies{i}.N.Local),Bodies{i}.Z(Bodies{i}.N.Local),Bodies{i}.GammaDist);
     %hold all
     %scatter3(Bodies{1}.Panels.CP.Body.x(:),Bodies{1}.Panels.CP.Body.y(:),Bodies{1}.Panels.CP.Body.z(:));
 end
-
-
+axis([-.1 1 -1 4])
+axis square
 
 
 toc

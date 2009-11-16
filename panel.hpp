@@ -38,8 +38,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class PANEL {
 public:
     long unsigned int ID;
-    Vect3 Centroid, TRANS[3], Xcb[4], Vfmm; //  Transformation matrix from BODY to PANEL axis; Position of corners
-    REAL *sigma, *mu, gamma, Area, MaxDiagonal, mu_prev, gamma_prev, alpha, chord, Uinf, Vn;
+    Vect3 Centroid, TRANS[3], Xcb[4], Vfmm, Vkin; //  Transformation matrix from BODY to PANEL axis; Position of corners
+    REAL *sigma, *mu, gamma, Area, MaxDiagonal, mu_prev, gamma_prev, alpha, chord, Uinf, Vn, Cpress;
     POINT *C1, *C2, *C3, *C4, *CollocationPoint, *edgeX1, *edgeX2;
     Vect4 DX, DY, M, D;
     bool isBound, isTop;
@@ -78,6 +78,7 @@ public:
     void GetLatticeVels();
     void PrintCollocationPoint();
     void GetNewGlobalPosition();
+    void GetCp(REAL);
     Vect3 LineVelocity(Vect3 lineStart, Vect3 lineEnd, Vect3 pTarget, const REAL gamma_in);
     Vect3 SourceVel(Vect3 pTarget);
     Vect3 WakePanelVelocity(Vect3);

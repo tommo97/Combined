@@ -18,7 +18,7 @@ Scale = 1;          %   Scaling is done in the simulation
 
 
 
-name = 'Straight_';
+name = 'Elliptic_';
 fname = [name '.neu'];
 
 
@@ -26,7 +26,7 @@ fname = [name '.neu'];
 
 th0 = 180;
 
-Vels{1} = [10 0 -2];
+Vels{1} = [0 0 0];
 Origin{1} = [0 0 0];
 Attitudes{1} = [0 0 pi];
 Rates{1} = [0 0 0];
@@ -48,11 +48,11 @@ NRELBlade.Origin = [0 0 0];
 NRELBlade.th0 =  th0;
 NRELBlade.PitchAxis = 0.3;
 %   Aerofoil
-NRELBlade.NChord = 25;
-NRELBlade.NSpan = 26;
+NRELBlade.NChord = 40;
+NRELBlade.NSpan = 30;
 %%  Aerofoil
 
-x = BellShape(0,1,NRELBlade.NChord,5);
+x = BellShape(0,1,NRELBlade.NChord,3);
 %x = linspace(0,1,NRELBlade.NChord);
 [Aerofoil z] = NRELFoil(x);
 
@@ -74,7 +74,7 @@ THETA = 10*zeros(size(RADIUS));
 CHORD = 1*ones(size(RADIUS));
 
 th = linspace(0,pi);
-%CHORD = 2*sqrt(sin(linspace(0,pi))) + .1;
+CHORD = sqrt(sin(linspace(0,pi))) + .2;
 
 NRELBlade.RADIUS = RADIUS;
 NRELBlade.CHORD = CHORD;
@@ -121,7 +121,9 @@ for i = 1:1
     %     Bodies{i}.X = Bodies{i}.X + rand*1e-16;
     %     Bodies{i}.Y = Bodies{i}.Y + rand*1e-16;
     %     Bodies{i}.Z = Bodies{i}.Z + rand*1e-16;
-    
+    Bodies{i}.C.x = Bodies{i}.X(Bodies{i}.N.Local);
+    Bodies{i}.C.y = Bodies{i}.Y(Bodies{i}.N.Local);
+    Bodies{i}.C.z = Bodies{i}.Z(Bodies{i}.N.Local);
     
     
     
@@ -158,13 +160,7 @@ for i = 1:1
 %     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
 %         Bodies{i}.Faces.LocalAxis.Z.Body(:,1),Bodies{i}.Faces.LocalAxis.Z.Body(:,2),Bodies{i}.Faces.LocalAxis.Z.Body(:,3),'blue');
 %     
-    
-    
-    
-    
-    
-    
-    
+
 end
 
 %%  Prepare output to neutral file

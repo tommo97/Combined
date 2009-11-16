@@ -367,7 +367,7 @@ void BODY::PrintSurface() {
 void BODY::WriteSurface(ostream& out_stream) {
     if (WRITE_TO_FILE) {
         out_stream.setf(ios::fixed, ios::floatfield);
-        out_stream << "hold all" << endl;
+        out_stream << "hold all; set(gcf,'Renderer','OpenGL');" << endl;
         for (int j = 0; j < NumFaces; ++j){
             SURFW((1.0)*Faces[j]->C1->vP, (1.0)*Faces[j]->C2->vP, (1.0)*Faces[j]->C3->vP, (1.0)*Faces[j]->C4->vP, Faces[j]->gamma, out_stream);
 //            out_stream << "scatter3(" << Faces[j]->C1->vP.x << "," << Faces[j]->C1->vP.y << "," << Faces[j]->C1->vP.z << ",'s');" << endl;
@@ -377,6 +377,24 @@ void BODY::WriteSurface(ostream& out_stream) {
         }
         out_stream << "axis equal" << endl;
     }
+
+    Vect3 P1(-1,0,-.2), P2(-1,-5, -.2), P3(-1,5,-.2), VT(globalSystem->uinf,globalSystem->vinf,globalSystem->winf), VEL;
+    out_stream << "data = [" << P1 << ";" << endl << P2 << ";" << endl << P3 <<  ";" << endl;
+    for (int i = 0; i < 100; ++i){
+    	VEL = globalSystem->Bodies[0]->GetVel(P1);
+    	P1 += .005*(VEL+VT);
+    	out_stream << P1 << ";" << endl;
+    	VEL = globalSystem->Bodies[0]->GetVel(P2);
+    	    	P2 += .005*(VEL+VT);
+    	    	out_stream << P2 << ";" << endl;
+    	    	VEL = globalSystem->Bodies[0]->GetVel(P3);
+    	    	    	P3 += .005*(VEL+VT);
+    	    	    	out_stream << P3 << ";" << endl;
+    }
+    out_stream << "];" << endl << "scatter3(data(:,1),data(:,2),data(:,3));" << endl;
+
+
+
 }
 
 /**************************************************************/
@@ -471,7 +489,7 @@ Vect3 BODY::GetVel(Vect3 Target) {
     Vect3 U, V, W;
     if (!globalSystem->LiftingLineMode)
     for (int i = 0; i < (int) ProtoWake.size(); ++i)
-        U -= ProtoWake[i]->WakePanelVelocity(Target);
+        U += ProtoWake[i]->WakePanelVelocity(Target);
 
     for (int i = 0; i < WakePoints.size(); ++i)
         for (int j = 0; j < WakePoints[i].size(); ++j)
@@ -480,12 +498,12 @@ Vect3 BODY::GetVel(Vect3 Target) {
 
     for (int l = 0; l < (int) Faces.size(); ++l) {
         if (!globalSystem->LiftingLineMode) {
-            W -= Faces[l]->SourceVel(Target);
+            W += Faces[l]->SourceVel(Target);
         }
-        W -= Faces[l]->BodyPanelVelocity(Target);//, globalSystem->Del2);
+        W += Faces[l]->BodyPanelVelocity(Target);//, globalSystem->Del2);
     }
 
-    return V;//U + V + W;
+    return U + V + W;
 }
 
 /**************************************************************/

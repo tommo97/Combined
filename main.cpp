@@ -92,13 +92,16 @@ int main(int argc, char *argv[]) {
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
-    globalSystem->uinf = 0.0;
+    globalSystem->uinf = 10.0;
     globalSystem->vinf = 0.0;
-    globalSystem->winf = 0.0;
+    globalSystem->winf = globalSystem->uinf*sind(0.0);
     globalSystem->Initialise();
     globalSystem->TimeStep();
 
-    globalSystem->TimeStep();
+
+
+
+
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
 #endif

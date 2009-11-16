@@ -189,6 +189,18 @@ class OctreeCapsule;
 
 #define RAD2DEG(a) 360*a/two_pi
 
+#define acosd(a) RAD2DEG(acos(a))
+
+#define asind(a) RAD2DEG(asin(a))
+
+#define atand(a) RAD2DEG(atan(a))
+
+#define sind(a) sin(DEG2RAD(a))
+
+#define cosd(a) cos(DEG2RAD(a))
+
+#define tand(a) tan(DEG2RAD(a))
+
 #define SURF(X1,X2,X4,X3,C) if (WRITE_TO_SCREEN) std::cout << "surf([" << X1[0] << ", " << X2[0] << "; " << X3[0] << ", " << X4[0] << "],[" << X1[1] << ", " << X2[1] << "; " << X3[1] << ", " << X4[1] << "],[" << X1[2] << ", " << X2[2] << ";" << X3[2] << ", " << X4[2] << "]," << C << ");" << std::endl;
 
 #define SURFW(X1,X2,X4,X3,C,W) W << "surf([" << X1[0] << ", " << X2[0] << "; " << X3[0] << ", " << X4[0] << "],[" << X1[1] << ", " << X2[1] << "; " << X3[1] << ", " << X4[1] << "],[" << X1[2] << ", " << X2[2] << ";" << X3[2] << ", " << X4[2] << "]," << C << ");" << std::endl;

@@ -47,9 +47,9 @@ Aerofoil.S809.LS.z = [0,-0.005,-0.0127,-0.0216,-0.0314,-0.042,-0.053,-0.0641,-0.
 %%  NACA 00xx Geometry
 x = fzero(@N00xx,[.5 1.5]);
 Aerofoil.N00xx.Coeffts = 5*[.2969, -.1260, -.3516, .2843, -.1015];
-Aerofoil.N0012.US.x = linspace(0,1);
-Aerofoil.N0012.US.z = .12*N00xx(linspace(0,x)); 
-Aerofoil.N0012.LS.x = linspace(0,1);
+Aerofoil.N0012.US.x = linspace(0,1,1000);
+Aerofoil.N0012.US.z = .12*N00xx(linspace(0,x,1000)); 
+Aerofoil.N0012.LS.x = linspace(0,1,1000);
 Aerofoil.N0012.LS.z = - Aerofoil.N0012.US.z;    
 
 %%  output

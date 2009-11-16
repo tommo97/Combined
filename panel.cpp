@@ -351,17 +351,71 @@ Vect3 PANEL::LineVelocity(Vect3 lineStart, Vect3 lineEnd, Vect3 pTarget, const R
 /**************************************************************/
 void PANEL::CheckNeighb(PANEL *Face) {
     if (Face != this) {
-        int RECIP[4] = {2,3,0,1};
-        POINT *LHS[5] = {this->C1, this->C2, this->C3, this->C4, this->C1};
-        POINT *RHS[5] = {Face->C1, Face->C2, Face->C3, Face->C4, Face->C1};
+//		int RECIP[4] = { 2, 3, 0, 1 };
+		POINT *LHS[5] = { this->C1, this->C2, this->C3, this->C4, this->C1 };
+		POINT *RHS[5] = { Face->C1, Face->C2, Face->C3, Face->C4, Face->C1 };
 
-        for (int i = 0; i < 4; ++i)
-            for (int j = 0; j < 4; ++j)
-                if (LHS[i]->vP == RHS[j+1]->vP && LHS[i+1]->vP == RHS[j]->vP)
-                {
-                    Neighb[i] = Face;
-                    NeighbNeighb[i] = Face->Neighb[RECIP[j]];
-                    return;
-                }
-    }
+		for (int i = 0; i < 4; ++i)
+			for (int j = 0; j < 4; ++j) {
+				if (LHS[i]->vP == RHS[j]->vP)
+					for (int k = 0; k < 5; ++k)
+						if (LHS[i + 1]->vP == RHS[k]->vP) {
+							Neighb[i] = Face;
+							//NeighbNeighb[i] = Face->Neighb[RECIP[j]];
+							return;
+						}
+			}
+	}
+}
+/**************************************************************/
+void PANEL::GetCp(REAL dt) {
+	//	All panels have four neighbours, just some are on different faces
+	PanelNeighbSet <REAL> Ds, Dmu;
+	PanelNeighbSet <Vect3> Dx;
+
+	Dx.L = CollocationPoint->vP - Neighb.L->CollocationPoint->vP;
+	Dx.R = Neighb.R->CollocationPoint->vP - CollocationPoint->vP;
+	Dx.T = Neighb.T->CollocationPoint->vP - CollocationPoint->vP;
+	Dx.B = CollocationPoint->vP - Neighb.B->CollocationPoint->vP;
+
+	Dmu.L = *(mu) - *(Neighb.L->mu);
+	Dmu.R = *(Neighb.R->mu) - *(mu);
+	Dmu.T = *(Neighb.T->mu) - *(mu);
+	Dmu.B = *(mu) - *(Neighb.B->mu);
+
+	Ds.L = Dx.L.Mag();
+	Ds.R = Dx.R.Mag();
+	Ds.T = Dx.T.Mag();
+	Ds.B = Dx.B.Mag();
+
+
+	if (Theta.L > pi/3)
+		Dx.L = Dmu.L = Ds.L = 0.;
+
+	if (Theta.R > pi/3)
+		Dx.R = Dmu.R = Ds.R = 0.;
+
+	if (Theta.T > pi/3)
+		Dx.T = Dmu.T = Ds.T = 0.;
+
+	if (Theta.B > pi/3)
+		Dx.B = Dmu.B = Ds.B = 0.;
+
+	REAL DmuDeta = (Dmu.L + Dmu.R)/(Ds.L + Ds.R);
+	REAL DmuDxi = (Dmu.T + Dmu.B)/(Ds.T + Ds.B);
+
+	//	Now get face vels parallel with zeta and eta
+	Vect3 eta = Dx.L + Dx.R;
+	eta = eta/eta.Mag();
+	Vect3 xi = Dx.T + Dx.B;
+	xi = xi/xi.Mag();
+
+	REAL Veta = CollocationPoint->vV.Dot(eta) + DmuDeta;
+	REAL Vxi = CollocationPoint->vV.Dot(xi) + DmuDxi;
+
+	REAL DphiDt = (*mu - gamma_prev)/dt;
+
+	REAL Vref2 = ((CollocationPoint->vV).Dot(CollocationPoint->vV));
+
+	Cpress = 1 - (Veta*Veta + Vxi*Vxi - 2*DphiDt)/Vref2;
 }
