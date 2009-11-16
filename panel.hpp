@@ -44,7 +44,7 @@ public:
     Vect4 DX, DY, M, D;
     bool isBound, isTop;
     BODY *Owner;
-    Vect3 tang1, tang2;
+    Vect3 tang1, tang2, CPVel;
     Array <Vect3> VelInterp;
 
     PanelNeighbSet <PANEL*> Neighb, NeighbNeighb;
