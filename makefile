@@ -83,6 +83,12 @@
 
 CC = g++
 OMP_FLAG = -fopenmp 
+OBJDIR = obj
+
+vpath %.cpp src
+vpath %.hpp include
+vpath %.o obj
+
 
 ifneq ($(CC),CC)
 #	Set up some c++ compiler flags for gcc
@@ -107,7 +113,7 @@ CC_PNG_FLAGS =
 #-DNO_FREETYPE
 LD_PNG_FLAGS =
 #-DNO_FREETYPE  -L/usr/local/lib64 -lpng -lpngwriter -lz
-CC_FLAGS = -m64 -g -I/usr/local/include
+CC_FLAGS = -m64 -g -I/usr/local/include -I include
 LD_COMMON_FLAGS = -m64 $(OMP_FLAG) -lncurses -lm
 LD_DEBUG_COMMON_FLAGS = -m64 $(OMP_DEBUG_FLAG) -lncurses -lm
 
@@ -139,30 +145,28 @@ endif
 
 CFLAGS = $(CC_COMMON_FLAGS)
 
-#SRC = $(shell ls -t *.cpp | grep -v 'main.cpp')
-SRC= types.cpp system.cpp io.cpp tree.cpp node.cpp branch.cpp cell.cpp panel.cpp body.cpp time_integrator.cpp
-
-
+SRC = types.cpp system.cpp io.cpp tree.cpp node.cpp branch.cpp cell.cpp panel.cpp body.cpp time_integrator.cpp
+HEADERS = $(SRC:.cpp=.hpp)
 SOURCES = $(SRC) main.cpp 
 
-HEADERS = $(SRC:.cpp=.hpp)
+
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE = main
 
-all : $(SOURCES) $(HEADERS) $(EXECUTABLE)
-$(EXECUTABLE):$(OBJECTS)
-	echo $(platform)
-	$(CC) $(OBJECTS) $(LD_FLAGS) -o $@
+all: $(EXECUTABLE) $(SOURCES) $(HEADERS)
+
+$(EXECUTABLE):$(addprefix $(OBJDIR)/, $(OBJECTS))
+	$(CC) $^ $(LD_FLAGS) -o $@
 	
 sun: clean
 	$(MAKE) all "CC= CC"
 
-.cpp.o:
+$(OBJDIR)/%.o : %.cpp
 	$(CC) $(GSLLIBS) $(CFLAGS) $< -o $@
 
 .PHONY: clean
 clean:
-	rm -f main *.o *~
+	rm -f main *.o *~ $(OBJDIR)/*
 
 valgrind: clean debug
 	valgrind -v  --leak-check=full --show-reachable=yes ./main > valgrind.out
