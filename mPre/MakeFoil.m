@@ -1,4 +1,4 @@
-function [Aerofoil z] = NRELFoil(xin)
+function [Aerofoil z] = MakeFoil(xin, t)
 
 
 
@@ -51,12 +51,20 @@ Aerofoil.N0012.US.x = linspace(0,1,1000);
 Aerofoil.N0012.US.z = .12*N00xx(linspace(0,x,1000)); 
 Aerofoil.N0012.LS.x = linspace(0,1,1000);
 Aerofoil.N0012.LS.z = - Aerofoil.N0012.US.z;    
+Aerofoil.N00xx.US.x = linspace(0,1,1000);
+Aerofoil.N00xx.US.z = t*N00xx(linspace(0,x,1000)); 
+Aerofoil.N00xx.LS.x = linspace(0,1,1000);
+Aerofoil.N00xx.LS.z = - Aerofoil.N00xx.US.z;  
+
 
 %%  output
 
 z.N0012.US = interp1(Aerofoil.N0012.US.x,Aerofoil.N0012.US.z,xin,'cubic');
 z.N0012.LS = interp1(Aerofoil.N0012.LS.x,Aerofoil.N0012.LS.z,xin,'cubic');
 z.N0012.X = xin;
+z.N00xx.US = interp1(Aerofoil.N00xx.US.x,Aerofoil.N00xx.US.z,xin,'cubic');
+z.N00xx.LS = interp1(Aerofoil.N00xx.LS.x,Aerofoil.N00xx.LS.z,xin,'cubic');
+z.N00xx.X = xin;
 z.S814.US = interp1(Aerofoil.S814.US.x,Aerofoil.S814.US.z,xin,'cubic');
 z.S814.LS = interp1(Aerofoil.S814.LS.x,Aerofoil.S814.LS.z,xin,'cubic');
 z.S814.X = xin;

@@ -1,9 +1,9 @@
 clear all; close all; clc;
-cd ~/Desktop/Workspace/Combined
 
-dir2 = './case_files/';
-dir3 = './run_files/';
-dir4 = './mat_files/';
+cd ~/Desktop/Workspace/Combined/mPre
+dir2 = '../case_files/';
+dir3 = '../run_files/';
+dir4 = '../mat_files/';
 commit = false;
 
 
@@ -54,7 +54,7 @@ NRELBlade.NSpan = 30;
 
 x = BellShape(0,1,NRELBlade.NChord,3);
 %x = linspace(0,1,NRELBlade.NChord);
-[Aerofoil z] = NRELFoil(x);
+[Aerofoil z] = MakeFoil(x);
 
 NRELBlade.FOIL = z.S809;
 

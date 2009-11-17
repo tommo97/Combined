@@ -1,5 +1,5 @@
 function MakeNEU(Bodies,name,split)
-dir1 = './neu_files/';
+dir1 = '../neu_files/';
 fname = [dir1 name '.neu'];
 fid = fopen(fname, 'wt');
 Empty = 0;
