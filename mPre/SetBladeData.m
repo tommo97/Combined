@@ -30,8 +30,10 @@ switch blade.type;
             3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-1.815;-1.815];
 end
 
-blade.DistPanel.maxx = max(blade.RADIUS);
-blade.DistPanel.minx = min(blade.RADIUS);
+minrad = min(blade.RADIUS);
+maxrad = max(blade.RADIUS);
+blade.DistPanel.maxx = min(maxrad,min(maxrad, blade.Cutout.Tip));
+blade.DistPanel.minx = max(minrad,max(blade.Cutout.Root, minrad));
 
 if ~isempty(blade.y)
     blade.Radius = blade.y;

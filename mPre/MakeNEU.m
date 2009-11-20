@@ -3,13 +3,16 @@ dir1 = '../neu_files/';
 fname = [dir1 name '.neu'];
 fid = fopen(fname, 'wt');
 Empty = 0;
-nGrps = length(Bodies);
+numBodies = length(Bodies);
+
 nPts = 0;
 nPnls = 0;
 
 if split
+    nGrps = length(Bodies);
     nBCs = nGrps;
 else
+    nGrps = 1;
     nBCs = 1;
 end
 PtsX = [];
@@ -21,13 +24,23 @@ W = [];
 F = [];
 f{1} = 2;
 f{2} = 4;
-for i = 1:nGrps
+NumPanels = 0;
+NumPoints = 0;
+for i = 1:numBodies
     Bodies{i}.Panels.Start = nPnls + 1;
     nPts = nPts + Bodies{i}.nPts;
     nPnls = nPnls + Bodies{i}.nPnls;
     Bodies{i}.Panels.Finish = nPnls;
     disp([Bodies{i}.Panels.Start Bodies{i}.Panels.Finish]);
-    
+    Bodies{i}.N.Global = Bodies{i}.N.Local + NumPoints;
+    Bodies{i}.Panels.c1.Global = Bodies{i}.Panels.c1.Local + NumPoints;
+    Bodies{i}.Panels.c2.Global = Bodies{i}.Panels.c2.Local + NumPoints;
+    Bodies{i}.Panels.c3.Global = Bodies{i}.Panels.c3.Local + NumPoints;
+    Bodies{i}.Panels.c4.Global = Bodies{i}.Panels.c4.Local + NumPoints;
+    Bodies{i}.Panels.WakeShedders.US.Global = Bodies{i}.Panels.WakeShedders.US.Local + NumPanels;
+    Bodies{i}.Panels.WakeShedders.LS.Global = Bodies{i}.Panels.WakeShedders.LS.Local + NumPanels;
+    NumPanels = NumPanels + numel(Bodies{i}.Panels.c1.Local);
+    NumPoints = NumPoints + numel(Bodies{i}.X);
     PtsX = [PtsX;[Bodies{i}.X Bodies{i}.Y Bodies{i}.Z]];
     C1 = [C1;Bodies{i}.Panels.c1.Global(:)];
     C2 = [C2;Bodies{i}.Panels.c2.Global(:)];

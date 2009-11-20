@@ -7,7 +7,7 @@ Rotor.Attitude = [  str2num(get(handles.psi,'String'))...
 Rotor.Origin = [str2num(get(handles.Ox,'String'))...
                 str2num(get(handles.Oy,'String'))...
                 str2num(get(handles.Oz,'String'))];
-Rotor.th0 = str2num(get(handles.theta_hub,'String'));
+Rotor.th0 = deg2rad(str2num(get(handles.theta_hub,'String')));
 ax = Rotor.Axes;
 hold(ax,'off');
 cla(ax);
@@ -39,4 +39,6 @@ for i = 1:Rotor.NumBlades
     view(ax,3);
 end
 axis(ax,'equal','tight');
+Rotor.Split = get(handles.blades_as_bodies,'Value') ;
+
 hold(ax,'off');

@@ -33,7 +33,7 @@ Rates{1} = [0 0 0];
 
 Vels{2} = [-10 0 0];
 Origin{2} = [0 0 0];
-Attitudes{2} = [deg2rad(180)+pi/2 0 pi];
+Attitudes{2} = [deg2rad(180) 0 pi];
 Rates{2} = [7.5 0 0];
 
 Vels{3} = [-10 0 0];
@@ -54,7 +54,7 @@ NRELBlade.NSpan = 30;
 
 x = BellShape(0,1,NRELBlade.NChord,3);
 %x = linspace(0,1,NRELBlade.NChord);
-[Aerofoil z] = MakeFoil(x);
+[Aerofoil z] = MakeFoil(x,0);
 
 NRELBlade.FOIL = z.S809;
 
@@ -67,14 +67,14 @@ THETA=[0;0;0;6.7;9.9;13.4;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
     3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-1.815;-1.815];
 
 
-RADIUS = linspace(-5,5);
-THETA = 10*zeros(size(RADIUS));
+%RADIUS = linspace(-5,5);
+%THETA = 10*zeros(size(RADIUS));
 
 
-CHORD = 1*ones(size(RADIUS));
+%CHORD = 1*ones(size(RADIUS));
 
 th = linspace(0,pi);
-CHORD = sqrt(sin(linspace(0,pi))) + .2;
+%CHORD = sqrt(sin(linspace(0,pi))) + .2;
 
 NRELBlade.RADIUS = RADIUS;
 NRELBlade.CHORD = CHORD;
