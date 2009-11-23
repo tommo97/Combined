@@ -1,4 +1,7 @@
-function MakeNEU(Bodies,name,split)
+function handles = MakeNEU(handles)
+Bodies = handles.Rotor.Blade;
+name = handles.fullname;
+split = handles.Rotor.Split;
 dir1 = '../neu_files/';
 fname = [dir1 name '.neu'];
 fid = fopen(fname, 'wt');
@@ -55,7 +58,7 @@ end
 
 
 
-disp(['Writing ' num2str(nGrps) ' groups with ' num2str(nPts) ' points and ' num2str(nPnls) ' panels.'])
+handles.neumsg = ['Writing ' num2str(nGrps) ' groups with ' num2str(nPts) ' points and ' num2str(nPnls) ' panels.'];
 
 
 fprintf(fid,'        CONTROL INFO 2.4.6\n** GAMBIT NEUTRAL FILE\n%s\n',name);

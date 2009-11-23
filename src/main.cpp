@@ -51,41 +51,9 @@ int main(int argc, char *argv[]) {
     globalSystem->NeuFile = dir1 + "0012.neu";
 
 
-    switch (argc) {
 
-        case 2:
-        {
-            globalIO->read_input(dir2 + argv[1]);
-            break;
-        }
+    globalIO->read_input(dir2 + argv[1]);
 
-        case 3:
-        {
-            globalSystem->NeuFile = argv[1];
-            globalSystem->GambitScale = atof(argv[2]);
-            break;
-        }
-        case 4:
-        {
-            globalSystem->NeuFile = argv[1];
-            globalSystem->GambitScale = atof(argv[2]);
-            globalSystem->MaxP = atoi(argv[3]);
-            break;
-        }
-                case 5:
-        {
-            globalSystem->NeuFile = argv[1];
-            globalSystem->GambitScale = atof(argv[2]);
-            globalSystem->MaxP = atoi(argv[3]);
-            globalSystem->dtInit = atof(argv[4]);
-            break;
-        }
-        default:
-        {
-            break;
-        }
-
-    }
 
     globalIO->PrepOutputDir();
     globalIO->WriteBinary();

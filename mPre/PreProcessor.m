@@ -23,7 +23,7 @@ function varargout = PreProcessor(varargin)
 
 % Edit the above text to modify the response to help PreProcessor
 
-% Last Modified by GUIDE v2.5 19-Nov-2009 18:36:56
+% Last Modified by GUIDE v2.5 23-Nov-2009 15:49:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,8 +55,8 @@ function PreProcessor_OpeningFcn(source, eventdata, handles, varargin)
 % Choose default command line output for PreProcessor
 handles.output = source;
 
-
-
+%%  Set up Simulation panel defaults
+set(handles.minmodbeta,'enable','off');
 %%  Set up Output panel defaults
 set(handles.output_case,'Value',true);
 set(handles.output_neu,'Value',true);
@@ -68,21 +68,36 @@ set(handles.timestamp,'Value',true);
 
 handles.Origin = [0;0;0];
 handles.Attitude = [0;0;0];
+%%  Set up tabs
+% hg=uitabgroup;
+% ht(1)=uitab(hg,'Title','Tab 1');
+% ht(2)=uitab(hg,'Title','Tab 2');
+% 
+% axes('parent',ht(1));
+% plot(1:10,(1:10).^2);
+% 
+% axes('parent',ht(2));
+% plot(1:10,(1:10).^3);
 
+
+%%  Chord panel and axis
+
+
+%   Tip
 handles.Chord.Tip.thickness = 0;
 handles.Chord.Tip.axes = handles.tip_foil_axes;
 handles.Chord.Tip.thickness_slider = handles.tip_thickness_slider;
 handles.Chord.Tip.thickness_edit_text = handles.tip_thickness_edit_text;
 handles.Chord.Tip.section = 'N0012';
 
+%   Root
 handles.Chord.Root.thickness = 0;
 handles.Chord.Root.axes = handles.root_foil_axes;
 handles.Chord.Root.thickness_slider = handles.root_thickness_slider;
 handles.Chord.Root.thickness_edit_text = handles.root_thickness_edit_text;
 handles.Chord.Root.section = 'N0012';
 
-set(handles.chord_pans_buttongroup,'SelectionChangeFcn',@chord_pans_buttongroup_SelectionChangeFcn);
-
+%   Both
 handles.Chord.DistPanel.lin_button = handles.chord_linear;
 handles.Chord.DistPanel.bell_button = handles.chord_bell;
 handles.Chord.DistPanel.num_panels = handles.chord_pan_count;
@@ -92,6 +107,8 @@ handles.Chord.DistPanel.x = linspace(0,1,16);
 handles.Chord.DistPanel.minx = 0;
 handles.Chord.DistPanel.maxx = 1;
 
+set(handles.chord_pans_buttongroup,'SelectionChangeFcn',@chord_pans_buttongroup_SelectionChangeFcn);
+%%  Span panel and axis
 set(handles.span_pans_buttongroup,'SelectionChangeFcn',@span_pans_buttongroup_SelectionChangeFcn);
 
 
@@ -311,6 +328,7 @@ end
 
 
 function nblades_Callback(source, eventdata, handles)
+handles = RotorSpec(handles);
 function nblades_CreateFcn(source, eventdata, handles)
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
@@ -386,6 +404,7 @@ end
 
 
 function theta_hub_Callback(source, eventdata, handles)
+handles = RotorSpec(handles);
 % source    handles to theta_hub (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -540,7 +559,17 @@ function commit_to_head_Callback(source, eventdata, handles)
 
 % --- Executes on button press in generate.
 function generate_Callback(source, eventdata, handles)
-MakeNEU(handles.Rotor.Blade,get(handles.name,'String'),handles.Rotor.Split)
+temp = num2str(uint64(datevec(now)));
+handles.datestamp = temp(~isspace(temp));
+handles.fullname = get(handles.name,'String');
+if get(handles.timestamp,'Value')
+    handles.fullname = [handles.fullname handles.datestamp];
+end
+set(handles.fullname_box,'String',handles.fullname);
+handles = MakeNEU(handles);
+handles = WriteCaseFile(handles);
+DispMsg(handles);
+
 % source    handle to generate (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -548,6 +577,7 @@ MakeNEU(handles.Rotor.Blade,get(handles.name,'String'),handles.Rotor.Split)
 
 % --- Executes on button press in blades_as_bodies.
 function blades_as_bodies_Callback(source, eventdata, handles)
+handles = RotorSpec(handles);
 % source    handle to blades_as_bodies (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -704,6 +734,7 @@ end
 
 
 function maxP_Callback(source, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
 % source    handle to maxP (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -727,6 +758,7 @@ end
 
 
 function scale_Callback(source, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
 % source    handle to scale (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -751,6 +783,7 @@ end
 
 function fluid_temp_Callback(source, eventdata, handles)
 handles = GetFluidProps(handles);
+[handles CaseInfo] = SimParam(handles);
 guidata(source, handles);
 % source    handle to fluid_temp (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -778,6 +811,7 @@ function fluid_menu_Callback(source, eventdata, handles)
 contents = get(source,'String');
 handles.fluid.type = contents{get(source,'Value')};
 handles = GetFluidProps(handles);
+[handles CaseInfo] = SimParam(handles);
 guidata(source, handles);
 % source    handle to fluid_menu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -801,69 +835,38 @@ end
 
 
 
-function edit45_Callback(source, eventdata, handles)
-% source    handle to edit45 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+function uinf_Callback(source, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
 
-% Hints: get(source,'String') returns contents of edit45 as text
-%        str2double(get(source,'String')) returns contents of edit45 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit45_CreateFcn(source, eventdata, handles)
-% source    handle to edit45 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
+function uinf_CreateFcn(source, eventdata, handles)
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
 end
 
 
 
-function edit46_Callback(source, eventdata, handles)
-% source    handle to edit46 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(source,'String') returns contents of edit46 as text
-%        str2double(get(source,'String')) returns contents of edit46 as a double
+function vinf_Callback(source, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
 
 
-% --- Executes during object creation, after setting all properties.
-function edit46_CreateFcn(source, eventdata, handles)
-% source    handle to edit46 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
+
+function vinf_CreateFcn(source, eventdata, handles);
+
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
 end
 
 
 
-function edit47_Callback(source, eventdata, handles)
-% source    handle to edit47 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+function winf_Callback(source, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
 
-% Hints: get(source,'String') returns contents of edit47 as text
-%        str2double(get(source,'String')) returns contents of edit47 as a double
+function winf_CreateFcn(source, eventdata, handles)
 
-
-% --- Executes during object creation, after setting all properties.
-function edit47_CreateFcn(source, eventdata, handles)
-% source    handle to edit47 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
 end
@@ -935,4 +938,135 @@ function rotor_axis_x_CreateFcn(source, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
+end
+
+function DispMsg(handles)
+str = handles.neumsg;
+n = size(handles.casemsg,2);
+for i = 1:n
+    str =  strvcat(str,handles.casemsg{i});
+end
+msgbox(str);
+
+
+
+function dtinit_Callback(hObject, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
+
+function dtinit_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function dtout_Callback(hObject, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
+
+function dtout_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function tmax_Callback(hObject, eventdata, handles)
+omega = str2num(get(handles.rpm,'String'))/60;
+set(handles.nturns,'String',num2str(str2double(get(hObject,'String'))*omega));
+[handles CaseInfo] = SimParam(handles);
+
+function tmax_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function nturns_Callback(hObject, eventdata, handles)
+omega = str2num(get(handles.rpm,'String'))/60;
+set(handles.tmax,'String',num2str(str2double(get(hObject,'String'))/omega));
+[handles CaseInfo] = SimParam(handles);
+
+function nturns_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function nss_Callback(hObject, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
+
+function nss_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function cflmax_Callback(hObject, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
+
+function cflmax_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function minmodbeta_Callback(hObject, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
+
+
+function minmodbeta_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function scheme_Callback(hObject, eventdata, handles)
+contents = get(hObject,'String');
+if strcmp(contents{get(hObject,'Value')}, 'O(2) MUSCL')
+    set(handles.minmodbeta,'enable','on');
+    set(handles.limiter,'Value',2,'enable','off');   
+elseif strcmp(contents{get(hObject,'Value')}, 'O(1) Upwind')
+    set(handles.limiter,'Value',1,'enable','off');   
+else
+    set(handles.minmodbeta,'enable','off');
+    set(handles.limiter,'Value',1,'enable','on');
+end
+handles.FVM.scheme = contents{get(hObject,'Value')};
+[handles CaseInfo] = SimParam(handles);
+
+
+function scheme_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function integrator_Callback(hObject, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
+
+
+
+function integrator_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function limiter_Callback(hObject, eventdata, handles)
+[handles CaseInfo] = SimParam(handles);
+
+function limiter_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end

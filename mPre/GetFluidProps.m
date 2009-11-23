@@ -11,6 +11,7 @@ switch handles.fluid.type
         t0 = 291.15;
         mu0 = 18.27e-6;
         mu = Sutherland(mu0,c,tempr,t0);
+        handles.fluid.nu = mu/handles.fluid.rho;
     case 'Fresh Water' 
         T = [100 80 60 40 30 25 22 20 15 10  4 0];
         R = [958.4  971.8  983.2  992.2  995.6502  997.0479  997.7735  998.2071  999.1026 999.7026  999.9720  999.8395];
@@ -31,6 +32,7 @@ switch handles.fluid.type
         handles.fluid.nu = ITTC(a,b,c,d,t);
     otherwise
         handles.fluid.rho = 1;
+        handles.fluid.nu = 1e-6;
 end
 
 set(handles.rho,'String',num2str(handles.fluid.rho));
