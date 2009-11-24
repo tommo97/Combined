@@ -1,10 +1,10 @@
 fclose all;clear all;clc; close all;
 tic
-cd ~/Desktop/Workspace/Combined;
+cd ~/Desktop/Workspace/Combined/mPost;
 %%  Read in binary data
-fid = fopen('BodyData.bin', 'r');
+fid = fopen('../BodyData.bin', 'r');
 hold all
-load('./mat_files/Elliptic_.mat')
+load('../mat_files/Elliptic_.mat')
 NumBodies = fread(fid,1,'int');
 
 for i = 1:NumBodies
