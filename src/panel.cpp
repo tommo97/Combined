@@ -23,13 +23,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 
 
 /**************************************************************/
 #include "includes.hpp"
 #include "types.hpp"
 #include "panel.hpp"
+
 /***************************************************************
 This code accompanies panel.hpp and is used to set up first order
 panels on a boundary surface described by the BODY object
@@ -59,7 +60,7 @@ PANEL::PANEL(POINT *P1, POINT *P2, POINT *P3, POINT *P4) : C1(P1), C2(P2), C3(P3
     isBound = false;
     Owner = NULL;
     mu_prev = gamma_prev = 0.0;
-    Vfmm = Vect3(0.,0.,0.);
+    Vfmm = Vect3(0., 0., 0.);
     Theta = 0.;
     Ds = Vn = 0.;
 }
@@ -153,7 +154,7 @@ void PANEL::GetCollocationPoint() {
 
     Area = 0.5 * CR.Mag();
 
-    Vect3 BR = .5*(C1->vP + C4->vP) - .5*(C2->vP + C3->vP);
+    Vect3 BR = .5 * (C1->vP + C4->vP) - .5 * (C2->vP + C3->vP);
     //  Unit vectors of the same
     TRANS[1] = BR / BR.Mag();
     //    Get local X
@@ -168,82 +169,55 @@ void PANEL::GetCollocationPoint() {
 }
 
 /**************************************************************/
-void PANEL::SourceDoubletPotential(POINT *IP, REAL Mu, REAL Sigma, REAL Phi[])
-{
+void PANEL::SourceDoubletPotential(POINT *IP, REAL Mu, REAL Sigma, REAL Phi[]) {
     //      PV from panel centre to POI in local frame
     Vect3 P = VectMultMatrix(TRANS, IP->vP - Centroid);
     REAL MagP = P.Mag();
 
-//    if (MagP < FarField * MaxDiagonal) {
-        Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
-        REAL Pz2 = P.z * P.z;
+        if (MagP < FarField * MaxDiagonal) {
+    Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
+    REAL Pz2 = P.z * P.z;
 
-        Vect4 e(dX1.x * dX1.x + Pz2, dX2.x * dX2.x + Pz2, dX3.x * dX3.x + Pz2, dX4.x * dX4.x + Pz2);
-        Vect4 w(dX1.y * dX1.y, dX2.y * dX2.y, dX3.y * dX3.y, dX4.y * dX4.y);
-        Vect4 h(dX1.x * dX1.y, dX2.x * dX2.y, dX3.x * dX3.y, dX4.x * dX4.y);
-
-
-        Vect4 r = sqrt(e + w);
-
-        REAL aPz = sqrt(Pz2);
-
-        Vect4 alpha, beta, Pzr;
-
-        Pzr = P.z * r;
-
-        alpha = (M * e - h) / Pzr;
-        beta = (M * permute_1(e) - permute_1(h)) / permute_1(Pzr);
-        Vect4 Num = alpha - beta;
-        Vect4 Denom = alpha * beta + 1;
-
-        REAL T = 0;
-
-//        if (MagP == 0)
-//            Phi[0] = -two_pi;
-//        else
-//            Phi[0] = Mu / 2;
+    Vect4 e(dX1.x * dX1.x + Pz2, dX2.x * dX2.x + Pz2, dX3.x * dX3.x + Pz2, dX4.x * dX4.x + Pz2);
+    Vect4 w(dX1.y * dX1.y, dX2.y * dX2.y, dX3.y * dX3.y, dX4.y * dX4.y);
+    Vect4 h(dX1.x * dX1.y, dX2.x * dX2.y, dX3.x * dX3.y, dX4.x * dX4.y);
 
 
-//        if (aPz > 0) {
-//            //  This is basically all the arctan terms rolled into one atan2 call using double angle formulas
-//            //  atan2 does not seem to cascade.....
-//            Vect4 Pzr = P.z * r;
-//            Vect4 alpha = (M * e - h) / Pzr;
-//            Vect4 beta = (M * permute_1(e) - permute_1(h)) / permute_1(Pzr);
-//            Vect4 delta = alpha - beta;
-//            Vect4 A = (alpha - beta) / (1 + alpha * beta);
-//            REAL X = (A.a + A.b) / (1 - A.a * A.b);
-//            REAL Y = (A.c + A.d) / (1 - A.c * A.d);
-//            T = atan((X + Y)/(1 - X * Y));
-//            Phi[0] = Mu * T / (four_pi);
-//        }
+    Vect4 r = sqrt(e + w);
 
+    REAL aPz = sqrt(Pz2);
 
-//        REAL temp = T;
+    Vect4 alpha, beta, Pzr;
 
+    Pzr = P.z * r;
 
+    alpha = (M * e - h) / Pzr;
+    beta = (M * permute_1(e) - permute_1(h)) / permute_1(Pzr);
+    Vect4 Num = alpha - beta;
+    Vect4 Denom = alpha * beta + 1;
 
-        if (aPz > 0) {
-            T = 0;
-            if (Num.a != 0.) T += atan2(Num.a, Denom.a);
-            if (Num.b != 0.) T += atan2(Num.b, Denom.b);
-            if (Num.c != 0.) T += atan2(Num.c, Denom.c);
-            if (Num.d != 0.) T += atan2(Num.d, Denom.d);
-            Phi[0] = Mu * T / (four_pi);
+    REAL T = 0;
+    if (aPz > 0) {
+        T = 0;
+        if (Num.a != 0.) T += atan2(Num.a, Denom.a);
+        if (Num.b != 0.) T += atan2(Num.b, Denom.b);
+        if (Num.c != 0.) T += atan2(Num.c, Denom.c);
+        if (Num.d != 0.) T += atan2(Num.d, Denom.d);
+        Phi[0] = Mu * T / (four_pi);
+    }
+
+    //        if (fabs(temp - T) > 1e-3)  cout << T << " " << temp << endl;
+    REAL B = 0;
+    B += (D.a == 0. && (r.a + r.b - D.a) > 0.) ? 0.0 : ((dX1.x * DY.a - dX1.y * DX.a) * log((r.a + r.b + D.a) / (r.a + r.b - D.a))) / D.a;
+    B += (D.b == 0. && (r.b + r.c - D.b) > 0.) ? 0.0 : ((dX2.x * DY.b - dX2.y * DX.b) * log((r.b + r.c + D.b) / (r.b + r.c - D.b))) / D.b;
+    B += (D.c == 0. && (r.c + r.d - D.c) > 0.) ? 0.0 : ((dX3.x * DY.c - dX3.y * DX.c) * log((r.c + r.d + D.c) / (r.c + r.d - D.c))) / D.c;
+    B += (D.d == 0. && (r.d + r.a - D.d) > 0.) ? 0.0 : ((dX4.x * DY.d - dX4.y * DX.d) * log((r.d + r.a + D.d) / (r.d + r.a - D.d))) / D.d;
+
+    Phi[1] = Sigma * (B - P.z * T) / (four_pi);
+        } else {
+            Phi[0] = - Mu * Area * fabs(P.z) / (MagP * MagP * MagP * four_pi);
+            Phi[1] = - Sigma * Area / (MagP * four_pi);
         }
-
-//        if (fabs(temp - T) > 1e-3)  cout << T << " " << temp << endl;
-        REAL B = 0;
-        B += (D.a == 0. && (r.a + r.b - D.a) > 0.) ? 0.0 : ((dX1.x * DY.a - dX1.y * DX.a) * log((r.a + r.b + D.a) / (r.a + r.b - D.a))) / D.a;
-        B += (D.b == 0. && (r.b + r.c - D.b) > 0.) ? 0.0 : ((dX2.x * DY.b - dX2.y * DX.b) * log((r.b + r.c + D.b) / (r.b + r.c - D.b))) / D.b;
-        B += (D.c == 0. && (r.c + r.d - D.c) > 0.) ? 0.0 : ((dX3.x * DY.c - dX3.y * DX.c) * log((r.c + r.d + D.c) / (r.c + r.d - D.c))) / D.c;
-        B += (D.d == 0. && (r.d + r.a - D.d) > 0.) ? 0.0 : ((dX4.x * DY.d - dX4.y * DX.d) * log((r.d + r.a + D.d) / (r.d + r.a - D.d))) / D.d;
-
-        Phi[1] = Sigma * (B - P.z * T) / (four_pi);
-//    } else {
-//        Phi[0] = - Mu * Area * fabs(P.z) / (MagP * MagP * MagP * four_pi);
-//        Phi[1] = - Sigma * Area / (MagP * four_pi);
-//    }
 }
 
 /**************************************************************/
@@ -294,21 +268,22 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
         return VectMultMatrixTranspose(TRANS, Mult * Area * P / (MagP * MagP * MagP));
 
 }
+
 /**************************************************************/
 void PANEL::WakeNeighbSet() {
     doSide = true;
     gammaSide = gamma;
-    
-//        if (Neighb.B) {
-//            doSide.B = false;
-//            Neighb.B->gammaSide.T = Neighb.B->gamma - gamma;
-//        }
-//        if (Neighb.R) {
-//            doSide.R = false;
-//            Neighb.R->gammaSide.L = Neighb.R->gamma - gamma;
-//        }
-//        if (Neighb.L) gammaSide.L -= Neighb.L->gamma;
-//        if (Neighb.T) gammaSide.T -= Neighb.T->gamma;
+
+    //        if (Neighb.B) {
+    //            doSide.B = false;
+    //            Neighb.B->gammaSide.T = Neighb.B->gamma - gamma;
+    //        }
+    //        if (Neighb.R) {
+    //            doSide.R = false;
+    //            Neighb.R->gammaSide.L = Neighb.R->gamma - gamma;
+    //        }
+    //        if (Neighb.L) gammaSide.L -= Neighb.L->gamma;
+    //        if (Neighb.T) gammaSide.T -= Neighb.T->gamma;
 }
 
 /**************************************************************/
@@ -330,16 +305,18 @@ Vect3 PANEL::BodyPanelVelocity(Vect3 pTarget, REAL mu) {
             LineVelocity(C3->vP, C4->vP, pTarget, mu) +
             LineVelocity(C4->vP, C1->vP, pTarget, mu);
 }
+
 /**************************************************************/
 Vect3 PANEL::BodyPanelVelocity(Vect3 pTarget) {
     return BodyPanelVelocity(pTarget, *(this->mu));
 }
+
 /**************************************************************/
 Vect3 PANEL::LineVelocity(Vect3 lineStart, Vect3 lineEnd, Vect3 pTarget, const REAL gamma_in) {
     Vect3 R1 = pTarget - lineStart, R2 = pTarget - lineEnd, C = R1.Cross(R2);
     REAL MagC = C.Mag(), MagR1 = R1.Mag(), MagR2 = R2.Mag();
     Vect3 Vout;
-    if ((MagR1 > 0.) && (MagR2 > 0.) && (MagC > 0.)) {
+    if ((MagR1 > globalSystem->Del2) && (MagR2 > globalSystem->Del2) && (MagC > globalSystem->Del2)) {
         Vect3 R0 = lineEnd - lineStart;
         REAL Mult = gamma_in / (MagC * MagC * four_pi);
         REAL K = Mult * ((R0.Dot(R1) / MagR1) - (R0.Dot(R2) / MagR2));
@@ -348,74 +325,80 @@ Vect3 PANEL::LineVelocity(Vect3 lineStart, Vect3 lineEnd, Vect3 pTarget, const R
     }
     return Vout;
 }
+
 /**************************************************************/
 void PANEL::CheckNeighb(PANEL *Face) {
     if (Face != this) {
-//		int RECIP[4] = { 2, 3, 0, 1 };
-		POINT *LHS[5] = { this->C1, this->C2, this->C3, this->C4, this->C1 };
-		POINT *RHS[5] = { Face->C1, Face->C2, Face->C3, Face->C4, Face->C1 };
+        //		int RECIP[4] = { 2, 3, 0, 1 };
+        POINT * LHS[5] = {this->C1, this->C2, this->C3, this->C4, this->C1};
+        POINT * RHS[5] = {Face->C1, Face->C2, Face->C3, Face->C4, Face->C1};
 
-		for (int i = 0; i < 4; ++i)
-			for (int j = 0; j < 4; ++j) {
-				if (LHS[i]->vP == RHS[j]->vP)
-					for (int k = 0; k < 5; ++k)
-						if (LHS[i + 1]->vP == RHS[k]->vP) {
-							Neighb[i] = Face;
-							//NeighbNeighb[i] = Face->Neighb[RECIP[j]];
-							return;
-						}
-			}
-	}
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j) {
+                if (LHS[i]->vP == RHS[j]->vP)
+                    for (int k = 0; k < 5; ++k)
+                        if (LHS[i + 1]->vP == RHS[k]->vP) {
+                            Neighb[i] = Face;
+                            //NeighbNeighb[i] = Face->Neighb[RECIP[j]];
+                            return;
+                        }
+            }
+    }
 }
+
 /**************************************************************/
 void PANEL::GetCp(REAL dt) {
-	//	All panels have four neighbours, just some are on different faces
-	PanelNeighbSet <REAL> Ds, Dmu;
-	PanelNeighbSet <Vect3> Dx;
+    //	All panels have four neighbours, just some are on different faces
+    PanelNeighbSet <REAL> Ds, Dmu;
+    PanelNeighbSet <Vect3> Dx;
 
-	Dx.L = CollocationPoint->vP - Neighb.L->CollocationPoint->vP;
-	Dx.R = Neighb.R->CollocationPoint->vP - CollocationPoint->vP;
-	Dx.T = Neighb.T->CollocationPoint->vP - CollocationPoint->vP;
-	Dx.B = CollocationPoint->vP - Neighb.B->CollocationPoint->vP;
+    Dx.L = CollocationPoint->vP - Neighb.L->CollocationPoint->vP;
+    Dx.R = Neighb.R->CollocationPoint->vP - CollocationPoint->vP;
+    Dx.T = Neighb.T->CollocationPoint->vP - CollocationPoint->vP;
+    Dx.B = CollocationPoint->vP - Neighb.B->CollocationPoint->vP;
 
-	Dmu.L = *(mu) - *(Neighb.L->mu);
-	Dmu.R = *(Neighb.R->mu) - *(mu);
-	Dmu.T = *(Neighb.T->mu) - *(mu);
-	Dmu.B = *(mu) - *(Neighb.B->mu);
+    Dmu.L = *(mu) - *(Neighb.L->mu);
+    Dmu.R = *(Neighb.R->mu) - *(mu);
+    Dmu.T = *(Neighb.T->mu) - *(mu);
+    Dmu.B = *(mu) - *(Neighb.B->mu);
 
-	Ds.L = Dx.L.Mag();
-	Ds.R = Dx.R.Mag();
-	Ds.T = Dx.T.Mag();
-	Ds.B = Dx.B.Mag();
+    Ds.L = Dx.L.Mag();
+    Ds.R = Dx.R.Mag();
+    Ds.T = Dx.T.Mag();
+    Ds.B = Dx.B.Mag();
 
 
-	if (Theta.L > pi/3)
-		Dx.L = Dmu.L = Ds.L = 0.;
+    if (Theta.L > pi / 3)
+        Dx.L = Dmu.L = Ds.L = 0.;
 
-	if (Theta.R > pi/3)
-		Dx.R = Dmu.R = Ds.R = 0.;
+    if (Theta.R > pi / 3)
+        Dx.R = Dmu.R = Ds.R = 0.;
 
-	if (Theta.T > pi/3)
-		Dx.T = Dmu.T = Ds.T = 0.;
+    if (Theta.T > pi / 3)
+        Dx.T = Dmu.T = Ds.T = 0.;
 
-	if (Theta.B > pi/3)
-		Dx.B = Dmu.B = Ds.B = 0.;
+    if (Theta.B > pi / 3)
+        Dx.B = Dmu.B = Ds.B = 0.;
 
-	REAL DmuDeta = (Dmu.L + Dmu.R)/(Ds.L + Ds.R);
-	REAL DmuDxi = (Dmu.T + Dmu.B)/(Ds.T + Ds.B);
+    REAL DmuDeta = (Dmu.L + Dmu.R) / (Ds.L + Ds.R);
+    REAL DmuDxi = (Dmu.T + Dmu.B) / (Ds.T + Ds.B);
 
-	//	Now get face vels parallel with zeta and eta
-	Vect3 eta = Dx.L + Dx.R;
-	eta = eta/eta.Mag();
-	Vect3 xi = Dx.T + Dx.B;
-	xi = xi/xi.Mag();
+    //	Now get face vels parallel with zeta and eta
+    Vect3 eta = Dx.L + Dx.R;
+    eta = eta / eta.Mag();
+    Vect3 xi = Dx.T + Dx.B;
+    xi = xi / xi.Mag();
 
-	REAL Veta = CollocationPoint->vV.Dot(eta) + DmuDeta;
-	REAL Vxi = CollocationPoint->vV.Dot(xi) + DmuDxi;
+    REAL Veta = CollocationPoint->vV.Dot(eta) + DmuDeta;
+    REAL Vxi = CollocationPoint->vV.Dot(xi) + DmuDxi;
 
-	REAL DphiDt = (*mu - gamma_prev)/dt;
+    REAL DphiDt = (*mu - gamma_prev) / dt;
 
-	REAL Vref2 = ((CollocationPoint->vV).Dot(CollocationPoint->vV));
+    Vect3 Vel = Vkin - globalSystem->Vinf;
 
-	Cpress = 1 - (Veta*Veta + Vxi*Vxi - 2*DphiDt)/Vref2;
+    REAL Vref2 = Vel.Dot(Vel);//(CollocationPoint->vV).Dot(CollocationPoint->vV));
+
+    Cpress = 1 - (Veta * Veta + Vxi * Vxi - 2 * DphiDt) / Vref2;
+    //	Check this...
+    dF = -Cpress * (.5 * globalSystem->Rho * Vref2) * Area * TRANS[2];
 }

@@ -1,8 +1,4 @@
 clear all; close all; clc;
-p = mfilename('fullpath');
-path = p(1:end-12);
-cd(path);
-cd ..;
 
 cd ~/Desktop/Workspace/Combined/mPre
 dir2 = '../case_files/';
@@ -22,17 +18,17 @@ Scale = 1;          %   Scaling is done in the simulation
 
 
 
-name = 'straight';
+name = 'Elliptic_';
 fname = [name '.neu'];
 
 
 %%  Geometry Parameters - Positions/Vels/Attitudes etc
 
-th0 = -5;
+th0 = 180;
 
 Vels{1} = [0 0 0];
 Origin{1} = [0 0 0];
-Attitudes{1} = [0 0 0];
+Attitudes{1} = [0 0 pi];
 Rates{1} = [0 0 0];
 
 Vels{2} = [-10 0 0];
@@ -47,13 +43,13 @@ Rates{3} = [7.5 0 0];
 
 
 %%  Geometry Parameters - make a template/skeleton blade
-NRELBlade.Attitude = [0 0 0];
+NRELBlade.Attitude = [0 pi/2 0];
 NRELBlade.Origin = [0 0 0];
 NRELBlade.th0 =  th0;
 NRELBlade.PitchAxis = 0.3;
 %   Aerofoil
-NRELBlade.NChord = 32;
-NRELBlade.NSpan = 24;
+NRELBlade.NChord = 40;
+NRELBlade.NSpan = 30;
 %%  Aerofoil
 
 x = BellShape(0,1,NRELBlade.NChord,3);
@@ -71,8 +67,8 @@ THETA=[0;0;0;6.7;9.9;13.4;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
     3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-1.815;-1.815];
 
 
-RADIUS = linspace(-5,5);
-THETA = zeros(size(RADIUS));
+%RADIUS = linspace(-5,5);
+%THETA = 10*zeros(size(RADIUS));
 
 
 %CHORD = 1*ones(size(RADIUS));
@@ -156,14 +152,6 @@ for i = 1:1
     Bodies{i}.Faces.LocalAxis.Y.Body = [ly(:,1)./lymag, ly(:,2)./lymag, ly(:,3)./lymag];
     Bodies{i}.Faces.LocalAxis.Z.Body = [lz(:,1)./lzmag, lz(:,2)./lzmag, lz(:,3)./lzmag];
     Bodies{i}.Faces.LocalAxis.X.Body = cross(Bodies{i}.Faces.LocalAxis.Y.Body, Bodies{i}.Faces.LocalAxis.Z.Body);
-%    scatter3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3));
-%     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-%         Bodies{i}.Faces.LocalAxis.X.Body(:,1),Bodies{i}.Faces.LocalAxis.X.Body(:,2),Bodies{i}.Faces.LocalAxis.X.Body(:,3),'green');
-%     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-%         Bodies{i}.Faces.LocalAxis.Y.Body(:,1),Bodies{i}.Faces.LocalAxis.Y.Body(:,2),Bodies{i}.Faces.LocalAxis.Y.Body(:,3),'red');
-%     quiver3(Bodies{i}.Faces.CP.Body(:,1),Bodies{i}.Faces.CP.Body(:,2),Bodies{i}.Faces.CP.Body(:,3),...
-%         Bodies{i}.Faces.LocalAxis.Z.Body(:,1),Bodies{i}.Faces.LocalAxis.Z.Body(:,2),Bodies{i}.Faces.LocalAxis.Z.Body(:,3),'blue');
-%     
 
 end
 

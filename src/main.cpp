@@ -47,22 +47,20 @@ int main(int argc, char *argv[]) {
     globalSystem->GambitScale = 1;
     globalSystem->MaxP = 3;
     globalSystem->dtInit = 0.01;
-    globalSystem->Del2 = 1e-3;
+    globalSystem->Del2 = .05;
+    globalSystem->DS = .3;
     globalSystem->NeuFile = dir1 + "0012.neu";
 
 
 
     globalIO->read_input(dir2 + argv[1]);
 
-
     globalIO->PrepOutputDir();
     globalIO->WriteBinary();
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
-    globalSystem->uinf = 10.0;
-    globalSystem->vinf = 0.0;
-    globalSystem->winf = globalSystem->uinf*sind(0.0);
+
     globalSystem->Initialise();
     globalSystem->TimeStep();
 

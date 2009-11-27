@@ -176,7 +176,7 @@ void FVMCell::ReList() {
 
 /**************************************************************/
 void FVMCell::Report() {
-    Vect3 Vel, VelN, VelS, VelE, VelW, VelT, VelB, Vinf(globalSystem->uinf, globalSystem->vinf, globalSystem->winf), Vfmm = Vinf;
+    Vect3 Vel, VelN, VelS, VelE, VelW, VelT, VelB, Vinf(globalSystem->Vinf.x, globalSystem->Vinf.y, globalSystem->Vinf.z), Vfmm = Vinf;
 
     for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
         for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
@@ -245,7 +245,7 @@ void FVMCell::vApplyRecursivelyP(BranchFuncPtr down, FVMCellFuncPtr bottom, Bran
 
 /**************************************************************/
 void FVMCell::SetVelsZero() {
-    FaceVels = Velocity = Vect3(globalSystem->uinf, globalSystem->vinf, globalSystem->winf);
+    FaceVels = Velocity = Vect3(globalSystem->Vinf.x, globalSystem->Vinf.y, globalSystem->Vinf.z);
 }
 
 /**************************************************************/

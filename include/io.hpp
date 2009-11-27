@@ -97,6 +97,15 @@ public:
 
     void write_GMSH();
 
+    template<class T>
+    inline string to_string(const T& t) {
+    	stringstream ss;
+    	ss << t;
+    	return ss.str();
+    }
+
+
+
 #ifdef _PNGWRITER
     void write_image();
 

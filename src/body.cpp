@@ -24,7 +24,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
+#define PANEL_MODE
 
 #include "body.hpp"
 /**************************************************************/
@@ -79,7 +79,7 @@ void BODY::MoveBody(REAL dt) {
 void BODY::SortWake(REAL dt) {
     if (WRITE_TO_SCREEN) cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
     PANEL *src, *trg;
-    Vect3 Vinf(globalSystem->uinf, globalSystem->vinf, globalSystem->winf);
+    Vect3 Vinf = globalSystem->Vinf;
     Array <PANEL*> ProtoCopy;
 
 
@@ -198,7 +198,7 @@ void BODY::InitNascentWake(REAL dt) {
     //     int edge;
     for (int i = 0; i < (int) BoundaryFaces.size(); ++i) {
         if (BoundaryFaces[i]->isTop) {
-            Vect3 vVinf(globalSystem->uinf, globalSystem->vinf, globalSystem->winf);
+            Vect3 vVinf = globalSystem->Vinf;
             PANEL *src, *trg;
             src = BoundaryFaces[i];
             POINT *X1, *X2, *X3, *X4;
@@ -208,21 +208,21 @@ void BODY::InitNascentWake(REAL dt) {
             X4 = new POINT;
 			X1->vV = X2->vV = X3->vV = X4->vV = vVinf;
 			//	Rotate to previous position
-			MoveBody(-dt * DS);
+			MoveBody(-dt * globalSystem->DS);
 			Vect3 vx1, vx2, vx3, vx4;
 
 			vx4 = src->edgeX1->vP;
 			vx3 = src->edgeX2->vP;
 
 			//	Rotate back
-			MoveBody(dt * DS);
+			MoveBody(dt * globalSystem->DS);
 
 			vx1 = src->edgeX1->vP;
 			vx2 = src->edgeX2->vP;
 
 			//	Convect x1 and x2
-			vx3 += (DS * dt) * vVinf;
-			vx4 += (DS * dt) * vVinf;
+			vx3 += (globalSystem->DS * dt) * vVinf;
+			vx4 += (globalSystem->DS * dt) * vVinf;
             //	Put positions into POINTs
 
             X1->vP = vx1;
@@ -368,17 +368,13 @@ void BODY::WriteSurface(ostream& out_stream) {
     if (WRITE_TO_FILE) {
         out_stream.setf(ios::fixed, ios::floatfield);
         out_stream << "hold all; set(gcf,'Renderer','OpenGL');" << endl;
-        for (int j = 0; j < NumFaces; ++j){
+        for (int j = 0; j < NumFaces; ++j)
             SURFW((1.0)*Faces[j]->C1->vP, (1.0)*Faces[j]->C2->vP, (1.0)*Faces[j]->C3->vP, (1.0)*Faces[j]->C4->vP, Faces[j]->gamma, out_stream);
-//            out_stream << "scatter3(" << Faces[j]->C1->vP.x << "," << Faces[j]->C1->vP.y << "," << Faces[j]->C1->vP.z << ",'s');" << endl;
-//            out_stream << "scatter3(" << Faces[j]->C2->vP.x << "," << Faces[j]->C2->vP.y << "," << Faces[j]->C2->vP.z << ",'f');" << endl;
-//            out_stream << "scatter3(" << Faces[j]->C3->vP.x << "," << Faces[j]->C3->vP.y << "," << Faces[j]->C3->vP.z << ",'.');" << endl;
-//            out_stream << "scatter3(" << Faces[j]->C4->vP.x << "," << Faces[j]->C4->vP.y << "," << Faces[j]->C4->vP.z << ");" << endl;
-        }
+
         out_stream << "axis equal" << endl;
     }
 
-    Vect3 P1(-1,0,-.2), P2(-1,-5, -.2), P3(-1,5,-.2), VT(globalSystem->uinf,globalSystem->vinf,globalSystem->winf), VEL;
+    Vect3 P1(-1,0,-.2), P2(-1,-5, -.2), P3(-1,5,-.2), VT = globalSystem->Vinf, VEL;
     out_stream << "data = [" << P1 << ";" << endl << P2 << ";" << endl << P3 <<  ";" << endl;
     for (int i = 0; i < 100; ++i){
     	VEL = globalSystem->Bodies[0]->GetVel(P1);
@@ -391,7 +387,7 @@ void BODY::WriteSurface(ostream& out_stream) {
     	    	    	P3 += .005*(VEL+VT);
     	    	    	out_stream << P3 << ";" << endl;
     }
-    out_stream << "];" << endl << "scatter3(data(:,1),data(:,2),data(:,3));" << endl;
+    out_stream << "];" << endl << "scatter3(plot_ax,data(:,1),data(:,2),data(:,3));" << endl;
 
 
 
@@ -399,6 +395,119 @@ void BODY::WriteSurface(ostream& out_stream) {
 
 /**************************************************************/
 void BODY::WriteWake(ostream& out_stream) {
+    #ifdef PANEL_MODE
+    if (WRITE_TO_FILE) {
+        out_stream.setf(ios::fixed, ios::floatfield);
+        out_stream << "hold(plot_ax,'all');\n" ;
+    }
+    PANEL *tmp, *hld;
+    ARRAY3(PANEL*) Patches;
+    int count = 0;
+    for (int i = 0; i < (int) WakeGlobal.size(); ++i)
+        for (int j = 0; j < (int) WakeGlobal[i].size(); ++j) {
+            if (WakeGlobal[i][j]->Neighb.T && WakeGlobal[i][j]->Neighb.R && !WakeGlobal[i][j]->Neighb.L && !WakeGlobal[i][j]->Neighb.B) {
+                ARRAY2(PANEL*) Patch;
+
+                hld = tmp = WakeGlobal[i][j];
+                //  Get first row
+                {
+                    Array <PANEL*> row;
+                    row.push_back(tmp);
+                    while (tmp->Neighb.R) {
+                        tmp = tmp->Neighb.R;
+                        row.push_back(tmp);
+                        count++;
+                    }
+                    Patch.push_back(row);
+                }
+                //  Get remaining rows
+                while (hld->Neighb.T) {
+                    hld = tmp = hld->Neighb.T;
+                    Array <PANEL*> row;
+                    row.push_back(tmp);
+                    while (tmp->Neighb.R) {
+                        tmp = tmp->Neighb.R;
+                        row.push_back(tmp);
+                        count++;
+                    }
+                    Patch.push_back(row);
+                }
+                Patches.push_back(Patch);
+            }
+        }
+
+
+    if (WRITE_TO_FILE)
+        for (int j = 0; j < nSpanPanels; ++j)
+            SURFW(ProtoWake[j]->C1->vP, ProtoWake[j]->C2->vP, ProtoWake[j]->C3->vP, ProtoWake[j]->C4->vP, ProtoWake[j]->gamma, out_stream);
+
+
+
+
+    for (int g = 0; g < Patches.size(); ++g) {
+        if (Patches[g].size() != 0) {
+
+            ARRAY2(Vect3) X(Patches[g].size() + 1, Patches[g][0].size() + 1);
+            ARRAY2(REAL) C(Patches[g].size(), Array <REAL > (Patches[g][0].size(), 0.0));
+            for (int i = 0; i < Patches[g].size(); ++i)
+                for (int j = 0; j < Patches[g][i].size(); ++j) {
+                    X[i][j] = Patches[g][i][j]->C1->vP;
+                    X[i][j + 1] = Patches[g][i][j]->C4->vP;
+                    X[i + 1][j] = Patches[g][i][j]->C2->vP;
+                    X[i + 1][j + 1] = Patches[g][i][j]->C3->vP;
+                    C[i][j] = Patches[g][i][j]->gamma;
+                    //                        if (i == 0)
+                    //                            C[i][j + 1] = Patches[g][i][j]->gamma;
+                    //                        else
+                    //                            C[i][j + 1] += .5 * Patches[g][i][j]->gamma;
+                    //
+                    //                        if (j == 0)
+                    //                            C[i + 1][j] = Patches[g][i][j]->gamma;
+                    //                        else
+                    //                            C[i + 1][j] += .5 * Patches[g][i][j]->gamma;
+                }
+
+            if (WRITE_TO_FILE) {
+                out_stream << "X" << g << " = [";
+                for (int i = 0; i < X.size(); ++i) {
+                    for (int j = 0; j < X[i].size(); ++j)
+                        out_stream << X[i][j].x << " ";
+                    out_stream << " ;" << endl;
+                }
+                out_stream << "];" << endl;
+
+                out_stream << "Y" << g << " = [";
+                for (int i = 0; i < X.size(); ++i) {
+                    for (int j = 0; j < X[i].size(); ++j)
+                        out_stream << X[i][j].y << " ";
+                    out_stream << " ;" << endl;
+                }
+                out_stream << "];" << endl;
+
+                out_stream << "Z" << g << " = [";
+                for (int i = 0; i < X.size(); ++i) {
+                    for (int j = 0; j < X[i].size(); ++j)
+                        out_stream << X[i][j].z << " ";
+                    out_stream << " ;" << endl;
+                }
+                out_stream << "];" << endl;
+
+                out_stream << "C" << g << " = [";
+                for (int i = 0; i < C.size(); ++i) {
+                    for (int j = 0; j < C[i].size(); ++j)
+                        out_stream << C[i][j] << " ";
+                    out_stream << " ;" << endl;
+                }
+                out_stream << "];" << endl;
+
+                out_stream << "surf(plot_ax,X" << g << ", Y" << g << ", Z" << g << ", C" << g << ");" << endl;
+                //        out_stream << "surf(X" << g << ", Y" << g << ", Z" << g << ",'FaceAlpha','flat','AlphaDataMapping','scaled','AlphaData',10./C" << g << ",'FaceColor','blue','linestyle','none');" << endl;
+            }
+        }
+    }
+
+
+    #else
     if (WRITE_TO_FILE) {
         out_stream.setf(ios::fixed, ios::floatfield);
         out_stream << "hold all" << endl;
@@ -458,8 +567,8 @@ void BODY::WriteWake(ostream& out_stream) {
     out_stream << "];" << endl;
 
      out_stream << "scatter3(X0(:),Y0(:),Z0(:),50,sqrt(Ox(:).*Ox(:) + Oy(:).*Oy(:) + Oz(:).*Oz(:)),'filled');" << endl;
-
-    out_stream << "view(3); axis tight; axis equal;drawnow;set(gcf,'Renderer','OpenGL');" << endl;
+#endif
+    out_stream << "view(plot_ax,3); axis(plot_ax,'equal','tight');\n";
 }
 /**************************************************************/
 
@@ -480,6 +589,7 @@ void BODY::PrintWake() {
             SURF(WakeGlobal[i][j]->C1->vP, WakeGlobal[i][j]->C2->vP, ProtoWake[j]->C3->vP, WakeGlobal[i][j]->C4->vP, WakeGlobal[i][j]->gamma);
 
     if (WRITE_TO_SCREEN) cout << "axis equal" << endl;
+
 }
 
 /**************************************************************/
@@ -491,10 +601,13 @@ Vect3 BODY::GetVel(Vect3 Target) {
     for (int i = 0; i < (int) ProtoWake.size(); ++i)
         U += ProtoWake[i]->WakePanelVelocity(Target);
 
-    for (int i = 0; i < WakePoints.size(); ++i)
-        for (int j = 0; j < WakePoints[i].size(); ++j)
-            globalDirectVel(Target - WakePoints[i][j]->vP, WakePoints[i][j]->vO, V);
+//    for (int i = 0; i < WakePoints.size(); ++i)
+//        for (int j = 0; j < WakePoints[i].size(); ++j)
+//            globalDirectVel(Target - WakePoints[i][j]->vP, WakePoints[i][j]->vO, V);
 
+    for (int i = 0; i < (int) WakeGlobal.size(); ++i)
+        for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
+            U += WakeGlobal[i][j]->WakePanelVelocity(Target);
 
     for (int l = 0; l < (int) Faces.size(); ++l) {
         if (!globalSystem->LiftingLineMode) {
@@ -509,24 +622,24 @@ Vect3 BODY::GetVel(Vect3 Target) {
 /**************************************************************/
 Vect3 BODY::GetWakeVel(Vect3 Target) {
     Vect3 U;
-//    for (i = 0; i < (int) WakeGlobal.size(); ++i)
-//        for (j = 0; j < (int) WakeGlobal[i].size(); ++j)
-//            U += WakeGlobal[i][j]->WakePanelVelocity(Target);
+    for (int i = 0; i < (int) WakeGlobal.size(); ++i)
+        for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
+            U += WakeGlobal[i][j]->WakePanelVelocity(Target);
 
-    for (int i = 0; i < WakePoints.size(); ++i)
-        for (int j = 0; j < WakePoints[i].size(); ++j)
-            globalDirectVel(WakePoints[i][j]->vP - Target, WakePoints[i][j]->vO, U);
+//    for (int i = 0; i < WakePoints.size(); ++i)
+//        for (int j = 0; j < WakePoints[i].size(); ++j)
+//            globalDirectVel(WakePoints[i][j]->vP - Target, WakePoints[i][j]->vO, U);
 
     return U;
 }
 
 /**************************************************************/
 void BODY::DissolveWake(REAL dt) {
-    Array <REAL> R, RR, G, GG, GP, GPGP;
-    Array <Vect3> DR, DRDR, V, VV, X, XX;
+    Array <REAL> R, G, GP;
+    Array <Vect3> DR, V, X;
     Vect3 Start, End;
 
-    Vect3 Vinf(globalSystem->uinf, globalSystem->vinf, globalSystem->winf);
+    Vect3 Vinf = globalSystem->Vinf;
     if (ProtoWake.size() > 0){
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -534,28 +647,28 @@ void BODY::DissolveWake(REAL dt) {
     for (int i = 0; i < (int) ProtoWake.size(); ++i) {
 
         ProtoWake[i]->GetCollocationPoint();
-        Vect3 Pos = ProtoWake[i]->CollocationPoint->vP - CG.vP;
+        Vect3 Pos = ProtoWake[i]->CollocationPoint->vP;
         // 	Get point kinematic velocity - rotational part first
-        Vect3 Vrot = ProtoWake[i]->Owner->BodyRates.Cross(Pos);
+        Vect3 Vrot = ProtoWake[i]->Owner->EulerRates.Cross(Pos);
         // 	Add to translational velocity....
         Vect3 Vkin = ProtoWake[i]->Owner->CG.vV + Vrot;
         // 	Include freestream
         ProtoWake[i]->CollocationPoint->vV = Vinf - Vkin; // + AllBodyPanels[i]->CollocationPoint->vVfmm;
         //  Iterate over all wake panels
         for (int J = 0; J < (int) globalSystem->Bodies.size(); ++J)
-            ProtoWake[i]->CollocationPoint->vV += globalSystem->Bodies[J]->GetVel(Pos + CG.vP);
+            ProtoWake[i]->CollocationPoint->vV += globalSystem->Bodies[J]->GetWakeVel(Pos);
 
     }
 
+
+
+
+
     for (int i = 0; i < ProtoWake.size(); ++i) {
         PANEL *temp_pan = ProtoWake[i];
-        Vect3 S1,S2;
+
         if (!ProtoWake[i]->Neighb.B) {
-            Start = S1 = .5 * (temp_pan->C4->vP + temp_pan->C1->vP);
-            S2 = .5 * (temp_pan->C2->vP + temp_pan->C3->vP);
-            XX.push_back(S1);
-            XX.push_back(S2);
-            DRDR.push_back((S2-S1));
+            Start = .5 * (temp_pan->C4->vP + temp_pan->C1->vP);
             R.push_back((temp_pan->CollocationPoint->vP - Start).Mag());
             G.push_back(temp_pan->gamma);
             GP.push_back(temp_pan->gamma_prev);
@@ -564,10 +677,6 @@ void BODY::DissolveWake(REAL dt) {
             X.push_back(temp_pan->CollocationPoint->vP);
             while ((temp_pan->Neighb.T) && (temp_pan->Neighb.T!=temp_pan)) {
                 temp_pan = temp_pan->Neighb.T;
-                S1 = .5 * (temp_pan->C4->vP + temp_pan->C1->vP);
-                S2 = .5 * (temp_pan->C2->vP + temp_pan->C3->vP);
-                XX.push_back(S2);
-                DRDR.push_back((S2-S1));
                 R.push_back(R.back() + (temp_pan->CollocationPoint->vP - temp_pan->Neighb.B->CollocationPoint->vP).Mag());
                 G.push_back(temp_pan->gamma);
                 GP.push_back(temp_pan->gamma_prev);
@@ -579,37 +688,25 @@ void BODY::DissolveWake(REAL dt) {
         }
     }
 
-    GG.push_back(0);
-    RR.push_back(0);
-    for (int i = 0; i < V.size()-1; ++i){
-    	GG.push_back(.5*(G[i]+G[i+1]));
-    	RR.push_back(RR.back() + DRDR[i].Mag());
-    }
-
-    GG.push_back(0);
-    RR.push_back(RR.back() + DRDR.back().Mag());
-
 
         int n = R.size();
         Array <Vect3> dOdt(n), UdelGamma(n), Om(n);
     {
-        REAL r[n+1], g[n+1];
-        for (int i = 0; i < R.size(); ++i)
-            dOdt[i] = ((G[i] - GP[i])/dt)*DR[i];	//	the DR is to give the direction to the vorticity
 
-        for (int i = 0; i < n+1; ++i)
-        {
-            r[i] = RR[i];
-            g[i] = GG[i];
+
+        REAL r[n], g[n];
+        for (int i = 0; i < R.size(); ++i) {
+            r[i] = R[i];
+            g[i] = G[i];
+            dOdt[i] = ((G[i] - GP[i])/dt)*DR[i];
+
         }
-
-
         gsl_interp_accel *acc
                 = gsl_interp_accel_alloc();
         gsl_spline *spline
-                = gsl_spline_alloc(gsl_interp_akima,n+1);
+                = gsl_spline_alloc(gsl_interp_akima, R.size());
 
-        gsl_spline_init(spline, r, g, n+1);
+        gsl_spline_init(spline, r, g, n);
         for (int i = 0; i < n; ++i) {
             UdelGamma[i] = gsl_spline_eval_deriv(spline, R[i], acc) * V[i] * globalSystem->GambitScale;
             Om[i] = dt*(UdelGamma[i] - dOdt[i]);
@@ -624,7 +721,7 @@ void BODY::DissolveWake(REAL dt) {
         for (int i = 0; i < X.size(); ++i)
             new_points.push_back(new POINT(X[i] + V[i]*dt,Om[i]));
 
-        WakePoints.push_front(new_points);
+        WakePoints.push_back(new_points);
 
     }
 }

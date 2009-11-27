@@ -23,7 +23,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 
 
 
@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /**************************************************************/
 #include "time_integrator.hpp"
 #include <gsl/gsl_sf_bessel.h>
+
 /**************************************************************/
 TIME_STEPPER::TIME_STEPPER() {
     dt_prev = 1e16;
@@ -154,45 +155,45 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
 void TIME_STEPPER::time_loop() {
 
     if (first_step) {
-    	globalSystem->NumSubSteps = 25;
-    	globalSystem->dtInit = 5;
-		for (int i = 0; i < globalSystem->NumBodies; ++i)
-			globalSystem->Bodies[i]->InitNascentWake(globalSystem->dtInit / globalSystem->NumSubSteps);
-		globalSystem->SetupGlobalInfluenceMatrices();
-		dt = globalSystem->dtInit;
+
+        for (int i = 0; i < globalSystem->NumBodies; ++i)
+            globalSystem->Bodies[i]->InitNascentWake(globalSystem->dtInit / globalSystem->NumSubSteps);
+        globalSystem->SetupGlobalInfluenceMatrices();
+        dt = globalSystem->dtInit;
         globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
         globalSystem->GetPressures(dt);
         globalIO->write_m();
         globalSystem->WriteBodies();
-//        globalSystem->PutWakesInTree();
-//        globalOctree->Reset();
-//        globalOctree->InitVelsGetLaplacian();
-//        globalOctree->GetVels();
+        //        globalSystem->PutWakesInTree();
+        //        globalOctree->Reset();
+        //        globalOctree->InitVelsGetLaplacian();
+        //        globalOctree->GetVels();
         first_step = false;
     }
 
-//    time_step();
-//    globalIO->stat_step();
-//
-//    globalOctree->FVM(); //  t = t0
-//    globalOctree->Integrate(); //  t = t0 -> t1
-//
-//    globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
-//
-//    globalSystem->PutWakesInTree();
-//    globalOctree->Reset();
-//    globalOctree->InitVelsGetLaplacian();
-//    globalOctree->GetVels();
-//    globalSystem->GetPanelFMMVelocities();  //  t = t1
-//    globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
-//
-//    if (globalTimeStepper->dump_next){
-////        globalSystem->WriteDomain();
-//        globalSystem->WriteVorticity();
-////        globalOctree->Reset();
-//    }
+    //    time_step();
+    //    globalIO->stat_step();
+    //
+    //    globalOctree->FVM(); //  t = t0
+    //    globalOctree->Integrate(); //  t = t0 -> t1
+    //
+    //    globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
+    //
+    //    globalSystem->PutWakesInTree();
+    //    globalOctree->Reset();
+    //    globalOctree->InitVelsGetLaplacian();
+    //    globalOctree->GetVels();
+    //    globalSystem->GetPanelFMMVelocities();  //  t = t1
+    //    globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
+    //
+    //    if (globalTimeStepper->dump_next){
+    ////        globalSystem->WriteDomain();
+    //        globalSystem->WriteVorticity();
+    ////        globalOctree->Reset();
+    //    }
 
 }
+
 /**************************************************************/
 void TIME_STEPPER::time_step() {
 
@@ -227,32 +228,31 @@ void TIME_STEPPER::time_step() {
     REAL dt_lagrange = min(dt_euler / 10, cfl_lim / OmRMax);
 
     int nss = ceil(dt_euler / dt_lagrange);
-    
+
     CFL = srad * dt;
 
     globalSystem->NumSubSteps = nss;
 
-//    if (n == 0) dump_next = true;
+    //    if (n == 0) dump_next = true;
 
-    if (n > 0)
-    {
+    if (n > 0) {
         dt_prev = dt;
         t = t + dt;
     }
 
 
-//    if ((ChangeOver == false) && (t >= 1))
-//    {
-//
-//        for (int i = 0; i < globalSystem->NumBodies; ++i)
-//            globalSystem->Bodies[i]->CG.vV = - globalSystem->Vinf;
-//
-//        globalSystem->uinf = 0;
-//        globalSystem->vinf = 0;
-//        globalSystem->winf = 0;
-//        globalSystem->Vinf = 0;
-//        ChangeOver = true;
-//    }
+    //    if ((ChangeOver == false) && (t >= 1))
+    //    {
+    //
+    //        for (int i = 0; i < globalSystem->NumBodies; ++i)
+    //            globalSystem->Bodies[i]->CG.vV = - globalSystem->Vinf;
+    //
+    //        globalSystem->Vinf.x = 0;
+    //        globalSystem->Vinf.y = 0;
+    //        globalSystem->Vinf.z = 0;
+    //        globalSystem->Vinf = 0;
+    //        ChangeOver = true;
+    //    }
 
 
     n++;
@@ -268,8 +268,7 @@ void TIME_STEPPER::Integrate(FVMCell * cell) {
 /**************************************************************/
 void TIME_STEPPER::Euler(FVMCell * cell) {
 
-    for (int q = 0; q < globalSystem->NumTransVars; ++q)
-    {
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
         cell->TransVars[q] += dt * cell->TransDerivs[q];
         cell->TransDerivs[q] = 0.;
     }

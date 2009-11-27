@@ -109,10 +109,6 @@ class OctreeCapsule;
 //  Tells code to include the tilting term (not required for 2D cases)
 // #define INCLUDE_TILTING_TERM            
 
-//  Fluid Density
-#define _RHO 1027
-//  The distance back along the path of motion protowakes are formed (DT*DS*Vel)           
-#define DS .3
 //  Far field approximations are used for panels beyond FarField*MaxDiagonal from centroid
 #define FarField 5
 //  MINMOD3 parameter: 1 results in MIN-MOD limiter, 2 results in SUPERBEE           
@@ -201,9 +197,9 @@ class OctreeCapsule;
 
 #define tand(a) tan(DEG2RAD(a))
 
-#define SURF(X1,X2,X4,X3,C) if (WRITE_TO_SCREEN) std::cout << "surf([" << X1[0] << ", " << X2[0] << "; " << X3[0] << ", " << X4[0] << "],[" << X1[1] << ", " << X2[1] << "; " << X3[1] << ", " << X4[1] << "],[" << X1[2] << ", " << X2[2] << ";" << X3[2] << ", " << X4[2] << "]," << C << ");" << std::endl;
+#define SURF(X1,X2,X4,X3,C) if (WRITE_TO_SCREEN) std::cout << "surf([" << X1[0] << ", " << X2[0] << "; " << X3[0] << ", " << X4[0] << "],[" << X1[1] << ", " << X2[1] << "; " << X3[1] << ", " << X4[1] << "],[" << X1[2] << ", " << X2[2] << ";" << X3[2] << ", " << X4[2] << "]," << C << ");\n";
 
-#define SURFW(X1,X2,X4,X3,C,W) W << "surf([" << X1[0] << ", " << X2[0] << "; " << X3[0] << ", " << X4[0] << "],[" << X1[1] << ", " << X2[1] << "; " << X3[1] << ", " << X4[1] << "],[" << X1[2] << ", " << X2[2] << ";" << X3[2] << ", " << X4[2] << "]," << C << ");" << std::endl;
+#define SURFW(X1,X2,X4,X3,C,W) W << "surf([" << X1[0] << ", " << X2[0] << "; " << X3[0] << ", " << X4[0] << "],[" << X1[1] << ", " << X2[1] << "; " << X3[1] << ", " << X4[1] << "],[" << X1[2] << ", " << X2[2] << ";" << X3[2] << ", " << X4[2] << "]," << C << ");\n";
 
         
 

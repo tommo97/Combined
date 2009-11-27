@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class PANEL {
 public:
     long unsigned int ID;
-    Vect3 Centroid, TRANS[3], Xcb[4], Vfmm, Vkin; //  Transformation matrix from BODY to PANEL axis; Position of corners
+    Vect3 Centroid, TRANS[3], Xcb[4], Vfmm, Vkin, dF; //  Transformation matrix from BODY to PANEL axis; Position of corners
     REAL *sigma, *mu, gamma, Area, MaxDiagonal, mu_prev, gamma_prev, alpha, chord, Uinf, Vn, Cpress;
     POINT *C1, *C2, *C3, *C4, *CollocationPoint, *edgeX1, *edgeX2;
     Vect4 DX, DY, M, D;

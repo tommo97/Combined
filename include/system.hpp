@@ -41,12 +41,14 @@ class SYSTEM
 public:
   int MaxP, NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval, NumTransVars;
   bool LiftingLineMode, ZeroBodyRelativeMotion;
-  REAL dtInit, uinf, vinf, winf, GambitScale, Del2;
+  REAL dtInit, GambitScale, Del2, DS;
   REAL Mu,Nu,Rho,Temp;
   string NeuFile, CaseName;
   Vect3 Vinf;
   SYSTEM(int);
   ~SYSTEM();
+
+  int num_out;
 	
   //                Panel code related members
   Array <BODY*> Bodies;
