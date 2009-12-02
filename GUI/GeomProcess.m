@@ -6,6 +6,9 @@ Blade.Radius = handles.Span.Radius';
 Blade.Chord = handles.Span.Chord';
 Blade.Theta = handles.Span.Theta';
 
+
+Blade.Thickness = handles.Span.Thickness';
+
 Blade.Attitude = [0 0 0];
 Blade.Origin = [0 0 0];
 Blade.th0 = 0.;

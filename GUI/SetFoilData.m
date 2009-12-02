@@ -29,6 +29,15 @@ switch type;
         data.US = Data.N00xx.US;
         data.LS = Data.N00xx.LS;
         data.X = Data.N00xx.X;
+    case 'NACA 638xx'
+        set(foil.thickness_slider,'enable','on');
+        set(foil.thickness_edit_text,'enable','on');
+        foil.US = Foil.N638xx.US;
+        foil.LS = Foil.N638xx.LS;
+        foil.X = Foil.N638xx.X;
+        data.US = Data.N638xx.US;
+        data.LS = Data.N638xx.LS;
+        data.X = Data.N638xx.X;
     otherwise
         foil.US = Foil.N0012.US;
         foil.LS = Foil.N0012.LS;

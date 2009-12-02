@@ -25,6 +25,12 @@ RLowerS.z = repmat(Blade.Section.Root.LS,[Blade.NSpan 1]);
 RLowerS.n = repmat(Blade.Section.Root.X,[Blade.NSpan 1]);
 
 RootBlendCoefft = repmat(linspace(1,0,Blade.NSpan)', [1 Blade.NChord]);
+
+if ~isempty(Blade.Thickness)
+    th = Blade.Thickness - min(Blade.Thickness);
+    RootBlendCoefft = repmat(th./max(th)', [1 Blade.NChord]);
+end
+
 TipBlendCoefft = 1-RootBlendCoefft;
 
 

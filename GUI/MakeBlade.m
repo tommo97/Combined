@@ -34,6 +34,7 @@ y = BellShape(Rmin,Rmax,Blade.NSpan,5)';
 
 
 %%  Make blade surfaces
+
 UpperS.x = repmat(x,[Blade.NSpan 1]);% - Blade.PitchAxis;
 UpperS.y = repmat(y,[1 Blade.NChord]);
 UpperS.z = repmat(USz,[Blade.NSpan 1]);

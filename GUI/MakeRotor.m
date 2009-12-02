@@ -23,14 +23,18 @@ for i = 1:Rotor.NumBlades
     % Now put this rotor blade into appropriate azimuthal position -
     % equivilent to rotation about body roll axis
     TRANS2 = MakeEulerMatrix(Rotor.Attitude);
-    TRANS = MakeEulerMatrix([azimuth(i) Rotor.th0 0]);
-    x1 = x0*TRANS(1,1) + y0*TRANS(1,2) + z0*TRANS(1,3);
-    y1 = x0*TRANS(2,1) + y0*TRANS(2,2) + z0*TRANS(2,3);
-    z1 = x0*TRANS(3,1) + y0*TRANS(3,2) + z0*TRANS(3,3);
+    TRANS0 = MakeEulerMatrix([0 Rotor.th0 0]);
+    x1 = x0*TRANS0(1,1) + y0*TRANS0(1,2) + z0*TRANS0(1,3);
+    y1 = x0*TRANS0(2,1) + y0*TRANS0(2,2) + z0*TRANS0(2,3);
+    z1 = x0*TRANS0(3,1) + y0*TRANS0(3,2) + z0*TRANS0(3,3);
+    TRANS1 = MakeEulerMatrix([azimuth(i) 0 0]);
+    x2 = x1*TRANS1(1,1) + y1*TRANS1(1,2) + z1*TRANS1(1,3);
+    y2 = x1*TRANS1(2,1) + y1*TRANS1(2,2) + z1*TRANS1(2,3);
+    z2 = x1*TRANS1(3,1) + y1*TRANS1(3,2) + z1*TRANS1(3,3);
     
-    Rotor.Blade{i}.X = Rotor.Origin(1) + x1*TRANS2(1,1) + y1*TRANS2(1,2) + z1*TRANS2(1,3);
-    Rotor.Blade{i}.Y = Rotor.Origin(2) + x1*TRANS2(2,1) + y1*TRANS2(2,2) + z1*TRANS2(2,3);
-    Rotor.Blade{i}.Z = Rotor.Origin(3) + x1*TRANS2(3,1) + y1*TRANS2(3,2) + z1*TRANS2(3,3);
+    Rotor.Blade{i}.X = Rotor.Origin(1) + x2*TRANS2(1,1) + y2*TRANS2(1,2) + z2*TRANS2(1,3);
+    Rotor.Blade{i}.Y = Rotor.Origin(2) + x2*TRANS2(2,1) + y2*TRANS2(2,2) + z2*TRANS2(2,3);
+    Rotor.Blade{i}.Z = Rotor.Origin(3) + x2*TRANS2(3,1) + y2*TRANS2(3,2) + z2*TRANS2(3,3);
     Rotor.Blade{i}.Faces.C1.Body = [Rotor.Blade{i}.X(Rotor.Blade{i}.Panels.c1.Local) Rotor.Blade{i}.Y(Rotor.Blade{i}.Panels.c1.Local) Rotor.Blade{i}.Z(Rotor.Blade{i}.Panels.c1.Local)];
     Rotor.Blade{i}.Faces.C2.Body = [Rotor.Blade{i}.X(Rotor.Blade{i}.Panels.c2.Local) Rotor.Blade{i}.Y(Rotor.Blade{i}.Panels.c2.Local) Rotor.Blade{i}.Z(Rotor.Blade{i}.Panels.c2.Local)];
     Rotor.Blade{i}.Faces.C3.Body = [Rotor.Blade{i}.X(Rotor.Blade{i}.Panels.c3.Local) Rotor.Blade{i}.Y(Rotor.Blade{i}.Panels.c3.Local) Rotor.Blade{i}.Z(Rotor.Blade{i}.Panels.c3.Local)];

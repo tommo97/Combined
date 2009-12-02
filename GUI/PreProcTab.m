@@ -43,9 +43,19 @@ set(handles.commit_to_head,'enable','off');
 set(handles.output_svn,'enable','off');
 set(handles.timestamp,'Value',false);
 
+handles.PostComp.r_R = .47;
 
+handles.PostComp.use_slice = true;
 handles.Origin = [0;0;0];
 handles.Attitude = [0;0;0];
+%%  Clear the axes
+cla(handles.root_foil_axes,'reset');
+cla(handles.tip_foil_axes,'reset');
+cla(handles.goto_axes,'reset');
+cla(handles.cp_axes,'reset');
+cla(handles.full_turbine_axes,'reset');
+cla(handles.blade_surf_axes,'reset');
+cla(handles.blade_geom_axes,'reset');
 %%  Set up tabs
 % hg=uitabgroup;
 % ht(1)=uitab(hg,'Title','Tab 1');
@@ -671,6 +681,12 @@ guidata(source, handles);
 
 
 function slice_Callback(source, eventdata, handles)
+handles.PostComp.use_slice = true;
+slice = str2num(get(source,'String'));
+r = handles.PostComp.Bodies{1}.Radius(slice);
+R = max(handles.PostComp.Bodies{1}.Radius);
+set(handles.r_upon_R,'String',num2str(r/R,3));
+guidata(source, handles);
 % source    handle to slice (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -693,15 +709,93 @@ end
 
 
 % --- Executes on button press in run.
-function run_Callback(hObject, eventdata, handles)
-% hObject    handle to run (see GCBO)
+function run_Callback(source, eventdata, handles)
+dirname = pwd;
+cd ..
+system('rm bin_files/*.bin');
+    set(handles.inputFiles_listbox,'Value',1);
+    set(handles.inputFiles_listbox,'String','Empty',...
+	'Value',get(handles.inputFiles_listbox,'Value'));
+[status, result] = system(['export LD_LIBRARY_PATH=/usr/lib64; ./main ' handles.fullname '.cas > dump &']);
+cd GUI;
+[a b] = system('ps | grep main');
+while length(b) > 1
+    
+    [s r] = system('tail --lines=17 ../dump');
+    set(handles.terminal_output,'String',r);
+    pause(1);
+    [a b] = system('ps | grep main');
+    
+end
+[s r] = system('tail --lines=17 ../dump');
+set(handles.terminal_output,'String',r);
+
+% source    handle to run (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 
 % --- Executes on button press in pushbutton1.
-function pushbutton1_Callback(hObject, eventdata, handles)
+function pushbutton1_Callback(source, eventdata, handles)
 gotonewest(handles);
-% hObject    handle to pushbutton1 (see GCBO)
+% source    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+
+function lambda_Callback(source, eventdata, handles)
+
+% source    handle to lambda (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(source,'String') returns contents of lambda as text
+%        str2double(get(source,'String')) returns contents of lambda as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function lambda_CreateFcn(source, eventdata, handles)
+% source    handle to lambda (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(source,'BackgroundColor','white');
+end
+
+
+
+function r_upon_R_Callback(source, eventdata, handles)
+handles.PostComp.use_slice = false;
+r_R = str2num(get(source,'String'));
+
+
+R = max(handles.PostComp.Bodies{1}.Radius);
+handles.PostComp.r_slice = R*r_R;
+handles.PostComp.r_R = r_R;
+slice = interp1(handles.PostComp.Bodies{1}.Radius,1:numel(handles.PostComp.Bodies{1}.Radius),handles.PostComp.r_slice,'nearest');
+set(handles.slice,'String',num2str(round(slice)));
+
+guidata(source, handles);
+% source    handle to r_upon_R (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(source,'String') returns contents of r_upon_R as text
+%        str2double(get(source,'String')) returns contents of r_upon_R as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function r_upon_R_CreateFcn(source, eventdata, handles)
+% source    handle to r_upon_R (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(source,'BackgroundColor','white');
+end

@@ -394,9 +394,9 @@ void PANEL::GetCp(REAL dt) {
 
     REAL DphiDt = (*mu - gamma_prev) / dt;
 
-    Vect3 Vel = Vkin - globalSystem->Vinf;
+    //Vect3 Vel = Vkin + globalSystem->Vinf;
 
-    REAL Vref2 = Vel.Dot(Vel);//(CollocationPoint->vV).Dot(CollocationPoint->vV));
+    REAL Vref2 = Vkin.Dot(Vkin) + globalSystem->Vinf.Dot(globalSystem->Vinf);
 
     Cpress = 1 - (Veta * Veta + Vxi * Vxi - 2 * DphiDt) / Vref2;
     //	Check this...

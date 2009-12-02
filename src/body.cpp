@@ -367,11 +367,11 @@ void BODY::PrintSurface() {
 void BODY::WriteSurface(ostream& out_stream) {
     if (WRITE_TO_FILE) {
         out_stream.setf(ios::fixed, ios::floatfield);
-        out_stream << "hold all; set(gcf,'Renderer','OpenGL');" << endl;
+        out_stream << "if exist('plot_ax')\n figure; plot_ax=gca;\nend\nhold(plot_ax,'all'); set(gcf,'Renderer','OpenGL');" << endl;
         for (int j = 0; j < NumFaces; ++j)
             SURFW((1.0)*Faces[j]->C1->vP, (1.0)*Faces[j]->C2->vP, (1.0)*Faces[j]->C3->vP, (1.0)*Faces[j]->C4->vP, Faces[j]->gamma, out_stream);
 
-        out_stream << "axis equal" << endl;
+        
     }
 
     Vect3 P1(-1,0,-.2), P2(-1,-5, -.2), P3(-1,5,-.2), VT = globalSystem->Vinf, VEL;
@@ -389,7 +389,7 @@ void BODY::WriteSurface(ostream& out_stream) {
     }
     out_stream << "];" << endl << "scatter3(plot_ax,data(:,1),data(:,2),data(:,3));" << endl;
 
-
+    out_stream << "axis(plot_ax,'equal','tight');" << endl;
 
 }
 
