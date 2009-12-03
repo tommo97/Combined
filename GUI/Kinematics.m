@@ -7,6 +7,7 @@ for i = 1:handles.BodyData.numbodies
     handles.BodyData.vels{i}        = [str2num(get(handles.u,'String')) str2num(get(handles.v,'String')) str2num(get(handles.w,'String'))];
     axis = [str2num(get(handles.rotor_axis_x,'String')) str2num(get(handles.rotor_axis_y,'String')) str2num(get(handles.rotor_axis_z,'String'))];
     axis = axis./(sqrt(dot(axis,axis)));
+    handles.BodyData.RotorAxis{i} = axis;
     rotorspeed = 2*pi*str2num(get(handles.rpm,'String'))/60;
     handles.BodyData.rates{i} = handles.BodyData.rates{i} + rotorspeed*axis;
     handles.BodyData.names{i} = [get(handles.name,'String') '_' num2str(i)];

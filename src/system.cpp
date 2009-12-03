@@ -392,8 +392,8 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
                     Bodies[i]->WakePoints[j][k]->vP += Bodies[i]->WakePoints[j][k]->vV * dt;
 
                         //  Check the order of the next few lines
-//        for (int i = 0; i < NumBodies; ++i)
-//            Bodies[i]->SortWake(dt);
+        for (int i = 0; i < NumBodies; ++i)
+            Bodies[i]->SortWake(dt);
 
         GetGlobalRHS();
         LinAlg();
@@ -413,8 +413,8 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
 
 
-        for (int j = 0; j < NumBodies; ++j)
-            Bodies[j]->DissolveWake(dt);
+//        for (int j = 0; j < NumBodies; ++j)
+//            Bodies[j]->DissolveWake(dt);
 
 
         //        globalIO->write_m();
@@ -821,6 +821,8 @@ void SYSTEM::WriteBodies() {
     fout.write((char *) & NameLength, sizeof (int));
     fout.write((char *) CaseName.c_str(), sizeof (char[NameLength]));
     fout.write((char *) &globalTimeStepper->sim_time, sizeof (REAL));
+    fout.write((char *) &Vinf, sizeof (Vect3));
+    fout.write((char *) &Rho, sizeof (REAL));
     fout.write((char *) & NumBodies, sizeof (int));
 
     for (int i = 0; i < NumBodies; ++i) {

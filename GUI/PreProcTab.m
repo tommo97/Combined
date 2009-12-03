@@ -675,6 +675,7 @@ end
 % --- Executes on button press in load.
 function load_Callback(source, eventdata, handles)
 handles = BodyDataOut(handles);
+handles = AllDataOut(handles);
 guidata(source, handles);
 
 % --- Executes on button press in plot_cp.
@@ -717,6 +718,7 @@ end
 
 % --- Executes on button press in run.
 function run_Callback(source, eventdata, handles)
+load(['../mat_files/' handles.PostComp.CaseName '.mat']);
 if strcmp(get(handles.run,'String'),'Stop')
 system('killall main');
 else
@@ -729,16 +731,18 @@ set(handles.inputFiles_listbox,'String','Empty',...
 	'Value',1);
 [status, result] = system(['export LD_LIBRARY_PATH=/usr/lib64; ./main ' handles.fullname '.cas > dump &']);
 cd GUI;
-[a b] = system('ps | grep main');
+[a b] = system('top -n 1 | grep main');
 while length(b) > 1
-    
+    fls = dir('../bin_files/*.bin');
     [s r] = system('tail --lines=24 ../dump');
     set(handles.terminal_output,'String',r);
     set(handles.run,'String','Stop');
     set(handles.timer,'String',toc);
     pause(1);
     [a b] = system('ps | grep main');
+    if length({fls.name}) > 0
     handles = AllDataOut(handles);
+    end
 end
 [s r] = system('tail --lines=17 ../dump');
 set(handles.terminal_output,'String',r);

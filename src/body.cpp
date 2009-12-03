@@ -577,14 +577,14 @@ Vect3 BODY::GetVel(Vect3 Target) {
     if (!globalSystem->LiftingLineMode)
         for (int i = 0; i < (int) ProtoWake.size(); ++i)
             U += ProtoWake[i]->WakePanelVelocity(Target);
+//
+//    for (int i = 0; i < WakePoints.size(); ++i)
+//        for (int j = 0; j < WakePoints[i].size(); ++j)
+//            globalDirectVel(Target - WakePoints[i][j]->vP, WakePoints[i][j]->vO, V);
 
-    for (int i = 0; i < WakePoints.size(); ++i)
-        for (int j = 0; j < WakePoints[i].size(); ++j)
-            globalDirectVel(Target - WakePoints[i][j]->vP, WakePoints[i][j]->vO, V);
-
-    //    for (int i = 0; i < (int) WakeGlobal.size(); ++i)
-    //        for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
-    //            U += WakeGlobal[i][j]->WakePanelVelocity(Target);
+        for (int i = 0; i < (int) WakeGlobal.size(); ++i)
+            for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
+                U += WakeGlobal[i][j]->WakePanelVelocity(Target);
 
     for (int l = 0; l < (int) Faces.size(); ++l) {
         if (!globalSystem->LiftingLineMode) {
@@ -599,13 +599,13 @@ Vect3 BODY::GetVel(Vect3 Target) {
 /**************************************************************/
 Vect3 BODY::GetWakeVel(Vect3 Target) {
     Vect3 U;
-    //    for (int i = 0; i < (int) WakeGlobal.size(); ++i)
-    //        for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
-    //            U += WakeGlobal[i][j]->WakePanelVelocity(Target);
+        for (int i = 0; i < (int) WakeGlobal.size(); ++i)
+            for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
+                U += WakeGlobal[i][j]->WakePanelVelocity(Target);
 
-    for (int i = 0; i < WakePoints.size(); ++i)
-        for (int j = 0; j < WakePoints[i].size(); ++j)
-            globalDirectVel(WakePoints[i][j]->vP - Target, WakePoints[i][j]->vO, U);
+//    for (int i = 0; i < WakePoints.size(); ++i)
+//        for (int j = 0; j < WakePoints[i].size(); ++j)
+//            globalDirectVel(WakePoints[i][j]->vP - Target, WakePoints[i][j]->vO, U);
 
     return U;
 }

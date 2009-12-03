@@ -19,6 +19,7 @@ for i = 1:numbodies
     Vels{i} = [str2num(get(handles.u,'String')) str2num(get(handles.v,'String')) str2num(get(handles.w,'String'))];
     axis = [str2num(get(handles.rotor_axis_x,'String')) str2num(get(handles.rotor_axis_y,'String')) str2num(get(handles.rotor_axis_z,'String'))];
     axis = axis./(sqrt(dot(axis,axis)));
+    handles.Bodies{i}.RotorAxis = axis;
     rotorspeed = 2*pi*str2num(get(handles.rpm,'String'))/60;
     Rates{i} = Rates{i} + rotorspeed*axis;
     names{i} = [get(handles.name,'String') '_' num2str(i)];
