@@ -1,7 +1,7 @@
 function handles = MakeNEU(handles)
 Bodies = handles.Rotor.Blade;
 name = handles.fullname;
-split = handles.Rotor.Split;
+split = get(handles.blades_as_bodies,'Value');
 dir1 = '../neu_files/';
 fname = [dir1 name '.neu'];
 fid = fopen(fname, 'wt');

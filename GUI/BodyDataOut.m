@@ -10,7 +10,8 @@ binfile = strcat('../bin_files/', files(get(handles.inputFiles_listbox,'Value'))
 fid = fopen(binfile{1}, 'r');
 
 handles.PostComp.CaseName = fread(fid,fread(fid,1,'int'),'char=>char')';
-
+handles.PostComp.CaseTime = fread(fid,1,'double');
+disp(handles.PostComp.CaseTime);
 set(handles.casename,'String',handles.PostComp.CaseName);
 
 load(['../mat_files/' handles.PostComp.CaseName '.mat']);

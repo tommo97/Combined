@@ -1,5 +1,5 @@
-function handles = PostPlot(handles)
-hold(handles.cp_axes,'off')
+function handles = PostPlot(handles,ax)
+hold(ax,'off')
 %%  Begin Postprocessing
 for i = 1:size(handles.PostComp.Bodies,1);
     inds = [1:max(handles.PostComp.Bodies{i}.Panels.MainPans(:))]';
@@ -63,7 +63,7 @@ for i = 1:size(handles.PostComp.Bodies,1);
     PressChord = PressChord/max(abs(PressChord));
     PressChord(end+1) = PressChord(1);
     CPress(end+1) = CPress(1);
-    plot(handles.cp_axes,PressChord,-CPress);
+    plot(ax,PressChord,-CPress);
    
     %surf(handles.PostComp.Bodies{i}.X(handles.PostComp.Bodies{i}.N.Local),handles.PostComp.Bodies{i}.Y(handles.PostComp.Bodies{i}.N.Local),handles.PostComp.Bodies{i}.Z(handles.PostComp.Bodies{i}.N.Local),handles.PostComp.Bodies{i}.GammaDist);
     %hold all
@@ -71,7 +71,7 @@ for i = 1:size(handles.PostComp.Bodies,1);
 end
 
 if handles.PostComp.r_R==.30
-hold(handles.cp_axes,'on')
+hold(ax,'on')
 data = [0.00000E+0	2.88412
 5.19673E-3	2.19367
 1.11359E-2	1.85086
@@ -94,9 +94,9 @@ data = [0.00000E+0	2.88412
 1.93022E-2	-1.00751
 8.90869E-3	-0.90612
 4.45434E-3	-0.54882];
-scatter(handles.cp_axes,data(:,1),data(:,2));
+scatter(ax,data(:,1),data(:,2));
 elseif handles.PostComp.r_R==.47
-hold(handles.cp_axes,'on')
+hold(ax,'on')
 data = [9.65108E-3	2.04677
 2.15293E-2	1.96452
 4.00891E-2	1.76613
@@ -119,9 +119,9 @@ data = [9.65108E-3	2.04677
 4.45434E-3	-0.66290
 4.45434E-3	1.88226
 -7.42391E-4	1.96935];
-scatter(handles.cp_axes,data(:,1),data(:,2));
+scatter(ax,data(:,1),data(:,2));
 elseif handles.PostComp.r_R==.63
-hold(handles.cp_axes,'on')
+hold(ax,'on')
 data = [0.00776	2.04706
 0.02039	1.96486
 0.03897	1.76656
@@ -144,9 +144,9 @@ data = [0.00776	2.04706
 0.00510	-0.66264
 0.00407	1.88736
 -0.00114	1.96959];
-scatter(handles.cp_axes,data(:,1),data(:,2));
+scatter(ax,data(:,1),data(:,2));
 elseif handles.PostComp.r_R==.80
-hold(handles.cp_axes,'on')
+hold(ax,'on')
 data = [9.65108E-3	1.76265
 1.93022E-2	1.62702
 3.93467E-2	1.41227
@@ -169,9 +169,9 @@ data = [9.65108E-3	1.76265
 2.96956E-3	-0.80678
 0.00000E+0	1.49892
 5.19673E-3	1.59688];
-scatter(handles.cp_axes,data(:,1),data(:,2));
+scatter(ax,data(:,1),data(:,2));
 elseif handles.PostComp.r_R==.95
-hold(handles.cp_axes,'on')
+hold(ax,'on')
 data = [2.04987E-2	1.15498
 3.97892E-2	1.08725
 5.98200E-2	1.00663
@@ -194,8 +194,8 @@ data = [2.04987E-2	1.15498
 -4.01784E-4	0.49125
 4.83849E-3	0.74580
 1.08250E-2	1.02290];
-scatter(handles.cp_axes,data(:,1),data(:,2));
+scatter(ax,data(:,1),data(:,2));
 end
 
-axis(handles.cp_axes,[-.1 1.1 -1 4]);
-axis(handles.cp_axes,'square');
+axis(ax,[-.1 1.1 -1 4]);
+axis(ax,'square');

@@ -48,6 +48,12 @@ handles.PostComp.r_R = .47;
 handles.PostComp.use_slice = true;
 handles.Origin = [0;0;0];
 handles.Attitude = [0;0;0];
+
+set(handles.run,'String','Run');
+set(handles.timer,'String','0.0');
+set(handles.inputFiles_listbox,'Value',1);
+set(handles.inputFiles_listbox,'String','Empty');
+
 %%  Clear the axes
 cla(handles.root_foil_axes,'reset');
 cla(handles.tip_foil_axes,'reset');
@@ -61,7 +67,7 @@ cla(handles.blade_geom_axes,'reset');
 % ht(1)=uitab(hg,'Title','Tab 1');
 % ht(2)=uitab(hg,'Title','Tab 2');
 % 
-% axes('parent',ht(1));
+% axes('parent',ht(1));r
 % plot(1:10,(1:10).^2);
 % 
 % axes('parent',ht(2));
@@ -436,6 +442,7 @@ guidata(source, handles);
 
 function blades_as_bodies_Callback(source, eventdata, handles)
 handles = RotorSpec(handles);
+guidata(source, handles);
 function name_Callback(source, eventdata, handles)
 function name_CreateFcn(source, eventdata, handles)
 % source    handle to name (see GCBO)
@@ -672,7 +679,7 @@ guidata(source, handles);
 
 % --- Executes on button press in plot_cp.
 function plot_cp_Callback(source, eventdata, handles)
-handles = PostPlot(handles);
+handles = PostPlot(handles,handles.cp_axes);
 guidata(source, handles);
 % source    handle to plot_cp (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -710,26 +717,33 @@ end
 
 % --- Executes on button press in run.
 function run_Callback(source, eventdata, handles)
+if strcmp(get(handles.run,'String'),'Stop')
+system('killall main');
+else
+    tic;
 dirname = pwd;
 cd ..
 system('rm bin_files/*.bin');
-    set(handles.inputFiles_listbox,'Value',1);
-    set(handles.inputFiles_listbox,'String','Empty',...
-	'Value',get(handles.inputFiles_listbox,'Value'));
+
+set(handles.inputFiles_listbox,'String','Empty',...
+	'Value',1);
 [status, result] = system(['export LD_LIBRARY_PATH=/usr/lib64; ./main ' handles.fullname '.cas > dump &']);
 cd GUI;
 [a b] = system('ps | grep main');
 while length(b) > 1
     
-    [s r] = system('tail --lines=17 ../dump');
+    [s r] = system('tail --lines=24 ../dump');
     set(handles.terminal_output,'String',r);
+    set(handles.run,'String','Stop');
+    set(handles.timer,'String',toc);
     pause(1);
     [a b] = system('ps | grep main');
-    
+    handles = AllDataOut(handles);
 end
 [s r] = system('tail --lines=17 ../dump');
 set(handles.terminal_output,'String',r);
-
+end
+set(handles.run,'String','Run');
 % source    handle to run (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -799,3 +813,22 @@ function r_upon_R_CreateFcn(source, eventdata, handles)
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in savecpplot.
+function savecpplot_Callback(source, eventdata, handles)
+
+try
+close(handles.newFig);
+catch
+handles.newFig = [];
+end
+
+handles.newFig = figure;
+newAxes = axes;
+set(handles.newFig,'CurrentAxes',newAxes);
+PostPlot(handles,newAxes);
+guidata(source, handles);
+% source    handle to savecpplot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

@@ -47,7 +47,7 @@ public:
   Vect3 Vinf;
   SYSTEM(int);
   ~SYSTEM();
-
+  bool PanelMode;
   int num_out;
 	
   //                Panel code related members

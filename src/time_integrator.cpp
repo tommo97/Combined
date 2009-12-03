@@ -39,7 +39,7 @@ TIME_STEPPER::TIME_STEPPER() {
     ChangeOver = false;
     n = -1;
     RKStep = 0;
-    t = substep_time = 0.0;
+    t = substep_time = sim_time = 0.0;
     cfl_lim = 0.45;
     dt_out = .1;
     t_out = dt_out;

@@ -23,10 +23,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
-#define PANEL_MODE
+ */
+//#define PANEL_MODE
 
 #include "body.hpp"
+
 /**************************************************************/
 BODY::BODY(Vect3 Origin_, Vect3 Attitude, Vect3 Velocity, Vect3 Rates, string name, SYSTEM *sys) {
     globalSystem = sys;
@@ -61,7 +62,7 @@ void BODY::MoveBody(REAL dt) {
     CG.vP += CG.vV*dt;
     //    Now set appropriate body rates, and transforms etc.
     SetEulerTrans();
-//    GetBodyRates();   //  Body rates are constant in this case....                        //  Check BodyRates
+    //    GetBodyRates();   //  Body rates are constant in this case....                        //  Check BodyRates
     //      Now update position of body faces
 
     for (int i = 0; i < (int) ProtoWake.size(); ++i) {
@@ -77,7 +78,7 @@ void BODY::MoveBody(REAL dt) {
 
 /**************************************************************/
 void BODY::SortWake(REAL dt) {
-    if (WRITE_TO_SCREEN) cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+    globalSystem->PanelMode = true;
     PANEL *src, *trg;
     Vect3 Vinf = globalSystem->Vinf;
     Array <PANEL*> ProtoCopy;
@@ -206,23 +207,23 @@ void BODY::InitNascentWake(REAL dt) {
             X2 = new POINT;
             X3 = new POINT;
             X4 = new POINT;
-			X1->vV = X2->vV = X3->vV = X4->vV = vVinf;
-			//	Rotate to previous position
-			MoveBody(-dt * globalSystem->DS);
-			Vect3 vx1, vx2, vx3, vx4;
+            X1->vV = X2->vV = X3->vV = X4->vV = vVinf;
+            //	Rotate to previous position
+            MoveBody(-dt * globalSystem->DS);
+            Vect3 vx1, vx2, vx3, vx4;
 
-			vx4 = src->edgeX1->vP;
-			vx3 = src->edgeX2->vP;
+            vx4 = src->edgeX1->vP;
+            vx3 = src->edgeX2->vP;
 
-			//	Rotate back
-			MoveBody(dt * globalSystem->DS);
+            //	Rotate back
+            MoveBody(dt * globalSystem->DS);
 
-			vx1 = src->edgeX1->vP;
-			vx2 = src->edgeX2->vP;
+            vx1 = src->edgeX1->vP;
+            vx2 = src->edgeX2->vP;
 
-			//	Convect x1 and x2
-			vx3 += (globalSystem->DS * dt) * vVinf;
-			vx4 += (globalSystem->DS * dt) * vVinf;
+            //	Convect x1 and x2
+            vx3 += (globalSystem->DS * dt) * vVinf;
+            vx4 += (globalSystem->DS * dt) * vVinf;
             //	Put positions into POINTs
 
             X1->vP = vx1;
@@ -345,11 +346,11 @@ void BODY::SetEulerTrans() {
     REAL b2 = sinphi * sinthe * sinpsi + cosphi*cospsi;
     REAL b3 = sinphi*costhe;
     REAL c1 = cosphi * sinthe * cospsi + sinphi*sinpsi;
-    REAL c2 = cosphi * sinthe * sinpsi-sinphi*cospsi;
+    REAL c2 = cosphi * sinthe * sinpsi - sinphi*cospsi;
     REAL c3 = cosphi*costhe;
-    TRANS[0] = Vect3(a1,b1,c1);
-    TRANS[1] = Vect3(a2,b2,c2);
-    TRANS[2] = Vect3(a3,b3,c3);
+    TRANS[0] = Vect3(a1, b1, c1);
+    TRANS[1] = Vect3(a2, b2, c2);
+    TRANS[2] = Vect3(a3, b3, c3);
 }
 /**************************************************************/
 #ifndef use_NCURSES
@@ -367,38 +368,18 @@ void BODY::PrintSurface() {
 void BODY::WriteSurface(ostream& out_stream) {
     if (WRITE_TO_FILE) {
         out_stream.setf(ios::fixed, ios::floatfield);
-        out_stream << "if exist('plot_ax')\n figure; plot_ax=gca;\nend\nhold(plot_ax,'all'); set(gcf,'Renderer','OpenGL');" << endl;
         for (int j = 0; j < NumFaces; ++j)
-            SURFW((1.0)*Faces[j]->C1->vP, (1.0)*Faces[j]->C2->vP, (1.0)*Faces[j]->C3->vP, (1.0)*Faces[j]->C4->vP, Faces[j]->gamma, out_stream);
-
-        
+            SURFW((1.0) * Faces[j]->C1->vP, (1.0) * Faces[j]->C2->vP, (1.0) * Faces[j]->C3->vP, (1.0) * Faces[j]->C4->vP, Faces[j]->gamma, out_stream);
     }
-
-    Vect3 P1(-1,0,-.2), P2(-1,-5, -.2), P3(-1,5,-.2), VT = globalSystem->Vinf, VEL;
-    out_stream << "data = [" << P1 << ";" << endl << P2 << ";" << endl << P3 <<  ";" << endl;
-    for (int i = 0; i < 100; ++i){
-    	VEL = globalSystem->Bodies[0]->GetVel(P1);
-    	P1 += .005*(VEL+VT);
-    	out_stream << P1 << ";" << endl;
-    	VEL = globalSystem->Bodies[0]->GetVel(P2);
-    	    	P2 += .005*(VEL+VT);
-    	    	out_stream << P2 << ";" << endl;
-    	    	VEL = globalSystem->Bodies[0]->GetVel(P3);
-    	    	    	P3 += .005*(VEL+VT);
-    	    	    	out_stream << P3 << ";" << endl;
-    }
-    out_stream << "];" << endl << "scatter3(plot_ax,data(:,1),data(:,2),data(:,3));" << endl;
-
-    out_stream << "axis(plot_ax,'equal','tight');" << endl;
 
 }
 
 /**************************************************************/
 void BODY::WriteWake(ostream& out_stream) {
-    #ifdef PANEL_MODE
+#ifdef PANEL_MODE
     if (WRITE_TO_FILE) {
         out_stream.setf(ios::fixed, ios::floatfield);
-        out_stream << "hold(plot_ax,'all');\n" ;
+        out_stream << "hold(plot_ax,'all');\n";
     }
     PANEL *tmp, *hld;
     ARRAY3(PANEL*) Patches;
@@ -500,21 +481,17 @@ void BODY::WriteWake(ostream& out_stream) {
                 }
                 out_stream << "];" << endl;
 
-                out_stream << "surf(plot_ax,X" << g << ", Y" << g << ", Z" << g << ", C" << g << ");" << endl;
+                out_stream << "scatter3(plot_ax,X" << g << ", Y" << g << ", Z" << g << ", C" << g << ");" << endl;
                 //        out_stream << "surf(X" << g << ", Y" << g << ", Z" << g << ",'FaceAlpha','flat','AlphaDataMapping','scaled','AlphaData',10./C" << g << ",'FaceColor','blue','linestyle','none');" << endl;
             }
         }
     }
 
 
-    #else
-    if (WRITE_TO_FILE) {
-        out_stream.setf(ios::fixed, ios::floatfield);
-        out_stream << "hold all" << endl;
-    }
+#else
     if (WRITE_TO_FILE)
         for (int j = 0; j < nSpanPanels; ++j)
-            SURFW(ProtoWake[j]->C1->vP, ProtoWake[j]->C2->vP, ProtoWake[j]->C3->vP, ProtoWake[j]->C4->vP, 0.0*ProtoWake[j]->gamma, out_stream);
+            SURFW(ProtoWake[j]->C1->vP, ProtoWake[j]->C2->vP, ProtoWake[j]->C3->vP, ProtoWake[j]->C4->vP, 0.0 * ProtoWake[j]->gamma, out_stream);
 
 
     out_stream << "X0 = [ ";
@@ -566,10 +543,10 @@ void BODY::WriteWake(ostream& out_stream) {
     }
     out_stream << "];" << endl;
 
-     out_stream << "scatter3(X0(:),Y0(:),Z0(:),50,sqrt(Ox(:).*Ox(:) + Oy(:).*Oy(:) + Oz(:).*Oz(:)),'filled');" << endl;
+    out_stream << "scatter3(plot_ax,X0(:),Y0(:),Z0(:),50,sqrt(Ox(:).*Ox(:) + Oy(:).*Oy(:) + Oz(:).*Oz(:)),'filled');" << endl;
 #endif
-    out_stream << "view(plot_ax,3); axis(plot_ax,'equal','tight');\n";
 }
+
 /**************************************************************/
 
 void BODY::PrintBoundary() {
@@ -598,22 +575,22 @@ Vect3 BODY::GetVel(Vect3 Target) {
     // Why can this section not be multi-threaded????
     Vect3 U, V, W;
     if (!globalSystem->LiftingLineMode)
-    for (int i = 0; i < (int) ProtoWake.size(); ++i)
-        U += ProtoWake[i]->WakePanelVelocity(Target);
+        for (int i = 0; i < (int) ProtoWake.size(); ++i)
+            U += ProtoWake[i]->WakePanelVelocity(Target);
 
-//    for (int i = 0; i < WakePoints.size(); ++i)
-//        for (int j = 0; j < WakePoints[i].size(); ++j)
-//            globalDirectVel(Target - WakePoints[i][j]->vP, WakePoints[i][j]->vO, V);
+    for (int i = 0; i < WakePoints.size(); ++i)
+        for (int j = 0; j < WakePoints[i].size(); ++j)
+            globalDirectVel(Target - WakePoints[i][j]->vP, WakePoints[i][j]->vO, V);
 
-    for (int i = 0; i < (int) WakeGlobal.size(); ++i)
-        for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
-            U += WakeGlobal[i][j]->WakePanelVelocity(Target);
+    //    for (int i = 0; i < (int) WakeGlobal.size(); ++i)
+    //        for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
+    //            U += WakeGlobal[i][j]->WakePanelVelocity(Target);
 
     for (int l = 0; l < (int) Faces.size(); ++l) {
         if (!globalSystem->LiftingLineMode) {
             W += Faces[l]->SourceVel(Target);
         }
-        W += Faces[l]->BodyPanelVelocity(Target);//, globalSystem->Del2);
+        W += Faces[l]->BodyPanelVelocity(Target); //, globalSystem->Del2);
     }
 
     return U + V + W;
@@ -622,13 +599,13 @@ Vect3 BODY::GetVel(Vect3 Target) {
 /**************************************************************/
 Vect3 BODY::GetWakeVel(Vect3 Target) {
     Vect3 U;
-    for (int i = 0; i < (int) WakeGlobal.size(); ++i)
-        for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
-            U += WakeGlobal[i][j]->WakePanelVelocity(Target);
+    //    for (int i = 0; i < (int) WakeGlobal.size(); ++i)
+    //        for (int j = 0; j < (int) WakeGlobal[i].size(); ++j)
+    //            U += WakeGlobal[i][j]->WakePanelVelocity(Target);
 
-//    for (int i = 0; i < WakePoints.size(); ++i)
-//        for (int j = 0; j < WakePoints[i].size(); ++j)
-//            globalDirectVel(WakePoints[i][j]->vP - Target, WakePoints[i][j]->vO, U);
+    for (int i = 0; i < WakePoints.size(); ++i)
+        for (int j = 0; j < WakePoints[i].size(); ++j)
+            globalDirectVel(WakePoints[i][j]->vP - Target, WakePoints[i][j]->vO, U);
 
     return U;
 }
@@ -640,86 +617,89 @@ void BODY::DissolveWake(REAL dt) {
     Vect3 Start, End;
 
     Vect3 Vinf = globalSystem->Vinf;
-    if (ProtoWake.size() > 0){
+    if (ProtoWake.size() > 0) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < (int) ProtoWake.size(); ++i) {
+        for (int i = 0; i < (int) ProtoWake.size(); ++i) {
 
-        ProtoWake[i]->GetCollocationPoint();
-        Vect3 Pos = ProtoWake[i]->CollocationPoint->vP;
-        // 	Get point kinematic velocity - rotational part first
-        Vect3 Vrot = ProtoWake[i]->Owner->EulerRates.Cross(Pos);
-        // 	Add to translational velocity....
-        Vect3 Vkin = ProtoWake[i]->Owner->CG.vV + Vrot;
-        // 	Include freestream
-        ProtoWake[i]->CollocationPoint->vV = Vinf - Vkin; // + AllBodyPanels[i]->CollocationPoint->vVfmm;
-        //  Iterate over all wake panels
-        for (int J = 0; J < (int) globalSystem->Bodies.size(); ++J)
-            ProtoWake[i]->CollocationPoint->vV += globalSystem->Bodies[J]->GetWakeVel(Pos);
+            ProtoWake[i]->GetCollocationPoint();
+            Vect3 Pos = ProtoWake[i]->CollocationPoint->vP;
+            // 	Get point kinematic velocity - rotational part first
+            Vect3 Vrot = ProtoWake[i]->Owner->EulerRates.Cross(Pos);
+            // 	Add to translational velocity....
+            Vect3 Vkin = ProtoWake[i]->Owner->CG.vV + Vrot;
+            // 	Include freestream
+            ProtoWake[i]->CollocationPoint->vV = Vinf - Vkin; // + AllBodyPanels[i]->CollocationPoint->vVfmm;
+            //  Iterate over all wake panels
+            for (int J = 0; J < (int) globalSystem->Bodies.size(); ++J)
+                ProtoWake[i]->CollocationPoint->vV += globalSystem->Bodies[J]->GetWakeVel(Pos);
 
-    }
-
-
+        }
 
 
 
-    for (int i = 0; i < ProtoWake.size(); ++i) {
-        PANEL *temp_pan = ProtoWake[i];
 
-        if (!ProtoWake[i]->Neighb.B) {
-            Start = .5 * (temp_pan->C4->vP + temp_pan->C1->vP);
-            R.push_back((temp_pan->CollocationPoint->vP - Start).Mag());
-            G.push_back(temp_pan->gamma);
-            GP.push_back(temp_pan->gamma_prev);
-            DR.push_back((.5*(temp_pan->C4->vP + temp_pan->C1->vP) - .5*(temp_pan->C2->vP + temp_pan->C3->vP)));
-            V.push_back(temp_pan->CollocationPoint->vV);
-            X.push_back(temp_pan->CollocationPoint->vP);
-            while ((temp_pan->Neighb.T) && (temp_pan->Neighb.T!=temp_pan)) {
-                temp_pan = temp_pan->Neighb.T;
-                R.push_back(R.back() + (temp_pan->CollocationPoint->vP - temp_pan->Neighb.B->CollocationPoint->vP).Mag());
+        Array <POINT*> new_points;
+        for (int i = 0; i < ProtoWake.size(); ++i) {
+            PANEL *temp_pan = ProtoWake[i];
+
+            if (!ProtoWake[i]->Neighb.B) {
+                Array <REAL> R, G, GP;
+                Array <Vect3> DR, V, X;
+                Vect3 Start, End;
+                Start = .5 * (temp_pan->C4->vP + temp_pan->C1->vP);
+                R.push_back((temp_pan->CollocationPoint->vP - Start).Mag());
                 G.push_back(temp_pan->gamma);
                 GP.push_back(temp_pan->gamma_prev);
-                DR.push_back((.5*(temp_pan->C4->vP + temp_pan->C1->vP) - .5*(temp_pan->C2->vP + temp_pan->C3->vP)));
+                DR.push_back((.5 * (temp_pan->C4->vP + temp_pan->C1->vP) - .5 * (temp_pan->C2->vP + temp_pan->C3->vP)));
                 V.push_back(temp_pan->CollocationPoint->vV);
                 X.push_back(temp_pan->CollocationPoint->vP);
+                while ((temp_pan->Neighb.T) && (temp_pan->Neighb.T != temp_pan)) {
+                    temp_pan = temp_pan->Neighb.T;
+                    R.push_back(R.back() + (temp_pan->CollocationPoint->vP - temp_pan->Neighb.B->CollocationPoint->vP).Mag());
+                    G.push_back(temp_pan->gamma);
+                    GP.push_back(temp_pan->gamma_prev);
+                    DR.push_back((.5 * (temp_pan->C4->vP + temp_pan->C1->vP) - .5 * (temp_pan->C2->vP + temp_pan->C3->vP)));
+                    V.push_back(temp_pan->CollocationPoint->vV);
+                    X.push_back(temp_pan->CollocationPoint->vP);
+                }
+                End = .5 * (temp_pan->C2->vP + temp_pan->C3->vP);
+                int n = R.size();
+                Array <Vect3> dOdt(n), UdelGamma(n), Om(n);
+                {
+
+
+                    REAL r[n], g[n];
+                    for (int i = 0; i < R.size(); ++i) {
+                        r[i] = R[i];
+                        g[i] = G[i];
+                        dOdt[i] = ((G[i] - GP[i]) / dt) * DR[i];
+                    }
+                    gsl_interp_accel *acc
+                            = gsl_interp_accel_alloc();
+                    gsl_spline *spline
+                            = gsl_spline_alloc(gsl_interp_akima, R.size());
+
+                    gsl_spline_init(spline, r, g, n);
+                    for (int i = 0; i < n; ++i) {
+                        UdelGamma[i] = gsl_spline_eval_deriv(spline, R[i], acc) * V[i] * globalSystem->GambitScale;
+                        Om[i] = dt * (UdelGamma[i] - dOdt[i]);
+                    }
+
+                    gsl_spline_free(spline);
+                    gsl_interp_accel_free(acc);
+
+                }
+
+                //  Release a particle into the freestream
+                for (int i = 0; i < X.size(); ++i)
+                    new_points.push_back(new POINT(X[i] + 2 * V[i] * dt, Om[i]));
             }
-            End = .5 * (temp_pan->C2->vP + temp_pan->C3->vP);
-        }
-    }
-
-
-        int n = R.size();
-        Array <Vect3> dOdt(n), UdelGamma(n), Om(n);
-    {
-
-
-        REAL r[n], g[n];
-        for (int i = 0; i < R.size(); ++i) {
-            r[i] = R[i];
-            g[i] = G[i];
-            dOdt[i] = ((G[i] - GP[i])/dt)*DR[i];
-
-        }
-        gsl_interp_accel *acc
-                = gsl_interp_accel_alloc();
-        gsl_spline *spline
-                = gsl_spline_alloc(gsl_interp_akima, R.size());
-
-        gsl_spline_init(spline, r, g, n);
-        for (int i = 0; i < n; ++i) {
-            UdelGamma[i] = gsl_spline_eval_deriv(spline, R[i], acc) * V[i] * globalSystem->GambitScale;
-            Om[i] = dt*(UdelGamma[i] - dOdt[i]);
         }
 
-        gsl_spline_free(spline);
-        gsl_interp_accel_free(acc);
 
-    }
-        Array <POINT*> new_points;
-    //  Release a particle into the freestream
-        for (int i = 0; i < X.size(); ++i)
-            new_points.push_back(new POINT(X[i] + V[i]*dt,Om[i]));
+
 
         WakePoints.push_back(new_points);
 

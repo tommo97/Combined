@@ -72,7 +72,7 @@ SYSTEM::~SYSTEM() {
 
 /**************************************************************/
 SYSTEM::SYSTEM(int NT) {
-    LiftingLineMode = false;
+    LiftingLineMode = PanelMode = false;
     num_out = 0;
     SysDumpInterval = 0; //  Used to dump the result of system calls
     Vinf.x = Vinf.y = Vinf.z = 0;
@@ -362,6 +362,7 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
 
         globalTimeStepper->substep_time = SubStep*dt;
+        globalTimeStepper->sim_time += dt;
 
         MoveBodies(dt, true);
 
@@ -369,7 +370,6 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
         //	Sort wake convection
         Vect3 Vwake, Vbody;
         for (int i = 0; i < NumBodies; ++i) {
-
             for (int j = 0; j < Bodies[i]->WakePoints.size(); ++j) {
                 //#ifdef _OPENMP
                 //#pragma omp parallel for default(none) shared(i,j,dt) private(Vwake, Vbody)
@@ -392,8 +392,8 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
                     Bodies[i]->WakePoints[j][k]->vP += Bodies[i]->WakePoints[j][k]->vV * dt;
 
                         //  Check the order of the next few lines
-        for (int i = 0; i < NumBodies; ++i)
-            Bodies[i]->SortWake(dt);
+//        for (int i = 0; i < NumBodies; ++i)
+//            Bodies[i]->SortWake(dt);
 
         GetGlobalRHS();
         LinAlg();
@@ -413,8 +413,8 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
 
 
-      //  for (int j = 0; j < NumBodies; ++j)
-      //      Bodies[j]->DissolveWake(dt);
+        for (int j = 0; j < NumBodies; ++j)
+            Bodies[j]->DissolveWake(dt);
 
 
         //        globalIO->write_m();
@@ -424,9 +424,10 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
         // #ifdef DEBUG
                 if (WRITE_TO_SCREEN) {
                     cout << "Substep " << SubStep << " of " << n_steps;
+                    cout << " sim time: " << globalTimeStepper->sim_time << " secs ";
                     cout << " Phi " << RAD2DEG(Bodies[0]->EulerAngles.x) << " ";
                     cout << (ticks() - t0) / 1000 << " dt " << dt;
-                    cout << " " << Bodies[0]->WakeGlobal.size() << " . " << endl;
+                    cout << " " << Bodies[0]->WakeGlobal.size() << " @PanelMode " << endl;
                 }
         // #endif
 #endif
@@ -692,12 +693,14 @@ void SYSTEM::PrintBodiesAndWakes() {
 
 /**************************************************************/
 void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
-
+    out_stream << "if exist('plot_ax')\n figure; plot_ax=gca;\nend\n" << endl;
+    out_stream << "hold(plot_ax,'on');\n";
     for (int i = 0; i < NumBodies; ++i) {
         Bodies[i]->WriteSurface(out_stream);
         Bodies[i]->WriteWake(out_stream);
     }
-    out_stream << "\nhold(plot_ax,'off');\n";
+    out_stream << "axis(plot_ax,'equal','tight')\n;view(plot_ax,3);\n";
+    out_stream << "\nhold(plot_ax,'off');\nset(gcf,'Renderer','OpenGL');\ndrawnow;" << endl;
 }
 
 /**************************************************************/
@@ -817,7 +820,7 @@ void SYSTEM::WriteBodies() {
     int NameLength = CaseName.length();
     fout.write((char *) & NameLength, sizeof (int));
     fout.write((char *) CaseName.c_str(), sizeof (char[NameLength]));
-
+    fout.write((char *) &globalTimeStepper->sim_time, sizeof (REAL));
     fout.write((char *) & NumBodies, sizeof (int));
 
     for (int i = 0; i < NumBodies; ++i) {
