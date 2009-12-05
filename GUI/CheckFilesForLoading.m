@@ -1,11 +1,20 @@
 function handles = CheckFilesForLoading(handles)
+a = dir('../scratch');
+s = size(a,1);
+dates = zeros(1,s-2);
+for i = 3:s
+    dates(-2+i) = a(i).datenum * a(i).isdir;
+end
 
-handles = load_listbox('../bin_files', handles);
+newest = find(dates==max(dates)) + 2;
+handles.bin_dir = ['../scratch/' a(newest).name '/output/binary_output/'];
+
+handles = load_listbox(handles.bin_dir, handles);
 
 
 function handles = load_listbox(dir_path, handles)
-temp = pwd;
-cd(dir_path);
+%temp = pwd;
+%cd(dir_path);
 dir_struct = dir([dir_path '/*.bin']);
 if length({dir_struct.name}) > 0
 names = {dir_struct.name};
@@ -28,6 +37,6 @@ else
     set(handles.inputFiles_listbox,'String','Empty',...
 	'Value',get(handles.inputFiles_listbox,'Value'));
 end
-cd(temp);
+%cd(temp);
 
 %set(handles.inputFilesDir,'String',pwd)

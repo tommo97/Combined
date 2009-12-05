@@ -12,7 +12,7 @@ Mx = t;
 My = t;
 Mz = t;
 for i = 1:length(files)
-    binfile = strcat('../bin_files/', files(i));
+    binfile = strcat(handles.bin_dir, files(i));
     fid = fopen(binfile{1}, 'r');
     fread(fid,fread(fid,1,'int'),'char=>char')';
     t(i) = fread(fid,1,'double');
@@ -85,8 +85,10 @@ Cpm = Cp;
 Ctm(outliersCt,:) = NaN;
 Cpm(outliersCp,:) = NaN;
 
-plot(handles.coefft_axes,t,sum(Cpm,2),'.b');
-plot(handles.coefft_axes,t,sum(Ctm,2),'.r');
+plot(handles.coefft_axes,t,sum(Cpm,2),'.-b');
+plot(handles.coefft_axes,t,sum(Ctm,2),'.-r');
+legend(handles.coefft_axes,'Cpow','Cthr','Location','SouthWest');
+grid(handles.coefft_axes,'on');
 for i = 1:size(Fx,2);
 
 % plot(handles.goto_axes,t,Fx(:,i),'r');
@@ -105,6 +107,7 @@ end
 % plot(handles.goto_axes,t,Mx(:,i),'k');
 % plot(handles.goto_axes,t,My(:,i),'y');
 %plot(handles.goto_axes,t,Mz(:,i),'p');
+grid(handles.goto_axes,'on');
 legend(handles.goto_axes,'Fz','Mz','Location','SouthWest');
 
 

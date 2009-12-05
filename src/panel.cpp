@@ -225,7 +225,7 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
     //      PV from panel centre to POI in local frame
     Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
     REAL MagP = P.Mag(), Mult = *sigma / four_pi;
-
+    if (MagP > globalSystem->Del2){
     if (MagP < FarField * MaxDiagonal) {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
@@ -268,22 +268,23 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
         return VectMultMatrixTranspose(TRANS, Mult * Area * P / (MagP * MagP * MagP));
 
 }
+}
 
 /**************************************************************/
 void PANEL::WakeNeighbSet() {
     doSide = true;
     gammaSide = gamma;
 
-    //        if (Neighb.B) {
-    //            doSide.B = false;
-    //            Neighb.B->gammaSide.T = Neighb.B->gamma - gamma;
-    //        }
-    //        if (Neighb.R) {
-    //            doSide.R = false;
-    //            Neighb.R->gammaSide.L = Neighb.R->gamma - gamma;
-    //        }
-    //        if (Neighb.L) gammaSide.L -= Neighb.L->gamma;
-    //        if (Neighb.T) gammaSide.T -= Neighb.T->gamma;
+            if (Neighb.B) {
+                doSide.B = false;
+                Neighb.B->gammaSide.T = Neighb.B->gamma - gamma;
+            }
+            if (Neighb.R) {
+                doSide.R = false;
+                Neighb.R->gammaSide.L = Neighb.R->gamma - gamma;
+            }
+            if (Neighb.L) gammaSide.L -= Neighb.L->gamma;
+            if (Neighb.T) gammaSide.T -= Neighb.T->gamma;
 }
 
 /**************************************************************/

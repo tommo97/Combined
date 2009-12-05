@@ -433,11 +433,30 @@ if get(handles.timestamp,'Value')
     handles.fullname = [handles.fullname handles.datestamp];
 end
 set(handles.fullname_box,'String',handles.fullname);
+handles.output_dir = ['../tarballs/' handles.fullname];
+command = ['rm -r ' handles.output_dir];
+system(command);
+command = ['mkdir ' handles.output_dir];
+system(command);
+
 handles = MakeNEU(handles);
 handles = WriteCaseFile(handles);
 Bodies = handles.Bodies;
-save(['../mat_files/' handles.fullname '.mat'],'Bodies');
+thisdir = pwd;
+save([handles.output_dir '/' handles.fullname '.mat'],'Bodies');
+cd('../tarballs');
+
+
+command = ['tar -cf ' handles.fullname '.tar ' handles.fullname '/; gzip -f9 ' handles.fullname '.tar'];
+disp(command)
+system(command);
+
+cd(thisdir);
+
+
 DispMsg(handles);
+command = ['rm -r ' handles.output_dir];
+system(command);
 guidata(source, handles);
 
 function blades_as_bodies_Callback(source, eventdata, handles)
@@ -725,15 +744,16 @@ else
     tic;
 dirname = pwd;
 cd ..
-system('rm bin_files/*.bin');
+
 
 set(handles.inputFiles_listbox,'String','Empty',...
 	'Value',1);
-[status, result] = system(['export LD_LIBRARY_PATH=/usr/lib64; ./main ' handles.fullname '.cas > dump &']);
+[status, result] = system(['export LD_LIBRARY_PATH=/usr/lib64; ./main ' handles.fullname ' > dump &']);
 cd GUI;
 [a b] = system('top -n 1 | grep main');
+handles = CheckFilesForLoading(handles);
 while length(b) > 1
-    fls = dir('../bin_files/*.bin');
+    fls = dir([handles.bin_dir '*.bin']);
     [s r] = system('tail --lines=24 ../dump');
     set(handles.terminal_output,'String',r);
     set(handles.run,'String','Stop');

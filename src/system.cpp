@@ -392,14 +392,14 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
                     Bodies[i]->WakePoints[j][k]->vP += Bodies[i]->WakePoints[j][k]->vV * dt;
 
                         //  Check the order of the next few lines
-        for (int i = 0; i < NumBodies; ++i)
-            Bodies[i]->SortWake(dt);
+
 
         GetGlobalRHS();
         LinAlg();
 
 
-
+        for (int i = 0; i < NumBodies; ++i)
+            Bodies[i]->SortWake(dt);
 
 
         Vect3 F(0., 0., 0.);
@@ -445,7 +445,8 @@ void SYSTEM::ReadNeuGetBodies() {
     Array <Vect3> X;
     ARRAY2(int) PNLS, GROUPS, BCS;
     Array <string> NAMES;
-    string neu_file = "./neu_files/" + NeuFile;
+    string neu_file = WorkingDir + NeuFile;
+    if (WRITE_TO_SCREEN) {cout << "Reading " << neu_file << "..." << endl;}
     globalIO->read_neu(neu_file, X, PNLS, GROUPS, BCS, NAMES);
 
 
@@ -810,7 +811,8 @@ void SYSTEM::WriteVorticity() {
 
 /**************************************************************/
 void SYSTEM::WriteBodies() {
-    string fname = "bin_files/BodyData" + globalIO->to_string(num_out) + ".bin";
+    string fname = globalIO->directory + "binary_output/BodyData" + globalIO->to_string(num_out) + ".bin";
+    cout << "Written " << globalIO->directory + "binary_output/BodyData" + globalIO->to_string(num_out) + ".bin" << endl;
     num_out++;
     ofstream fout(fname.c_str(), ios::out | ios::binary | ios::ate);
     if (!fout) {

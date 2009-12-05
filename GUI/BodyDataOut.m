@@ -5,7 +5,7 @@ tic
 %%  Read in binary data
 files = get(handles.inputFiles_listbox,'String');
 
-binfile = strcat('../bin_files/', files(get(handles.inputFiles_listbox,'Value')));
+binfile = strcat(handles.bin_dir, files(get(handles.inputFiles_listbox,'Value')));
 
 fid = fopen(binfile{1}, 'r');
 

@@ -325,17 +325,6 @@ void IO::read_neu(string infname, Array<Vect3> &X, Array<Array<int> > &PNLS,
         }
     }
 }
-//%       Comment line - ignored
-//#       Input line - returned to screen and transcript
-//INPUT:          coax.neu;
-//PMAX:           3;
-//SCALE:          3;
-//NAME:           coax;
-//NUMBODIES:      2;
-//CGBODY:         [0.0 0.0 0.0] [2.5 0.0 0.0];
-//RATEBODY:       [-7.5 0.0 0.0] [7.5 0.0 0.0];
-//VELBODY:        [-10.0 0.0 0.0] [-10.0 0.0 0.0];
-
 
 static Array<Vect3> ReadVectorsFromLine(string);
 
@@ -371,12 +360,12 @@ void IO::PrepOutputDir() {
     int i = 0, j = 0;
     stringstream out_stream;
 
-    directory = Home + "/output/" + to_string(globalSystem->ProcessID)
-            + globalSystem->CaseName + "/";
+    directory = globalSystem->WorkingDir + "output/";
 
-    string command = "mkdir -p " + directory;
+    string command = "mkdir -p " + directory + "binary_output/";
     string output = globalGetStdoutFromCommand(command);
     cout << command << " " << output << endl;
+    command = "mkdir -p " + directory;
 
     out_name = "_output_pid" + to_string(globalSystem->ProcessID);
     file_type = ".dat";
@@ -420,31 +409,11 @@ void IO::read_input(string infname) {
                     size_t found;
                     found=line.find_first_of(":");
 
-
-                    /*
-                     INPU
-PMAX
-PMAX:	3; 3
-SCAL
-BODY
-BODYNUM:	1; 1
-ATTI
-CGBO
-RATE
-KINV
-NAME
-DT:
-NSS:
-Num sub-steps 50
-VINF
-DS:*/
                     string ln = line.substr(0,found);
-                    cout << ln << endl;
                     if (line.compare(0,found,"Input Neu File") == 0)
                         strm >> globalSystem->NeuFile;
                     if (line.compare(0,found,"max P") == 0) {
                         strm >> globalSystem->MaxP;
-                        cout << line << " " << globalSystem->MaxP << endl;
                     }
                     if (line.compare(0,found,"Scale") == 0)
                         strm >> globalSystem->GambitScale;
@@ -452,16 +421,14 @@ DS:*/
                         strm >> globalSystem->dtInit;
                     if (line.compare(0,found,"ds") == 0){
                         strm >> globalSystem->DS;
-                        cout << "DS !! = " << globalSystem->DS << endl;}
+                    }
                     if (line.compare(0,found,"Num Sub-Steps") == 0){
                         strm >> globalSystem->NumSubSteps;
-                        cout << "Num sub-steps " << globalSystem->NumSubSteps << endl;
                     }
                     if (line.compare(0,found,"Case Name") == 0)
                         strm >> globalSystem->CaseName;
                     if (line.compare(0,found,"Num Bodies") == 0) {
                         strm >> globalSystem->NumBodies;
-                        cout << line << " " << globalSystem->NumBodies << endl;
                     }
                     if (line.compare(0,found,"Body CGs") == 0)
                         globalSystem->ORIGIN = ReadVectorsFromLine(ChopLine(

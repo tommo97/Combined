@@ -43,7 +43,7 @@ public:
   bool LiftingLineMode, ZeroBodyRelativeMotion;
   REAL dtInit, GambitScale, Del2, DS;
   REAL Mu,Nu,Rho,Temp;
-  string NeuFile, CaseName;
+  string NeuFile, CaseName, WorkingDir;
   Vect3 Vinf;
   SYSTEM(int);
   ~SYSTEM();

@@ -24,7 +24,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-//#define PANEL_MODE
+#define PANEL_MODE
 
 #include "body.hpp"
 
@@ -481,8 +481,8 @@ void BODY::WriteWake(ostream& out_stream) {
                 }
                 out_stream << "];" << endl;
 
-                out_stream << "scatter3(plot_ax,X" << g << ", Y" << g << ", Z" << g << ", C" << g << ");" << endl;
-                //        out_stream << "surf(X" << g << ", Y" << g << ", Z" << g << ",'FaceAlpha','flat','AlphaDataMapping','scaled','AlphaData',10./C" << g << ",'FaceColor','blue','linestyle','none');" << endl;
+                out_stream << "surf(plot_ax,X" << g << ", Y" << g << ", Z" << g << ", C" << g << ");" << endl;
+                //out_stream << "surf(X" << g << ", Y" << g << ", Z" << g << ",'FaceAlpha','flat','AlphaDataMapping','scaled','AlphaData',10./C" << g << ",'FaceColor','blue','linestyle','none');" << endl;
             }
         }
     }

@@ -168,12 +168,14 @@ void OCTREE::GetVels() {
     }
     //  Sweep velocity fields down OCTREE
     for (int mlev = 0; mlev < AllBranches.size(); ++mlev) {
+        //  Inherit vel fields from parent
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
         for (int i = 0; i < AllBranches[mlev].size(); ++i)
             AllBranches[mlev][i]->InheritVField();
 
+        //  Add influence from neighbours
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif

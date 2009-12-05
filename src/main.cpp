@@ -41,19 +41,40 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
 
 
-    string dir1 = "./neu_files/", dir2 = "./case_files/";
-
     //  Some default values
     globalSystem->GambitScale = 1;
     globalSystem->MaxP = 3;
     globalSystem->dtInit = 0.01;
-    globalSystem->Del2 = .00025;
+    globalSystem->Del2 = .001;
     globalSystem->DS = .3;
-    globalSystem->NeuFile = dir1 + "0012.neu";
+    globalSystem->NeuFile = "neu_files/0012.neu";
+    
+    string input = argv[1];
 
 
 
-    globalIO->read_input(dir2 + argv[1]);
+    //  Make a scratch directory
+    string command = "mkdir -p scratch";
+    cout << command << endl;
+    string output = globalGetStdoutFromCommand(command);
+    //  Copy the input file into scratch and untar
+    command =  "cp tarballs/" + input + ".tar.gz scratch/";
+    cout << command << endl;
+    output = globalGetStdoutFromCommand(command);
+    command =  "tar -xvf scratch/" + input + ".tar.gz -C scratch/";
+    cout << command << endl;
+    output = globalGetStdoutFromCommand(command);
+    //  Copy the files from that tar.gz into the new directory - in
+    globalSystem->WorkingDir = "scratch/" + input + "/";
+
+
+ 
+
+    //command = "cp tarballs/" + input + ".t* scratch/; tar -xvf scratch/" + input + ".tar.gz -C scratch/";
+    //cout << command << endl;
+    output = globalGetStdoutFromCommand(command);
+
+    globalIO->read_input("scratch/" + input + "/" + input + ".cas");
 
     globalIO->PrepOutputDir();
     globalIO->WriteBinary();

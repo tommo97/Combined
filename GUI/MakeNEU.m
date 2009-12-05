@@ -2,8 +2,8 @@ function handles = MakeNEU(handles)
 Bodies = handles.Rotor.Blade;
 name = handles.fullname;
 split = get(handles.blades_as_bodies,'Value');
-dir1 = '../neu_files/';
-fname = [dir1 name '.neu'];
+
+fname = [handles.output_dir '/' name '.neu'];
 fid = fopen(fname, 'wt');
 Empty = 0;
 numBodies = length(Bodies);
