@@ -76,13 +76,13 @@ xo = [xo(1) xo(2:end)+linspace(1,0,Blade.NChord-1).*d.*diff(xo)];
 % xo = [xo(1) xo(1)+1.25*(xo(2)-xo(1)) xo(3:end-2) xo(end)+1.25*(xo(end-1)-xo(end)) xo(end)];
 % 
 
-Blade.US.Local.x = [xi;Blade.Upper.x;xo];
-Blade.US.Local.y = [yi;Blade.Upper.y;yo];
-Blade.US.Local.z = [zi;Blade.Upper.z;zo];
+Blade.US.Local.x = [Blade.Upper.x;xo];
+Blade.US.Local.y = [Blade.Upper.y;yo];
+Blade.US.Local.z = [Blade.Upper.z;zo];
 
-Blade.LS.Local.x = [xi;Blade.Lower.x;xo];
-Blade.LS.Local.y = [yi;Blade.Lower.y;yo];
-Blade.LS.Local.z = [zi;Blade.Lower.z;zo];
+Blade.LS.Local.x = [Blade.Lower.x];
+Blade.LS.Local.y = [Blade.Lower.y];
+Blade.LS.Local.z = [Blade.Lower.z];
 
 
 %%  Put into attitude specified by Euler angles

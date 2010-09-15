@@ -1,6 +1,6 @@
 function blade = SetBladeData(blade)
 % Set current data to the selected data set.
-
+blade.MakeCaps = false;
 switch blade.type;
     case 'NREL UAE' % User selects Peaks.
         %%  NRELBlade -- NREL data
@@ -42,10 +42,12 @@ switch blade.type;
         blade.CHORD = sqrt(sin(linspace(0,pi))) + .2;
         blade.THICKNESS = [];
     case 'Straight'
-        blade.RADIUS = linspace(-5,5);
+        blade.RADIUS = linspace(-.5,.5);
         blade.THETA = 10*zeros(size(blade.RADIUS));
         blade.CHORD = 1*ones(size(blade.RADIUS));
         blade.THICKNESS = [];
+        blade.MakeCaps = false;
+        
 end
 
 minrad = min(blade.RADIUS);

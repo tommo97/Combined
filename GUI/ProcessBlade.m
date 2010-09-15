@@ -59,6 +59,10 @@ Blade.Lower.z = chords.*(LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas));
 Blade.Lower.n = LowerS.n;
 
 
+
+dlmwrite('LS.dat',[Blade.Lower.x(:),Blade.Lower.y(:),Blade.Lower.z(:)])
+dlmwrite('US.dat',[Blade.Upper.x(:),Blade.Upper.y(:),Blade.Upper.z(:)])
+
 %%  Close ends - make some caps
 d = cos(linspace(0,pi,Blade.NChord-1));
 
@@ -80,6 +84,17 @@ xon = [xon(1) xon(2:end)+linspace(1,0,Blade.NChord-1).*d.*diff(xon)];
 % xi = [xi(1) xi(1)+1.25*(xi(2)-xi(1)) xi(3:end-2) xi(end)+1.25*(xi(end-1)-xi(end)) xi(end)];
 % xo = [xo(1) xo(1)+1.25*(xo(2)-xo(1)) xo(3:end-2) xo(end)+1.25*(xo(end-1)-xo(end)) xo(end)];
 % 
+
+if ~Blade.MakeCaps
+   xi = [];
+   yi = [];
+   zi = [];
+   xo = [];
+   yo = [];
+   zo = [];
+   xin = [];
+   xon = [];
+end
 
 Blade.US.Local.x = [xi;Blade.Upper.x;xo];
 Blade.US.Local.y = [yi;Blade.Upper.y;yo];
@@ -127,6 +142,7 @@ US.UN(:) = ind2(US.N(:));
 LS.UN = zeros(size(Blade.LS.Global.x));
 LS.UN(:) = ind2(LS.N(:));
 
+
 US.UN(1,1) = LS.UN(2,2);
 LS.UN(1,1) = US.UN(2,2);
 
@@ -140,13 +156,18 @@ LS.UN(1,end) = US.UN(2,end-1);
 US.UN(end,end) = LS.UN(end-1,end-1);
 LS.UN(end,end) = US.UN(end-1,end-1);
 
+
 Blade.X = X(m,1);
 Blade.Y = X(m,2);
 Blade.Z = X(m,3);
 Blade.n = P(m);
 
 %%  Prepare for export
-Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
+if ~Blade.MakeCaps
+    Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
+else
+    Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
+end
 %   Tips
 
 Blade.Tip.Inboard.US.N.Local = US.UN(1:2,:);

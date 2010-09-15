@@ -737,7 +737,7 @@ end
 
 % --- Executes on button press in run.
 function run_Callback(source, eventdata, handles)
-load(['../mat_files/' handles.PostComp.CaseName '.mat']);
+['../scratch/' handles.PostComp.CaseName '/' handles.PostComp.CaseName '.mat'];
 if strcmp(get(handles.run,'String'),'Stop')
 system('killall main');
 else
