@@ -38,6 +38,19 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
     system("clear");
+
+        if (argc < 2){
+        cout << "Incorrect number of input arguments. Command expected is:" << endl;
+        cout << "\t./main case_name" << endl;
+        cout << "where case_name.tar.gz is a bundle in the tarballs directory" << endl;
+        cout << "containing the directory structure:" << endl;
+        cout << "\tcase_name/" << endl << "\tcase_name/case_name.cas" << endl;
+        cout << "\tcase_name/case_name.neu" << endl << "\tcase_name/case_name.mat" << endl;
+        cout << "Aborting." << endl;
+        return 1;
+     }
+
+    
     SYSTEM System(0);
 
 
@@ -48,7 +61,14 @@ int main(int argc, char *argv[]) {
     globalSystem->Del2 = .001;
     globalSystem->DS = .3;
     globalSystem->NeuFile = "neu_files/0012.neu";
-    
+
+
+
+
+
+
+
+
     string input = argv[1];
 
 
@@ -71,7 +91,7 @@ int main(int argc, char *argv[]) {
  
 
     //command = "cp tarballs/" + input + ".t* scratch/; tar -xvf scratch/" + input + ".tar.gz -C scratch/";
-    //cout << command << endl;
+    cout << command << endl;
     output = globalGetStdoutFromCommand(command);
 
     globalIO->read_input("scratch/" + input + "/" + input + ".cas");

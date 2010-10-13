@@ -418,7 +418,7 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
 
 
         //        globalIO->write_m();
-        WriteBodies();
+        //WriteBodies();
         //                if (SubStep % 1 == 0) globalIO->write_m();
 #ifndef USE_NCURSES
         // #ifdef DEBUG

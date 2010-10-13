@@ -161,9 +161,9 @@ void TIME_STEPPER::time_loop() {
         globalSystem->SetupGlobalInfluenceMatrices();
         dt = globalSystem->dtInit;
         globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
-        globalSystem->GetPressures(dt);
-        globalIO->write_m();
-        globalSystem->WriteBodies();
+        //globalSystem->GetPressures(dt);
+        //globalIO->write_m();
+        //globalSystem->WriteBodies();
         //        globalSystem->PutWakesInTree();
         //        globalOctree->Reset();
         //        globalOctree->InitVelsGetLaplacian();
