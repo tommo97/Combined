@@ -81,6 +81,7 @@
 #      cast-alignment warning. 
 
 
+
 CC = g++
 OMP_FLAG = -fopenmp 
 OBJDIR = obj
@@ -90,31 +91,28 @@ vpath %.hpp include
 vpath %.o obj
 
 
-ifneq ($(CC),CC)
+ifneq ($(CC),sunCC)
 #	Set up some c++ compiler flags for gcc
-	OPT_FLAGS = -O3 -march=native -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
-    DEBUG_FLAGS = -O0  -Wall -W  -Wshadow -fno-common -g -ansi -pedantic -Wconversion -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums
+	OPT_FLAGS = -g -O3 -march=native -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
+        DEBUG_FLAGS = -O0 -g -Wall -Wextra -Wunused -Wuninitialized -Winit-self -Wshadow -pedantic -W  -Wshadow -fno-common -g -ansi -pedantic -Wconversion -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums
 	OMP_DEBUG_FLAG = $(OMP_FLAG)
-
 else
 #	Set up some c++ compiler flags for Sun
-	OPT_FLAGS = -xO5 -fast -xipo=2 -xvector=simd
+	OPT_FLAGS= -DFILE=__FILE -g0 -fast -fns -xipo -xtarget=generic -xarch=sse2 -xvector=simd -xalias_level=simple -xrestrict
 	DEBUG_FLAGS = -g
 	ifeq ($(OMP_FLAG),-fopenmp)
 		OMP_FLAG = -xopenmp=parallel
 		OMP_DEBUG_FLAG = -xopenmp=noopt
 	endif
-
 endif
 
 
+
 #	Common flags
-CC_PNG_FLAGS =
-#-DNO_FREETYPE
-LD_PNG_FLAGS =
-#-DNO_FREETYPE  -L/usr/local/lib64 -lpng -lpngwriter -lz
+CC_PNG_FLAGS = -DNO_FREETYPE
+LD_PNG_FLAGS = -DNO_FREETYPE  -lpng -lpngwriter -lz
 CC_FLAGS = -m64 -g -I/usr/local/include -I include
-LD_COMMON_FLAGS = -m64 $(OMP_FLAG) -lncurses -lm
+LD_COMMON_FLAGS = -m64 $(OMP_FLAG) -lmatio -lncurses -lm -lz
 LD_DEBUG_COMMON_FLAGS = -m64 $(OMP_DEBUG_FLAG) -lncurses -lm
 
 CC_DEBUG_FLAGS =  -c $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_DEBUG_FLAG) $(DEBUG_FLAGS)
@@ -122,11 +120,11 @@ CC_COMMON_FLAGS = -c $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_FLAG) $(OPT_FLAGS)
 
 
 platform = Linux
-  ifeq ($(HOSTNAME), Chameleon)
-   LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lgsl -llapack -lcblas -latlas -lgfortran 
-  endif
-  ifeq ($(HOSTNAME), masternode)
-   LD_FLAGS= $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lgsl -lcblas -latlas -lgoto_opteron-r1.26 -lgfortran
+
+ifneq ($(CC),sunCC)
+	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lf77blas -lcblas -latlas -lgsl
+else
+	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS)  $(OPT_FLAGS) -llapack -lgsl -lgslcblas
 endif
 
 ifeq ($(OSTYPE), darwin9.0)
@@ -139,6 +137,10 @@ ifeq ($(OSTYPE), darwin10.0)
  LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lcblas -latlas -lgfortran -lgsl
 endif
 
+
+
+
+CFLAGS = $(CC_COMMON_FLAGS)
 
 
 
