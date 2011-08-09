@@ -180,7 +180,7 @@ void SYSTEM::PutWakesInTree() {
             for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j){
                 for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k) {
                     OctreeCapsule C(BODY::Bodies[J]->VortonX[i][j][k], BODY::Bodies[J]->VortonOM[i][j][k]*globalSystem->GambitScale*globalSystem->GambitScale, true);
-                    cout << BODY::Bodies[J]->VortonOM[i][j][k]*globalSystem->GambitScale*globalSystem->GambitScale << endl;
+//                    cout << BODY::Bodies[J]->VortonOM[i][j][k]*globalSystem->GambitScale*globalSystem->GambitScale << endl
                     C.AssociatedBody = J;
                     globalOctree->Root->EvalCapsule(C);
                 }
