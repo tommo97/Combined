@@ -156,11 +156,9 @@ void TIME_STEPPER::time_loop() {
 
     if (first_step) {
 
-        for (int i = 0; i < globalSystem->NumBodies; ++i)
-            globalSystem->Bodies[i]->InitNascentWake(globalSystem->dtInit / globalSystem->NumSubSteps);
-        globalSystem->SetupGlobalInfluenceMatrices();
+
         dt = globalSystem->dtInit;
-        globalSystem->BodySubStep(dt, globalSystem->NumSubSteps);
+        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
         //globalSystem->GetPressures(dt);
         //globalIO->write_m();
         //globalSystem->WriteBodies();
@@ -221,8 +219,8 @@ void TIME_STEPPER::time_step() {
 
     //  Now calculate the Lagrangian time-step length
     REAL OmRMax = 0;
-    for (int i = 0; i < globalSystem->NumBodies; ++i)
-        OmRMax = max(OmRMax, max(fabs(globalSystem->Bodies[i]->CG.vV + globalSystem->Bodies[i]->BodyRates.Cross(globalSystem->Bodies[i]->Rmax))));
+    for (int i = 0; i < BODY::Bodies.size(); ++i)
+        OmRMax = max(OmRMax, max(fabs(BODY::Bodies[i]->CG + BODY::Bodies[i]->BodyRates.Cross(BODY::Bodies[i]->Rmax))));
 
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
     REAL dt_lagrange = min(dt_euler / 10, cfl_lim / OmRMax);

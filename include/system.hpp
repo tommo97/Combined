@@ -50,10 +50,6 @@ public:
   bool PanelMode;
   int num_out;
 	
-  //                Panel code related members
-  Array <BODY*> Bodies;
-  Array <PANEL*> AllBodyPanels;
-  Array <POINT*> BodyPoints;
 
   Array <Vect3> ATTITUDE, VELOCITY, ORIGIN, RATES;
 

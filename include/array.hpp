@@ -1,14 +1,14 @@
 /*
 This file is part of the Combined Wake Modelling Code Version 1.0
 
-VTM Code Copyright Tom McCombes 2009
+VTM Code Copyright Tom McCombes 2011
 This code solves the 3D unsteady incompressible
 Navier-Stokes equations in velociy vorticity form
 
 
-$Rev:: 2                $:  Revision of last commit
+$Rev:: 53               $:  Revision of last commit
 $Author:: tom           $:  Author of last commit
-$Date:: 2009-10-28 20:1#$:  Date of last commit
+$Date:: 2011-02-02 17:5#$:  Date of last commit
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,15 +23,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 
-
+#define USE_ARRAY
 
 #ifndef ARRAY_INCL
 #define ARRAY_INCL
 #ifndef TEST_MODE
 #include "includes.hpp"
-#include "types.hpp"
+//#include "types.hpp"
 #endif
 #ifdef USE_ARRAY
 
@@ -42,46 +42,71 @@ public:
     Array() : length(0), data_(NULL) {
     };
 
-    Array(int n) : length(n), data_(new T[length])
-    {
+    Array(int n) : length(n), data_(new T[length]) {
 #ifndef ARRAY_NO_CHECK
         if (!data_) throw MEMFAIL;
 #endif
     };
 
-    Array(int n, const T &t) : length(n), data_(new T[length])
-    {
-#ifndef ARRAY_NO_CHECK
+
+#ifdef ARRAY_NO_CHECK
+
+    Array(int n, const T &t) : length(n), data_(new T[length]) {
+#else
+
+    Array(int n, const T &t) {
+
+        if (n < 0) {
+
+            printf("Attempted to create an array of length %d. Aborting. ", n);
+            throw BadSize();
+        }
+        length = n;
+        data_ = new T[length];
         if (!data_) throw MEMFAIL;
 #endif
-        for (unsigned int i = 0; i < length; ++i) data_[i] = t;
+        for (int i = 0; i < length; ++i) data_[i] = t;
     };
 
-    Array(const Array <T> &a) : length(a.length), data_(new T[length])
-    {
+    Array(const Array <T> &a) : length(a.length), data_(new T[length]) {
 #ifndef ARRAY_NO_CHECK
         if (!data_) throw MEMFAIL;
 #endif
-//        memcpy (data_,a.data_, length * sizeof(T));
-        for (unsigned int i = 0; i < length; ++i) data_[i] = a.data_[i];
+        //        memcpy (data_,a.data_, length * sizeof(T));
+        for (int i = 0; i < length; ++i) data_[i] = a.data_[i];
     };
-    
+
     ~Array();
+
+
+
     Array & operator=(const Array&);
     Array & operator=(const T&);
+
     void clear();
+
+    void pop(int);
     Array& push_back(const T&);
+    Array& push_back(const Array <T>&);
     Array& push_front(const T&);
     Array& pop_front();
     Array& pop_back();
 
+    inline friend std::ostream & operator <<(std::ostream& os, const Array &in) {
+        for (int i = 0; i < in.length - 1; ++i)
+            os << in.data_[i] << "\t ";
+
+        return os << in.data_[in.length - 1] << "\n";
+    };
+
     int size() {
-        return length;
+        return (int) length;
     }
 #ifndef TEST_MODE
+
     void print() {
-        for (unsigned int i = 0; i < length; ++i) if (WRITE_TO_SCREEN) std::cout << data_[i] << " ";
-        if (WRITE_TO_SCREEN) std::cout << std::endl;
+        for (int i = 0; i < length; ++i) std::cout << data_[i] << " ";
+        std::cout << std::endl;
     };
 #endif
     Array& allocate(int i);
@@ -96,8 +121,8 @@ public:
     const T & operator() (int ind) const;
 #ifndef ARRAY_NO_CHECK
 
-    T & operator[] (unsigned int i) {
-        if (i >= length) {
+    T & operator[] (int i) {
+        if (i >= length || i < 0) {
             printf("Array Bounds Violation: Attempted to access element %d, array length %d - ", i, length);
 
             throw BoundsViolation();
@@ -122,10 +147,301 @@ public:
 
     class WrongSizeAssign {
     };
+
+
+    inline friend Array <T> sin(const Array<T> A) {
+        Array <T> L(A.length);
+        for (int i = 0; i < A.length; ++i)
+            L.data_[i] = sin(A.data_[i]);
+
+        return L;
+    }
+
+    inline friend T max(const Array<T> A) {
+        T L = A.data_[0];
+        for (int i = 1; i < A.length; ++i)
+            L = max(L, A.data_[i]);
+
+        return L;
+    }
+
+    inline friend T min(const Array<T> A) {
+        T L = A.data_[0];
+        for (int i = 1; i < A.length; ++i)
+            L = min(L, A.data_[i]);
+
+        return L;
+    }
+
+    inline friend Array <T> cos(const Array<T> A) {
+        Array <T> L(A.length);
+        for (int i = 0; i < A.length; ++i)
+            L.data_[i] = cos(A.data_[i]);
+
+        return L;
+    }
+
+    inline friend Array <T> tan(const Array<T> A) {
+        Array <T> L(A.length);
+        for (int i = 0; i < A.length; ++i)
+            L.data_[i] = tan(A.data_[i]);
+
+        return L;
+    }
+    
+
+
+
+
+    inline friend Array <T> fabs(const Array<T> A) {
+        Array <T> L(A.length);
+        for (int i = 0; i < A.length; ++i)
+            L.data_[i] = fabs(A.data_[i]);
+
+        return L;
+    }
+
+    inline friend Array <T> sqrt(const Array<T> A) {
+        Array <T> L(A.length);
+        for (int i = 0; i < A.length; ++i)
+            L.data_[i] = sqrt(A.data_[i]);
+
+        return L;
+    }
+
+    inline friend Array <T> atan2(const Array<T> A, const Array<T> B) {
+        Array <T> L(A.length);
+        for (int i = 0; i < A.length; ++i)
+            L.data_[i] = atan2(A.data_[i], B.data_[i]);
+
+        return L;
+    }
+
+    inline friend Array <T> atan(const Array<T> A, const Array<T> B) {
+        Array <T> L(A.length);
+        for (int i = 0; i < A.length; ++i)
+            L.data_[i] = atan(A.data_[i] / B.data_[i]);
+
+        return L;
+    }
+
+    inline friend Array <T> log(const Array<T> A) {
+        Array <T> L(A.length);
+        for (int i = 0; i < A.length; ++i)
+            L.data_[i] = log(A.data_[i]);
+
+        return L;
+    }
+
+    //  Some addition operators
+
+    class WrongSizeSum {
+    };
+
+    template <class U> Array operator+(const U &a) {
+        Array b(length);
+        for (int i = 0; i < length; i++)
+            b.data_[i] = data_[i] + a;
+        return b;
+    }
+
+    //     template <class U> friend Array operator+(const Array A, const U B ) {return A + B;}
+
+    template <class U> friend Array operator+(const U &A, const Array &B) {
+        Array c(B.length);
+        for (int i = 0; i < B.length; i++)
+            c.data_[i] = B.data_[i] + A;
+        return c;
+    }
+
+    Array operator+(const Array &a) {
+#ifndef ARRAY_NO_CHECK
+        if (length != a.length) {
+            std::cout << "Size of *this array: " << length << ", size of input array: " << a.length << std::endl;
+            std::cout << a << std::endl;
+            throw WrongSizeSum();
+        }
+#endif
+        Array b(length);
+        for (int i = 0; i < length; i++)
+            b.data_[i] = data_[i] + a.data_[i];
+        return b;
+    }
+
+    inline void operator +=(const Array &B) {
+#ifndef ARRAY_NO_CHECK
+        if (length != B.length) throw WrongSizeSum();
+#endif
+        for (int i = 0; i < length; ++i)
+            data_[i] += B.data_[i];
+    }
+
+    template <class U> inline friend void operator +=(Array &A, const U &B) {
+        for (int i = 0; i < A.length; ++i)
+            A.data_[i] += B;
+    }
+
+    template <class U> inline friend void operator +=(const U &A, Array &B) {
+        for (int i = 0; i < B.length; ++i)
+            B.data_[i] += A;
+    }
+
+
+    //  Some subtraction operators
+
+    class WrongSizeSubtract {
+    };
+
+    template <class U> Array operator-(const U &a) {
+        Array b(length);
+        for (int i = 0; i < length; i++)
+            b.data_[i] = a - data_[i];
+        return b;
+    }
+
+    template <class U> friend Array operator-(const U &A, const Array &B) {
+        Array c(B.length);
+        for (int i = 0; i < B.length; i++)
+            c.data_[i] = B.data_[i] - A;
+        return c;
+    }
+
+    Array operator-(const Array &a) {
+#ifndef ARRAY_NO_CHECK
+        if (length != a.length) {
+            std::cout << "Size of *this array: " << length << ", size of input array: " << a.length << std::endl;
+            std::cout << a << std::endl;
+            throw WrongSizeSubtract();
+        }
+#endif
+        Array b(length);
+        for (int i = 0; i < length; i++)
+            b.data_[i] = data_[i] - a.data_[i];
+        return b;
+    }
+
+    inline void operator -=(const Array &B) {
+#ifndef ARRAY_NO_CHECK
+        if (length != B.length) throw WrongSizeSubtract();
+#endif
+        for (int i = 0; i < length; ++i)
+            data_[i] -= B.data_[i];
+    }
+
+    template <class U> inline friend void operator -=(Array &A, const U &B) {
+        for (int i = 0; i < A.length; ++i)
+            A.data_[i] -= B;
+    }
+
+    template <class U> inline friend void operator -=(const U &A, Array &B) {
+        for (int i = 0; i < B.length; ++i)
+            B.data_[i] -= A;
+    }
+
+    //  Some multiplication operators
+
+    class WrongSizeMultiply {
+    };
+
+    template <class U> Array operator*(const U &a) {
+        Array b(length);
+        for (int i = 0; i < length; i++)
+            b.data_[i] = data_[i] * a;
+        return b;
+    }
+
+    template <class U> friend Array operator*(const U &A, const Array &B) {
+        Array c(B.length);
+        for (int i = 0; i < B.length; i++)
+            c.data_[i] = B.data_[i] * A;
+        return c;
+    }
+
+    Array operator*(const Array &a) {
+#ifndef ARRAY_NO_CHECK
+        if (length != a.length) {
+            std::cout << "Size of *this array: " << length << ", size of input array: " << a.length << std::endl;
+            std::cout << a << std::endl;
+            throw WrongSizeMultiply();
+        }
+#endif
+        Array b(length);
+        for (int i = 0; i < length; i++)
+            b.data_[i] = data_[i] * a.data_[i];
+        return b;
+    }
+
+    inline void operator *=(const Array &B) {
+#ifndef ARRAY_NO_CHECK
+        if (length != B.length) throw WrongSizeMultiply();
+#endif
+        for (int i = 0; i < length; ++i)
+            data_[i] *= B.data_[i];
+    }
+
+    template <class U> inline friend void operator *=(Array &A, const U &B) {
+        for (int i = 0; i < A.length; ++i)
+            A.data_[i] *= B;
+    }
+
+    template <class U> inline friend void operator *=(const U &A, Array &B) {
+        for (int i = 0; i < B.length; ++i)
+            B.data_[i] *= A;
+    }
+
+    //  Some division operators
+
+    class WrongSizeDivide {
+    };
+
+    template <class U> Array operator/(const U &a) {
+        Array b(length);
+        for (int i = 0; i < length; i++)
+            b.data_[i] = data_[i] / a;
+        return b;
+    }
+
+    template <class U> friend Array operator/(const U &A, const Array &B) {
+        Array c(B.length);
+        for (int i = 0; i < B.length; i++)
+            c.data_[i] = A / B.data_[i];
+        return c;
+    }
+
+    Array operator/(const Array &a) {
+#ifndef ARRAY_NO_CHECK
+        if (length != a.length) {
+            std::cout << "Size of /this array: " << length << ", size of input array: " << a.length << std::endl;
+            std::cout << a << std::endl;
+            throw WrongSizeDivide();
+        }
+#endif
+        Array b(length);
+        for (int i = 0; i < length; i++)
+            b.data_[i] = data_[i] / a.data_[i];
+        return b;
+    }
+
+    inline void operator /=(const Array &B) {
+#ifndef ARRAY_NO_CHECK
+        if (length != B.length) throw WrongSizeDivide();
+#endif
+        for (int i = 0; i < length; ++i)
+            data_[i] /= B.data_[i];
+    }
+
+    template <class U> inline friend void operator /=(Array &A, const U &B) {
+        for (int i = 0; i < A.length; ++i)
+            A.data_[i] /= B;
+    }
+
+
 private:
-    unsigned int length;
+    int length;
     T* data_;
 };
+
+
 
 /************************************************/
 
@@ -145,15 +461,40 @@ template <class T> Array<T>& Array<T>::operator =(const Array &a) {
 
         data_ = new T[length];
 
-        for (unsigned int i = 0; i < length; ++i) data_[i] = a.data_[i];
+        for (int i = 0; i < length; ++i) data_[i] = a.data_[i];
     }
     return *this;
 }
 /************************************************/
 
+/*  Pop out a single element  */
+template <class T> void Array<T>::pop(int p) {
+    {
+#ifndef ARRAY_NO_CHECK
+        if (p >= length || length == 1) {
+            printf("Array Bounds Violation: Attempted to pop out element %d, or array too short: array length %d - ", p, length);
+            throw BoundsViolation();
+        }
+#endif
+        printf("L %d ", length);
+        T* data_new = new T [length - 1];
+        memcpy(data_new, data_, p * sizeof (T));
+        memcpy(data_new + p, data_ + p + 1, (length - p - 1) * sizeof (T));
+        delete[] data_;
+        data_ = data_new;
+        length--;
+
+    }
+
+
+}
+
+
+/************************************************/
+
 /*  Set to values  */
 template <class T> Array<T>& Array<T>::operator =(const T &a) {
-    for (unsigned int i = 0; i < length; i++) data_[i] = a;
+    for (int i = 0; i < length; i++) data_[i] = a;
     return *this;
 }
 
@@ -164,26 +505,29 @@ template <class T> void Array<T>::clear() // clear array memory
     data_ = NULL;
     length = 0;
 }
+
 /************************************************/
-template <class T> T & Array<T>::front(){
-        if (data_)
-            return data_[0];
-        else
-            throw BoundsViolation();
+template <class T> T & Array<T>::front() {
+    if (data_)
+        return data_[0];
+    else
+        throw BoundsViolation();
 }
+
 /************************************************/
-template <class T> T & Array<T>::back(){
-        if (data_)
-            return data_[length-1];
-        else
-            throw BoundsViolation();
+template <class T> T & Array<T>::back() {
+    if (data_)
+        return data_[length - 1];
+    else
+        throw BoundsViolation();
 }
+
 /************************************************/
 template <class T> Array<T>& Array<T>::push_back(const T &insrt) {
     T* data_new = new T [length + 1];
 
     if (data_) {
-        for (unsigned int i = 0; i < length; ++i) data_new[i] = data_[i];
+        for (int i = 0; i < length; ++i) data_new[i] = data_[i];
         delete[] data_;
     }
     data_new[length] = insrt;
@@ -192,11 +536,28 @@ template <class T> Array<T>& Array<T>::push_back(const T &insrt) {
     return *this;
 }
 /************************************************/
+template <class T> Array<T>& Array<T>::push_back(const Array <T> &insrt) {
+    T* data_new = new T [length + insrt.length];
+
+    int cnt = 0;
+    if (data_) {
+        for (int i = 0; i < length; ++i, ++cnt) data_new[i] = data_[i];
+        delete[] data_;
+    }
+    if (insrt.data_) {
+        for (int i = 0; i < insrt.length; ++i, ++cnt) data_new[cnt] = insrt.data_[i];
+    }
+
+    data_ = data_new;
+    length = length + insrt.length;
+    return *this;
+}
+/************************************************/
 template <class T> Array<T>& Array<T>::push_front(const T &insrt) {
     T* data_new = new T [length + 1];
 
     if (data_) {
-        for (unsigned int i = 0; i < length; ++i) data_new[i+1] = data_[i];
+        for (int i = 0; i < length; ++i) data_new[i + 1] = data_[i];
         delete[] data_;
     }
     data_new[0] = insrt;
@@ -204,19 +565,20 @@ template <class T> Array<T>& Array<T>::push_front(const T &insrt) {
     length += 1;
     return *this;
 }
+
 /************************************************/
 template <class T> Array<T>& Array<T>::pop_back() {
 
 #ifndef ARRAY_NO_CHECK
     if (!data_) throw BadSize();
 #endif
-        if (length == 1) {
+    if (length == 1) {
         clear();
         return *this;
     }
     T* data_new = new T [length - 1];
     if (data_) {
-        for (unsigned int i = 0; i < length - 1; ++i) data_new[i] = data_[i];
+        for (int i = 0; i < length - 1; ++i) data_new[i] = data_[i];
         delete[] data_;
     }
 
@@ -237,7 +599,7 @@ template <class T> Array<T>& Array<T>::pop_front() {
     T* data_new = new T [length - 1];
 
     if (data_) {
-        for (unsigned int i = 1; i < length; ++i) data_new[i - 1] = data_[i];
+        for (int i = 1; i < length; ++i) data_new[i - 1] = data_[i];
         delete[] data_;
     }
 
@@ -250,7 +612,10 @@ template <class T> Array<T>& Array<T>::pop_front() {
 template <class T> Array<T>& Array<T>::allocate(int l) {
     if (data_) delete[] data_;
 #ifndef ARRAY_NO_CHECK
-    if (l == 0) throw BadSize();
+    if (l < 0) {
+        printf("Attempted to allocate an array of length %d. Aborting.", l);
+        throw BadSize();
+    }
 #endif
     data_ = new T[l];
     length = l;
@@ -265,7 +630,10 @@ template <class T> Array<T>& Array<T>::assign(int l, const T &asignee) {
     clear();
 
 #ifndef ARRAY_NO_CHECK
-    if (l == 0) throw BadSize();
+    if (l < 0) {
+        printf("Attempted to assign an array of length %d. Aborting.", l);
+        throw BadSize();
+    }
 #endif
     data_ = new T[l];
     length = l;
@@ -317,7 +685,7 @@ public:
         }
     };
 
-    Array < Array < T > > & operator [] (unsigned int i) {
+    Array < Array < T > > & operator [] (int i) {
         return data_[i];
     };
 
@@ -369,27 +737,30 @@ public:
         N = S = E = W = T = B = P;
     }
 
-    C & operator[] (unsigned int i) {
+    C & operator[] (int i) {
         switch (i) {
-            case (0) : return N;
-            case (1) : return S;
-            case (2) : return E;
-            case (3) : return W;
-            case (4) : return T;
-            case (5) : return B;
-            default : throw BoundsViolation();
+            case (0): return N;
+            case (1): return S;
+            case (2): return E;
+            case (3): return W;
+            case (4): return T;
+            case (5): return B;
+            default: throw BoundsViolation();
         }
     }
 
     class BoundsViolation {
     };
 };
+
 /**************************************************************/
 template <class C>
 class PanelNeighbSet {
+private:
+    C T, B, L, R;
 public:
 
-    C T, B, L, R;
+    
 
     PanelNeighbSet() {
     };
@@ -405,13 +776,13 @@ public:
         T = B = L = R = P;
     }
 
-    C & operator[] (unsigned int i) {
+    C & operator[] (int i) {
         switch (i) {
-            case (0) : return L;
-            case (1) : return T;
-            case (2) : return R;
-            case (3) : return B;
-            default : throw BoundsViolation();
+            case (0): return B;
+            case (1): return R;
+            case (2): return T;
+            case (3): return L;
+            default: throw BoundsViolation();
         }
     }
 

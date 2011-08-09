@@ -109,8 +109,6 @@ class OctreeCapsule;
 //  Tells code to include the tilting term (not required for 2D cases)
 // #define INCLUDE_TILTING_TERM            
 
-//  Far field approximations are used for panels beyond FarField*MaxDiagonal from centroid
-#define FarField 5
 //  MINMOD3 parameter: 1 results in MIN-MOD limiter, 2 results in SUPERBEE           
 #define BETA 2.0
 //  Defines whether to use teams mode for openMP

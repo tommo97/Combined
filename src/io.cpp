@@ -387,69 +387,69 @@ void IO::PrepOutputDir() {
 }
 
 void IO::read_input(string infname) {
-    ifstream input;
-    input.open(infname.c_str());
-    if (!input) {
-        if (WRITE_TO_SCREEN)
-            cout << "Unable to open input file: " << infname << endl;
-        return;
-    }
-    if (input.is_open()) {
-        while (!input.eof()) {
-            string line;
-            getline(input, line);
-            istringstream strm;
-            if (!line.empty()) {
-                if ((line[0] != '%') && (line[0] != '/')) {
-                    if ((line[0] == '#') && WRITE_TO_SCREEN)
-                        cout << line << endl;
-                    else
-                        strm.str(ChopLine(line));
-
-                    size_t found;
-                    found=line.find_first_of(":");
-
-                    string ln = line.substr(0,found);
-                    if (line.compare(0,found,"Input Neu File") == 0)
-                        strm >> globalSystem->NeuFile;
-                    if (line.compare(0,found,"max P") == 0) {
-                        strm >> globalSystem->MaxP;
-                    }
-                    if (line.compare(0,found,"Scale") == 0)
-                        strm >> globalSystem->GambitScale;
-                    if (line.compare(0,found,"dt Init") == 0)
-                        strm >> globalSystem->dtInit;
-                    if (line.compare(0,found,"ds") == 0){
-                        strm >> globalSystem->DS;
-                    }
-                    if (line.compare(0,found,"Num Sub-Steps") == 0){
-                        strm >> globalSystem->NumSubSteps;
-                    }
-                    if (line.compare(0,found,"Case Name") == 0)
-                        strm >> globalSystem->CaseName;
-                    if (line.compare(0,found,"Num Bodies") == 0) {
-                        strm >> globalSystem->NumBodies;
-                    }
-                    if (line.compare(0,found,"Body CGs") == 0)
-                        globalSystem->ORIGIN = ReadVectorsFromLine(ChopLine(
-                            line));
-                    if (line.compare(0,found,"Body Rates") == 0)
-                        globalSystem->RATES = ReadVectorsFromLine(
-                            ChopLine(line));
-                    if (line.compare(0,found,"Body Kin-Vels") == 0)
-                        globalSystem->VELOCITY = ReadVectorsFromLine(ChopLine(
-                            line));
-                    if (line.compare(0,found,"Body Attitudes") == 0)
-                        globalSystem->ATTITUDE = ReadVectorsFromLine(ChopLine(line));
-                    if (line.compare(0,found,"Vinf") == 0) {
-                        Array <Vect3> temp = ReadVectorsFromLine(ChopLine(line));
-
-                        globalSystem->Vinf = temp[0];
-                    }
-                }
-            }
-        }
-    }
+//    ifstream input;
+//    input.open(infname.c_str());
+//    if (!input) {
+//        if (WRITE_TO_SCREEN)
+//            cout << "Unable to open input file: " << infname << endl;
+//        return;
+//    }
+//    if (input.is_open()) {
+//        while (!input.eof()) {
+//            string line;
+//            getline(input, line);
+//            istringstream strm;
+//            if (!line.empty()) {
+//                if ((line[0] != '%') && (line[0] != '/')) {
+//                    if ((line[0] == '#') && WRITE_TO_SCREEN)
+//                        cout << line << endl;
+//                    else
+//                        strm.str(ChopLine(line));
+//
+//                    size_t found;
+//                    found=line.find_first_of(":");
+//
+//                    string ln = line.substr(0,found);
+//                    if (line.compare(0,found,"Input Neu File") == 0)
+//                        strm >> globalSystem->NeuFile;
+//                    if (line.compare(0,found,"max P") == 0) {
+//                        strm >> globalSystem->MaxP;
+//                    }
+//                    if (line.compare(0,found,"Scale") == 0)
+//                        strm >> globalSystem->GambitScale;
+//                    if (line.compare(0,found,"dt Init") == 0)
+//                        strm >> globalSystem->dtInit;
+//                    if (line.compare(0,found,"ds") == 0){
+//                        strm >> globalSystem->DS;
+//                    }
+//                    if (line.compare(0,found,"Num Sub-Steps") == 0){
+//                        strm >> globalSystem->NumSubSteps;
+//                    }
+//                    if (line.compare(0,found,"Case Name") == 0)
+//                        strm >> globalSystem->CaseName;
+//                    if (line.compare(0,found,"Num Bodies") == 0) {
+//                        strm >> globalSystem->NumBodies;
+//                    }
+//                    if (line.compare(0,found,"Body CGs") == 0)
+//                        globalSystem->ORIGIN = ReadVectorsFromLine(ChopLine(
+//                            line));
+//                    if (line.compare(0,found,"Body Rates") == 0)
+//                        globalSystem->RATES = ReadVectorsFromLine(
+//                            ChopLine(line));
+//                    if (line.compare(0,found,"Body Kin-Vels") == 0)
+//                        globalSystem->VELOCITY = ReadVectorsFromLine(ChopLine(
+//                            line));
+//                    if (line.compare(0,found,"Body Attitudes") == 0)
+//                        globalSystem->ATTITUDE = ReadVectorsFromLine(ChopLine(line));
+//                    if (line.compare(0,found,"Vinf") == 0) {
+//                        Array <Vect3> temp = ReadVectorsFromLine(ChopLine(line));
+//
+//                        globalSystem->Vinf = temp[0];
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 /**************************************************************/

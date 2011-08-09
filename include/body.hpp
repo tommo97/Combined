@@ -35,60 +35,122 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "panel.hpp"
 
 
+#include "utils.hpp"
 
-class BODY
-{
-  public:
-    ~BODY();
-    SYSTEM *globalSystem;
-    BODY(SYSTEM *sys) {globalSystem = sys;}
-    BODY(Vect3, Vect3, Vect3, Vect3, string, SYSTEM *sys);
-    int BodyID;
-    POINT CG;   //  ie position of local axis origin in global (inertial) axis x0,y0,z0
-    POINT Origin;	// 	PV to the global origin in local axis.....
-    Vect3 EulerAngles;		//  ie phi, theta, psi
-    Vect3 TRANS[3];  
-    Vect3 EulerRates;		//  ie phi_dot, theta_dot, psi_dot
-    Vect3 BodyRates; 		//  ie P,Q,R
-    Vect3 Rmax;                 //  Point on body furthest from origin
-    Array <Vect3> ForceRecords;
-    Array <Vect3> TorqueRecords;
-    deque < Array <POINT*> > WakePoints;
-    Array <POINT*> ProtoWakePoints;
-    Vect3 vFORCE;
-    Vect3 vTORQUE;
-    void BodyVelocity(REAL  P[], REAL V[]);     //  Velocity V at point P due to all elements on this body
+class BODY {
+public:
+    static Array <Vect3> CGS;
+    Vect3 CG, CGo;
+    static Array <Vect3> ATTITUDE;
+    Vect3 Attitude;
+    static Array <Vect3> VELOCITY;
+    Vect3 Velocity;
+    static Array <Vect3> RATES;
+    static Array <string> NAMES;
+    static Array <REAL> TimePrev;
+    static Array <REAL> DPhi;
+    static Array <REAL> DCp;
+    static Array <REAL> DphiDCp;
+    static Array <REAL> dDeltaCp_dDeltaPhi;
+    static Array <REAL> LiftHist;
+    static Array <PANEL*> AllProtoWakes;
+    static Array <Vect3> VortonPositions;
+    static Array <Vect3> VortonStrengths;
+    static Vect3 Vinf;
+    static REAL Radius, TSR, RHO;
+    string Name;
+    static Array <REAL> Times;
+    Vect3 Rmax;
+#ifdef USEGSL
+    gsl_matrix * gslA; //  A (doublet) influence coefficient matrix for this body
+    gsl_matrix * gslB; //  B (source) influence coefficient matrix for this body
+    gsl_permutation * gslPermut;
+    gsl_vector * gslMu;
+    gsl_vector * gslSigma;
+    gsl_vector * gslRHS;
+#endif
+    static REAL Time;
+    static Array <Vect3> TorqueHist;
+    static Array <Vect3> ForceHist;
+    static Array < Array < Array < int > > > Surfaces;
+    static Array < Array < Array < PANEL*> > > ptSurfaces;
+    static REAL GambitScale;
+    static Array < Array <Array <int> > > PtIDS;
+    static Array < Array <Array <int> > > TipInboardUSIDS;
+    static Array < Array <Array <int> > > TipInboardLSIDS;
+    static Array < Array <Array <int> > > TipOutboardUSIDS;
+    static Array < Array <Array <int> > > TipOutboardLSIDS;
+    static Array < Array < Array < int > > > InnerTipUSPanelIDS, OuterTipUSPanelIDS;
+    static Array < Array < Array < int > > > InnerTipLSPanelIDS, OuterTipLSPanelIDS;
+    static Array <Vect3> AllBodyPoints;
+    static Array < Array <REAL> > A;
+    static Array < Array <REAL> > B;
+    static Array < Array <REAL> > C;
+    static Array < Array <REAL> > D;
+    static Array < Array <REAL> > LocalChordRadius;
+    static Array <REAL> RHS;
+    static Array <REAL> Mu;
+    static Array <REAL> Sigma;
+    static int NumBodies;
+    static int NumFaces;
+    static Array <BODY*> Bodies;
+    static bool LiftingLineMode;
+    static Array <PANEL*> AllBodyFaces;
+    static int BodyPanelIDCounter, BodyPointIDCounter;
+    static void BodySubStep(REAL delta_t, int n_steps);
+    
+    void MakeTmpWake();
+
+    Vect3 BodyRates, BodyAngles, EulerRates, EulerAngles;
+
+	Array <Vect3> AngleHist;
+
+    Array < Array <REAL> > localA;
+    Array < Array <REAL> > localB;
+    Array <REAL> localSigma, localRHS, localMu;
+
+    Vect3 TRANS[3];
+    Array <PANEL> Faces;
+    Array <Array <PANEL> > ProtoWakes;
+    Array < Array < Array < Vect3> > > VortonX, VortonOM, VortonVel;
+    Array <PANEL*> BoundaryFaces, FirstProtoWakes;
+
+    Array < Array < Array < Vect3 > > > WakePoints;
+    Array < Array < Array < REAL > > > WakeGamma;
+    Array < Array < Array < PANEL > > > WkTmp;
+
+    BODY(Vect3 Or, Vect3 At, Vect3 Ve, Vect3 Ra, string Na) : CG(Or), Attitude(At), Velocity(Ve), Name(Na), BodyRates(Ra){
+        EulerAngles = Attitude; //  psi theta phi
+        SetEulerTrans();
+        BodyAngles = Vect3(0.0); //  omx omy omz
+        CGo = CG;
+        SetEulerTrans();
+        GetEulerRates();
+        BODY::LiftingLineMode = false;
+//        WkTmp = Array < Array < Array <PANEL> > > ();
+    };
+
+    
+    static void ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, Vect3 vel, Vect3 att, Vect3 rates, bool flip, int plane);
+    void GetPanels(Array <PANEL> &PANELS);
     void GetEulerRates();
     void GetBodyRates();
     void SetEulerTrans();
-    void Earth2Body(REAL [], REAL []);
-    void Body2Earth(REAL [], REAL []);
     void MoveBody(REAL);
-    void InitNascentWake(REAL);
-    void SortWake(REAL);
-    void GetPanels(Array <int> &GROUP, Array <PANEL*> &PANELS);
-    void PrintSurface();
-    void PrintBoundary();
-    void PrintWake();
-    void WriteSurface(ostream& out_stream);
-    void WriteWake(ostream& out_stream);
-    void GetNewWakePanels(BODY &);
-    void DissolveWake(REAL);
-    Vect3 GetWakeVel(Vect3 Target);
-    void PrintVels();   
-    Vect3 GetVel(Vect3 Target);
-    string Name;
-    int NumFaces;   //  Number of faces (ie panels) on body
-    Array <PANEL*> Faces, BoundaryFaces, ProtoWake;
-    int nSpanPanels;
-    deque <Array <PANEL*> > WakeGlobal;
-    gsl_matrix * A;     //  A (doublet) influence coefficient matrix for this body
-    gsl_matrix * B;     //  B (source) influence coefficient matrix for this body
-    gsl_permutation * p;
-    gsl_vector * Mu;
-    gsl_vector * Sigma;
-    gsl_vector * RHS;
+    void WakeToVortons();
+    static bool IPKC;
+    static void SetUpProtoWakes(REAL);
+    static void PollFaces();
+    static void UpdateGlobalInfluenceMatrices();
+    static void SplitUpLinearAlgebra();
+    static void SetUpInfluenceMatrices();
+    Vect3 GetVel(Vect3);
+    void MakeWake();
+    static void GetLinearRHS();
+    static void GetNonLinearRHS();
+    static void LinAlg();
+    Vect3 GetWakeVel(Vect3);
+    REAL GetWakePhi(Vect3);
 
 };
-
 #endif

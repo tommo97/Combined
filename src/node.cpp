@@ -600,11 +600,11 @@ void Node::UpdateMomentMults() {
 }
 /**************************************************************/
 void Node::RecursivePanelVel(PANEL& Pan) {
-		Vect3 R = (Pan.CollocationPoint->vP - Position);
+		Vect3 R = (Pan.CollocationPoint - Position);
 		REAL R2 = R.Dot(R);
 		bool DoHere = true;
 
-		if (R2 < (FarField * Pan.MaxDiagonal) || (R2 < 3 * size)) {
+		if (R2 < (PANEL::FarField * Pan.MaxDiagonal) || (R2 < 3 * size)) {
 			if (Children[0][0][0]) {
 				DoHere = false;
 				Children[0][0][0]->RecursivePanelVel(Pan);
