@@ -105,8 +105,8 @@ void SYSTEM::Initialise() {
 /**************************************************************/
 void SYSTEM::TimeStep() {
 
-    //    while (globalTimeStepper->t < globalTimeStepper->max_t)
-    globalTimeStepper->time_loop();
+    while (globalTimeStepper->t < globalTimeStepper->max_t)
+        globalTimeStepper->time_loop();
 
     if (WRITE_TO_SCREEN) cout << "Finished at sim time: " << globalTimeStepper->t << endl;
 }
@@ -175,19 +175,22 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
-//    for (int i = 0; i < NumBodies; ++i) {
-//        for (int j = 0; j < globalSystem->NumSubSteps; ++j) {
-//            for (int k = 0; k < Bodies[i]->WakePoints.back().size(); ++k) {
-//                OctreeCapsule C(Bodies[i]->WakePoints.back()[k]->vP, Bodies[i]->WakePoints.back()[k]->vO, true);
-//                C.AssociatedBody = i;
-//                globalOctree->Root->EvalCapsule(C);
-//                delete Bodies[i]->WakePoints.back()[k];
-//            }
-//            Bodies[i]->WakePoints.pop_back();
-//        }
-//    }
-}
+    for (int J = 0; J < BODY::Bodies.size(); ++J){
+        for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
+            for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j){
+                for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k) {
+                    OctreeCapsule C(BODY::Bodies[J]->VortonX[i][j][k], BODY::Bodies[J]->VortonOM[i][j][k]*globalSystem->GambitScale*globalSystem->GambitScale, true);
+                    C.AssociatedBody = J;
+                    globalOctree->Root->EvalCapsule(C);
+                }
+                BODY::Bodies[J]->VortonX[i].pop_back();
+                BODY::Bodies[J]->VortonOM[i].pop_back();
+                BODY::Bodies[J]->VortonVel[i].pop_back();
+            }
 
+    }
+    
+}
 /**************************************************************/
 void SYSTEM::GetFaceVels() {
 //    for (int i = 0; i < NumBodies; ++i)
@@ -222,6 +225,14 @@ void SYSTEM::GetFaceVels() {
 
 /**************************************************************/
 void SYSTEM::GetPanelFMMVelocities() {
+
+
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        BODY::AllBodyFaces[i]->Vfmm = globalOctree->TreeVel(BODY::AllBodyFaces[i]->Centroid);
+    }
+     
+     
+     
 //    for (int i = 0; i < NumBodies; ++i)
 //        for (int j = 0; j < Bodies[i]->Faces.size(); ++j)
 //            Bodies[i]->Faces[j]->Vfmm =

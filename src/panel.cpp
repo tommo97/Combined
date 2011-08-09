@@ -194,7 +194,7 @@ void PANEL::DivPanel(int n, Array < Array < Vect3 > > &CP, Array < Array < Vect3
 }
 /**************************************************************/
 REAL PANEL::GetCp() {
-    Vect3 Vinf(BODY::Vinf);
+    Vect3 Vinf(globalSystem->Vinf);
     //	All panels have four neighbours, just some are on different faces
     PanelNeighbSet <REAL> Ds, DMu;
     PanelNeighbSet <Vect3> Dx;

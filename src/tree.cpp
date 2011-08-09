@@ -42,12 +42,12 @@ OCTREE::~OCTREE()
 /**************************************************************/
 void OCTREE::InitVelsGetLaplacian() {
 	Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int i = 0; i < AllCells.size(); ++i){
-        AllCells[i]->GetLaplacian();
-    }
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
+//    for (int i = 0; i < AllCells.size(); ++i){
+//        AllCells[i]->GetLaplacian();
+//    }
 }
 /**************************************************************/
 void OCTREE::Prune() {
@@ -64,7 +64,7 @@ void OCTREE::ClearNodes() {
 /**************************************************************/
 void OCTREE::Reset() {
     Prune();
-    Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
+    //Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
 
 
     AllCells.clear();
@@ -151,6 +151,7 @@ void OCTREE::GetVels() {
     Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::CollapseVField, &Node::DoNothing);
     Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::SetVelsEqual, &Node::DoNothing);
 #else
+    
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -167,6 +168,7 @@ void OCTREE::GetVels() {
         }
     }
     //  Sweep velocity fields down OCTREE
+    
     for (int mlev = 0; mlev < AllBranches.size(); ++mlev) {
         //  Inherit vel fields from parent
 #ifdef _OPENMP

@@ -42,7 +42,6 @@ Array <Vect3> BODY::ATTITUDE;
 Array <Vect3> BODY::VortonPositions;
 Array <Vect3> BODY::VortonStrengths;
 Array <REAL> BODY::TimePrev = Array <REAL> (4, 0.0);
-REAL BODY::GambitScale;
 REAL BODY::Time = 0;
 REAL BODY::RHO = 1;
 int BODY::BodyPanelIDCounter = 0, BODY::BodyPointIDCounter = 0;
@@ -77,7 +76,6 @@ Array <Vect3> BODY::AllBodyPoints;
 bool BODY::IPKC = false;
 int BODY::NumFaces = 0;
 int BODY::NumBodies = 0;
-Vect3 BODY::Vinf(0.0);
 REAL BODY::Radius, BODY::TSR;
 bool BODY::LiftingLineMode;
 
@@ -115,9 +113,9 @@ void BODY::MakeWake() {
     for (int i = 0; i < FirstProtoWakes.size(); ++i) {
         PANEL *tmp = FirstProtoWakes[i];
         
-        VortonVel[i].push_front(Array < Vect3 > (VortonVel[i].front().size(), Vect3(0.0)));
-        VortonX[i].push_front(Array < Vect3 > (VortonX[i].front().size(), Vect3(0.0)));
-        VortonOM[i].push_front(Array < Vect3 > (VortonOM[i].front().size(), Vect3(0.0)));
+        VortonVel[i].push_front(Array < Vect3 > (VVelSizes[i], Vect3(0.0)));
+        VortonX[i].push_front(Array < Vect3 > (VXSizes[i], Vect3(0.0)));
+        VortonOM[i].push_front(Array < Vect3 > (VOMSizes[i], Vect3(0.0)));
 
 
         VortonX[i][0][0] = tmp->C1;
@@ -145,35 +143,35 @@ void BODY::MakeWake() {
             tmp = tmp->Neighb[2];
         }
 
-//        if (VortonX[i].size() > 2)
-//        {
-//            Array <Vect3> X = VortonX[i][2];
-//            Array <Vect3> Om = VortonOM[i][2];
-//            Array <Vect3> Vel = VortonVel[i][2];
-//            
-//            VortonX[i][2].clear();
-//            VortonOM[i][2].clear();
-//            VortonVel[i][2].clear();
-//            
-//            int n = 5;
-//            for (int j = 0; j < X.size() - 1; ++j)
-//            {
-//                Array <Vect3> Xint = UTIL::globalLinspace(X[j],X[j+1],n);
-//                Array <Vect3> OMint = UTIL::globalLinspace(Om[j],Om[j+1],n);
-//                
-//                for (int k = 0; k < n-1; ++k)
-//                {
-//                    VortonX[i][2].push_back(Xint[k]);
-//                    VortonOM[i][2].push_back(OMint[k]/n);
-//                    VortonVel[i][2].push_back(Vect3(0.));
-//                    
-//                    
-//                }
-//                
-//            }
-//            
-//            
-//        }
+        if (VortonX[i].size() > 2)
+        {
+            Array <Vect3> X = VortonX[i][2];
+            Array <Vect3> Om = VortonOM[i][2];
+            Array <Vect3> Vel = VortonVel[i][2];
+            
+            VortonX[i][2].clear();
+            VortonOM[i][2].clear();
+            VortonVel[i][2].clear();
+            
+            int n = 20;
+            for (int j = 0; j < X.size() - 1; ++j)
+            {
+                Array <Vect3> Xint = UTIL::globalLinspace(X[j],X[j+1],n);
+                Array <Vect3> OMint = UTIL::globalLinspace(Om[j],Om[j+1],n);
+                
+                for (int k = 0; k < n-1; ++k)
+                {
+                    VortonX[i][2].push_back(Xint[k]);
+                    VortonOM[i][2].push_back(OMint[k]/n);
+                    VortonVel[i][2].push_back(Vect3(0.));
+                    
+                    
+                }
+                
+            }
+            
+            
+        }
 
 
         tmp = FirstProtoWakes[i];
@@ -210,9 +208,9 @@ void BODY::GetLinearRHS() {
         // 	Add to translational velocity....
         Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
         // 	Include freestream and FMM wake interpolation
-        Vect3 V = BODY::Vinf - Vkin; // + BODY::AllBodyFaces[i]->Vfmm; //BODY::AllBodyFaces[i]->VelInterp[SubStep];       //  Substep counting starts at 1
+        Vect3 V = globalSystem->Vinf - Vkin; // + BODY::AllBodyFaces[i]->Vfmm; //BODY::AllBodyFaces[i]->VelInterp[SubStep];       //  Substep counting starts at 1
 
-        Vect3 VWake = 0.0;
+        Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
 
         REAL PhiWake = 0.0;
 
@@ -235,7 +233,7 @@ void BODY::GetLinearRHS() {
         BODY::AllBodyFaces[i]->Phi = PhiWake;
         BODY::AllBodyFaces[i]->Vkin = Vkin;
         BODY::AllBodyFaces[i]->VWake = VWake;
-        BODY::AllBodyFaces[i]->VCentroid = BODY::Vinf - Vkin + VWake;
+        BODY::AllBodyFaces[i]->VCentroid = globalSystem->Vinf - Vkin + VWake;
 
         V = BODY::AllBodyFaces[i]->VCentroid;
 
@@ -299,8 +297,8 @@ void BODY::GetNonLinearRHS() {
             //            PhiWake += BODY::AllProtoWakes[j]->Gamma * fid;
         }
 
-
-        BODY::AllBodyFaces[i]->VCentroid = BODY::Vinf - BODY::AllBodyFaces[i]->Vkin + BODY::AllBodyFaces[i]->VWake + U;
+        Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
+        BODY::AllBodyFaces[i]->VCentroid = globalSystem->Vinf + VWake - BODY::AllBodyFaces[i]->Vkin + BODY::AllBodyFaces[i]->VWake + U;
 
         Vect3 V = BODY::AllBodyFaces[i]->VCentroid;
 
@@ -346,10 +344,10 @@ void BODY::SplitUpLinearAlgebra() {
         // 	Add to translational velocity....
         Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
         // 	Include freestream and FMM wake interpolation
-        Vect3 V = BODY::Vinf - Vkin; // + BODY::AllBodyFaces[i]->Vfmm; //BODY::AllBodyFaces[i]->VelInterp[SubStep];       //  Substep counting starts at 1
+        Vect3 V = globalSystem->Vinf - Vkin; // + BODY::AllBodyFaces[i]->Vfmm; //BODY::AllBodyFaces[i]->VelInterp[SubStep];       //  Substep counting starts at 1
 
 
-        Vect3 VWake = 0.0;
+        Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
 
         REAL PhiWake = 0.0;
 
@@ -360,7 +358,7 @@ void BODY::SplitUpLinearAlgebra() {
         BODY::AllBodyFaces[i]->Phi = PhiWake;
         BODY::AllBodyFaces[i]->Vkin = Vkin;
         BODY::AllBodyFaces[i]->VWake = VWake;
-        BODY::AllBodyFaces[i]->VCentroid = BODY::Vinf - Vkin + VWake;
+        BODY::AllBodyFaces[i]->VCentroid = globalSystem->Vinf - Vkin + VWake;
 
         V = BODY::AllBodyFaces[i]->VCentroid;
 
@@ -376,7 +374,7 @@ void BODY::SplitUpLinearAlgebra() {
     }
 
 
-    cout << BODY::AllBodyFaces[0]->Vn << endl;
+//    cout << BODY::AllBodyFaces[0]->Vn << endl;
 
     for (int I = 0; I < BODY::Bodies.size(); ++I) {
         int n = BODY::Bodies[I]->Faces.size();
@@ -437,13 +435,13 @@ void BODY::SplitUpLinearAlgebra() {
 
         Force += Vect3(BODY::AllBodyFaces[i]->dF.Dot(Vect3(1, 0, 0)), BODY::AllBodyFaces[i]->dF.Dot(Vect3(0, 1, 0)), BODY::AllBodyFaces[i]->dF.Dot(Vect3(0, 0, 1)));
         Torque += dQ;
-        incrementalCp += dQ.x * BODY::Bodies[0]->BodyRates.x / (0.5 * BODY::RHO * BODY::Vinf.Mag() * BODY::Vinf.Mag() * BODY::Vinf.Mag() * pi * BODY::Radius * BODY::Radius);
+        incrementalCp += dQ.x * BODY::Bodies[0]->BodyRates.x / (0.5 * BODY::RHO * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * pi * BODY::Radius * BODY::Radius);
     }
 
     BODY::ForceHist.push_back(Force);
     BODY::TorqueHist.push_back(Torque);
-    cout << "Thrust: " << Force[0] << " Torque: " << Torque << " Ct: " << Force[0] / (0.5 * 1027 * BODY::Vinf.Mag() * BODY::Vinf.Mag() * pi * BODY::Radius * BODY::Radius);
-    cout << " Cp: " << Torque.x * BODY::Bodies[0]->BodyRates.x / (0.5 * 1027 * BODY::Vinf.Mag() * BODY::Vinf.Mag() * BODY::Vinf.Mag() * pi * BODY::Radius * BODY::Radius) << endl;
+//    cout << "Thrust: " << Force[0] << " Torque: " << Torque << " Ct: " << Force[0] / (0.5 * 1027 * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * pi * BODY::Radius * BODY::Radius);
+//    cout << " Cp: " << Torque.x * BODY::Bodies[0]->BodyRates.x / (0.5 * 1027 * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * pi * BODY::Radius * BODY::Radius) << endl;
     BODY::LiftHist.push_back(Lift);
     for (int i = 0; i < BODY::AllProtoWakes.size(); ++i) {
         BODY::AllProtoWakes[i]->GammaPrev = BODY::AllProtoWakes[i]->Gamma;
@@ -522,8 +520,8 @@ void BODY::LinAlg() {
 
     BODY::ForceHist.push_back(Force);
     BODY::TorqueHist.push_back(Torque);
-    cout << "Thrust: " << Force[0] << " Torque: " << Torque << " Ct: " << Force[0] / (0.5 * 1027 * BODY::Vinf.Mag() * BODY::Vinf.Mag() * pi * BODY::Radius * BODY::Radius);
-    cout << " Cp: " << Torque.x * BODY::Bodies[0]->BodyRates.x / (0.5 * 1027 * BODY::Vinf.Mag() * BODY::Vinf.Mag() * BODY::Vinf.Mag() * pi * BODY::Radius * BODY::Radius) << endl;
+//    cout << "Thrust: " << Force[0] << " Torque: " << Torque << " Ct: " << Force[0] / (0.5 * 1027 * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * pi * BODY::Radius * BODY::Radius);
+//    cout << " Cp: " << Torque.x * BODY::Bodies[0]->BodyRates.x / (0.5 * 1027 * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * pi * BODY::Radius * BODY::Radius) << endl;
     BODY::LiftHist.push_back(Lift);
     for (int i = 0; i < BODY::AllProtoWakes.size(); ++i) {
         BODY::AllProtoWakes[i]->GammaPrev = BODY::AllProtoWakes[i]->Gamma;
@@ -661,7 +659,8 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
     for (int SubStep = 1; SubStep <= n_steps; ++SubStep) {
 
 
-
+        globalTimeStepper->substep_time = SubStep*dt;
+        globalTimeStepper->sim_time += dt;
 
         BODY::TimePrev[3] = BODY::TimePrev[2];
         BODY::TimePrev[2] = BODY::TimePrev[1];
@@ -671,7 +670,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         BODY::Times.push_back(BODY::Time);
 
 
-        cout << "%\t" << SubStep << endl;
+//        cout << "%\t" << SubStep << endl;
         for (int i = 0; i < NumBodies; ++i)
             BODY::Bodies[i]->MakeWake();
 
@@ -687,7 +686,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
                     for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k)
                         NumVortons++;
 
-        Array <Vect3> Vels(NumVortons, Vect3(BODY::Vinf));
+        Array <Vect3> Vels(NumVortons, Vect3(globalSystem->Vinf));
         Array <Vect3*> PosPtr(NumVortons);
         int count = 0;
         for (int J = 0; J < (int) NumBodies; ++J)
@@ -813,11 +812,10 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
 
         //  Check the order of the next few lines
-        for (int i = 0; i < BODY::Bodies.size(); ++i)
-            {
-					BODY::Bodies[i]->MoveBody(dt);
-					BODY::Bodies[i]->AngleHist.push_back(BODY::Bodies[i]->EulerAngles);
-				}
+        for (int i = 0; i < BODY::Bodies.size(); ++i) {
+            BODY::Bodies[i]->MoveBody(dt);
+            BODY::Bodies[i]->AngleHist.push_back(BODY::Bodies[i]->EulerAngles);
+        }
 
         SplitUpLinearAlgebra();
 //        GetLinearRHS();
@@ -1040,8 +1038,8 @@ void BODY::SetUpProtoWakes(REAL dt) {
         for (int i = 0; i < BODY::Bodies[I]->BoundaryFaces.size(); ++i) {
             Vect3 P1 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX1);
             Vect3 P2 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX2);
-            P1 = P1 + Vect3(BODY::Vinf) * dt*globalSystem->DS;
-            P2 = P2 + Vect3(BODY::Vinf) * dt*globalSystem->DS;
+            P1 = P1 + Vect3(globalSystem->Vinf) * dt*globalSystem->DS;
+            P2 = P2 + Vect3(globalSystem->Vinf) * dt*globalSystem->DS;
 
             ProtoWakePoint1.push_back(P1);
             ProtoWakePoint2.push_back(P2);
@@ -1090,7 +1088,9 @@ void BODY::SetUpProtoWakes(REAL dt) {
         BODY::Bodies[I]->VortonX.allocate(BODY::Bodies[I]->ProtoWakes.size());
         BODY::Bodies[I]->VortonOM.allocate(BODY::Bodies[I]->ProtoWakes.size());
         BODY::Bodies[I]->VortonVel.allocate(BODY::Bodies[I]->ProtoWakes.size());
-
+        BODY::Bodies[I]->VXSizes.allocate(BODY::Bodies[I]->ProtoWakes.size());
+        BODY::Bodies[I]->VOMSizes.allocate(BODY::Bodies[I]->ProtoWakes.size());
+        BODY::Bodies[I]->VVelSizes.allocate(BODY::Bodies[I]->ProtoWakes.size());
 
         BODY::Bodies[I]->FirstProtoWakes.allocate(BODY::Bodies[I]->ProtoWakes.size());
         for (int i = 0; i < BODY::Bodies[I]->ProtoWakes.size(); ++i) {
@@ -1129,6 +1129,9 @@ void BODY::SetUpProtoWakes(REAL dt) {
             BODY::Bodies[I]->VortonX[i].push_back(Pts);
             BODY::Bodies[I]->VortonOM[i].push_back(Array < Vect3 > (Pts.size(), Vect3(0.0)));
             BODY::Bodies[I]->VortonVel[i].push_back(Array < Vect3 > (Pts.size(), Vect3(0.0)));
+            BODY::Bodies[I]->VXSizes[i] = Pts.size();
+            BODY::Bodies[I]->VOMSizes[i] = Pts.size();
+            BODY::Bodies[I]->VVelSizes[i] = Pts.size();
             Pts.clear();
 
         }
@@ -1185,6 +1188,7 @@ void BODY::MoveBody(REAL dt) {
     //    Now get new cg position in global reference frame
 
     CG += Velocity*dt;
+//    cout << CG << endl;
     //    Now set appropriate body rates, and transforms etc.
     SetEulerTrans();
 
@@ -1340,7 +1344,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
             X[i] = X[i] - (2 * (X[i].Dot(a)) / (a.Dot(a))) * a;
 
         }
-        Vect3 P = Vect3(BODY::GambitScale * (X[i] + dpos));
+        Vect3 P = Vect3(globalSystem->GambitScale * (X[i] + dpos));
         BodyPoints.push_back(P);
     }
 

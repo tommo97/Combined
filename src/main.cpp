@@ -52,19 +52,18 @@ int main(int argc, char *argv[]) {
 
     
     SYSTEM System(0);
-
-
+    
     //  Some default values
-    globalSystem->GambitScale = 1;
+    globalSystem->NumSubSteps = 10;
+    globalSystem->GambitScale = 25;
     globalSystem->MaxP = 3;
     globalSystem->dtInit = 0.01;
-    globalSystem->Del2 = .001;
+    globalSystem->Del2 = 0.25*globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
     globalSystem->NeuFile = "neu_files/0012.neu";
 
 
     system("clear");
-    BODY::GambitScale = 1;
     UTIL::cpu_t = ticks();
 
 
@@ -337,32 +336,32 @@ void UTIL::PreAmble() {
 
     Array <string> infname(nBodies);
 
-    cout << "Enter body to use for specifying # revs [enter +ve integer], or use time [enter 0]:";
+    cout << "Enter body to use for specifying # revs [enter +ve integer], or use time [enter 0]:" << endl;
     cin >> BodyDatum;
     outstream << BodyDatum << endl;
     
     if (BodyDatum > 0) {
         useRevs = true;
-        cout << "Enter number of revs for body " << BodyDatum << " [real]:";
+        cout << "Enter number of revs for body " << BodyDatum << " [real]:" << endl;
         cin >> nRevs;
         outstream << nRevs << endl;
     } else {
-        cout << "Enter simulation duration in seconds [real]:";
+        cout << "Enter simulation duration in seconds [real]:" << endl;
         cin >> maxT;
         outstream << maxT << endl;
     }
     bool useTSR, useRadians;
     
-    cout << "Prefer to specify degrees or radians for attitudes [degrees=1, radians=0]?:";
+    cout << "Prefer to specify degrees or radians for attitudes [degrees=1, radians=0]?:" << endl;
     cin >> useRadians;
     outstream << useRadians << endl;
-    cout << "Prefer to specify TSR plus axis or rates [TSR=1, rates=0]:";
+    cout << "Prefer to specify TSR plus axis or rates [TSR=1, rates=0]:" << endl;
     cin >> useTSR;
     outstream << useTSR << endl;
     
     int defRates = 2;
     if (!useTSR) {
-        cout << "Prefer to specify rates RPM, Hz, or rad/s [RPM=0, Hz=1, rad/s=2]:";
+        cout << "Prefer to specify rates RPM, Hz, or rad/s [RPM=0, Hz=1, rad/s=2]:" << endl;
         cin >> defRates;
         outstream << defRates << endl;
     }
@@ -371,17 +370,17 @@ void UTIL::PreAmble() {
 
 
     
-    cout << "Enter number of timestep samples [integer]:";
+    cout << "Enter number of timestep samples [integer]:" << endl;
     cin >> nSteps;
     outstream << nSteps << endl;
-    cout << "Enter freestream velocity Uinf Vinf Winf as [3 x real]:";
+    cout << "Enter freestream velocity Uinf Vinf Winf as [3 x real]:" << endl;
 
-    cin >> BODY::Vinf.x >> BODY::Vinf.y >> BODY::Vinf.z;
-    outstream << BODY::Vinf << endl;
-    cout << "Enter fluid density in kg/m3 [real]:";
+    cin >> globalSystem->Vinf.x >> globalSystem->Vinf.y >> globalSystem->Vinf.z;
+    outstream << globalSystem->Vinf << endl;
+    cout << "Enter fluid density in kg/m3 [real]:" << endl;
     cin >> rho;
     outstream << BODY::RHO << endl;
-    cout << "Use iterative pressure kutta condition? [bool 1/0]:";
+    cout << "Use iterative pressure kutta condition? [bool 1/0]:" << endl;
     cin >> IPKC;
     outstream << IPKC << endl;
     if (IPKC==0)
@@ -391,7 +390,7 @@ void UTIL::PreAmble() {
     
 
     
-    cout << "Make an input log file? [bool 1/0]:";
+    cout << "Make an input log file? [bool 1/0]:" << endl;
     cin >> makeLog;
     outstream << makeLog << endl;
     
@@ -409,59 +408,61 @@ void UTIL::PreAmble() {
         cout << setfill('=') << setw(80) << "=" << endl;
         cout << "\t Body " << i + 1 << " Setup:" << endl;
         
-        cout << "Enter input neutral file [string]:";
+        cout << "Enter input neutral file [string]:" << endl;
         cin >> infname[i];
         outstream << infname[i] << endl;
         
         
-        cout << "Mirror/flip input geometry? [bool 1/0]";
+        cout << "Mirror/flip input geometry? [bool 1/0]" << endl;
         cin >> flip[i];
         outstream << flip[i] << endl;
         
         if (flip[i])
         {
-            cout << "Mirror using yz, xz or xy plane? [yz=1, xz=2, xy=3]";
+            cout << "Mirror using yz, xz or xy plane? [yz=1, xz=2, xy=3]" << endl;
             cin >> plane[i];
             outstream << plane[i] << endl;
             
         }
         
-        cout << "Enter displacement of neutral file origin in global frame as [3 x real]:";
+        cout << "Enter displacement of neutral file origin in global frame as [3 x real]:" << endl;
         cin >> Disp[i].x >> Disp[i].y >> Disp[i].z;
         outstream << Disp[i] << endl;
-        
-        cout << "Enter body CG position (i.e. centre of rotation) xcg ycg zcg as [3 x real]:";
+        Disp[i] = Disp[i]*globalSystem->GambitScale;
+        cout << "Enter body CG position (i.e. centre of rotation) xcg ycg zcg as [3 x real]:" << endl;
         cin >> BODY::CGS[i].x >> BODY::CGS[i].y >> BODY::CGS[i].z;
         outstream << BODY::CGS[i] << endl;
+        BODY::CGS[i] = BODY::CGS[i] * globalSystem->GambitScale;
         
-        cout << "Enter body CG translational velocity Vx Vy Vz as [3 x real]:";
+        cout << "Enter body CG translational velocity Vx Vy Vz as [3 x real]:" << endl;
         cin >> BODY::VELOCITY[i].x >> BODY::VELOCITY[i].y >> BODY::VELOCITY[i].z;
         outstream << BODY::VELOCITY[i] << endl;
+        BODY::VELOCITY[i] = BODY::VELOCITY[i]*globalSystem->GambitScale;
         
-        cout << "Enter body attitude psi theta phi in degrees as [3 x real]:";
+        cout << "Enter body attitude psi theta phi in degrees as [3 x real]:" << endl;
         cin >> BODY::ATTITUDE[i].x >> BODY::ATTITUDE[i].y >> BODY::ATTITUDE[i].z;
         outstream << BODY::ATTITUDE[i] << endl;
         
         if (useTSR) {
-            cout << "Enter TSR (lambda) [real]:";
+            cout << "Enter TSR (lambda) [real]:" << endl;
             cin >> tsr[i];
             outstream << tsr[i] << endl;
             
-            cout << "Enter rotation axis as [3 x real]:";
+            cout << "Enter rotation axis as [3 x real]:" << endl;
             cin >> Ax[i].x >> Ax[i].y >> Ax[i].z;
             outstream << Ax[i] << endl;
             
-            cout << "Enter radius as [real]:";
+            cout << "Enter radius as [real]:" << endl;
             cin >> rads[i];
             outstream << rads[i] << endl;
             
             BODY::Radius = rads[0];
-            BODY::RATES[i] = Ax[i]*(BODY::Vinf.Mag()*tsr[i]/rads[i]);
+            BODY::RATES[i] = Ax[i]*(globalSystem->Vinf.Mag()*tsr[i]/rads[i]);
             
             
             
         } else {
-            cout << "Enter body rotational velocity p q r as [3 x real]:";
+            cout << "Enter body rotational velocity p q r as [3 x real]:" << endl;
             Vect3 rt;
             cin >> rt.x >> rt.y >> rt.z;
             outstream << rt << endl;
@@ -498,7 +499,7 @@ void UTIL::PreAmble() {
         
         cout << "\tSimulation Summary:" << endl;
         cout << "\tRuntime / Sample Number: \t" << maxT << "/" << nSteps << endl;
-        cout << "\tInflow Velocity: \t\t" << BODY::Vinf << endl << endl;
+        cout << "\tInflow Velocity: \t\t" << globalSystem->Vinf << endl << endl;
         
         
         for (int i = 0; i < BODY::Bodies.size(); ++i)

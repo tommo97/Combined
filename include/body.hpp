@@ -56,7 +56,6 @@ public:
     static Array <PANEL*> AllProtoWakes;
     static Array <Vect3> VortonPositions;
     static Array <Vect3> VortonStrengths;
-    static Vect3 Vinf;
     static REAL Radius, TSR, RHO;
     string Name;
     static Array <REAL> Times;
@@ -113,6 +112,7 @@ public:
     Array <PANEL> Faces;
     Array <Array <PANEL> > ProtoWakes;
     Array < Array < Array < Vect3> > > VortonX, VortonOM, VortonVel;
+    Array < int  > VXSizes, VOMSizes, VVelSizes;
     Array <PANEL*> BoundaryFaces, FirstProtoWakes;
 
     Array < Array < Array < Vect3 > > > WakePoints;

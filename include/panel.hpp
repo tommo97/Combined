@@ -39,7 +39,7 @@ class PANEL {
 public:
     static REAL FarField;
 
-    Vect3 C1, C2, C3, C4, Centroid, CollocationPoint, Normal, Eta, Epsilon, TRANS[3], edgeX1, edgeX2, Vkin, VWake, VCentroid, dF;
+    Vect3 C1, C2, C3, C4, Centroid, CollocationPoint, Normal, Eta, Epsilon, TRANS[3], edgeX1, edgeX2, Vfmm, Vkin, VWake, VCentroid, dF;
     Array <Vect3> Xcb;
     Vect4 DX, DY, M, D;
     Vect3 C1o, C2o, C3o, C4o;
@@ -89,6 +89,7 @@ public:
         TRANS[0] = TRANS[1] = TRANS[2] = Vect3(0.);
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
+        Vfmm = Vect3(0.);
     }
 
     PANEL(Vect3 P1, Vect3 P2, Vect3 P3, Vect3 P4) {
@@ -108,6 +109,7 @@ public:
         GetNormal();
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
+        Vfmm = Vect3(0.);
     }
 
     PANEL(const PANEL &C) {
@@ -148,6 +150,7 @@ public:
         Rloc = C.Rloc;
         dF = C.dF;
         ID = C.ID;
+        Vfmm = C.Vfmm;
     }
 
 
