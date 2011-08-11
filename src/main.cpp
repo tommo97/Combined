@@ -54,13 +54,11 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->NumSubSteps = 10;
-    globalSystem->GambitScale = 25;
+    globalSystem->GambitScale = 10;
     globalSystem->MaxP = 3;
-    globalSystem->dtInit = 0.01;
-    globalSystem->Del2 = 0.25*globalSystem->GambitScale*globalSystem->GambitScale;
+    globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
-    globalSystem->NeuFile = "neu_files/0012.neu";
+    globalSystem->dtInit = 1e-3;
 
 
     system("clear");
@@ -69,18 +67,25 @@ int main(int argc, char *argv[]) {
 
 
     UTIL::PreAmble();
-    UTIL::PostAmble();
+    
+    cout << "------- "<< globalSystem->Del2 << " " <<  TIME_STEPPER::max_t << " " << globalSystem->NumSubSteps << endl;
+    
+    globalSystem->Initialise();
+    
+    cout << globalSystem->Vinf << endl;
+    
+    cout << "------- "<< globalSystem->Del2 << " " <<  globalSystem->GambitScale << " " << TIME_STEPPER::max_t << " " << globalSystem->NumSubSteps << endl;
+//    BODY::BodySubStep(TIME_STEPPER::max_t, globalSystem->NumSubSteps);
 
 
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
 
-    globalSystem->Initialise();
     globalSystem->TimeStep();
 
 
-
+    UTIL::PostAmble();
 
 
 #ifndef use_NCURSES
@@ -92,7 +97,7 @@ int main(int argc, char *argv[]) {
 void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
 
     REAL mult, nrm;
-    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
+    nrm = sqrt(globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.Dot(diff));
     mult = -1 / (four_pi * nrm * nrm * nrm);
     vel += mult * diff.Cross(omega);
 }
@@ -101,7 +106,7 @@ void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
 Vect3 globalDirectVel(Vect3 diff, Vect3 omega) {
 
     REAL mult, nrm;
-    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
+    nrm = sqrt(globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.Dot(diff));
     mult = -1 / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
@@ -373,6 +378,7 @@ void UTIL::PreAmble() {
     cout << "Enter number of timestep samples [integer]:" << endl;
     cin >> nSteps;
     outstream << nSteps << endl;
+    
     cout << "Enter freestream velocity Uinf Vinf Winf as [3 x real]:" << endl;
 
     cin >> globalSystem->Vinf.x >> globalSystem->Vinf.y >> globalSystem->Vinf.z;
@@ -428,16 +434,13 @@ void UTIL::PreAmble() {
         cout << "Enter displacement of neutral file origin in global frame as [3 x real]:" << endl;
         cin >> Disp[i].x >> Disp[i].y >> Disp[i].z;
         outstream << Disp[i] << endl;
-        Disp[i] = Disp[i]*globalSystem->GambitScale;
         cout << "Enter body CG position (i.e. centre of rotation) xcg ycg zcg as [3 x real]:" << endl;
         cin >> BODY::CGS[i].x >> BODY::CGS[i].y >> BODY::CGS[i].z;
         outstream << BODY::CGS[i] << endl;
-        BODY::CGS[i] = BODY::CGS[i] * globalSystem->GambitScale;
         
         cout << "Enter body CG translational velocity Vx Vy Vz as [3 x real]:" << endl;
         cin >> BODY::VELOCITY[i].x >> BODY::VELOCITY[i].y >> BODY::VELOCITY[i].z;
         outstream << BODY::VELOCITY[i] << endl;
-        BODY::VELOCITY[i] = BODY::VELOCITY[i]*globalSystem->GambitScale;
         
         cout << "Enter body attitude psi theta phi in degrees as [3 x real]:" << endl;
         cin >> BODY::ATTITUDE[i].x >> BODY::ATTITUDE[i].y >> BODY::ATTITUDE[i].z;
@@ -497,10 +500,16 @@ void UTIL::PreAmble() {
         cout << setfill('=') << setw(80) << "=" << endl;
     }
         
+        TIME_STEPPER::max_t = maxT;
+        globalSystem->NumSubSteps = nSteps;
+        
         cout << "\tSimulation Summary:" << endl;
-        cout << "\tRuntime / Sample Number: \t" << maxT << "/" << nSteps << endl;
+        cout << "\tRuntime / Sample Number: \t" << TIME_STEPPER::max_t << "/" << globalSystem->NumSubSteps << endl;
         cout << "\tInflow Velocity: \t\t" << globalSystem->Vinf << endl << endl;
         
+        
+        
+
         
         for (int i = 0; i < BODY::Bodies.size(); ++i)
         {
@@ -529,15 +538,16 @@ void UTIL::PreAmble() {
     BODY::PollFaces();
 
     BODY::SetUpInfluenceMatrices();
-
+    
+    
 //    BODY::BodySubStep(maxT, nSteps);
 
 }
 /**************************************************************/
-Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega) {
+Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega, REAL del2) {
 
     REAL mult, nrm;
     nrm = sqrt(diff.Dot(diff));
-    mult = -1 / (globalSystem->Del2 + four_pi * nrm * nrm * nrm);
+    mult = -1 / (del2 + four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }

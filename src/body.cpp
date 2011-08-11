@@ -106,16 +106,15 @@ Vect3 BODY::GetVel(Vect3 Target) {
 
 /**************************************************************/
 void BODY::MakeWake() {
-    Vect3 LineStart, LineEnd;
     REAL Gamma;
-    Array <Vect3> Pts, OmegasR1, OmegasR2, Cs;
+    Array <Vect3> Pts;
     Array <REAL> Gms;
     for (int i = 0; i < FirstProtoWakes.size(); ++i) {
         PANEL *tmp = FirstProtoWakes[i];
         
-        VortonVel[i].push_front(Array < Vect3 > (VVelSizes[i], Vect3(0.0)));
-        VortonX[i].push_front(Array < Vect3 > (VXSizes[i], Vect3(0.0)));
-        VortonOM[i].push_front(Array < Vect3 > (VOMSizes[i], Vect3(0.0)));
+        VortonVel[i].push_front(Array < Vect3 > (VortonVel[i].front().size(), Vect3(0.0)));
+        VortonX[i].push_front(Array < Vect3 > (VortonX[i].front().size(), Vect3(0.0)));
+        VortonOM[i].push_front(Array < Vect3 > (VortonOM[i].front().size(), Vect3(0.0)));
 
 
         VortonX[i][0][0] = tmp->C1;
@@ -143,36 +142,39 @@ void BODY::MakeWake() {
             tmp = tmp->Neighb[2];
         }
 
-        if (VortonX[i].size() > 2)
-        {
-            Array <Vect3> X = VortonX[i][2];
-            Array <Vect3> Om = VortonOM[i][2];
-            Array <Vect3> Vel = VortonVel[i][2];
-            
-            VortonX[i][2].clear();
-            VortonOM[i][2].clear();
-            VortonVel[i][2].clear();
-            
-            int n = 20;
-            for (int j = 0; j < X.size() - 1; ++j)
-            {
-                Array <Vect3> Xint = UTIL::globalLinspace(X[j],X[j+1],n);
-                Array <Vect3> OMint = UTIL::globalLinspace(Om[j],Om[j+1],n);
-                
-                for (int k = 0; k < n-1; ++k)
-                {
-                    VortonX[i][2].push_back(Xint[k]);
-                    VortonOM[i][2].push_back(OMint[k]/n);
-                    VortonVel[i][2].push_back(Vect3(0.));
-                    
-                    
-                }
-                
-            }
-            
-            
-        }
+//        if (VortonX[i].size() > 2)
+//        {
+//            Array <Vect3> X = VortonX[i][2];
+//            Array <Vect3> Om = VortonOM[i][2];
+//            Array <Vect3> Vel = VortonVel[i][2];
+//            
+//            VortonX[i][2].clear();
+//            VortonOM[i][2].clear();
+//            VortonVel[i][2].clear();
+//            
+//            int n = 20;
+//            for (int j = 0; j < X.size() - 1; ++j)
+//            {
+//                Array <Vect3> Xint = UTIL::globalLinspace(X[j],X[j+1],n);
+//                Array <Vect3> OMint = UTIL::globalLinspace(Om[j],Om[j+1],n);
+//                
+//                for (int k = 0; k < n-1; ++k)
+//                {
+//                    VortonX[i][2].push_back(Xint[k]);
+//                    VortonOM[i][2].push_back(OMint[k]/n);
+//                    VortonVel[i][2].push_back(Vect3(0.));
+//                    
+//                    
+//                }
+//                
+//            }
+//            
+//            
+//        }
 
+//            VortonX[i][2].clear();
+//            VortonOM[i][2].clear();
+//            VortonVel[i][2].clear();
 
         tmp = FirstProtoWakes[i];
         Pts.push_back(tmp->C1);
@@ -216,7 +218,7 @@ void BODY::GetLinearRHS() {
 
 #pragma omp parallel for
         for (int j = 0; j < BODY::VortonPositions.size(); ++j)
-            VWake = VWake - UTIL::globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortonPositions[j], BODY::VortonStrengths[j]);
+            VWake = VWake - UTIL::globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortonPositions[j], BODY::VortonStrengths[j], globalSystem->Del2);
 
 
 
@@ -335,7 +337,7 @@ void BODY::SplitUpLinearAlgebra() {
 
 
     //  Calculate velocity at all faces
-
+//    cout << globalSystem->Vinf << endl;
 #pragma omp parallel for
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
@@ -344,7 +346,6 @@ void BODY::SplitUpLinearAlgebra() {
         // 	Add to translational velocity....
         Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
         // 	Include freestream and FMM wake interpolation
-        Vect3 V = globalSystem->Vinf - Vkin; // + BODY::AllBodyFaces[i]->Vfmm; //BODY::AllBodyFaces[i]->VelInterp[SubStep];       //  Substep counting starts at 1
 
 
         Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
@@ -353,14 +354,14 @@ void BODY::SplitUpLinearAlgebra() {
 
 #pragma omp parallel for
         for (int j = 0; j < BODY::VortonPositions.size(); ++j)
-            VWake = VWake - UTIL::globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortonPositions[j], BODY::VortonStrengths[j]);
+            VWake = VWake - UTIL::globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortonPositions[j], BODY::VortonStrengths[j], globalSystem->Del2);
 
         BODY::AllBodyFaces[i]->Phi = PhiWake;
         BODY::AllBodyFaces[i]->Vkin = Vkin;
         BODY::AllBodyFaces[i]->VWake = VWake;
         BODY::AllBodyFaces[i]->VCentroid = globalSystem->Vinf - Vkin + VWake;
 
-        V = BODY::AllBodyFaces[i]->VCentroid;
+        Vect3 V = BODY::AllBodyFaces[i]->VCentroid;
 
         REAL Vn = BODY::AllBodyFaces[i]->Vn = V.Dot(BODY::AllBodyFaces[i]->TRANS[2]);
 
@@ -670,7 +671,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         BODY::Times.push_back(BODY::Time);
 
 
-//        cout << "%\t" << SubStep << endl;
+        //cout << "%\t" << SubStep << " " << globalSystem->Vinf << " " << dt << endl;
         for (int i = 0; i < NumBodies; ++i)
             BODY::Bodies[i]->MakeWake();
 
@@ -759,17 +760,17 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
 
 
-/*
+
 #pragma omp parallel for
         for (int i = 0; i < PosPtr.size(); ++i)
             for (int j = 0; j < BODY::VortonPositions.size(); ++j)
-                Vels[i] += UTIL::globalDirectVel(BODY::VortonPositions[j] - *(PosPtr[i]), BODY::VortonStrengths[j]);
-*/
+                Vels[i] += UTIL::globalDirectVel(BODY::VortonPositions[j] - *(PosPtr[i]), BODY::VortonStrengths[j], globalSystem->Del2);
 
 
-        //        for (int i = 0; i < BODY::Bodies.size(); ++i)
-        //            for (int j = 0; j < BODY::VortonPositions.size(); ++j)
-        //                Vels[i] += BODY::Bodies[i]->GetVel(*(PosPtr[j]));
+
+        for (int i = 0; i < BODY::Bodies.size(); ++i)
+            for (int j = 0; j < PosPtr.size(); ++j)
+                Vels[i] += BODY::Bodies[i]->GetVel(*(PosPtr[j]));
 
 
 
@@ -1344,7 +1345,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
             X[i] = X[i] - (2 * (X[i].Dot(a)) / (a.Dot(a))) * a;
 
         }
-        Vect3 P = Vect3(globalSystem->GambitScale * (X[i] + dpos));
+        Vect3 P = Vect3((X[i] + dpos));
         BodyPoints.push_back(P);
     }
 

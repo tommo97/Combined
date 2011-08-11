@@ -75,10 +75,8 @@ SYSTEM::SYSTEM(int NT) {
 
 /**************************************************************/
 void SYSTEM::Initialise() {
-    Vinf *= GambitScale;
+
     Nu = GambitScale * GambitScale * Mu / Rho;
-    Del2 *= GambitScale*GambitScale;
-    cout << GambitScale << endl;
     globalTimeStepper = new TIME_STEPPER();
 
     ReadNeuGetBodies();
@@ -90,7 +88,7 @@ void SYSTEM::Initialise() {
 
 
     if (WRITE_TO_SCREEN) cout << "rho: " << Rho << "; mu: " << Mu << "; nu: " << Nu << endl;
-    if (WRITE_TO_SCREEN) cout << "Scale Factor: " << GambitScale << endl;
+    if (WRITE_TO_SCREEN) cout << "FVM mesh scale Factor: " << GambitScale << endl;
 
     int nss = globalSystem->NumSubSteps;
 
@@ -105,7 +103,7 @@ void SYSTEM::Initialise() {
 /**************************************************************/
 void SYSTEM::TimeStep() {
 
-    while (globalTimeStepper->t < globalTimeStepper->max_t)
+    while (globalTimeStepper->t < TIME_STEPPER::max_t)
         globalTimeStepper->time_loop();
 
     if (WRITE_TO_SCREEN) cout << "Finished at sim time: " << globalTimeStepper->t << endl;
@@ -177,9 +175,9 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 void SYSTEM::PutWakesInTree() {
     for (int J = 0; J < BODY::Bodies.size(); ++J){
         for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
-            for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j){
+            for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size() - 1; ++j){
                 for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k) {
-                    OctreeCapsule C(BODY::Bodies[J]->VortonX[i][j][k], BODY::Bodies[J]->VortonOM[i][j][k]*globalSystem->GambitScale*globalSystem->GambitScale, true);
+                    OctreeCapsule C(BODY::Bodies[J]->VortonX[i][j][k]*globalSystem->GambitScale, BODY::Bodies[J]->VortonOM[i][j][k]*globalSystem->GambitScale*globalSystem->GambitScale, true);
 //                    cout << BODY::Bodies[J]->VortonOM[i][j][k]*globalSystem->GambitScale*globalSystem->GambitScale << endl
                     C.AssociatedBody = J;
                     globalOctree->Root->EvalCapsule(C);

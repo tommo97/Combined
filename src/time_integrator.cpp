@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /**************************************************************/
 #include "time_integrator.hpp"
 #include <gsl/gsl_sf_bessel.h>
-
+REAL TIME_STEPPER::max_t = 0;
 /**************************************************************/
 TIME_STEPPER::TIME_STEPPER() {
     dt_prev = 1e16;
@@ -169,26 +169,26 @@ void TIME_STEPPER::time_loop() {
         first_step = false;
     }
 
-        time_step();
-        globalIO->stat_step();
-    
-        globalOctree->FVM(); //  t = t0
-        globalOctree->Integrate(); //  t = t0 -> t1
-    
-        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
-    
-        globalSystem->PutWakesInTree();
-        globalOctree->Reset();
-        globalOctree->InitVelsGetLaplacian();
-        globalOctree->GetVels();
-        globalSystem->GetPanelFMMVelocities();  //  t = t1
-    //    globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
+    time_step();
+    globalIO->stat_step();
+
+    globalOctree->FVM(); //  t = t0
+    globalOctree->Integrate(); //  t = t0 -> t1
+
+    BODY::BodySubStep(dt, globalSystem->NumSubSteps);
+
+    globalSystem->PutWakesInTree();
+    globalOctree->Reset();
+    globalOctree->InitVelsGetLaplacian();
+    globalOctree->GetVels();
+    globalSystem->GetPanelFMMVelocities(); //  t = t1
+    globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
     //
-        if (globalTimeStepper->dump_next){
-    //        globalSystem->WriteDomain();
-            globalSystem->WriteVorticity();
-    //        globalOctree->Reset();
-        }
+    if (globalTimeStepper->dump_next) {
+        //        globalSystem->WriteDomain();
+        globalSystem->WriteVorticity();
+        //        globalOctree->Reset();
+    }
 
 }
 
@@ -223,13 +223,15 @@ void TIME_STEPPER::time_step() {
         OmRMax = max(OmRMax, max(fabs(BODY::Bodies[i]->Velocity + BODY::Bodies[i]->BodyRates.Cross(BODY::Bodies[i]->Rmax))));
 
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = min(dt_euler / 10, cfl_lim / OmRMax);
+    REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (globalSystem->GambitScale*OmRMax));
 
     int nss = ceil(dt_euler / dt_lagrange);
 
     CFL = srad * dt;
 
     globalSystem->NumSubSteps = nss;
+    
+    cout << nss << " "  << cfl_lim / (globalSystem->GambitScale*OmRMax) << " " << dt << " " << endl;
 
     //    if (n == 0) dump_next = true;
 
