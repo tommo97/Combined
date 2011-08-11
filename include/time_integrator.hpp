@@ -45,7 +45,7 @@ class TIME_STEPPER
         int n;
         REAL substep_time, t, t_out, cfl_lim, dt_out, dt_prev, sim_time;
         REAL  dt, dx, dy, dz;
-        static REAL max_t;
+        static REAL MaxTime, SimTime, SubStepTime;
         REAL *A;
         REAL lambda, mu, nu;
         bool dump_next, first_step, ChangeOver;

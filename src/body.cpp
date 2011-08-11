@@ -142,36 +142,39 @@ void BODY::MakeWake() {
             tmp = tmp->Neighb[2];
         }
 
-//        if (VortonX[i].size() > 2)
-//        {
-//            Array <Vect3> X = VortonX[i][2];
-//            Array <Vect3> Om = VortonOM[i][2];
-//            Array <Vect3> Vel = VortonVel[i][2];
-//            
-//            VortonX[i][2].clear();
-//            VortonOM[i][2].clear();
-//            VortonVel[i][2].clear();
-//            
-//            int n = 20;
-//            for (int j = 0; j < X.size() - 1; ++j)
-//            {
-//                Array <Vect3> Xint = UTIL::globalLinspace(X[j],X[j+1],n);
-//                Array <Vect3> OMint = UTIL::globalLinspace(Om[j],Om[j+1],n);
-//                
-//                for (int k = 0; k < n-1; ++k)
-//                {
-//                    VortonX[i][2].push_back(Xint[k]);
-//                    VortonOM[i][2].push_back(OMint[k]/n);
-//                    VortonVel[i][2].push_back(Vect3(0.));
-//                    
-//                    
-//                }
-//                
-//            }
-//            
-//            
-//        }
-
+        if (VortonX[i].size() > 2)
+        {
+            Array <Vect3> X = VortonX[i][2];
+            Array <Vect3> Om = VortonOM[i][2];
+            Array <Vect3> Vel = VortonVel[i][2];
+            
+            VortonX[i][2].clear();
+            VortonOM[i][2].clear();
+            VortonVel[i][2].clear();
+            
+            int n = 5;
+            for (int j = 0; j < X.size() - 1; ++j)
+            {
+                Array <Vect3> Xint = UTIL::globalLinspace(X[j],X[j+1],n);
+                Array <Vect3> OMint = UTIL::globalLinspace(Om[j],Om[j+1],n);
+                
+                for (int k = 0; k < n-1; ++k)
+                {
+                    VortonX[i][2].push_back(Xint[k]);
+                    VortonOM[i][2].push_back(OMint[k]/n);
+                    VortonVel[i][2].push_back(Vect3(0.));
+                    
+                    
+                }
+                
+            }
+            
+            
+        }
+        
+        
+        
+//
 //            VortonX[i][2].clear();
 //            VortonOM[i][2].clear();
 //            VortonVel[i][2].clear();
@@ -210,7 +213,7 @@ void BODY::GetLinearRHS() {
         // 	Add to translational velocity....
         Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
         // 	Include freestream and FMM wake interpolation
-        Vect3 V = globalSystem->Vinf - Vkin; // + BODY::AllBodyFaces[i]->Vfmm; //BODY::AllBodyFaces[i]->VelInterp[SubStep];       //  Substep counting starts at 1
+        Vect3 V = globalSystem->unscaledVinf - Vkin; // + BODY::AllBodyFaces[i]->Vfmm; //BODY::AllBodyFaces[i]->VelInterp[SubStep];       //  Substep counting starts at 1
 
         Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
 
@@ -235,7 +238,7 @@ void BODY::GetLinearRHS() {
         BODY::AllBodyFaces[i]->Phi = PhiWake;
         BODY::AllBodyFaces[i]->Vkin = Vkin;
         BODY::AllBodyFaces[i]->VWake = VWake;
-        BODY::AllBodyFaces[i]->VCentroid = globalSystem->Vinf - Vkin + VWake;
+        BODY::AllBodyFaces[i]->VCentroid = globalSystem->unscaledVinf - Vkin + VWake;
 
         V = BODY::AllBodyFaces[i]->VCentroid;
 
@@ -300,7 +303,7 @@ void BODY::GetNonLinearRHS() {
         }
 
         Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
-        BODY::AllBodyFaces[i]->VCentroid = globalSystem->Vinf + VWake - BODY::AllBodyFaces[i]->Vkin + BODY::AllBodyFaces[i]->VWake + U;
+        BODY::AllBodyFaces[i]->VCentroid = globalSystem->unscaledVinf + VWake - BODY::AllBodyFaces[i]->Vkin + BODY::AllBodyFaces[i]->VWake + U;
 
         Vect3 V = BODY::AllBodyFaces[i]->VCentroid;
 
@@ -359,7 +362,7 @@ void BODY::SplitUpLinearAlgebra() {
         BODY::AllBodyFaces[i]->Phi = PhiWake;
         BODY::AllBodyFaces[i]->Vkin = Vkin;
         BODY::AllBodyFaces[i]->VWake = VWake;
-        BODY::AllBodyFaces[i]->VCentroid = globalSystem->Vinf - Vkin + VWake;
+        BODY::AllBodyFaces[i]->VCentroid = globalSystem->unscaledVinf - Vkin + VWake;
 
         Vect3 V = BODY::AllBodyFaces[i]->VCentroid;
 
@@ -436,7 +439,7 @@ void BODY::SplitUpLinearAlgebra() {
 
         Force += Vect3(BODY::AllBodyFaces[i]->dF.Dot(Vect3(1, 0, 0)), BODY::AllBodyFaces[i]->dF.Dot(Vect3(0, 1, 0)), BODY::AllBodyFaces[i]->dF.Dot(Vect3(0, 0, 1)));
         Torque += dQ;
-        incrementalCp += dQ.x * BODY::Bodies[0]->BodyRates.x / (0.5 * BODY::RHO * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * globalSystem->Vinf.Mag() * pi * BODY::Radius * BODY::Radius);
+        incrementalCp += dQ.x * BODY::Bodies[0]->BodyRates.x / (0.5 * BODY::RHO * globalSystem->unscaledVinf.Mag() * globalSystem->unscaledVinf.Mag() * globalSystem->unscaledVinf.Mag() * pi * BODY::Radius * BODY::Radius);
     }
 
     BODY::ForceHist.push_back(Force);
@@ -660,14 +663,15 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
     for (int SubStep = 1; SubStep <= n_steps; ++SubStep) {
 
 
-        globalTimeStepper->substep_time = SubStep*dt;
-        globalTimeStepper->sim_time += dt;
+
 
         BODY::TimePrev[3] = BODY::TimePrev[2];
         BODY::TimePrev[2] = BODY::TimePrev[1];
         BODY::TimePrev[1] = BODY::TimePrev[0];
-        BODY::TimePrev[0] = BODY::Time;
-        BODY::Time += dt;
+        BODY::TimePrev[0] = TIME_STEPPER::SimTime;
+        
+        TIME_STEPPER::SubStepTime += dt;
+        TIME_STEPPER::SimTime += dt;
         BODY::Times.push_back(BODY::Time);
 
 
@@ -687,7 +691,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
                     for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k)
                         NumVortons++;
 
-        Array <Vect3> Vels(NumVortons, Vect3(globalSystem->Vinf));
+        Array <Vect3> Vels(NumVortons, Vect3(globalSystem->unscaledVinf));
         Array <Vect3*> PosPtr(NumVortons);
         int count = 0;
         for (int J = 0; J < (int) NumBodies; ++J)
@@ -761,16 +765,16 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
 
 
-#pragma omp parallel for
-        for (int i = 0; i < PosPtr.size(); ++i)
-            for (int j = 0; j < BODY::VortonPositions.size(); ++j)
-                Vels[i] += UTIL::globalDirectVel(BODY::VortonPositions[j] - *(PosPtr[i]), BODY::VortonStrengths[j], globalSystem->Del2);
-
-
-
-        for (int i = 0; i < BODY::Bodies.size(); ++i)
-            for (int j = 0; j < PosPtr.size(); ++j)
-                Vels[i] += BODY::Bodies[i]->GetVel(*(PosPtr[j]));
+//#pragma omp parallel for
+//        for (int i = 0; i < PosPtr.size(); ++i)
+//            for (int j = 0; j < BODY::VortonPositions.size(); ++j)
+//                Vels[i] += UTIL::globalDirectVel(BODY::VortonPositions[j] - *(PosPtr[i]), BODY::VortonStrengths[j], globalSystem->Del2);
+//
+//
+//
+//        for (int i = 0; i < BODY::Bodies.size(); ++i)
+//            for (int j = 0; j < PosPtr.size(); ++j)
+//                Vels[i] += BODY::Bodies[i]->GetVel(*(PosPtr[j]));
 
 
 
@@ -1039,8 +1043,8 @@ void BODY::SetUpProtoWakes(REAL dt) {
         for (int i = 0; i < BODY::Bodies[I]->BoundaryFaces.size(); ++i) {
             Vect3 P1 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX1);
             Vect3 P2 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX2);
-            P1 = P1 + Vect3(globalSystem->Vinf) * dt*globalSystem->DS;
-            P2 = P2 + Vect3(globalSystem->Vinf) * dt*globalSystem->DS;
+            P1 = P1 + Vect3(globalSystem->unscaledVinf) * dt*globalSystem->DS;
+            P2 = P2 + Vect3(globalSystem->unscaledVinf) * dt*globalSystem->DS;
 
             ProtoWakePoint1.push_back(P1);
             ProtoWakePoint2.push_back(P2);

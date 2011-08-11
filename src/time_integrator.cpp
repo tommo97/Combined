@@ -31,7 +31,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /**************************************************************/
 #include "time_integrator.hpp"
 #include <gsl/gsl_sf_bessel.h>
-REAL TIME_STEPPER::max_t = 0;
+REAL TIME_STEPPER::MaxTime = 0;
+REAL TIME_STEPPER::SimTime = 0;
+REAL TIME_STEPPER::SubStepTime = 0;
 /**************************************************************/
 TIME_STEPPER::TIME_STEPPER() {
     dt_prev = 1e16;
@@ -40,10 +42,9 @@ TIME_STEPPER::TIME_STEPPER() {
     n = -1;
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
-    cfl_lim = 0.25;
+    cfl_lim = 0.45;
     dt_out = .1;
     t_out = dt_out;
-    max_t = 20;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();
     dump_next = false;
@@ -210,9 +211,9 @@ void TIME_STEPPER::time_step() {
 
     dump_next = false;
 
-    if ((t + dt >= t_out) || (t + dt >= max_t)) {
+    if ((TIME_STEPPER::SimTime + dt >= t_out) || (TIME_STEPPER::SimTime + dt >= TIME_STEPPER::MaxTime)) {
         dump_next = true;
-        dt = dt_euler = min(t_out - t, max_t - t);
+        dt = dt_euler = min(t_out - TIME_STEPPER::SimTime, TIME_STEPPER::MaxTime - TIME_STEPPER::SimTime);
         t_out += dt_out;
     }
 
@@ -223,7 +224,7 @@ void TIME_STEPPER::time_step() {
         OmRMax = max(OmRMax, max(fabs(BODY::Bodies[i]->Velocity + BODY::Bodies[i]->BodyRates.Cross(BODY::Bodies[i]->Rmax))));
 
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (globalSystem->GambitScale*OmRMax));
+    REAL dt_lagrange = min(dt_euler / 1, cfl_lim / (globalSystem->GambitScale*OmRMax));
 
     int nss = ceil(dt_euler / dt_lagrange);
 
@@ -237,7 +238,7 @@ void TIME_STEPPER::time_step() {
 
     if (n > 0) {
         dt_prev = dt;
-        t = t + dt;
+        t += dt;
     }
 
 

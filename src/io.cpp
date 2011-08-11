@@ -530,7 +530,7 @@ void IO::stat_step() {
     out_stream.setf(ios::fixed, ios::floatfield);
     out_stream.precision(4);
     out_stream << globalTimeStepper->n << "\t" << globalSystem->NumSubSteps
-            << "\t" << globalTimeStepper->dt << "/" << globalTimeStepper->t;
+            << "\t" << globalTimeStepper->dt << "/" << TIME_STEPPER::SimTime;
     out_stream.precision(3);
     out_stream << "\t" << (REAL) (ticks() - globalTimer) / 1000;
     out_stream << "/" << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
@@ -587,7 +587,7 @@ void IO::print_stat_step(ostream & out) {
     out << "*" << endl;
     out.setf(ios::fixed, ios::floatfield);
     out << "*\tstep:\t" << globalTimeStepper->n << " \tsim time:\t"
-            << globalTimeStepper->t << "\tdt\t" << globalTimeStepper->dt
+            << globalTimeStepper->sim_time << "\tdt\t" << globalTimeStepper->dt
             << endl;
     out << "*\tcpu_t:\t" << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     out << "\tt:\t" << (REAL) (ticks() - globalTimer) / 1000;

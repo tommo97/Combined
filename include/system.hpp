@@ -44,7 +44,7 @@ public:
   REAL dtInit, GambitScale, Del2, DS;
   REAL Mu,Nu,Rho,Temp;
   string NeuFile, CaseName, WorkingDir;
-  Vect3 Vinf;
+  Vect3 scaledVinf, unscaledVinf;
   SYSTEM(int);
   ~SYSTEM();
   bool PanelMode;

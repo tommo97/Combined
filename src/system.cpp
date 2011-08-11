@@ -46,10 +46,11 @@ SYSTEM::~SYSTEM() {
 
 /**************************************************************/
 SYSTEM::SYSTEM(int NT) {
-    LiftingLineMode = PanelMode = false;
+    LiftingLineMode =  false;
     num_out = 0;
     SysDumpInterval = 0; //  Used to dump the result of system calls
-    Vinf.x = Vinf.y = Vinf.z = 0;
+    scaledVinf.x = scaledVinf.y = scaledVinf.z = 0;
+    unscaledVinf = scaledVinf;
     MaxP = 3;
     DS = .3;
     Temp = 288.15; //  Kelvin
@@ -76,16 +77,13 @@ SYSTEM::SYSTEM(int NT) {
 /**************************************************************/
 void SYSTEM::Initialise() {
 
+    scaledVinf = unscaledVinf*GambitScale;
     Nu = GambitScale * GambitScale * Mu / Rho;
     globalTimeStepper = new TIME_STEPPER();
-
-    ReadNeuGetBodies();
 
     NumTransVars = BODY::Bodies.size();
 
     globalOctree = new OCTREE();
-
-
 
     if (WRITE_TO_SCREEN) cout << "rho: " << Rho << "; mu: " << Mu << "; nu: " << Nu << endl;
     if (WRITE_TO_SCREEN) cout << "FVM mesh scale Factor: " << GambitScale << endl;
@@ -103,10 +101,10 @@ void SYSTEM::Initialise() {
 /**************************************************************/
 void SYSTEM::TimeStep() {
 
-    while (globalTimeStepper->t < TIME_STEPPER::max_t)
+    while (TIME_STEPPER::SimTime < TIME_STEPPER::MaxTime)
         globalTimeStepper->time_loop();
 
-    if (WRITE_TO_SCREEN) cout << "Finished at sim time: " << globalTimeStepper->t << endl;
+    if (WRITE_TO_SCREEN) cout << "Finished at sim time: " << TIME_STEPPER::SimTime << endl;
 }
 
 /**************************************************************/
@@ -175,10 +173,11 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 void SYSTEM::PutWakesInTree() {
     for (int J = 0; J < BODY::Bodies.size(); ++J){
         for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
-            for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size() - 1; ++j){
+            for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j){
                 for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k) {
-                    OctreeCapsule C(BODY::Bodies[J]->VortonX[i][j][k]*globalSystem->GambitScale, BODY::Bodies[J]->VortonOM[i][j][k]*globalSystem->GambitScale*globalSystem->GambitScale, true);
-//                    cout << BODY::Bodies[J]->VortonOM[i][j][k]*globalSystem->GambitScale*globalSystem->GambitScale << endl
+                    Vect3 Om = BODY::Bodies[J]->VortonOM[i][j][k]*(4*globalSystem->GambitScale*globalSystem->GambitScale);
+                    Vect3 P = BODY::Bodies[J]->VortonX[i][j][k]*globalSystem->GambitScale;
+                    OctreeCapsule C(P,Om, true);
                     C.AssociatedBody = J;
                     globalOctree->Root->EvalCapsule(C);
                 }
@@ -227,7 +226,7 @@ void SYSTEM::GetPanelFMMVelocities() {
 
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        BODY::AllBodyFaces[i]->Vfmm = globalOctree->TreeVel(BODY::AllBodyFaces[i]->Centroid);
+        BODY::AllBodyFaces[i]->Vfmm = globalOctree->TreeVel(globalSystem->GambitScale*BODY::AllBodyFaces[i]->Centroid)/globalSystem->GambitScale;
     }
      
      
@@ -271,7 +270,7 @@ void SYSTEM::WriteDomain() {
                 Vect3 X;
                 X = Min - buffer + Vect3(i, j, k);
                 Vect3 V = globalOctree->TreeVel(X);
-                outstream << i + 1 << "\t" << j + 1 << "\t" << k + 1 << "\t" << X << "\t" << V + Vinf << endl;
+                outstream << i + 1 << "\t" << j + 1 << "\t" << k + 1 << "\t" << X << "\t" << V + scaledVinf << endl;
             }
 
     globalIO->write_file(outstream, string("data"), string("dat"), true);

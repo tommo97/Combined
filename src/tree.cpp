@@ -64,12 +64,12 @@ void OCTREE::ClearNodes() {
 /**************************************************************/
 void OCTREE::Reset() {
     Prune();
-    //Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
+    Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
 
 
     AllCells.clear();
-    AllBranches.allocate(12);
-    BranchCount.assign(11,0);
+    AllBranches.allocate(16);
+    BranchCount.assign(16,0);
     Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
 
     for (int i = 0; i < BranchCount.size(); ++i){
@@ -152,6 +152,7 @@ void OCTREE::GetVels() {
     Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::SetVelsEqual, &Node::DoNothing);
 #else
     
+//    cout << "Passing Moments to Parents" << endl;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -159,6 +160,7 @@ void OCTREE::GetVels() {
         AllCells[i]->PassMmnts2Prnt();
 
     //  Sweep moments up OCTREE (from cells at L12 -> root at L0)
+//    cout << "Sweeping Moments Up Tree" << endl;
     for (int mlev = AllBranches.size() - 1; mlev >= 0; --mlev) {
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -171,6 +173,7 @@ void OCTREE::GetVels() {
     
     for (int mlev = 0; mlev < AllBranches.size(); ++mlev) {
         //  Inherit vel fields from parent
+//        cout << "Sweeping Velocity Fields Level " << mlev <<  endl;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -178,6 +181,7 @@ void OCTREE::GetVels() {
             AllBranches[mlev][i]->InheritVField();
 
         //  Add influence from neighbours
+//        cout << "Adding Influence of Neighbours Level " << mlev <<  endl;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -185,6 +189,7 @@ void OCTREE::GetVels() {
             AllBranches[mlev][i]->GetVelField(); //  This seems not to like being paralellised
     }
 
+//    cout << "Collapsing Velocity Fields Onto Cells" <<  endl;
     //  Collapse velocity fields onto children
 #ifdef _OPENMP
 #pragma omp parallel for

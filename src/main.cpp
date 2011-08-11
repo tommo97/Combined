@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 10;
+    globalSystem->GambitScale = 25;
     globalSystem->MaxP = 3;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
@@ -68,14 +68,14 @@ int main(int argc, char *argv[]) {
 
     UTIL::PreAmble();
     
-    cout << "------- "<< globalSystem->Del2 << " " <<  TIME_STEPPER::max_t << " " << globalSystem->NumSubSteps << endl;
+    cout << "------- "<< globalSystem->Del2 << " " <<  TIME_STEPPER::MaxTime << " " << globalSystem->NumSubSteps << endl;
     
     globalSystem->Initialise();
     
-    cout << globalSystem->Vinf << endl;
+    cout << globalSystem->unscaledVinf << endl;
     
-    cout << "------- "<< globalSystem->Del2 << " " <<  globalSystem->GambitScale << " " << TIME_STEPPER::max_t << " " << globalSystem->NumSubSteps << endl;
-//    BODY::BodySubStep(TIME_STEPPER::max_t, globalSystem->NumSubSteps);
+    cout << "------- "<< globalSystem->Del2 << " " <<  globalSystem->GambitScale << " " << TIME_STEPPER::MaxTime << " " << globalSystem->NumSubSteps << endl;
+//    BODY::BodySubStep(TIME_STEPPER::MaxTime, globalSystem->NumSubSteps);
 
 
 #ifndef use_NCURSES
@@ -381,8 +381,8 @@ void UTIL::PreAmble() {
     
     cout << "Enter freestream velocity Uinf Vinf Winf as [3 x real]:" << endl;
 
-    cin >> globalSystem->Vinf.x >> globalSystem->Vinf.y >> globalSystem->Vinf.z;
-    outstream << globalSystem->Vinf << endl;
+    cin >> globalSystem->unscaledVinf.x >> globalSystem->unscaledVinf.y >> globalSystem->unscaledVinf.z;
+    outstream << globalSystem->unscaledVinf << endl;
     cout << "Enter fluid density in kg/m3 [real]:" << endl;
     cin >> rho;
     outstream << BODY::RHO << endl;
@@ -460,7 +460,7 @@ void UTIL::PreAmble() {
             outstream << rads[i] << endl;
             
             BODY::Radius = rads[0];
-            BODY::RATES[i] = Ax[i]*(globalSystem->Vinf.Mag()*tsr[i]/rads[i]);
+            BODY::RATES[i] = Ax[i]*(globalSystem->unscaledVinf.Mag()*tsr[i]/rads[i]);
             
             
             
@@ -500,12 +500,12 @@ void UTIL::PreAmble() {
         cout << setfill('=') << setw(80) << "=" << endl;
     }
         
-        TIME_STEPPER::max_t = maxT;
+        TIME_STEPPER::MaxTime = maxT;
         globalSystem->NumSubSteps = nSteps;
         
         cout << "\tSimulation Summary:" << endl;
-        cout << "\tRuntime / Sample Number: \t" << TIME_STEPPER::max_t << "/" << globalSystem->NumSubSteps << endl;
-        cout << "\tInflow Velocity: \t\t" << globalSystem->Vinf << endl << endl;
+        cout << "\tRuntime / Sample Number: \t" << TIME_STEPPER::MaxTime << "/" << globalSystem->NumSubSteps << endl;
+        cout << "\tInflow Velocity: \t\t" << globalSystem->unscaledVinf << endl << endl;
         
         
         

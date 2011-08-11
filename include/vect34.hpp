@@ -37,9 +37,10 @@ class Vect3
     public:
 	REAL x, y, z;
 	Vect3(REAL ix, REAL iy, REAL iz) : x(ix), y(iy), z(iz) {}; 
-	Vect3() : x(0.), y(0.), z(0.) {};
+	Vect3() : x(0.0), y(0.0), z(0.0) {};
 	Vect3(REAL A) : x(A), y(A), z(A) {};
 	Vect3(REAL A[3]) : x(A[0]), y(A[1]), z(A[2]) {};
+    Vect3 (const Vect3&A) : x(A.x), y(A.y), z(A.z) {};
 	Vect3 Cross(const Vect3 B) {return Vect3(y*B.z - z*B.y, z*B.x - x*B.z, x*B.y - y*B.x);}
 	REAL Dot(const Vect3 B) {return x*B.x + y*B.y + z*B.z;}
 	REAL Mag() {return sqrt(x*x + y*y + z*z);}
@@ -70,8 +71,8 @@ class Vect3
 	inline friend Vect3 operator / (const Vect3 A, const REAL B ) {return Vect3(A.x/B,A.y/B,A.z/B);}
 	inline friend Vect3 operator / (const REAL A, const Vect3 B ) {return Vect3(B.x/A,B.y/A,B.z/A);}
 	inline void operator /= (const Vect3 B) {x /= B.x, y /= B.y, z /= B.z;}
-	inline friend void operator /= (Vect3 A, const REAL B ) {A.x/=B, A.y/=B, A.z/=B;}
-	inline friend void operator /= (const REAL A, Vect3 B ) {B.x/=A, B.y/=A, B.z/=A;}
+	//inline friend void operator /= (Vect3 A, const REAL B ) {A.x/=B, A.y/=B, A.z/=B;}
+	//inline friend void operator /= (const REAL A, Vect3 B ) {B.x/=A, B.y/=A, B.z/=A;}
 
 	//	Relational operators
         inline friend REAL max (const Vect3 A) {return max(max(A.x,A.y),A.z);}
@@ -99,6 +100,7 @@ class Vect3
 	//	Some other operators
 	inline friend ostream& operator << (ostream& os, const Vect3 in) {return os << in.x << " " << in.y << " " << in.z;}
 	inline friend Vect3 floor(const Vect3 B) {return Vect3(floor(B.x), floor(B.y), floor(B.z));}
+        inline friend Vect3 ceil(const Vect3 B) {return Vect3(ceil(B.x), ceil(B.y), ceil(B.z));}
 	inline friend Vect3 sqrt(const Vect3 B) {return Vect3(sqrt(B.x), sqrt(B.y), sqrt(B.z));}
 	inline friend REAL pow(const Vect3 B, int a, int b, int c) {return pow(B.x,a)*pow(B.y,b)*pow(B.z,c);}
 	inline void assign(REAL a, REAL b, REAL c) {x = a, y = b, z = c;} 
