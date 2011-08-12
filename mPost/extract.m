@@ -1,4 +1,4 @@
-function extract(fname,val)
+function [XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val)
 data = dlmread(fname);
 subs = data(:,1:3);
 subs(:,1) = subs(:,1) - min(data(:,1));
@@ -7,6 +7,9 @@ subs(:,3) = subs(:,3) - min(data(:,3));
 subs = subs+1;
 max(subs)
 V = zeros(max(subs));
+Vx = zeros(max(subs));
+Vy = zeros(max(subs));
+Vz = zeros(max(subs));
 [X Y Z] = meshgrid([min(data(:,2)):1:max(data(:,2))],...
     [min(data(:,1)):1:max(data(:,1))],...
     [min(data(:,3)):1:max(data(:,3))]);
@@ -19,6 +22,9 @@ if n ~= 1
     [min(data(:,1)):1/n:max(data(:,1))],...
     [min(data(:,3)):1/n:max(data(:,3))]);
 VI = zeros(size(XI));
+VIx = VI;
+VIy = VI;
+VIz = VI;
 end
 
 num_vort = (size(data,2) - 6)/3;
@@ -32,10 +38,14 @@ for q = 1:num_vort
     vort = data(:,cols);
     
     vals = sqrt(vort(:,1).*vort(:,1) + vort(:,2).*vort(:,2) + vort(:,3).*vort(:,3));
+    
     max(vals(:))
     
     for i = 1:size(subs,1)
         V(subs(i,1),subs(i,2), subs(i,3)) =  vals(i);
+        Vx(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,1);
+        Vy(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,2);
+        Vz(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,3);
     end
     Y = Y - min(Y(:));
     %V = V.^3;
@@ -43,11 +53,18 @@ for q = 1:num_vort
     if n ~= 1
         YI = YI - min(YI(:));
         VI =  interp3(X,Y,Z,V,XI,YI,ZI,'cubic');
+        VIx =  interp3(X,Y,Z,Vx,XI,YI,ZI,'cubic');
+        VIy =  interp3(X,Y,Z,Vy,XI,YI,ZI,'cubic');
+        VIz =  interp3(X,Y,Z,Vz,XI,YI,ZI,'cubic');
     else
         VI = V;
+        VIx = Vx;
+        VIy = Vy;
+        VIz = Vz;
         XI = X;
         YI = Y;
         ZI = Z;
+        
     end
     
     

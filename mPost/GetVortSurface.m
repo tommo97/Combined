@@ -1,6 +1,6 @@
 close all; clear all; clear mex;
-files = dir('f_be*.dat');
-val = 7.5;
+files = dir('f_*.dat');
+val = 1;
 s = size(files,1);
 
 % while s < 100
@@ -17,10 +17,10 @@ fname = files(s).name;
 fullscreen = get(0,'ScreenSize');
 fig = figure('Position',[0 0 1200 1200*16/10]);
 set(fig,'DoubleBuffer','on');
-extract(fname,val);
+[XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val);
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 hold all
-scatter3([0 0 0 0],[0 0 410 410],[-20 20 -20 20],[1 1 1 1],'white');
+%scatter3([0 0 0 0],[0 0 410 410],[-20 20 -20 20],[1 1 1 1],'white');
 %view([0 90]);
 %view(3);
 axis([-30 50 0 250 -75 75]);
@@ -50,7 +50,7 @@ if makemovie
         extract(fname,val);
         set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
         hold all
-        scatter3([0 0 0 0],[0 0 410 410],[-20 20 -20 20],[1 1 1 1],'white');
+        %scatter3([0 0 0 0],[0 0 410 410],[-20 20 -20 20],[1 1 1 1],'white');
         view([90 0]);
         view(38.5,16);
         axis equal tight off; lighting phong; camlight right;

@@ -5,18 +5,15 @@ tic
 %%  Read in binary data
 files = get(handles.inputFiles_listbox,'String');
 
-binfile = strcat(handles.bin_dir, files(get(handles.inputFiles_listbox,'Value')));
+binfile = strcat('../bin_files/', files(get(handles.inputFiles_listbox,'Value')));
 
 fid = fopen(binfile{1}, 'r');
 
 handles.PostComp.CaseName = fread(fid,fread(fid,1,'int'),'char=>char')';
-handles.PostComp.CaseTime = fread(fid,1,'double');
-disp(handles.PostComp.CaseTime);
-handles.PostComp.Vinf = fread(fid,[3 1],'double')';
-handles.PostComp.Rho = fread(fid,1,'double');
+
 set(handles.casename,'String',handles.PostComp.CaseName);
 
-load(['../scratch/' handles.PostComp.CaseName '/' handles.PostComp.CaseName '.mat']);
+load(['../mat_files/' handles.PostComp.CaseName '.mat']);
 
 handles.PostComp.Bodies = Bodies;
 

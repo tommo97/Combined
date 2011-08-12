@@ -1,9 +1,9 @@
 function handles = MakeNEU(handles)
 Bodies = handles.Rotor.Blade;
 name = handles.fullname;
-split = get(handles.blades_as_bodies,'Value');
-
-fname = [handles.output_dir '/' name '.neu'];
+split = handles.Rotor.Split;
+dir1 = '../neu_files/';
+fname = [dir1 name '.neu'];
 fid = fopen(fname, 'wt');
 Empty = 0;
 numBodies = length(Bodies);
@@ -19,6 +19,8 @@ else
     nBCs = 1;
 end
 PtsX = [];
+nC = [];
+mC = [];
 C1 = [];
 C2 = [];
 C3 = [];
@@ -36,6 +38,15 @@ for i = 1:numBodies
     Bodies{i}.Panels.Finish = nPnls;
     disp([Bodies{i}.Panels.Start Bodies{i}.Panels.Finish]);
     Bodies{i}.N.Global = Bodies{i}.N.Local + NumPoints;
+    
+    
+    Bodies{i}.Tip.Inboard.US.N.Global = Bodies{i}.Tip.Inboard.US.N.Local + NumPoints;
+    Bodies{i}.Tip.Inboard.LS.N.Global = Bodies{i}.Tip.Inboard.LS.N.Local + NumPoints;
+    Bodies{i}.Tip.Outboard.US.N.Global = Bodies{i}.Tip.Outboard.US.N.Local + NumPoints;
+    Bodies{i}.Tip.Outboard.LS.N.Global = Bodies{i}.Tip.Outboard.LS.N.Local + NumPoints;
+    
+    
+    
     Bodies{i}.Panels.c1.Global = Bodies{i}.Panels.c1.Local + NumPoints;
     Bodies{i}.Panels.c2.Global = Bodies{i}.Panels.c2.Local + NumPoints;
     Bodies{i}.Panels.c3.Global = Bodies{i}.Panels.c3.Local + NumPoints;
@@ -45,6 +56,8 @@ for i = 1:numBodies
     NumPanels = NumPanels + numel(Bodies{i}.Panels.c1.Local);
     NumPoints = NumPoints + numel(Bodies{i}.X);
     PtsX = [PtsX;[Bodies{i}.X Bodies{i}.Y Bodies{i}.Z]];
+    nC = [nC;Bodies{i}.n];
+    mC = [mC;Bodies{i}.m];
     C1 = [C1;Bodies{i}.Panels.c1.Global(:)];
     C2 = [C2;Bodies{i}.Panels.c2.Global(:)];
     C3 = [C3;Bodies{i}.Panels.c3.Global(:)];
@@ -122,6 +135,150 @@ end
 fprintf(fid,'\nENDOFSECTION\n BOUNDARY CONDITIONS 2.4.6\n\t\t\t\t%s\t1\t%g\t0\t6\n','WAKE',numel(W));
 fprintf(fid,'\t%g\t%g\t%g\n',W');
 fprintf(fid,'ENDOFSECTION\n');
+
+
+
+%   Write connectivity of US/LS here
+
+
+fprintf(fid,'/SURFACE \n');
+
+
+for i = 1:numBodies
+
+    pans = Bodies{i}.Panels.Start:Bodies{i}.Panels.Finish;
+    
+    [sx sy] = size(Bodies{i}.Panels.MainPans);
+    
+    fprintf(fid,'/P %g\t%g\t%g\n',i,sx,sy);
+    
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],pans(Bodies{i}.Panels.MainPans(j,:)));
+    end
+    
+    
+    [sx sy] = size(Bodies{i}.Panels.TipInnerUS);
+    
+    fprintf(fid,'/pTUSI %g\t%g\t%g\n',i,sx,sy);
+    
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],pans(Bodies{i}.Panels.TipInnerUS(j,:)));
+    end
+    
+      
+    [sx sy] = size(Bodies{i}.Panels.TipInnerLS);
+    
+    fprintf(fid,'/pTLSI %g\t%g\t%g\n',i,sx,sy);
+    
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],pans(Bodies{i}.Panels.TipInnerLS(j,:)));
+    end
+    
+    [sx sy] = size(Bodies{i}.Panels.TipInnerUS);
+    
+    fprintf(fid,'/pTUSO %g\t%g\t%g\n',i,sx,sy);
+    
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],pans(Bodies{i}.Panels.TipOuterUS(j,:)));
+    end
+    
+      
+    [sx sy] = size(Bodies{i}.Panels.TipInnerLS);
+    
+    fprintf(fid,'/pTLSO %g\t%g\t%g\n',i,sx,sy);
+    
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],pans(Bodies{i}.Panels.TipOuterLS(j,:)));
+    end
+
+    
+    
+end
+fprintf(fid,'/%%% \n');
+fprintf(fid,'\n/LOCALCHORD\t%g \n',nPts);
+
+str = [repmat(' ',nPts,10 - size(num2str(nPts),2)) num2str([1:nPts]','%g    ') repmat('   ',nPts,1) num2str([nC mC],'%-1.12e    ')];
+
+
+for i = 1:nPts
+    fprintf(fid,'/\t%s\n',str(i,:));
+    %    fprintf(fid,'\t%g\t%-1.12e\t%-1.12e\t%-1.12e\n',i,M1(i,1),M1(i,2),M1(i,3));
+end
+
+
+
+
+
+
+
+fprintf(fid,'/%%% \n');
+
+fprintf(fid,'\n/MESHING \n');
+
+
+for i = 1:numBodies
+
+    MainSurf = Bodies{i}.N.Global;
+    
+    [sx sy] = size(MainSurf);
+    
+    
+      fprintf(fid,'/M %g\t%g\t%g\n',i,sx,sy);
+    
+    
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],MainSurf(j,:));
+    end
+
+    
+
+    
+    Tip = Bodies{i}.Tip.Inboard.US.N.Global;
+    [sx sy] = size(Tip);
+    fprintf(fid,'/TUSI %g\t%g\t%g\n',i,sx,sy);
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],Tip(j,:));
+    end
+    
+    Tip = Bodies{i}.Tip.Inboard.LS.N.Global;
+    [sx sy] = size(Tip);
+    fprintf(fid,'/TLSI %g\t%g\t%g\n',i,sx,sy);
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],Tip(j,:));
+    end
+    
+    Tip = Bodies{i}.Tip.Outboard.US.N.Global;
+    [sx sy] = size(Tip);
+    fprintf(fid,'/TUSO %g\t%g\t%g\n',i,sx,sy);
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],Tip(j,:));
+    end
+    
+    Tip = Bodies{i}.Tip.Outboard.LS.N.Global;
+    [sx sy] = size(Tip);
+    fprintf(fid,'/TLSO %g\t%g\t%g\n',i,sx,sy);
+    for j = 1:sx
+        strs = repmat('\t%g',[1 sy]);
+        fprintf(fid,['/' strs '\n'],Tip(j,:));
+    end
+end
+
+
+
+
+fprintf(fid,'/%%% \n');
+
+
+
 fclose(fid);
 
 handles.Bodies = Bodies;

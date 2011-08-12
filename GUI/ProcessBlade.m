@@ -3,26 +3,46 @@ function Blade = ProcessBlade(Blade)
 %
 %   .n is the chordwise position between 0(leading edge) and 1(trailing
 %   edge);
+disp('here');
+
+
+
 
 TUpperS.x = repmat(Blade.Section.Tip.X,[Blade.NSpan 1]) - Blade.PitchAxis;
 TUpperS.y = repmat(Blade.Radius,[1 Blade.NChord]);
 TUpperS.z = repmat(Blade.Section.Tip.US,[Blade.NSpan 1]);
 TUpperS.n = repmat(Blade.Section.Tip.X,[Blade.NSpan 1]);
+TUpperS.m = repmat(Blade.Radius,[1 Blade.NChord])./max(Blade.Radius(:));
 
 RUpperS.x = repmat(Blade.Section.Root.X,[Blade.NSpan 1]) - Blade.PitchAxis;
 RUpperS.y = repmat(Blade.Radius,[1 Blade.NChord]);
 RUpperS.z = repmat(Blade.Section.Root.US,[Blade.NSpan 1]);
 RUpperS.n = repmat(Blade.Section.Root.X,[Blade.NSpan 1]);
+RUpperS.m = repmat(Blade.Radius,[1 Blade.NChord])./max(Blade.Radius(:));
 
 TLowerS.x = repmat(Blade.Section.Tip.X,[Blade.NSpan 1]) - Blade.PitchAxis;
 TLowerS.y = repmat(Blade.Radius,[1 Blade.NChord]);
 TLowerS.z = repmat(Blade.Section.Tip.LS,[Blade.NSpan 1]);
 TLowerS.n = repmat(Blade.Section.Tip.X,[Blade.NSpan 1]);
+TLowerS.m = repmat(Blade.Radius,[1 Blade.NChord])./max(Blade.Radius(:));
+
 
 RLowerS.x = repmat(Blade.Section.Root.X,[Blade.NSpan 1]) - Blade.PitchAxis;
 RLowerS.y = repmat(Blade.Radius,[1 Blade.NChord]);
 RLowerS.z = repmat(Blade.Section.Root.LS,[Blade.NSpan 1]);
 RLowerS.n = repmat(Blade.Section.Root.X,[Blade.NSpan 1]);
+RLowerS.m = repmat(Blade.Radius,[1 Blade.NChord])./max(Blade.Radius(:));
+
+% if (Blade.Reverse)
+%     TUpperS.x = -TUpperS.x;
+%     RUpperS.x = -RUpperS.x;
+%     TLowerS.x = -TLowerS.x;
+%     RLowerS.x = -RLowerS.x;
+%     
+% end
+
+
+
 
 RootBlendCoefft = repmat(linspace(1,0,Blade.NSpan)', [1 Blade.NChord]);
 
@@ -31,20 +51,28 @@ if ~isempty(Blade.Thickness)
     RootBlendCoefft = repmat(th./max(th)', [1 Blade.NChord]);
 end
 
+
+if Blade.isNREL
+    RootBlendCoefft = repmat(Blade.TransitionPiece', [1 Blade.NChord]);;
+end
+
 TipBlendCoefft = 1-RootBlendCoefft;
-
-
 UpperS.x = RootBlendCoefft.*RUpperS.x + TipBlendCoefft.*TUpperS.x;
 UpperS.y = RootBlendCoefft.*RUpperS.y + TipBlendCoefft.*TUpperS.y;
 UpperS.z = RootBlendCoefft.*RUpperS.z + TipBlendCoefft.*TUpperS.z;
 UpperS.n = RootBlendCoefft.*RUpperS.n + TipBlendCoefft.*TUpperS.n;
+UpperS.m = RootBlendCoefft.*RUpperS.m + TipBlendCoefft.*TUpperS.m;
 
 LowerS.x = RootBlendCoefft.*RLowerS.x + TipBlendCoefft.*TLowerS.x;
 LowerS.y = RootBlendCoefft.*RLowerS.y + TipBlendCoefft.*TLowerS.y;
 LowerS.z = RootBlendCoefft.*RLowerS.z + TipBlendCoefft.*TLowerS.z;
 LowerS.n = RootBlendCoefft.*RLowerS.n + TipBlendCoefft.*TLowerS.n;
+LowerS.m = RootBlendCoefft.*RLowerS.m + TipBlendCoefft.*TLowerS.m;
 %%   Scale and twist
 thetas = repmat(Blade.Theta,[1 Blade.NChord]);
+if (Blade.Reverse)
+    thetas = -thetas;
+end
 chords = repmat(Blade.Chord,[1 Blade.NChord]);
 
 
@@ -52,16 +80,14 @@ Blade.Upper.x = chords.*(UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
 Blade.Upper.y = UpperS.y;
 Blade.Upper.z = chords.*(UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas));
 Blade.Upper.n = UpperS.n;
+Blade.Upper.m = UpperS.m;
 
 Blade.Lower.x = chords.*(LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
 Blade.Lower.y = LowerS.y;
 Blade.Lower.z = chords.*(LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas));
 Blade.Lower.n = LowerS.n;
+Blade.Lower.m = LowerS.m;
 
-
-
-dlmwrite('LS.dat',[Blade.Lower.x(:),Blade.Lower.y(:),Blade.Lower.z(:)])
-dlmwrite('US.dat',[Blade.Upper.x(:),Blade.Upper.y(:),Blade.Upper.z(:)])
 
 %%  Close ends - make some caps
 d = cos(linspace(0,pi,Blade.NChord-1));
@@ -70,53 +96,47 @@ xi = .5*(Blade.Upper.x(1,:) + Blade.Lower.x(1,:));
 yi = .5*(Blade.Upper.y(1,:) + Blade.Lower.y(1,:));% - 0.1*sin(linspace(0,pi,Blade.NChord));
 zi = .5*(Blade.Upper.z(1,:) + Blade.Lower.z(1,:));
 xin = .5*(Blade.Upper.n(1,:) + Blade.Lower.n(1,:));
+xim = .5*(Blade.Upper.m(1,:) + Blade.Lower.m(1,:));
 
 xo = .5*(Blade.Upper.x(end,:) + Blade.Lower.x(end,:));
 yo = .5*(Blade.Upper.y(end,:) + Blade.Lower.y(end,:));% + 0.1*sin(linspace(0,pi,Blade.NChord));
 zo = .5*(Blade.Upper.z(end,:) + Blade.Lower.z(end,:));
 xon = .5*(Blade.Upper.n(end,:) + Blade.Lower.n(end,:));
+xom = .5*(Blade.Upper.m(end,:) + Blade.Lower.m(end,:));
 
 xi = [xi(1) xi(2:end)+linspace(1,0,Blade.NChord-1).*d.*diff(xi)];
 xin = [xin(1) xin(2:end)+linspace(1,0,Blade.NChord-1).*d.*diff(xin)];
 xo = [xo(1) xo(2:end)+linspace(1,0,Blade.NChord-1).*d.*diff(xo)];
 xon = [xon(1) xon(2:end)+linspace(1,0,Blade.NChord-1).*d.*diff(xon)];
+xom = [xom(1) xom(2:end)+linspace(1,0,Blade.NChord-1).*d.*diff(xom)];
 % 
 % xi = [xi(1) xi(1)+1.25*(xi(2)-xi(1)) xi(3:end-2) xi(end)+1.25*(xi(end-1)-xi(end)) xi(end)];
 % xo = [xo(1) xo(1)+1.25*(xo(2)-xo(1)) xo(3:end-2) xo(end)+1.25*(xo(end-1)-xo(end)) xo(end)];
 % 
 
-if ~Blade.MakeCaps
-   xi = [];
-   yi = [];
-   zi = [];
-   xo = [];
-   yo = [];
-   zo = [];
-   xin = [];
-   xon = [];
-end
-
 Blade.US.Local.x = [xi;Blade.Upper.x;xo];
 Blade.US.Local.y = [yi;Blade.Upper.y;yo];
 Blade.US.Local.z = [zi;Blade.Upper.z;zo];
 Blade.US.Local.n = [xin;Blade.Upper.n;xon];
+Blade.US.Local.m = [xim;Blade.Upper.m;xom];
 
 Blade.LS.Local.x = [xi;Blade.Lower.x;xo];
 Blade.LS.Local.y = [yi;Blade.Lower.y;yo];
 Blade.LS.Local.z = [zi;Blade.Lower.z;zo];
 Blade.LS.Local.n = [xin;Blade.Lower.n;xon];
-
+Blade.LS.Local.m = [xim;Blade.Lower.m;xom];
 %%  Put into attitude specified by Euler angles
 Blade.US.Global.x = Blade.US.Local.x;
 Blade.US.Global.y = Blade.US.Local.y;
 Blade.US.Global.z = Blade.US.Local.z;
 Blade.US.Global.n = Blade.US.Local.n;
+Blade.US.Global.m = Blade.US.Local.m;
 
 Blade.LS.Global.x = Blade.LS.Local.x;
 Blade.LS.Global.y = Blade.LS.Local.y;
 Blade.LS.Global.z = Blade.LS.Local.z;
 Blade.LS.Global.n = Blade.LS.Local.n;
-
+Blade.LS.Global.m = Blade.LS.Local.m;
 %%  Weld seams together -- points first
 %   These are the indices
 US.N = zeros(size(Blade.US.Global.x));
@@ -127,6 +147,7 @@ LS.N(:) = numel(LS.N)+[1:numel(LS.N)];
 %   Now get unique points
 X = [[Blade.US.Global.x(:);Blade.LS.Global.x(:)] [Blade.US.Global.y(:);Blade.LS.Global.y(:)] [Blade.US.Global.z(:);Blade.LS.Global.z(:)]];
 P = [Blade.US.Global.n(:);Blade.LS.Global.n(:)];
+Q = [Blade.US.Global.m(:);Blade.LS.Global.m(:)];
 N = [US.N(:);LS.N(:)];
 [b, m, n] = unique(X,'rows');
 disp('--------')
@@ -142,7 +163,6 @@ US.UN(:) = ind2(US.N(:));
 LS.UN = zeros(size(Blade.LS.Global.x));
 LS.UN(:) = ind2(LS.N(:));
 
-
 US.UN(1,1) = LS.UN(2,2);
 LS.UN(1,1) = US.UN(2,2);
 
@@ -156,18 +176,14 @@ LS.UN(1,end) = US.UN(2,end-1);
 US.UN(end,end) = LS.UN(end-1,end-1);
 LS.UN(end,end) = US.UN(end-1,end-1);
 
-
 Blade.X = X(m,1);
 Blade.Y = X(m,2);
 Blade.Z = X(m,3);
 Blade.n = P(m);
+Blade.m = Q(m);
 
 %%  Prepare for export
-if ~Blade.MakeCaps
-    Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
-else
-    Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
-end
+Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
 %   Tips
 
 Blade.Tip.Inboard.US.N.Local = US.UN(1:2,:);
@@ -209,6 +225,17 @@ Blade.nPnls = numel(Blade.Panels.c1.Local);
 Blade.nPts = numel(Blade.X);
 Blade.Panels.WakeShedders.LS.Local = MainPans(:,1);
 Blade.Panels.WakeShedders.US.Local = MainPans(:,end);
+Mp = zeros(size(Blade.N.Local) - 1);
+Mp(:) = 1:numel(Mp);
+t1 = zeros(size(Blade.Tip.Inboard.US.N.Local) - 1); t1(:) = 1:numel(t1); t1 = t1 + max(Mp(:));
+t2 = zeros(size(Blade.Tip.Inboard.LS.N.Local) - 1); t2(:) = 1:numel(t2); t2 = t2 + max(t1(:));
+t3 = zeros(size(Blade.Tip.Outboard.US.N.Local) - 1); t3(:) = 1:numel(t3); t3 = t3 + max(t2(:));
+t4 = zeros(size(Blade.Tip.Outboard.LS.N.Local) - 1); t4(:) = 1:numel(t4); t4 = t4 + max(t3(:));
+Blade.Panels.MainSurf = Mp;
+Blade.Panels.TipInnerUS = t1;
+Blade.Panels.TipInnerLS = t2;
+Blade.Panels.TipOuterUS = t3;
+Blade.Panels.TipOuterLS = t4;
 
 
 function [Corner1 Corner2 Corner3 Corner4] = fcorner(Pans)

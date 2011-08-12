@@ -6,7 +6,12 @@ Blade.Radius = handles.Span.Radius';
 Blade.Chord = handles.Span.Chord';
 Blade.Theta = handles.Span.Theta';
 
-Blade.MakeCaps = handles.Span.MakeCaps;
+Blade.Reverse = handles.Span.REVERSE;
+
+Blade.isNREL = handles.Span.isNREL;
+
+Blade.TransitionPiece = handles.Span.TransitionPiece;
+
 Blade.Thickness = handles.Span.Thickness';
 
 Blade.Attitude = [0 0 0];
@@ -19,6 +24,8 @@ Blade.NSpan = length(Blade.Radius);
 Blade.Section.Tip.US = handles.Chord.Tip.SectionShape.US;
 Blade.Section.Tip.LS = handles.Chord.Tip.SectionShape.LS;
 Blade.Section.Tip.X = handles.Chord.Tip.SectionShape.X;
+
+
 
 Blade.Section.Root.US = handles.Chord.Root.SectionShape.US;
 Blade.Section.Root.LS = handles.Chord.Root.SectionShape.LS;
@@ -35,21 +42,6 @@ for j = 1:size(S,2)
 end
 ax = Blade.Axes;
 surf(ax,Blade.X(Blade.N.Local),Blade.Y(Blade.N.Local),Blade.Z(Blade.N.Local),S);
-
-USx = Blade.US.Local.x';
-USy = Blade.US.Local.y';
-USz = Blade.US.Local.z';
-LSx = Blade.LS.Local.x';
-LSy = Blade.LS.Local.y';
-LSz = Blade.LS.Local.z';
-
-
-A = [USx(:) USy(:) USz(:)];
-B = [LSx(:) LSy(:) LSz(:)];
-save US.dat A -ASCII;
-save LS.dat B -ASCII;
-
-
 hold(ax,'on');
 surf(ax,Blade.X(Blade.Tip.Inboard.US.N.Local),Blade.Y(Blade.Tip.Inboard.US.N.Local),Blade.Z(Blade.Tip.Inboard.US.N.Local));
 surf(ax,Blade.X(Blade.Tip.Inboard.LS.N.Local),Blade.Y(Blade.Tip.Inboard.LS.N.Local),Blade.Z(Blade.Tip.Inboard.LS.N.Local));

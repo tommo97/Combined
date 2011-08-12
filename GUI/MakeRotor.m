@@ -13,11 +13,6 @@ hold(ax,'off');
 cla(ax);
 azimuth = ([1:Rotor.NumBlades] - 1)*2*pi/Rotor.NumBlades;
 
-%%  For Cross Flow: put attitude to [0 0 pi/2] then move R along -z then
-%   put into azimuthal position
-
-crossflow =true;
-R = 12.5;
 
 for i = 1:Rotor.NumBlades
     Rotor.Blade{i} = handles.Blade;
@@ -27,30 +22,16 @@ for i = 1:Rotor.NumBlades
     z0 = Rotor.Blade{i}.Z;  
     % Now put this rotor blade into appropriate azimuthal position -
     % equivilent to rotation about body roll axis
-    if crossflow
-       TRANS2 = MakeEulerMatrix(Rotor.Attitude + [0 0 pi/2]); 
-       TRANS1 = MakeEulerMatrix([0 azimuth(i)  0]);
-    else
-       TRANS2 = MakeEulerMatrix(Rotor.Attitude);
-       TRANS1 = MakeEulerMatrix([azimuth(i) 0 0]);
-    end
-    
+    TRANS2 = MakeEulerMatrix(Rotor.Attitude);
     TRANS0 = MakeEulerMatrix([0 Rotor.th0 0]);
     x1 = x0*TRANS0(1,1) + y0*TRANS0(1,2) + z0*TRANS0(1,3);
     y1 = x0*TRANS0(2,1) + y0*TRANS0(2,2) + z0*TRANS0(2,3);
     z1 = x0*TRANS0(3,1) + y0*TRANS0(3,2) + z0*TRANS0(3,3);
-    
-    
-    
-    if crossflow
-            z1 = z1 - R;
-    end
-
-    
+    TRANS1 = MakeEulerMatrix([azimuth(i) 0 0]);
     x2 = x1*TRANS1(1,1) + y1*TRANS1(1,2) + z1*TRANS1(1,3);
     y2 = x1*TRANS1(2,1) + y1*TRANS1(2,2) + z1*TRANS1(2,3);
     z2 = x1*TRANS1(3,1) + y1*TRANS1(3,2) + z1*TRANS1(3,3);
-
+    
     Rotor.Blade{i}.X = Rotor.Origin(1) + x2*TRANS2(1,1) + y2*TRANS2(1,2) + z2*TRANS2(1,3);
     Rotor.Blade{i}.Y = Rotor.Origin(2) + x2*TRANS2(2,1) + y2*TRANS2(2,2) + z2*TRANS2(2,3);
     Rotor.Blade{i}.Z = Rotor.Origin(3) + x2*TRANS2(3,1) + y2*TRANS2(3,2) + z2*TRANS2(3,3);

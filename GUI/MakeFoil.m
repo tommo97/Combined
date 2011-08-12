@@ -59,6 +59,19 @@ Foil.N00xx.US.Data = t*N00xx(linspace(0,x,1000));
 Foil.N00xx.LS.x = linspace(0,1,1000);
 Foil.N00xx.LS.Data = - Foil.N00xx.US.Data;
 
+if t==1
+    th = linspace(0,pi);
+    
+    x = 0.5*cos(th) - 0.5;
+    y = 0.5*sin(th);
+    
+    x = 1-x;
+    Foil.N00xx.US.x = x - 1;
+    Foil.N00xx.US.Data = y;
+    Foil.N00xx.LS.x = x - 1;
+    Foil.N00xx.LS.Data = - y;
+end
+
 Aerofoil.N0012.X = linspace(0,1,1000);
 Aerofoil.N0012.US = interp1(Foil.N0012.US.x,Foil.N0012.US.Data,Aerofoil.N0012.X,'cubic');
 Aerofoil.N0012.LS = interp1(Foil.N0012.LS.x,Foil.N0012.LS.Data,Aerofoil.N0012.X,'cubic');
@@ -78,12 +91,16 @@ Aerofoil.N638xx.X = linspace(0,1,1000);
 %%  output
 Data = [];
 if ~isempty(xin)
+    if t==1
+        xin = 0.5+0.5*cos(linspace(pi,0,length(xin)));  
+    end
     Data.N0012.US = interp1(Foil.N0012.US.x,Foil.N0012.US.Data,xin,'cubic');
     Data.N0012.LS = interp1(Foil.N0012.LS.x,Foil.N0012.LS.Data,xin,'cubic');
     Data.N0012.X = xin;
     Data.N00xx.US = interp1(Foil.N00xx.US.x,Foil.N00xx.US.Data,xin,'cubic');
     Data.N00xx.LS = interp1(Foil.N00xx.LS.x,Foil.N00xx.LS.Data,xin,'cubic');
     Data.N00xx.X = xin;
+
     Data.S814.US = interp1(Foil.S814.US.x,Foil.S814.US.Data,xin,'cubic');
     Data.S814.LS = interp1(Foil.S814.LS.x,Foil.S814.LS.Data,xin,'cubic');
     Data.S814.X = xin;

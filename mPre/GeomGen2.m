@@ -8,7 +8,7 @@ commit = false;
 cutout = 0;
 numbodies = 1;
 nblades = [1 1 1 1 1 1];
-Reflect = [1 1 1 -1 -1 -1];
+Reflect = [-1 1 1 -1 -1 -1];
 %%  Simulation Parameters
 num_procs = 4;
 MaxP = 3;
@@ -17,9 +17,9 @@ Scale = 5;          %   Scaling is done in the simulation
 
 
 
-Vels{1} = [-10 0 0];
+Vels{1} = [-1.70 0 0];
 Origin{1} = [0 0 0];
-Attitudes{1} = [0 0 0];
+Attitudes{1} = [0 deg2rad(8.5) 0];
 Rates{1} = [0 0 0];
 
 
@@ -49,7 +49,7 @@ Rates{1} = [0 0 0];
 % Rates{6} = [0 0 -7.5];
 
 
-name = '0012_';
+name = '0015_';
 fname = [name '.neu'];
 fid = fopen(fname, 'wt');
 fid_cas = fopen([dir2 name '.cas'],'wt');
@@ -75,9 +75,9 @@ THETA=[0;0;0;6.7;9.9;13.4;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
 
 
 %   Span lies along y axis, chord parallel to x axis
-n = 20;
+n = 128;
 
-RADIUS = linspace(0, 7.5,n);
+RADIUS = linspace(0, 4,n);
 CHORD = ones(size(RADIUS));
 THETA = zeros(size(RADIUS));
 
@@ -137,11 +137,11 @@ for q = 1:numbodies
         ydata = xdatab*TRANS(2,1) + ydatab*TRANS(2,2) + zdatab*TRANS(2,3);
         zdata = xdatab*TRANS(3,1) + ydatab*TRANS(3,2) + zdatab*TRANS(3,3);
         
-        if q <4
-            ydata = ydata - 6;
-        else
-            ydata = ydata + 6;
-        end
+%         if q <4
+%             ydata = ydata - 6;
+%         else
+%             ydata = ydata + 6;
+%         end
         
         hold all
         surf(xdata,ydata,zdata)

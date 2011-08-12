@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 
+void TestFMM(int);
 
 int main(int argc, char *argv[]) {
     system("clear");
@@ -550,4 +551,83 @@ Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega, REAL del2) {
     nrm = sqrt(diff.Dot(diff));
     mult = -1 / (del2 + four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
+}
+
+void  TestFMM(int n)
+{
+    
+    
+    Array <Vect3> Posns, Omegas;
+    Array <REAL> L2;
+
+
+
+    srand((unsigned) time(NULL));
+
+
+    Posns.allocate(n);
+    Omegas.allocate(n);
+    cout << "Generating " << n << " points..." << endl;
+
+
+    int count = 0;
+    while (globalNum_FVMCELLS < n) {
+        REAL rho = 1000 * (REAL(rand()) / RAND_MAX);
+        REAL phi = asin(2 * REAL(rand()) / RAND_MAX - 1);
+        REAL theta = 2 * pi * REAL(rand()) / RAND_MAX;
+
+
+        REAL x = rho * cos(phi) * cos(theta);
+        REAL y = rho * cos(phi) * sin(theta);
+        REAL z = rho * sin(phi);
+
+        Vect3 P = Vect3(x, y, z);
+        Vect3 O = Vect3(10 * (0.5 - REAL(rand()) / RAND_MAX), 10 * (0.5 - REAL(rand()) / RAND_MAX), 10 * (0.5 - REAL(rand()) / RAND_MAX));
+
+        OctreeCapsule C(P, 1000 * O, true);
+        C.AssociatedBody = 0;
+        globalOctree->Root->EvalCapsule(C);
+        count++;
+    }
+    globalOctree->Reset();
+
+    n = globalNum_FVMCELLS;
+    Posns.allocate(n);
+    Omegas.allocate(n);
+    Array <Vect3> DirectVels(n);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        Posns[i] = (globalOctree->AllCells[i]->Position);
+        Omegas[i] = (globalOctree->AllCells[i]->Omega);
+    }
+    
+
+    cout << "Done. It took " << count << " attempts to make " << globalNum_FVMCELLS << " unique cells." << endl;
+    REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+    cout << "Performing Direct Calculation for first " << min(Posns.size(),10000) << " cells..." << endl;
+#pragma omp parallel for
+    for (int i = 0; i < Posns.size(); ++i) {
+        Vect3 V(0, 0, 0);
+        for (int j = 0; j < Posns.size(); ++j) {
+            Vect3 D = Posns[j] - Posns[i];
+            V += globalDirectVel(D, Omegas[j]);
+
+        }
+        DirectVels[i] = (V);
+    }
+    REAL t2 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+    REAL td = t2 - t1;
+
+    globalOctree->Reset();
+    globalOctree->InitVelsGetLaplacian();
+    globalOctree->GetVels();
+    t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+    Array <Vect3> FMMVels(n);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
+        cout << FMMVels[i] << " " << DirectVels[i] << endl;
+    }
+    
+    
+    
+    
 }
