@@ -171,7 +171,7 @@ void BODY::MakeWake() {
 //            
 //            
 //        }
-        
+//        
         
         
 //
@@ -359,7 +359,7 @@ void BODY::SplitUpLinearAlgebra() {
         // 	Include freestream and FMM wake interpolation
 
 
-        Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
+        Vect3 VWake = -1*BODY::AllBodyFaces[i]->Vfmm;
 
 
 //
@@ -678,6 +678,10 @@ void BODY::LinAlg() {
 void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
     REAL dt = delta_t / n_steps;
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        BODY::AllBodyFaces[i]->Vfmm0 = BODY::AllBodyFaces[i]->VWake;
+    }
+
     for (int SubStep = 1; SubStep <= n_steps; ++SubStep) {
         BODY::TimePrev[3] = BODY::TimePrev[2];
         BODY::TimePrev[2] = BODY::TimePrev[1];
