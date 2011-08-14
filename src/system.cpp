@@ -171,22 +171,90 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
-    for (int J = 0; J < BODY::Bodies.size(); ++J){
-        for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
-            for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j){
-                for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k) {
-                    Vect3 Om = BODY::Bodies[J]->VortonOM[i][j][k]*(4*globalSystem->GambitScale*globalSystem->GambitScale);
-                    Vect3 P = BODY::Bodies[J]->VortonX[i][j][k]*globalSystem->GambitScale;
-                    OctreeCapsule C(P,Om, true);
-                    C.AssociatedBody = J;
-                    globalOctree->Root->EvalCapsule(C);
-                }
-                BODY::Bodies[J]->VortonX[i].pop_back();
-                BODY::Bodies[J]->VortonOM[i].pop_back();
-                BODY::Bodies[J]->VortonVel[i].pop_back();
-            }
+    
+    int n = 10;
 
-    }
+    for (int i = 0; i < BODY::Bodies.size(); ++i)
+        for (int j = 0; j < BODY::Bodies[i]->VortonX.size(); ++j) {
+            for (int k = 0; k < BODY::Bodies[i]->VortonX[j].size() - 1; ++k){
+                for (int l = 0; l < BODY::Bodies[i]->VortonX[j][k].size() - 1; ++l) {
+                    Vect3 P1 = BODY::Bodies[i]->VortonX[j][k][l];
+                    Vect3 P2 = BODY::Bodies[i]->VortonX[j][k + 1][l];
+                    Vect3 P3 = BODY::Bodies[i]->VortonX[j][k + 1][l + 1];
+                    Vect3 P4 = BODY::Bodies[i]->VortonX[j][k][l + 1];
+
+                    Vect3 OM1 = BODY::Bodies[i]->VortonOM[j][k][l];
+                    Vect3 OM2 = BODY::Bodies[i]->VortonOM[j][k + 1][l];
+                    Vect3 OM3 = BODY::Bodies[i]->VortonOM[j][k + 1][l + 1];
+                    Vect3 OM4 = BODY::Bodies[i]->VortonOM[j][k][l + 1];
+
+                    //      Position of vortices interpolated between edges 1 and 3
+
+                    Array <Vect3> Peps1 = UTIL::globalLinspace(P1, P2, n);
+                    Array <Vect3> Peps2 = UTIL::globalLinspace(P4, P3, n);
+
+                    Array <Vect3> OMeps1 = UTIL::globalLinspace(OM1, OM2, n);
+                    Array <Vect3> OMeps2 = UTIL::globalLinspace(OM4, OM3, n);
+
+                    //      Subdivision along eps
+
+                    for (int m = 0; m < n; ++m) {
+                        Array <Vect3> Xnu = UTIL::globalLinspace(Peps1[m], Peps2[m], n);
+                        Array <Vect3> OMnu = UTIL::globalLinspace(OMeps1[m], OMeps2[m], n);
+                        for (int p = 0; p < n; ++p) {
+                            Vect3 Om = OMnu[p] * (globalSystem->GambitScale * globalSystem->GambitScale) / (n * n);
+                            Vect3 P = Xnu[p] * globalSystem->GambitScale;
+                            OctreeCapsule C(P, Om, true);
+                            C.AssociatedBody = i;
+                            globalOctree->Root->EvalCapsule(C);
+                        }
+                    }
+
+                }
+                BODY::Bodies[i]->VortonX[j].pop_back();
+                BODY::Bodies[i]->VortonOM[j].pop_back();
+                BODY::Bodies[i]->VortonVel[j].pop_back();
+        }
+
+
+        }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+//    
+//    
+//    
+//    for (int J = 0; J < BODY::Bodies.size(); ++J){
+//        for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
+//            for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j){
+//                for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k) {
+//                    Vect3 Om = BODY::Bodies[J]->VortonOM[i][j][k]*(globalSystem->GambitScale*globalSystem->GambitScale);
+//                    Vect3 P = BODY::Bodies[J]->VortonX[i][j][k]*globalSystem->GambitScale;
+//                    OctreeCapsule C(P,Om, true);
+//                    C.AssociatedBody = J;
+//                    globalOctree->Root->EvalCapsule(C);
+//                }
+//                BODY::Bodies[J]->VortonX[i].pop_back();
+//                BODY::Bodies[J]->VortonOM[i].pop_back();
+//                BODY::Bodies[J]->VortonVel[i].pop_back();
+//            }
+//
+//    }
     
 }
 /**************************************************************/
@@ -222,15 +290,25 @@ void SYSTEM::GetFaceVels() {
 }
 
 /**************************************************************/
-void SYSTEM::GetPanelFMMVelocities() {
+void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        BODY::AllBodyFaces[i]->Vfmm = globalOctree->TreeVel(globalSystem->GambitScale*BODY::AllBodyFaces[i]->Centroid)/globalSystem->GambitScale;
+        BODY::AllBodyFaces[i]->Vfmm0 = globalOctree->TreeVel(globalSystem->GambitScale * BODY::AllBodyFaces[i]->Centroid);
+        BODY::AllBodyFaces[i]->Vfmm0 = BODY::AllBodyFaces[i]->Vfmm0 / globalSystem->GambitScale;
     }
-     
-     
-     
+
+    for (int i = 0; i < BODY::Bodies.size(); ++i)
+        BODY::Bodies[i]->MoveBody(dt);
+
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        BODY::AllBodyFaces[i]->Vfmm1 = globalOctree->TreeVel(globalSystem->GambitScale * BODY::AllBodyFaces[i]->Centroid);
+        BODY::AllBodyFaces[i]->Vfmm1 = BODY::AllBodyFaces[i]->Vfmm1 / globalSystem->GambitScale; 
+    }
+
+    for (int i = 0; i < BODY::Bodies.size(); ++i)
+        BODY::Bodies[i]->MoveBody(-dt);
+    
 //    for (int i = 0; i < NumBodies; ++i)
 //        for (int j = 0; j < Bodies[i]->Faces.size(); ++j)
 //            Bodies[i]->Faces[j]->Vfmm =

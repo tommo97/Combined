@@ -172,7 +172,7 @@ void Node::Recurrance(JaggedArray <REAL> &coeffts, int k1, int k2, int k3, Vect3
 void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 #define VERSION_2
 #ifdef VERSION_2
-    REAL R2 = diff.Dot(diff) + globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2;
+    REAL R2 = diff.Dot(diff) + globalSystem->Del2;
 
     // base case
 #ifdef MODE_3D
@@ -248,7 +248,7 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
     x12 = diff.x * 2;
     x22 = diff.y * 2;
     x32 = diff.z * 2;
-    mult = -1 / (globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
+    mult = -1 / (globalSystem->Del2 + diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
 
     /* base case */
     coeffts[0][0][0] = sqrt(-mult);

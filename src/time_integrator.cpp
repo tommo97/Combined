@@ -169,21 +169,30 @@ void TIME_STEPPER::time_loop() {
         globalOctree->GetVels();
         first_step = false;
     }
+    else {
+        //      Calculate FMM
+        globalOctree->Reset();
+        globalOctree->InitVelsGetLaplacian();
+        globalOctree->GetVels();
+        //      Calculate Panel contribution to FVM face fluxes
+        globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
+        //      Get Timestep length
+        time_step();
+        globalIO->stat_step();
+        //      Get FMM Vels on Panels @ t and t+dt
+        globalSystem->GetPanelFMMVelocities(dt); //  t = t1
+        //      Advance panels to t + dt
+        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
+        //      Advance FVM to t + dt
+        globalOctree->FVM(); //  t = t0
+        globalOctree->Integrate(); //  t = t0 -> t1
+        //      Bin panel wake into tree
+        globalSystem->PutWakesInTree();
 
-    time_step();
-    globalIO->stat_step();
+    }
 
-    globalOctree->FVM(); //  t = t0
-    globalOctree->Integrate(); //  t = t0 -> t1
 
-    BODY::BodySubStep(dt, globalSystem->NumSubSteps);
 
-    globalSystem->PutWakesInTree();
-    globalOctree->Reset();
-    globalOctree->InitVelsGetLaplacian();
-    globalOctree->GetVels();
-    globalSystem->GetPanelFMMVelocities(); //  t = t1
-    globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
     //
     if (globalTimeStepper->dump_next) {
         //        globalSystem->WriteDomain();
@@ -224,7 +233,7 @@ void TIME_STEPPER::time_step() {
         OmRMax = max(OmRMax, max(fabs(BODY::Bodies[i]->Velocity + BODY::Bodies[i]->BodyRates.Cross(BODY::Bodies[i]->Rmax))));
 
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = min(dt_euler / 1, cfl_lim / (globalSystem->GambitScale*OmRMax));
+    REAL dt_lagrange = min(dt_euler / 25, cfl_lim / (globalSystem->GambitScale*OmRMax));
 
     int nss = ceil(dt_euler / dt_lagrange);
 

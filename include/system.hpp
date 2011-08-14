@@ -97,7 +97,7 @@ public:
   void GetPressures(REAL);
   void PutWakesInTree();
   void GetFaceVels();
-  void GetPanelFMMVelocities();
+  void GetPanelFMMVelocities(REAL);
   void MoveBodies(REAL, bool);
   void WriteDomain();
   void WriteVorticity();

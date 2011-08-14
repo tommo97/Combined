@@ -142,35 +142,35 @@ void BODY::MakeWake() {
             tmp = tmp->Neighb[2];
         }
 
-        if (VortonX[i].size() > 2)
-        {
-            Array <Vect3> X = VortonX[i][2];
-            Array <Vect3> Om = VortonOM[i][2];
-            Array <Vect3> Vel = VortonVel[i][2];
-            
-            VortonX[i][2].clear();
-            VortonOM[i][2].clear();
-            VortonVel[i][2].clear();
-            
-            int n = 5;
-            for (int j = 0; j < X.size() - 1; ++j)
-            {
-                Array <Vect3> Xint = UTIL::globalLinspace(X[j],X[j+1],n);
-                Array <Vect3> OMint = UTIL::globalLinspace(Om[j],Om[j+1],n);
-                
-                for (int k = 0; k < n-1; ++k)
-                {
-                    VortonX[i][2].push_back(Xint[k]);
-                    VortonOM[i][2].push_back(OMint[k]/n);
-                    VortonVel[i][2].push_back(Vect3(0.));
-                    
-                    
-                }
-                
-            }
-            
-            
-        }
+//        if (VortonX[i].size() > 2)
+//        {
+//            Array <Vect3> X = VortonX[i][2];
+//            Array <Vect3> Om = VortonOM[i][2];
+//            Array <Vect3> Vel = VortonVel[i][2];
+//            
+//            VortonX[i][2].clear();
+//            VortonOM[i][2].clear();
+//            VortonVel[i][2].clear();
+//            
+//            int n = 5;
+//            for (int j = 0; j < X.size() - 1; ++j)
+//            {
+//                Array <Vect3> Xint = UTIL::globalLinspace(X[j],X[j+1],n);
+//                Array <Vect3> OMint = UTIL::globalLinspace(Om[j],Om[j+1],n);
+//                
+//                for (int k = 0; k < n-1; ++k)
+//                {
+//                    VortonX[i][2].push_back(Xint[k]);
+//                    VortonOM[i][2].push_back(OMint[k]/n);
+//                    VortonVel[i][2].push_back(Vect3(0.));
+//                    
+//                    
+//                }
+//                
+//            }
+//            
+//            
+//        }
         
         
         
@@ -215,7 +215,7 @@ void BODY::GetLinearRHS() {
         // 	Include freestream and FMM wake interpolation
         Vect3 V = globalSystem->unscaledVinf - Vkin; // + BODY::AllBodyFaces[i]->Vfmm; //BODY::AllBodyFaces[i]->VelInterp[SubStep];       //  Substep counting starts at 1
 
-        Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
+        Vect3 VWake = -1*BODY::AllBodyFaces[i]->Vfmm;
 
         REAL PhiWake = 0.0;
 
@@ -302,7 +302,7 @@ void BODY::GetNonLinearRHS() {
             //            PhiWake += BODY::AllProtoWakes[j]->Gamma * fid;
         }
 
-        Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
+        Vect3 VWake = -1*BODY::AllBodyFaces[i]->Vfmm;
         BODY::AllBodyFaces[i]->VCentroid = globalSystem->unscaledVinf + VWake - BODY::AllBodyFaces[i]->Vkin + BODY::AllBodyFaces[i]->VWake + U;
 
         Vect3 V = BODY::AllBodyFaces[i]->VCentroid;
@@ -341,6 +341,14 @@ void BODY::SplitUpLinearAlgebra() {
 
     //  Calculate velocity at all faces
 //    cout << globalSystem->Vinf << endl;
+
+//    Array <Vect3> Posns(globalOctree->AllCells.size()), Omegas(globalOctree->AllCells.size());
+//    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+//        Posns[i] = (globalOctree->AllCells[i]->Position);
+//        Omegas[i] = (globalOctree->AllCells[i]->Omega);
+//    }
+
+
 #pragma omp parallel for
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
@@ -352,6 +360,16 @@ void BODY::SplitUpLinearAlgebra() {
 
 
         Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
+
+
+//
+//        VWake = 0.0;
+//        for (int j = 0; j < Posns.size(); ++j) {
+//            Vect3 D = BODY::AllBodyFaces[i]->CollocationPoint - Posns[j];
+//            VWake += globalDirectVel(D, Omegas[j]);
+//
+//        }
+            
 
         REAL PhiWake = 0.0;
 
@@ -661,10 +679,6 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
     REAL dt = delta_t / n_steps;
     for (int SubStep = 1; SubStep <= n_steps; ++SubStep) {
-
-
-
-
         BODY::TimePrev[3] = BODY::TimePrev[2];
         BODY::TimePrev[2] = BODY::TimePrev[1];
         BODY::TimePrev[1] = BODY::TimePrev[0];
@@ -673,6 +687,12 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         TIME_STEPPER::SubStepTime += dt;
         TIME_STEPPER::SimTime += dt;
         BODY::Times.push_back(BODY::Time);
+        
+
+        //      Interpolate face vels for subtimestep...
+        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+            BODY::AllBodyFaces[i]->Vfmm = BODY::AllBodyFaces[i]->Vfmm0 + (SubStep-1)*(BODY::AllBodyFaces[i]->Vfmm1-BODY::AllBodyFaces[i]->Vfmm0)/(n_steps-1);
+        }
 
 
         //cout << "%\t" << SubStep << " " << globalSystem->Vinf << " " << dt << endl;
@@ -680,10 +700,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
             BODY::Bodies[i]->MakeWake();
 
 
-        ////
-        ////
         ////        //  Sort Wake Convection
-        ////
         int NumVortons = 0;
         for (int J = 0; J < (int) NumBodies; ++J)
             for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
@@ -705,61 +722,6 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
 
 
-
-
-
-
-
-
-
-
-#ifdef InterpPhi
-
-        Vect3 DMin(1e32, 1e32, 1e32), DMax(-1e32, -1e32, -1e32);
-
-        for (int i = 0; i < PosPtr.size(); ++i) {
-            DMin = min(DMin, *(PosPtr[i]));
-            DMax = max(DMax, *(PosPtr[i]));
-        }
-
-        DMin = floor(DMin);
-        DMax = ceil(DMax);
-
-
-        int n = 2;
-
-        int ni = n * ((DMax.x - DMin.x)) + 1;
-        int nj = n * ((DMax.y - DMin.y)) + 1;
-        int nk = n * ((DMax.z - DMin.z)) + 1;
-
-        Array <REAL> DomainX = UTIL::globalLinspace(DMin.x, DMax.x, ni);
-        Array <REAL> DomainY = UTIL::globalLinspace(DMin.y, DMax.y, nj);
-        Array <REAL> DomainZ = UTIL::globalLinspace(DMin.z, DMax.z, nk);
-
-        Array < Array < Array <REAL> > > DomainPhi = UTIL::zeros(ni, nj, nk);
-
-
-        //#pragma omp parallel for
-        for (int l = 0; l < (int) BODY::AllBodyFaces.size(); ++l) {
-            PANEL *src = BODY::AllBodyFaces[l];
-            Vect3 MuT = src->Mu * src->Area * src->TRANS[2];
-            REAL SigmaT = src->Sigma * src->Area;
-            REAL PhiS = 0.0, PhiD = 0.0;
-            Vect3 VT, CP = src->CollocationPoint;
-            for (int i = 0; i < ni; ++i)
-                for (int j = 0; j < nj; ++j)
-                    for (int k = 0; k < nk; ++k) {
-                        PhiS = 0.0, PhiD = 0.0;
-                        PANEL::PointDoublet(CP, Vect3(DomainX[i], DomainY[j], DomainZ[k]), VT, MuT, PhiD);
-                        PANEL::PointSource(CP, Vect3(DomainX[i], DomainY[j], DomainZ[k]), VT, SigmaT, PhiS);
-                        DomainPhi[i][j][k] += PhiD + PhiS;
-                    }
-        }
-
-
-
-        cout << ni << " " << nj << " " << nk << " " << DomainPhi[ni - 1][nj - 1][nk - 2] << endl;
-#endif
 
 
 
@@ -859,9 +821,6 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         //        for (int i = 0; i < BODY::Bodies.size(); ++i)
         //            BODY::Bodies[i]->WakeToVortons();
     }
-    //  Check the order of the next few lines
-    for (int i = 0; i < BODY::Bodies.size(); ++i)
-        BODY::Bodies[i]->MoveBody(-dt);
 }
 
 /**************************************************************/

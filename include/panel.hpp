@@ -39,7 +39,7 @@ class PANEL {
 public:
     static REAL FarField;
 
-    Vect3 C1, C2, C3, C4, Centroid, CollocationPoint, Normal, Eta, Epsilon, TRANS[3], edgeX1, edgeX2, Vfmm, Vkin, VWake, VCentroid, dF;
+    Vect3 C1, C2, C3, C4, Centroid, CollocationPoint, Normal, Eta, Epsilon, TRANS[3], edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, Vkin, VWake, VCentroid, dF;
     Array <Vect3> Xcb;
     Vect4 DX, DY, M, D;
     Vect3 C1o, C2o, C3o, C4o;

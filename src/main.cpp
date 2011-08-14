@@ -40,7 +40,7 @@ void TestFMM(int);
 int main(int argc, char *argv[]) {
     system("clear");
 
-        if (argc < 2){
+    if (argc < 2) {
         cout << "Incorrect number of input arguments. Command expected is:" << endl;
         cout << "\t./main case_name" << endl;
         cout << "where case_name.tar.gz is a bundle in the tarballs directory" << endl;
@@ -48,14 +48,14 @@ int main(int argc, char *argv[]) {
         cout << "\tcase_name/" << endl << "\tcase_name/case_name.cas" << endl;
         cout << "\tcase_name/case_name.neu" << endl << "\tcase_name/case_name.mat" << endl;
         cout << "Aborting." << endl;
-//        return 1;
-     }
+        //        return 1;
+    }
 
     
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 25;
+    globalSystem->GambitScale = 15;
     globalSystem->MaxP = 3;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 
 
     UTIL::PreAmble();
-    
+
     cout << "------- "<< globalSystem->Del2 << " " <<  TIME_STEPPER::MaxTime << " " << globalSystem->NumSubSteps << endl;
     
     globalSystem->Initialise();
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
 
     REAL mult, nrm;
-    nrm = sqrt(globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.Dot(diff));
+    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
     mult = -1 / (four_pi * nrm * nrm * nrm);
     vel += mult * diff.Cross(omega);
 }
@@ -107,7 +107,7 @@ void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
 Vect3 globalDirectVel(Vect3 diff, Vect3 omega) {
 
     REAL mult, nrm;
-    nrm = sqrt(globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.Dot(diff));
+    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
     mult = -1 / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
