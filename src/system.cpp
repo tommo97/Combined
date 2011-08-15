@@ -101,7 +101,7 @@ void SYSTEM::Initialise() {
 /**************************************************************/
 void SYSTEM::TimeStep() {
 
-    while (TIME_STEPPER::SimTime < TIME_STEPPER::MaxTime)
+    while (TIME_STEPPER::SimTime < (TIME_STEPPER::MaxTime - 1e-3))
         globalTimeStepper->time_loop();
 
     if (WRITE_TO_SCREEN) cout << "Finished at sim time: " << TIME_STEPPER::SimTime << endl;
@@ -172,71 +172,61 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
     
-    int n = 10;
+    int n = (int) GambitScale;
+    for (int I = 0; I < BODY::Bodies.size(); ++I)
+        for (int J = 0; J < BODY::Bodies[I]->VortonX.size(); ++J){
+            
+          
+                for (int i = 0; i < BODY::Bodies[I]->VortonX[J].size() - 1; ++i) {
+                    for (int j = 0; j < BODY::Bodies[I]->VortonX[J][i].size() - 1; ++j) {
+                        Vect3 P1 = BODY::Bodies[I]->VortonX[J][i][j];
+                        Vect3 P2 = BODY::Bodies[I]->VortonX[J][i + 1][j];
+                        Vect3 P3 = BODY::Bodies[I]->VortonX[J][i + 1][j + 1];
+                        Vect3 P4 = BODY::Bodies[I]->VortonX[J][i][j + 1];
 
-    for (int i = 0; i < BODY::Bodies.size(); ++i)
-        for (int j = 0; j < BODY::Bodies[i]->VortonX.size(); ++j) {
-            for (int k = 0; k < BODY::Bodies[i]->VortonX[j].size() - 1; ++k){
-                for (int l = 0; l < BODY::Bodies[i]->VortonX[j][k].size() - 1; ++l) {
-                    Vect3 P1 = BODY::Bodies[i]->VortonX[j][k][l];
-                    Vect3 P2 = BODY::Bodies[i]->VortonX[j][k + 1][l];
-                    Vect3 P3 = BODY::Bodies[i]->VortonX[j][k + 1][l + 1];
-                    Vect3 P4 = BODY::Bodies[i]->VortonX[j][k][l + 1];
+                        Vect3 OM1 = BODY::Bodies[I]->VortonOM[J][i][j];
+                        Vect3 OM2 = BODY::Bodies[I]->VortonOM[J][i + 1][j];
+                        Vect3 OM3 = BODY::Bodies[I]->VortonOM[J][i + 1][j + 1];
+                        Vect3 OM4 = BODY::Bodies[I]->VortonOM[J][i][j + 1];
 
-                    Vect3 OM1 = BODY::Bodies[i]->VortonOM[j][k][l];
-                    Vect3 OM2 = BODY::Bodies[i]->VortonOM[j][k + 1][l];
-                    Vect3 OM3 = BODY::Bodies[i]->VortonOM[j][k + 1][l + 1];
-                    Vect3 OM4 = BODY::Bodies[i]->VortonOM[j][k][l + 1];
+                        //      Position of vortices interpolated between edges 1 and 3
 
-                    //      Position of vortices interpolated between edges 1 and 3
+                        Array <Vect3> Peps1 = UTIL::globalLinspace(P1, P2, n);
+                        Array <Vect3> Peps2 = UTIL::globalLinspace(P4, P3, n);
 
-                    Array <Vect3> Peps1 = UTIL::globalLinspace(P1, P2, n);
-                    Array <Vect3> Peps2 = UTIL::globalLinspace(P4, P3, n);
+                        Array <Vect3> OMeps1 = UTIL::globalLinspace(OM1, OM2, n);
+                        Array <Vect3> OMeps2 = UTIL::globalLinspace(OM4, OM3, n);
 
-                    Array <Vect3> OMeps1 = UTIL::globalLinspace(OM1, OM2, n);
-                    Array <Vect3> OMeps2 = UTIL::globalLinspace(OM4, OM3, n);
+                        //      Subdivision along eps
 
-                    //      Subdivision along eps
-
-                    for (int m = 0; m < n; ++m) {
-                        Array <Vect3> Xnu = UTIL::globalLinspace(Peps1[m], Peps2[m], n);
-                        Array <Vect3> OMnu = UTIL::globalLinspace(OMeps1[m], OMeps2[m], n);
-                        for (int p = 0; p < n; ++p) {
-                            Vect3 Om = OMnu[p] * (globalSystem->GambitScale * globalSystem->GambitScale) / (n * n);
-                            Vect3 P = Xnu[p] * globalSystem->GambitScale;
-                            OctreeCapsule C(P, Om, true);
-                            C.AssociatedBody = i;
-                            globalOctree->Root->EvalCapsule(C);
+                        for (int k = 0; k < n; ++k) {
+                            Array <Vect3> Xnu = UTIL::globalLinspace(Peps1[k], Peps2[k], n);
+                            Array <Vect3> OMnu = UTIL::globalLinspace(OMeps1[k], OMeps2[k], n);
+                            for (int l = 0; l < n; ++l) {
+                                //      The following line is multiplied by 2 to make results match. I don't know why...
+                                Vect3 Om = OMnu[l] * (globalSystem->GambitScale * globalSystem->GambitScale) / (n * n);
+                                Vect3 P = Xnu[l] * globalSystem->GambitScale;
+                                OctreeCapsule C(P, Om, true);
+                                C.AssociatedBody = I;
+                                globalOctree->Root->EvalCapsule(C);
+                            }
                         }
+
                     }
-
+//                    BODY::Bodies[I]->VortonX[J].pop_back();
+//                    BODY::Bodies[I]->VortonOM[J].pop_back();
+//                    BODY::Bodies[I]->VortonVel[J].pop_back();
+//                    cout << BODY::Bodies[I]->VortonX[J].size() << endl;
                 }
-                BODY::Bodies[i]->VortonX[j].pop_back();
-                BODY::Bodies[i]->VortonOM[j].pop_back();
-                BODY::Bodies[i]->VortonVel[j].pop_back();
-        }
+            
+            BODY::Bodies[I]->VortonX[J].clear();
+            BODY::Bodies[I]->VortonOM[J].clear();
+            BODY::Bodies[I]->VortonVel[J].clear();
+
+            }
 
 
-        }
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-//    
+   
 //    
 //    
 //    for (int J = 0; J < BODY::Bodies.size(); ++J){
@@ -255,6 +245,25 @@ void SYSTEM::PutWakesInTree() {
 //            }
 //
 //    }
+
+    int NumVortons = 0;
+    for (int J = 0; J < BODY::Bodies.size(); ++J)
+        for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
+            for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j)
+                for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k)
+                    NumVortons++;
+    BODY::VortonPositions.allocate(NumVortons);
+    BODY::VortonStrengths.allocate(NumVortons);
+    int count = 0;
+    for (int J = 0; J < (int) NumBodies; ++J)
+        for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
+            for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j)
+                for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k) {
+                    BODY::VortonPositions[count] = (BODY::Bodies[J]->VortonX[i][j][k]);
+                    BODY::VortonStrengths[count] = (BODY::Bodies[J]->VortonOM[i][j][k]);
+                    count++;
+                }
+
     
 }
 /**************************************************************/
@@ -295,7 +304,6 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->Vfmm0 = globalOctree->TreeVel(globalSystem->GambitScale * BODY::AllBodyFaces[i]->Centroid);
-        BODY::AllBodyFaces[i]->Vfmm0 = BODY::AllBodyFaces[i]->Vfmm0 / globalSystem->GambitScale;
     }
 
     for (int i = 0; i < BODY::Bodies.size(); ++i)
@@ -303,12 +311,15 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->Vfmm1 = globalOctree->TreeVel(globalSystem->GambitScale * BODY::AllBodyFaces[i]->Centroid);
-        BODY::AllBodyFaces[i]->Vfmm1 = BODY::AllBodyFaces[i]->Vfmm1 / globalSystem->GambitScale; 
     }
 
     for (int i = 0; i < BODY::Bodies.size(); ++i)
         BODY::Bodies[i]->MoveBody(-dt);
     
+    
+//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) 
+//        cout << "D " << BODY::AllBodyFaces[i]->VWake << endl << "F " << BODY::AllBodyFaces[i]->Vfmm0 << endl << "R " << BODY::AllBodyFaces[i]->Vfmm0/BODY::AllBodyFaces[i]->VWake << endl << "---" << endl;
+        
 //    for (int i = 0; i < NumBodies; ++i)
 //        for (int j = 0; j < Bodies[i]->Faces.size(); ++j)
 //            Bodies[i]->Faces[j]->Vfmm =

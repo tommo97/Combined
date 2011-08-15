@@ -167,6 +167,7 @@ void TIME_STEPPER::time_loop() {
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
         globalOctree->GetVels();
+//        globalSystem->GetPanelFMMVelocities(0.0); //  t = t1
         first_step = false;
     }
     else {
@@ -218,6 +219,17 @@ void TIME_STEPPER::time_step() {
 
     dt = dt_euler;
 
+    
+    
+    //  Calculate timestep length such that no body travels further than a single cell
+    REAL OmRMax = 0;
+    for (int i = 0; i < BODY::Bodies.size(); ++i)
+        OmRMax = globalSystem->GambitScale * max(OmRMax, max(fabs(BODY::Bodies[i]->Velocity + BODY::Bodies[i]->BodyRates.Cross(BODY::Bodies[i]->Rmax))));
+
+    dt = min(dt,cfl_lim/OmRMax);
+    
+   
+    //  Check to see if this takes us over a time when we should be writing some output
     dump_next = false;
 
     if ((TIME_STEPPER::SimTime + dt >= t_out) || (TIME_STEPPER::SimTime + dt >= TIME_STEPPER::MaxTime)) {
@@ -227,13 +239,8 @@ void TIME_STEPPER::time_step() {
     }
 
 
-    //  Now calculate the Lagrangian time-step length
-    REAL OmRMax = 0;
-    for (int i = 0; i < BODY::Bodies.size(); ++i)
-        OmRMax = max(OmRMax, max(fabs(BODY::Bodies[i]->Velocity + BODY::Bodies[i]->BodyRates.Cross(BODY::Bodies[i]->Rmax))));
-
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = min(dt_euler / 25, cfl_lim / (globalSystem->GambitScale*OmRMax));
+    REAL dt_lagrange = dt_euler / 10.0 ;//min(dt_euler / 25, cfl_lim / (OmRMax));
 
     int nss = ceil(dt_euler / dt_lagrange);
 
@@ -241,7 +248,6 @@ void TIME_STEPPER::time_step() {
 
     globalSystem->NumSubSteps = nss;
     
-    cout << nss << " "  << cfl_lim / (globalSystem->GambitScale*OmRMax) << " " << dt << " " << endl;
 
     //    if (n == 0) dump_next = true;
 

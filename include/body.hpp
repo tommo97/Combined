@@ -110,8 +110,9 @@ public:
 
     Vect3 TRANS[3];
     Array <PANEL> Faces;
-    Array <Array <PANEL> > ProtoWakes;
-    Array < Array < Array < Vect3> > > VortonX, VortonOM, VortonVel;
+    Array <Array <PANEL> > ProtoWakes, ProtoWakes0;
+    Array < Array < Array < Vect3 > > > VortonX, VortonOM, VortonVel;
+    Array < Array < REAL > > VortonAge;
     Array < int  > VXSizes, VOMSizes, VVelSizes;
     Array <PANEL*> BoundaryFaces, FirstProtoWakes;
 

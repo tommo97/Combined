@@ -55,9 +55,9 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 15;
+    globalSystem->GambitScale = 33;
     globalSystem->MaxP = 3;
-    globalSystem->Del2 = 0.25;
+    globalSystem->Del2 = 0.025;
     globalSystem->DS = .3;
     globalSystem->dtInit = 1e-3;
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
 
     REAL mult, nrm;
-    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
+    nrm = sqrt(globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.Dot(diff));
     mult = -1 / (four_pi * nrm * nrm * nrm);
     vel += mult * diff.Cross(omega);
 }
@@ -107,7 +107,7 @@ void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
 Vect3 globalDirectVel(Vect3 diff, Vect3 omega) {
 
     REAL mult, nrm;
-    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
+    nrm = sqrt(globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.Dot(diff));
     mult = -1 / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
@@ -156,25 +156,25 @@ void UTIL::PostAmble() {
 
 
 
-        for (int j = 0; j < BODY::Bodies[i]->ProtoWakes.size(); ++j)
-            for (int k = 0; k < BODY::Bodies[i]->ProtoWakes[j].size(); ++k) {
+        for (int j = 0; j < BODY::Bodies[i]->ProtoWakes0.size(); ++j)
+            for (int k = 0; k < BODY::Bodies[i]->ProtoWakes0[j].size(); ++k) {
                 Array <REAL> t;
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C1.x);
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C2.x);
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C3.x);
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C4.x);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C1.x);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C2.x);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C3.x);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C4.x);
                 TmpPWPtsx.push_back(t);
                 t.clear();
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C1.y);
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C2.y);
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C3.y);
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C4.y);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C1.y);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C2.y);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C3.y);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C4.y);
                 TmpPWPtsy.push_back(t);
                 t.clear();
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C1.z);
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C2.z);
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C3.z);
-                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C4.z);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C1.z);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C2.z);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C3.z);
+                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C4.z);
                 TmpPWPtsz.push_back(t);
                 t.clear();
                 PWGammas.push_back(BODY::Bodies[i]->ProtoWakes[j][k].Gamma);
@@ -534,7 +534,7 @@ void UTIL::PreAmble() {
 
     BODY::PollFaces(); 
     
-    BODY::SetUpProtoWakes(maxT/nSteps);
+    BODY::SetUpProtoWakes(1.0/nSteps);
 
     BODY::PollFaces();
 
