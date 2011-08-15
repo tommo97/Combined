@@ -1,6 +1,6 @@
 close all; clear all; clear mex;
 files = dir('f_*.dat');
-val = 1;
+val = 1.;
 s = size(files,1);
 
 % while s < 100
@@ -10,14 +10,14 @@ s = size(files,1);
 %     pause(60);
 % end
 
-
+scale = 15;
 
 makemovie = false;
 fname = files(s).name;
 fullscreen = get(0,'ScreenSize');
 fig = figure('Position',[0 0 1200 1200*16/10]);
 set(fig,'DoubleBuffer','on');
-[XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val);
+[XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val,scale);
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 hold all
 %scatter3([0 0 0 0],[0 0 410 410],[-20 20 -20 20],[1 1 1 1],'white');

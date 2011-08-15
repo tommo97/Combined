@@ -1,4 +1,4 @@
-function [XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val)
+function [XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val, scale)
 data = dlmread(fname);
 subs = data(:,1:3);
 subs(:,1) = subs(:,1) - min(data(:,1));
@@ -10,9 +10,11 @@ V = zeros(max(subs));
 Vx = zeros(max(subs));
 Vy = zeros(max(subs));
 Vz = zeros(max(subs));
+
 [X Y Z] = meshgrid([min(data(:,2)):1:max(data(:,2))],...
     [min(data(:,1)):1:max(data(:,1))],...
     [min(data(:,3)):1:max(data(:,3))]);
+
 
 
 n = 1;
@@ -25,7 +27,13 @@ VI = zeros(size(XI));
 VIx = VI;
 VIy = VI;
 VIz = VI;
+XI = XI/scale;
+YI = YI/scale;
+ZI = ZI/scale;
 end
+X = X/scale;
+Y = Y/scale;
+Z = Z/scale;
 
 num_vort = (size(data,2) - 6)/3;
 colour{1} = [1 0 0];
@@ -49,7 +57,7 @@ for q = 1:num_vort
     end
     Y = Y - min(Y(:));
     %V = V.^3;
-    %V = smooth3(V,'gaussian',[5 5 5],0.65);   
+    %V = smooth3(V);%,'gaussian',[1 1 1],0.65);   
     if n ~= 1
         YI = YI - min(YI(:));
         VI =  interp3(X,Y,Z,V,XI,YI,ZI,'cubic');
