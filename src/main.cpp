@@ -55,9 +55,9 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 33;
+    globalSystem->GambitScale = 15;
     globalSystem->MaxP = 3;
-    globalSystem->Del2 = 0.025;
+    globalSystem->Del2 = 0.01;
     globalSystem->DS = .3;
     globalSystem->dtInit = 1e-3;
 
@@ -534,7 +534,7 @@ void UTIL::PreAmble() {
 
     BODY::PollFaces(); 
     
-    BODY::SetUpProtoWakes(1.0/nSteps);
+    BODY::SetUpProtoWakes(0.1);
 
     BODY::PollFaces();
 
@@ -571,7 +571,7 @@ void  TestFMM(int n)
 
 
     int count = 0;
-    while (globalNum_FVMCELLS < n) {
+    while (FVMCell::NumCells < n) {
         REAL rho = 1000 * (REAL(rand()) / RAND_MAX);
         REAL phi = asin(2 * REAL(rand()) / RAND_MAX - 1);
         REAL theta = 2 * pi * REAL(rand()) / RAND_MAX;
@@ -591,7 +591,7 @@ void  TestFMM(int n)
     }
     globalOctree->Reset();
 
-    n = globalNum_FVMCELLS;
+    n = FVMCell::NumCells;
     Posns.allocate(n);
     Omegas.allocate(n);
     Array <Vect3> DirectVels(n);
@@ -601,7 +601,7 @@ void  TestFMM(int n)
     }
     
 
-    cout << "Done. It took " << count << " attempts to make " << globalNum_FVMCELLS << " unique cells." << endl;
+    cout << "Done. It took " << count << " attempts to make " << FVMCell::NumCells << " unique cells." << endl;
     REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     cout << "Performing Direct Calculation for first " << min(Posns.size(),10000) << " cells..." << endl;
 #pragma omp parallel for

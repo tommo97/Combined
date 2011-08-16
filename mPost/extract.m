@@ -86,7 +86,9 @@ for q = 1:num_vort
 %         'FaceColor','interp','EdgeColor','none','DiffuseStrength',1.0);
     
  
-    p = patch(isosurface(XI,YI,ZI,VI,val),'FaceColor',colour{q},...
-        'EdgeColor','none','FaceLighting','phong');
-    isonormals(XI,YI,ZI,VI,p);
+%     p = patch(isosurface(XI,YI,ZI,VI,val));%,'FaceColor',colour{q},...
+%         %'EdgeColor','none','FaceLighting','phong');
+%     isonormals(XI,YI,ZI,VI,p);
+%     isocolors(XI,YI,ZI,VIx,p);
+%     set(p,'FaceColor','interp','EdgeColor','none')
 end;

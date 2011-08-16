@@ -15,7 +15,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
+This program is distributed in the 40hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
@@ -23,22 +23,27 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 
 
 
 #include "node.hpp"
 #include "cell.hpp"
 #include "vect34.hpp"
+unsigned long int Node::NumNodes = 0;
+unsigned long int Node::NodeCount = 0;
+Array <Node*> Node::AllNodes;
+
 /**************************************************************/
 Node::~Node() {
     RemoveFromNeighbs();
     ClearChildren();
     if (Parent)
         Parent->Children[x][y][z] = NULL;
-    globalNum_NODES--;
+    Node::NumNodes--;
     Trans.clear();
 }
+
 /**************************************************************/
 Node::Node() : Parent(NULL), x(-1), y(-1), z(-1), m(0), ID(00), size(OCTREE_SIZE),
 InList(false), Neighb(NULL), HasLoad(false) {
@@ -48,10 +53,11 @@ InList(false), Neighb(NULL), HasLoad(false) {
     TransDerivs.assign(globalSystem->NumTransVars, Vect3());
     SetISANull();
     SetKidsNull();
-    globalNum_NODES++;
-    NID = globalNum_NODES;
+    Node::NumNodes++;
+    NID = Node::NumNodes;
     Trans.push_back(-1);
 }
+
 /**************************************************************/
 Node::Node(Node *parent, int i, int j, int k) : Parent(parent), x(i), y(j), z(k), m(parent->m + 1),
 ID(((((((parent->ID << 1) + i) << 1) + j) << 1) + k)), size(.5 * parent->size), InList(false),
@@ -65,8 +71,8 @@ Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(N
     SetISANull();
     SetKidsNull();
     GetISA();
-    globalNum_NODES++;
-    NID = globalNum_NODES;
+    Node::NumNodes++;
+    NID = Node::NumNodes;
     skip_here.assign(globalSystem->NumThreads, false);
 
 
@@ -128,6 +134,7 @@ const int Node::deREF[][3] = {
     {1, 1, 1}
 };
 int Node::Op[6] = {1, 0, 3, 2, 5, 4};
+
 /**************************************************************/
 void Node::RemoveFromNeighbs() {
     for (int i = 0; i < 6; ++i) {
@@ -168,11 +175,12 @@ void Node::Recurrance(JaggedArray <REAL> &coeffts, int k1, int k2, int k3, Vect3
             coeffts[k1][k2][k3] -= m2 * coeffts[k1][k2][k3 - 2];
     }
 }
+
 /**************************************************************/
 void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 #define VERSION_2
 #ifdef VERSION_2
-    REAL R2 = diff.Dot(diff) + globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2;
+    REAL R2 = diff.Dot(diff) + globalSystem->GambitScale * globalSystem->GambitScale * globalSystem->Del2;
 
     // base case
 #ifdef MODE_3D
@@ -248,7 +256,7 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
     x12 = diff.x * 2;
     x22 = diff.y * 2;
     x32 = diff.z * 2;
-    mult = -1 / (globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
+    mult = -1 / (globalSystem->GambitScale * globalSystem->GambitScale * globalSystem->Del2 + diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
 
     /* base case */
     coeffts[0][0][0] = sqrt(-mult);
@@ -315,6 +323,7 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
                     x32 * coeffts[i][j][k - 1] + coeffts[i][j][k - 2]) * mult;
 #endif
 }
+
 /**************************************************************/
 void Node::GetISA() {
     ISA[1][1][1] = this;
@@ -372,6 +381,7 @@ Node* Node::ReturnNeighb(int i, int j, int k) {
 
     return Root->MoveDownTree(v);
 }
+
 /**************************************************************/
 void Node::Trans2Neighb(Array <int> &v, int dirn) {
     int M = (int) v.size() - 1;
@@ -387,6 +397,7 @@ void Node::Trans2Neighb(Array <int> &v, int dirn) {
         }
     }
 }
+
 /**************************************************************/
 Node* Node::MoveDownTree(Array <int> &Directions) {
     int ind = Directions[0];
@@ -407,6 +418,7 @@ Node* Node::MoveDownTree(Array <int> &Directions) {
     } else
         return Children[deREF[ind][0]][deREF[ind][1]][deREF[ind][2]];
 }
+
 /**************************************************************/
 void Node::EvalCapsule(OctreeCapsule &c) {
     if (c.has_load) {
@@ -415,6 +427,7 @@ void Node::EvalCapsule(OctreeCapsule &c) {
     }
     vEvalCapsule(c);
 }
+
 /**************************************************************/
 void Node::UpdateMomentMults() {
     REAL Size = Node::RootSize;
@@ -598,49 +611,51 @@ void Node::UpdateMomentMults() {
         }
     }
 }
-/**************************************************************/
-void Node::RecursivePanelVel(PANEL& Pan) {
-		Vect3 R = (Pan.CollocationPoint - Position);
-		REAL R2 = R.Dot(R);
-		bool DoHere = true;
 
-		if (R2 < (PANEL::FarField * Pan.MaxDiagonal) || (R2 < 3 * size)) {
-			if (Children[0][0][0]) {
-				DoHere = false;
-				Children[0][0][0]->RecursivePanelVel(Pan);
-			}
-			if (Children[0][0][1]) {
-				DoHere = false;
-				Children[0][0][1]->RecursivePanelVel(Pan);
-			}
-			if (Children[0][1][0]) {
-				DoHere = false;
-				Children[0][1][0]->RecursivePanelVel(Pan);
-			}
-			if (Children[0][1][1]) {
-				DoHere = false;
-				Children[0][1][1]->RecursivePanelVel(Pan);
-			}
-			if (Children[1][0][0]) {
-				DoHere = false;
-				Children[1][0][0]->RecursivePanelVel(Pan);
-			}
-			if (Children[1][0][1]) {
-				DoHere = false;
-				Children[1][0][1]->RecursivePanelVel(Pan);
-			}
-			if (Children[1][1][0]) {
-				DoHere = false;
-				Children[1][1][0]->RecursivePanelVel(Pan);
-			}
-			if (Children[1][1][1]) {
-				DoHere = false;
-				Children[1][1][1]->RecursivePanelVel(Pan);
-			}
-		}
-		if (DoHere) {
-			if (!globalSystem->LiftingLineMode)
-				Velocity -= Pan.SourceVel(Position);
-			Velocity -= Pan.BodyPanelVelocity(Position);
-		}
-	}
+/**************************************************************/
+void Node::RecursivePanelVel(PANEL* Pan){
+    Vect3 P = Position/globalSystem->GambitScale;
+    
+    Vect3 R = (Pan->CollocationPoint - P);
+    REAL R2 = R.Dot(R);
+    bool DoHere = true;
+
+    if (R2 < (PANEL::FarField * Pan->MaxDiagonal)*(PANEL::FarField * Pan->MaxDiagonal) || (R2 < (0.25*size*size))) {
+        if (Children[0][0][0]) {
+            DoHere = false;
+            Children[0][0][0]->RecursivePanelVel(Pan);
+        }
+        if (Children[0][0][1]) {
+            DoHere = false;
+            Children[0][0][1]->RecursivePanelVel(Pan);
+        }
+        if (Children[0][1][0]) {
+            DoHere = false;
+            Children[0][1][0]->RecursivePanelVel(Pan);
+        }
+        if (Children[0][1][1]) {
+            DoHere = false;
+            Children[0][1][1]->RecursivePanelVel(Pan);
+        }
+        if (Children[1][0][0]) {
+            DoHere = false;
+            Children[1][0][0]->RecursivePanelVel(Pan);
+        }
+        if (Children[1][0][1]) {
+            DoHere = false;
+            Children[1][0][1]->RecursivePanelVel(Pan);
+        }
+        if (Children[1][1][0]) {
+            DoHere = false;
+            Children[1][1][0]->RecursivePanelVel(Pan);
+        }
+        if (Children[1][1][1]) {
+            DoHere = false;
+            Children[1][1][1]->RecursivePanelVel(Pan);
+        }
+    }
+    if (DoHere) {
+        PanelVel -= globalSystem->GambitScale*Pan->SourceVel(P);
+        PanelVel -= globalSystem->GambitScale*Pan->BodyPanelVelocity(P);
+    }
+}

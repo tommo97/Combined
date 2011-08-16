@@ -248,8 +248,6 @@ extern TIME_STEPPER *globalTimeStepper;
 
 extern OCTREE *globalOctree;
 
-extern long unsigned int globalNum_NODES, globalNum_BRANCHES, globalNum_FVMCELLS;
-
 extern long int globalTimer;
 /*
 *  Global Functions

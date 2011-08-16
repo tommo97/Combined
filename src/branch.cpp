@@ -23,34 +23,38 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 
 
 #include "branch.hpp"
+unsigned long int Branch::NumBranches = 0;
 
 /**************************************************************/
 Branch::~Branch() {
-    globalNum_BRANCHES--;
+    Branch::NumBranches--;
 }
 
 /**************************************************************/
 Branch::Branch() : Node(), Moments(globalSystem->MaxP), VelField(globalSystem->MaxP) {
-    globalNum_BRANCHES++;
+    Branch::NumBranches++;
 }
 
 /**************************************************************/
 Branch::Branch(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Moments(globalSystem->MaxP), VelField(globalSystem->MaxP) {
-    globalNum_BRANCHES++;
+    Branch::NumBranches++;
 }
+
 /**************************************************************/
 void Branch::BranchCount() {
-        globalOctree->BranchCount[m]++;
+    globalOctree->BranchCount[m]++;
 }
+
 /**************************************************************/
-void Branch::ReList() {
-        globalOctree->AllBranches[m][globalOctree->BranchCount[m]] = this;
-        globalOctree->BranchCount[m]++;
+void Branch::vReList() {
+    globalOctree->AllBranches[m][globalOctree->BranchCount[m]] = this;
+    globalOctree->BranchCount[m]++;
 }
+
 /**************************************************************/
 void Branch::SetFieldsZero() {
     VelField = Vect3(0.);
@@ -67,7 +71,7 @@ void Branch::vPassMmnts2Prnt() {
                         for (int n2 = 0; n2 <= k2; n2++)
                             for (int n3 = 0; n3 <= k3; n3++)
                                 (static_cast<Branch*> (Parent))->Moments[k1][k2][k3] += BinomMlt[m][x][y][z][k1][k2][k3][n1][n2][n3] * Moments[k1 - n1][k2 - n2][k3 - n3];
-                            
+
 
         Parent->HasLoad = true;
     }
@@ -90,19 +94,15 @@ void Branch::vEvalCapsule(OctreeCapsule &C) {
     C.Position.z -= C.S * (2 * k - 1);
 
     if (!Children[i][j][k]) {
-        if (C.S > 0)
-        {
+        if (C.S > 0) {
             Branch *child = new Branch(this, i, j, k);
             Children[i][j][k] = child;
-            if (C.IP)
-            {
+            if (C.IP) {
                 child->InheritVField();
                 child->GetVelField();
             }
         }
-
-        else
-        {
+        else {
             Children[i][j][k] = new FVMCell(this, i, j, k);
         }
     }
@@ -120,7 +120,7 @@ void Branch::GetVelField() {
         for (int ix = 0; ix < 3; ++ix)
             for (int iy = 0; iy < 3; ++iy)
                 for (int iz = 0; iz < 3; ++iz)
-                    if (ISA[ix][iy][iz]) ISA[ix][iy][iz]->skip_here[tid] = true;     //  This is it! I think this means it is not thread safe!
+                    if (ISA[ix][iy][iz]) ISA[ix][iy][iz]->skip_here[tid] = true; //  This is it! I think this means it is not thread safe!
 
         for (int ix = 0; ix < 3; ++ix)
             for (int iy = 0; iy < 3; ++iy)
@@ -136,9 +136,9 @@ void Branch::GetVelField() {
                                                     for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
                                                         for (int n1 = k1; n1 < globalSystem->MaxP; n1++)
                                                             for (int n2 = k2; n1 + n2 < globalSystem->MaxP; n2++)
-                                                                for (int n3 = k3; n1 + n2 + n3 < globalSystem->MaxP; n3++){
+                                                                for (int n3 = k3; n1 + n2 + n3 < globalSystem->MaxP; n3++) {
                                                                     VelField[k1][k2][k3] += VlFldMlt[k1][k2][k3][n1][n2][n3] *
-                                                                        TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce][n1][n2][n3].Cross((static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments[n1 - k1][n2 - k2][n3 - k3]);
+                                                                            TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce][n1][n2][n3].Cross((static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments[n1 - k1][n2 - k2][n3 - k3]);
                                                                 }
                                         } else {
                                             Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->skip_here[tid] = false;
@@ -158,7 +158,7 @@ void Branch::InheritVField() {
                         for (int n2 = k2; n1 + n2 < globalSystem->MaxP; n2++)
                             for (int n3 = k3; n1 + n2 + n3 < globalSystem->MaxP; n3++)
                                 VelField[k1][k2][k3] += Node::InhrtMlt[m][x][y][z][k1][k2][k3][n1][n2][n3] * (static_cast<Branch*> (Parent))->VelField[n1][n2][n3];
-                            
+
     }
 }
 //#define MODE_1
@@ -184,6 +184,7 @@ void Branch::vApplyRecursively(BranchFuncPtr down, FVMCellFuncPtr bottom, Branch
         Children[1][1][1]->vApplyRecursively(down, bottom, up);
     (this->*up)();
 }
+
 /**************************************************************/
 void Branch::vApplyRecursivelyP(BranchFuncPtr down, FVMCellFuncPtr bottom, BranchFuncPtr up) {
     (this->*down)();

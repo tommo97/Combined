@@ -79,8 +79,10 @@ void OCTREE::Reset() {
     }
     
     CellCount = 0;  //  This is used as a pseudo iterator for assigning into AllCells
-    AllCells.assign(globalNum_FVMCELLS, NULL);
-    Root->ApplyRecursively(&Node::DoNothing, &FVMCell::ReList, &Branch::ReList);
+    AllCells.assign(FVMCell::NumCells, NULL);
+    Node::AllNodes.allocate(Node::NumNodes);
+    Node::NodeCount = 0;
+    Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
 }
 /**************************************************************/
 void OCTREE::FVM() {

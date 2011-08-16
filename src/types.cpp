@@ -30,7 +30,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "includes.hpp"
 #include "array.hpp"
 
-long unsigned int globalNum_NODES = 0, globalNum_BRANCHES = 0, globalNum_FVMCELLS = 0;
 long unsigned int globalFactorial[24] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320,
     362880, 3628800, 39916800, 479001600, 6227020800, 87178291200,
     1307674368000, 2432902008176640000};

@@ -42,12 +42,16 @@ public:
     Branch();
 
     Branch(Node *parent, int i, int j, int k);
+    
+    static unsigned long int NumBranches;
 
     void vRemoveFromNeighbs() {};
 
     void vCheckNeighbs() {};
 
     void vCollapseVField() {};
+    
+    void vReList();
 
     void vEvalCapsule(OctreeCapsule&);
 
@@ -67,6 +71,7 @@ public:
     void SetVelsZero()
     {
     	Velocity = 0.;
+        PanelVel = 0.;
     }
 };
 

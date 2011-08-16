@@ -538,7 +538,7 @@ void IO::stat_step() {
 
     out_stream << "\t" << globalTimeStepper->CFL;
 
-    out_stream << "\t" << globalNum_FVMCELLS;
+    out_stream << "\t" << FVMCell::NumCells;
     if (globalTimeStepper->dump_next) {
         out_stream << "\t<-W";
     } else {
@@ -591,7 +591,7 @@ void IO::print_stat_step(ostream & out) {
             << endl;
     out << "*\tcpu_t:\t" << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     out << "\tt:\t" << (REAL) (ticks() - globalTimer) / 1000;
-    out << "\t# cells:\t" << globalNum_FVMCELLS << endl;
+    out << "\t# cells:\t" << FVMCell::NumCells << endl;
     out << "*" << endl;
 }
 

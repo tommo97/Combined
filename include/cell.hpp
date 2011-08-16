@@ -44,6 +44,8 @@ public:
     FVMCell();
 
     FVMCell(Node *parent, int i, int j, int k);
+    
+    static unsigned long int NumCells;
 
     NeighbSet <Vect3> FaceVels;
 
@@ -71,6 +73,8 @@ public:
     void vEvalCapsule(OctreeCapsule &c);
 
     void vCheckNeighbs();
+    
+    void vReList();
 
     void vApplyRecursively(BranchFuncPtr down, FVMCellFuncPtr bottom, BranchFuncPtr up);
 

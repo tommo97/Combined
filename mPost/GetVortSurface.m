@@ -1,8 +1,7 @@
-close all; clear all; clear mex;
+figure ; clear all; clear mex;
 files = dir('f_*.dat');
-val = 1.;
+val = .1;
 s = size(files,1);
-
 % while s < 100
 %     files = dir('f*.dat');
 %     s = size(files,1);
@@ -18,6 +17,16 @@ fullscreen = get(0,'ScreenSize');
 fig = figure('Position',[0 0 1200 1200*16/10]);
 set(fig,'DoubleBuffer','on');
 [XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val,scale);
+
+
+p = patch(isosurface(XI,YI,ZI,VI,val));%,'FaceColor',colour{q},...
+%'EdgeColor','none','FaceLighting','phong');
+isonormals(XI,YI,ZI,VI,p);
+isocolors(XI,YI,ZI,VIx,p);
+set(p,'FaceColor','interp','EdgeColor','none')
+
+
+    
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 hold all
 %scatter3([0 0 0 0],[0 0 410 410],[-20 20 -20 20],[1 1 1 1],'white');
@@ -29,7 +38,6 @@ axis equal off;
 %set(gca,'CameraUpVector',[-1 0 0])
 axis equal tight; lighting phong; camlight right;
 %zoom(1.8);
-caxis([val 10])
 drawnow
 ViewParams = GetViewParams;
 %camlight right

@@ -30,16 +30,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "node.hpp"
 #include "types.hpp"
 #include "cell.hpp"
-
+unsigned long int FVMCell::NumCells = 0;
 /**************************************************************/
 FVMCell::FVMCell() : Node(), FaceVels(0.) {
     if (WRITE_TO_SCREEN) cout << "Warning - uninitialised cell" << endl;
-    globalNum_FVMCELLS++;
+    FVMCell::NumCells++;
 }
 
 /**************************************************************/
 FVMCell::FVMCell(Node *parent, int i, int j, int k) : Node(parent, i, j, k), FaceVels(0.), age(0){
-    globalNum_FVMCELLS++;
+    FVMCell::NumCells++;
     Laplacian.assign(globalSystem->NumTransVars, Vect3());
     BEV.assign(globalSystem->NumTransVars, Vect3());
 }
@@ -169,7 +169,7 @@ void FVMCell::CountCells() {
     globalOctree->CellCount++;
 }
 /**************************************************************/
-void FVMCell::ReList() {
+void FVMCell::vReList() {
     globalOctree->AllCells[globalOctree->CellCount] = this;
     globalOctree->CellCount++;
 }
@@ -252,7 +252,7 @@ void FVMCell::SetVelsZero() {
 
 /**************************************************************/
 FVMCell::~FVMCell() {
-    globalNum_FVMCELLS--;
+    FVMCell::NumCells--;
 }
 
 /**************************************************************/
