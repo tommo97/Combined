@@ -461,7 +461,7 @@ void UTIL::PreAmble() {
             outstream << rads[i] << endl;
             
             BODY::Radius = rads[0];
-            BODY::RATES[i] = Ax[i]*(globalSystem->unscaledVinf.Mag()*tsr[i]/rads[i]);
+            BODY::RATES[i] = Ax[i]*((globalSystem->unscaledVinf.Mag() - BODY::VELOCITY[i].Mag()) * tsr[i]/rads[i]);
             
             
             
