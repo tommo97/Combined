@@ -55,9 +55,9 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 25;
+    globalSystem->GambitScale = 10;
     globalSystem->MaxP = 3;
-    globalSystem->Del2 = 0.01;
+    globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
     globalSystem->dtInit = 1e-3;
 
@@ -461,7 +461,7 @@ void UTIL::PreAmble() {
             outstream << rads[i] << endl;
             
             BODY::Radius = rads[0];
-            BODY::RATES[i] = Ax[i]*((globalSystem->unscaledVinf.Mag() - BODY::VELOCITY[i].Mag()) * tsr[i]/rads[i]);
+            BODY::RATES[i] = Ax[i]*((globalSystem->unscaledVinf - BODY::VELOCITY[i]).Mag()*tsr[i]/rads[i]);
             
             
             

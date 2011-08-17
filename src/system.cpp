@@ -235,15 +235,15 @@ void SYSTEM::GetFaceVels() {
     for (int i = 0; i < Node::NumNodes; ++i)
         Node::AllNodes[i]->PanelVel = Vect3(0.0);
 
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
-        globalOctree->Root->RecursivePanelVel(BODY::AllBodyFaces[i]);
-
-    globalOctree->Root->RecursivePassPanelVelsDown();
-
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i){
-//        cout << globalOctree->AllCells[i]->Velocity << " " << globalOctree->AllCells[i]->PanelVel << endl;
-        globalOctree->AllCells[i]->Velocity += globalOctree->AllCells[i]->PanelVel;
-    }
+//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
+//        globalOctree->Root->RecursivePanelVel(BODY::AllBodyFaces[i]);
+//
+//    globalOctree->Root->RecursivePassPanelVelsDown();
+//
+//    for (int i = 0; i < globalOctree->AllCells.size(); ++i){
+////        cout << globalOctree->AllCells[i]->Velocity << " " << globalOctree->AllCells[i]->PanelVel << endl;
+//        globalOctree->AllCells[i]->Velocity += globalOctree->AllCells[i]->PanelVel;
+//    }
     
     
 //#ifdef _OPENMP

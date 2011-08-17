@@ -1011,7 +1011,6 @@ void PANEL::GetNewGlobalPosition() {
 
 
 
-
     if (isBound) {
         if (BoundBC == 0) {
             edgeX1 = C1;
