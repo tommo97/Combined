@@ -1,14 +1,14 @@
 /*
  This file is part of the Combined Wake Modelling Code Version 1.0
 
- VTM Code Copyright Tom McCombes 2009
+ V3D Code Copyright Tom McCombes 2011
  This code solves the 3D unsteady incompressible
  Navier-Stokes equations in velociy vorticity form
 
 
  $Rev:: 29               $:  Revision of last commit
  $Author:: tom           $:  Author of last commit
- $Date:: 2009-11-09 21:5#$:  Date of last commit
+ $Date:: 2011-11-09 21:5#$:  Date of last commit
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ void IO::print_header() {
         cout << setfill('*') << setw(80) << "*" << endl;
     if (WRITE_TO_SCREEN)
         cout << "*\t" << VERS << "\tω-V Code " << VERSION
-            << " Copyright© Tom McCombes 2009\t\t\t       *" << endl;
+            << " Copyright© Tom McCombes 2011\t\t\t       *" << endl;
 
     if (WRITE_TO_SCREEN)
         cout << setfill('*') << setw(80) << "*" << endl;
@@ -134,9 +134,9 @@ void IO::print_header(ostream& out_stream) {
 #ifndef use_NCURSES      
     if (WRITE_TO_FILE)
         out_stream << VERS << "  ω-V Code " << VERSION
-            << " Copyright© Tom McCombes 2009";
+            << " Copyright© Tom McCombes 2011";
 #else 
-    if (WRITE_TO_FILE) out_stream << VERS << "  Wake Code " << VERSION << " Copyright© Tom McCombes 2009";
+    if (WRITE_TO_FILE) out_stream << VERS << "  Wake Code " << VERSION << " Copyright© Tom McCombes 2011";
 #endif
     if (WRITE_TO_FILE)
         out_stream << "\t*" << endl << setfill('*') << setw(81) << "*" << endl;

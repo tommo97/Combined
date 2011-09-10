@@ -1,14 +1,14 @@
 /*
 This file is part of the Combined Wake Modelling Code Version 1.0
 
-VTM Code Copyright Tom McCombes 2009
+V3D Code Copyright Tom McCombes 2011
 This code solves the 3D unsteady incompressible
 Navier-Stokes equations in velociy vorticity form
 
 
 $Rev:: 35               $:  Revision of last commit
 $Author:: tom           $:  Author of last commit
-$Date:: 2009-11-16 00:1#$:  Date of last commit
+$Date:: 2011-11-16 00:1#$:  Date of last commit
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
