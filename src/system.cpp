@@ -183,6 +183,19 @@ void SYSTEM::PutWakesInTree() {
                     Vect3 P2 = BODY::Bodies[I]->VortonX[J][i + 1][j];
                     Vect3 P3 = BODY::Bodies[I]->VortonX[J][i + 1][j + 1];
                     Vect3 P4 = BODY::Bodies[I]->VortonX[J][i][j + 1];
+                    
+//                    //  Get "panel" normal
+//                    //   First diagonal
+//                    Vect3 D1 = P3 - P1;
+//                    //   Second diagonal
+//                    Vect3 D2 = P4 - P2;
+//                    //   TRANS[2]
+//                    Vect3 CR = D1.Cross(D2);
+//                    //   local Z (aka unit normal)
+//                    Vect3 D = sqrt(Del2) * CR / CR.Mag();
+//                    
+//                    Array <Vect3> Disps = UTIL::globalLinspace(-D, D, n);
+                    
 
                     Vect3 OM1 = BODY::Bodies[I]->VortonOM[J][i][j];
                     Vect3 OM2 = BODY::Bodies[I]->VortonOM[J][i + 1][j];
@@ -206,9 +219,13 @@ void SYSTEM::PutWakesInTree() {
                             //      The following line is multiplied by 2 to make results match. I don't know why...
                             Vect3 Om = OMnu[l] * (globalSystem->GambitScale * globalSystem->GambitScale) / (n * n);
                             Vect3 P = Xnu[l] * globalSystem->GambitScale;
-                            OctreeCapsule C(P, Om, true);
-                            C.AssociatedBody = I;
-                            globalOctree->Root->EvalCapsule(C);
+                            for (int m = 0; m < n; ++m)
+                            {
+                                OctreeCapsule C(P + GambitScale * Del2 * (0.5 - REAL(rand()) / RAND_MAX), Om/n, true);
+                                C.AssociatedBody = I;
+                                globalOctree->Root->EvalCapsule(C);
+                            }
+                            
                         }
                     }
 

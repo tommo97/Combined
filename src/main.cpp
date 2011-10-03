@@ -76,14 +76,14 @@ int main(int argc, char *argv[]) {
     cout << globalSystem->unscaledVinf << endl;
     
     cout << "------- "<< globalSystem->Del2 << " " <<  globalSystem->GambitScale << " " << TIME_STEPPER::MaxTime << " " << globalSystem->NumSubSteps << endl;
-//    BODY::BodySubStep(TIME_STEPPER::MaxTime, globalSystem->NumSubSteps);
+    BODY::BodySubStep(TIME_STEPPER::MaxTime, globalSystem->NumSubSteps);
 
 
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
 
-    globalSystem->TimeStep();
+//    globalSystem->TimeStep();
 
 
     UTIL::PostAmble();
