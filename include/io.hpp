@@ -84,6 +84,8 @@ public:
     void read_dat(char* infname, Array <Vect3> &x, Array <Vect3> &omega);
 
     void write_file(stringstream &, string outfname, string ext, bool);
+    
+    void write_2D_mat(Array < Array <REAL> > &outdata, string vname, string OutName, bool disp);
 
     void write_dat();
 

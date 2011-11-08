@@ -41,8 +41,6 @@ Array <Vect3> BODY::CGS;
 Array <Vect3> BODY::RATES;
 Array <Vect3> BODY::VELOCITY;
 Array <Vect3> BODY::ATTITUDE;
-Array <Vect3> BODY::VortonPositions;
-Array <Vect3> BODY::VortonStrengths;
 Array <REAL> BODY::TimePrev = Array <REAL> (4, 0.0);
 REAL BODY::Time = 0;
 REAL BODY::RHO = 1;
@@ -126,15 +124,16 @@ void BODY::MakeWake() {
         if (WakePanels[i].size() > 10) {
             for (int j = 0; j < WakePanels[i][0].size(); ++j) {
                 PANEL *tmp = (WakePanels[i][0][j]);
-
-                Pts.push_back(tmp->C1 + 0.5 * (tmp->C2 - tmp->C1));
-                Pts.push_back(tmp->C2 + 0.5 * (tmp->C3 - tmp->C2));
-                Pts.push_back(tmp->C3 + 0.5 * (tmp->C4 - tmp->C3));
-                Pts.push_back(tmp->C4 + 0.5 * (tmp->C1 - tmp->C4));
-                Oms.push_back(2*tmp->Gamma * (tmp->C2 - tmp->C1));
-                Oms.push_back(2*tmp->Gamma * (tmp->C3 - tmp->C2));
-                Oms.push_back(2*tmp->Gamma * (tmp->C4 - tmp->C3));
-                Oms.push_back(2*tmp->Gamma * (tmp->C1 - tmp->C4));
+                for (int k = 0; k < 11; ++k) {
+                    Pts.push_back(tmp->C1 + k*0.1 * (tmp->C2 - tmp->C1));
+                    Pts.push_back(tmp->C2 + k*0.1 * (tmp->C3 - tmp->C2));
+                    Pts.push_back(tmp->C3 + k*0.1 * (tmp->C4 - tmp->C3));
+                    Pts.push_back(tmp->C4 + k*0.1 * (tmp->C1 - tmp->C4));
+                    Oms.push_back((2./11.) * tmp->Gamma * (tmp->C2 - tmp->C1));
+                    Oms.push_back((2./11.) * tmp->Gamma * (tmp->C3 - tmp->C2));
+                    Oms.push_back((2./11.) * tmp->Gamma * (tmp->C4 - tmp->C3));
+                    Oms.push_back((2./11.) * tmp->Gamma * (tmp->C1 - tmp->C4));
+                }
                 delete tmp;
 
             }
@@ -213,7 +212,7 @@ void BODY::GetLinearRHS() {
         // 	Include freestream and FMM wake interpolation
         Vect3 V = globalSystem->unscaledVinf - Vkin; // + BODY::AllBodyFaces[i]->Vfmm; //BODY::AllBodyFaces[i]->VelInterp[SubStep];       //  Substep counting starts at 1
 
-        Vect3 VWake = -1*BODY::AllBodyFaces[i]->Vfmm;
+        Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
 
         REAL PhiWake = 0.0;
 
@@ -304,7 +303,7 @@ void BODY::GetNonLinearRHS() {
             //            PhiWake += BODY::AllProtoWakes[j]->Gamma * fid;
         }
 
-        Vect3 VWake = -1*BODY::AllBodyFaces[i]->Vfmm;
+        Vect3 VWake = BODY::AllBodyFaces[i]->Vfmm;
         BODY::AllBodyFaces[i]->VCentroid = globalSystem->unscaledVinf + VWake - BODY::AllBodyFaces[i]->Vkin + BODY::AllBodyFaces[i]->VWake + U;
 
         Vect3 V = BODY::AllBodyFaces[i]->VCentroid;
@@ -850,7 +849,6 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
 
 
-        cout << "%\t" << BODY::SubStep << endl;
         for (int i = 0; i < NumBodies; ++i)
             BODY::Bodies[i]->MakeWake();
 

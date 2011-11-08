@@ -501,6 +501,9 @@ void UTIL::WriteMATLABString(string vname, string fname, string data) {
 
 
 void UTIL::write1D(string varname, string fname, string &input, int m) {
+    
+    m+=1;
+    
     int dims[2];
     
     char *str = new char[strlen(input.c_str())+1];

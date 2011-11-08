@@ -31,6 +31,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define TYPES_INCL
 
 
+
+#define STRINGIZE(X) #X
+#define SVNVERS(X) (STRINGIZE(X))
+
+
+
 #define WRITE_TO_SCREEN true
 #define WRITE_TO_FILE true
 
@@ -53,7 +59,7 @@ using namespace std;
 #define NX 300
 #define NY 300
 //  Disables bounds checking in Array class... use with caution. Make sure code runs, and doesn't change...
-#define ARRAY_NO_CHECK
+//#define ARRAY_NO_CHECK
 
 
 //  Some simulation parameters

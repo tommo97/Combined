@@ -239,7 +239,7 @@ public:
     virtual void vReList() = 0;
 
     void ReList() {
-        Node::AllNodes[Node::NodeCount] = this;
+        Node::AllNodes[(int) Node::NodeCount] = this;
         Node::NodeCount++;
         vReList();
     }

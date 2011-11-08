@@ -109,7 +109,7 @@ void IO::print_header() {
     if (WRITE_TO_SCREEN)
         cout << setfill('*') << setw(80) << "*" << endl;
     if (WRITE_TO_SCREEN)
-        cout << "*\t" << VERS << "\tω-V Code v." << SVN_REV << " Copyright© Tom McCombes 2011\t\t\t       *" << endl;
+        cout << "*\t" << VERS << "\tω-V Code v." << SVNVERS(SVN_REV)  << " Copyright© Tom McCombes 2011\t\t\t       *" << endl;
 
     if (WRITE_TO_SCREEN)
         cout << setfill('*') << setw(80) << "*" << endl;
@@ -132,7 +132,7 @@ void IO::print_header(ostream& out_stream) {
         out_stream << setfill('*') << setw(81) << "*" << endl << "*          ";
 #ifndef use_NCURSES      
     if (WRITE_TO_FILE)
-        out_stream << "\t" << VERS << "  ω-V Code v." << SVN_REV << " Copyright© Tom McCombes 2011";
+        out_stream << "\t" << VERS << "  ω-V Code v." << SVNVERS(SVN_REV)   << " Copyright© Tom McCombes 2011";
 #else 
     if (WRITE_TO_FILE) out_stream << VERS << "  Wake Code v." << SVN_REV << " Copyright© Tom McCombes 2011";
 #endif
@@ -629,6 +629,36 @@ void IO::write_file(stringstream &outstream, string OutName, string ext,
         throw NO_FILE;
     }
 
+    NumFiles[ID]++;
+    filestr.close();
+}
+/**************************************************************/
+void IO::write_2D_mat(Array < Array <REAL> > &outdata, string vname, string OutName, bool disp) {
+
+    int ID = -1;
+    for (int i = 0; i < NumFiles.size(); ++i)
+        if (FileNames[i] == OutName)
+            ID = i;
+
+    if (ID == -1) {
+        FileNames.push_back(OutName);
+        NumFiles.push_back(0);
+        ID = NumFiles.size() - 1;
+    }
+
+    string fname = directory + FileNames[ID];
+    stringstream num;
+    num << NumFiles[ID];
+
+    int pad = 6 - num.str().length();
+    fname += "_" + globalSystem->CaseName + string(pad, '0') + num.str() + ".mat";
+    num_file++;
+    if (WRITE_TO_SCREEN && disp)
+        cout << fname << endl;
+    fstream filestr;
+
+    UTIL::WriteMATLABMatrix2D(vname,fname,outdata);
+    
     NumFiles[ID]++;
     filestr.close();
 }

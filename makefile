@@ -19,8 +19,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
+
 CC = g++
-OMP_FLAG = -fopenmp 
+OMP_FLAG = -fopenmp
 OBJDIR = obj
 
 vpath %.cpp src
@@ -30,9 +31,10 @@ vpath %.o obj
 
 ifneq ($(CC),sunCC)
 #	Set up some c++ compiler flags for gcc
-	OPT_FLAGS = -g -O3 -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
-        DEBUG_FLAGS = -O0 -g -Wall -Wextra -Wunused -Wuninitialized -Winit-self -Wshadow -pedantic -W  -Wshadow -fno-common -g -ansi -pedantic -Wconversion -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums
+	OPT_FLAGS = -g -O3 -march=native -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
+        DEBUG_FLAGS = -O0 -g -Wall -Wextra -Wunused -Wuninitialized -Winit-self -Wshadow -W  -Wshadow -fno-common -g -ansi -pedantic -Wconversion -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums
 	OMP_DEBUG_FLAG = $(OMP_FLAG)
+	
 else
 #	Set up some c++ compiler flags for Sun
 	OPT_FLAGS= -DFILE=__FILE -g0 -fast -fns -xipo -xtarget=generic -xarch=sse2 -xvector=simd -xalias_level=simple -xrestrict
@@ -43,7 +45,8 @@ else
 	endif
 endif
 
-SVNDEF := -D'SVN_REV="$(shell svnversion -n .)"'
+SVNDEF := -D'SVN_REV=$(shell svnversion -n .)'
+
 
 #	Common flags
 CC_PNG_FLAGS = -DNO_FREETYPE
@@ -59,7 +62,11 @@ CC_COMMON_FLAGS = -c $(SVNDEF) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_FLAG) $(OPT_FLA
 platform = Linux
 
 ifneq ($(CC),sunCC)
-	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lptf77blas -lptcblas -latlas -lgsl
+    ifeq ($(OMP_FLAG),-fopenmp)
+	    LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lptf77blas -lptcblas -latlas -lgsl
+	else
+	    LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lf77blas -lcblas -latlas -lgsl
+	endif
 else
 	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS)  $(OPT_FLAGS) -llapack -lgsl -lgslcblas
 endif

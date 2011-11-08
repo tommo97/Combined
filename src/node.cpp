@@ -180,7 +180,7 @@ void Node::Recurrance(JaggedArray <REAL> &coeffts, int k1, int k2, int k3, Vect3
 void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 #define VERSION_2
 #ifdef VERSION_2
-    REAL R2 = diff.Dot(diff) + globalSystem->GambitScale * globalSystem->GambitScale * globalSystem->Del2;
+    REAL R2 = diff.Dot(diff) +  globalSystem->Del2;
 
     // base case
 #ifdef MODE_3D

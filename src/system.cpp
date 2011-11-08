@@ -101,6 +101,7 @@ void SYSTEM::Initialise() {
 /**************************************************************/
 void SYSTEM::TimeStep() {
 
+    cout << "----------------------- " << TIME_STEPPER::SimTime  << " " << TIME_STEPPER::MaxTime << endl;
     while (TIME_STEPPER::SimTime < (TIME_STEPPER::MaxTime - 1e-3))
         globalTimeStepper->time_loop();
 
@@ -168,84 +169,61 @@ void SYSTEM::PrintBodiesAndWakes() {
 /**************************************************************/
 void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 }
-
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
 
     int n = (int) GambitScale;
-    for (int I = 0; I < BODY::Bodies.size(); ++I)
-        for (int J = 0; J < BODY::Bodies[I]->VortonX.size(); ++J) {
+    REAL h = Del2*GambitScale, d = 1.0, u = 0;
+    REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;;
+  
+
+    for (int j = 0; j < BODY::VortexPositions.size(); ++j) {
+        Vect3 X = BODY::VortexPositions[j] * GambitScale;
+        Vect3 OM = -1.0 * BODY::VortexOmegas[j] * GambitScale * GambitScale;
+
+        for (REAL a = -h; a <= h; a+=1.0)
+            for (REAL b = -h; b <= h; b+=1.0)
+                for (REAL c = -h; c <= h; c+=1.0) {
+
+                    M4x = 0.0, M4y = 0.0, M4z = 0.0;
+
+                    u = abs(a / (h * d));
+                    if (u <= 2)
+                        M4x = .5 * (1 - u * (2 - u)*(2 - u));
+                    if (u <= 1)
+                        M4x = 1 - 2.5 * u * u + 1.5 * u * u * u;
+
+                    u = abs(b / (h * d));
+                    if (u <= 2)
+                        M4y = .5 * (1 - u * (2 - u)*(2 - u));
+                    if (u <= 1)
+                        M4y = 1 - 2.5 * u * u + 1.5 * u * u * u;
+
+                    u = abs(c / (h * d));
+                    if (u <= 2)
+                        M4z = .5 * (1 - u * (2 - u)*(2 - u));
+                    if (u <= 1)
+                        M4z = 1 - 2.5 * u * u + 1.5 * u * u * u;
 
 
-            for (int i = 0; i < BODY::Bodies[I]->VortonX[J].size() - 1; ++i) {
-                for (int j = 0; j < BODY::Bodies[I]->VortonX[J][i].size() - 1; ++j) {
-                    Vect3 P1 = BODY::Bodies[I]->VortonX[J][i][j];
-                    Vect3 P2 = BODY::Bodies[I]->VortonX[J][i + 1][j];
-                    Vect3 P3 = BODY::Bodies[I]->VortonX[J][i + 1][j + 1];
-                    Vect3 P4 = BODY::Bodies[I]->VortonX[J][i][j + 1];
-                    
-//                    //  Get "panel" normal
-//                    //   First diagonal
-//                    Vect3 D1 = P3 - P1;
-//                    //   Second diagonal
-//                    Vect3 D2 = P4 - P2;
-//                    //   TRANS[2]
-//                    Vect3 CR = D1.Cross(D2);
-//                    //   local Z (aka unit normal)
-//                    Vect3 D = sqrt(Del2) * CR / CR.Mag();
-//                    
-//                    Array <Vect3> Disps = UTIL::globalLinspace(-D, D, n);
-                    
-/*
-                    Vect3 OM1 = BODY::Bodies[I]->VortonOM[J][i][j];
-                    Vect3 OM2 = BODY::Bodies[I]->VortonOM[J][i + 1][j];
-                    Vect3 OM3 = BODY::Bodies[I]->VortonOM[J][i + 1][j + 1];
-                    Vect3 OM4 = BODY::Bodies[I]->VortonOM[J][i][j + 1];
-*/
-                    //      Position of vortices interpolated between edges 1 and 3
+                    M4x = M4x / h;
+                    M4y = M4y / h;
+                    M4z = M4z / h;
+                    M4 = M4x*M4y*M4z;
 
-//                    Array <Vect3> Peps1 = UTIL::globalLinspace(P1, P2, n);
-//                    Array <Vect3> Peps2 = UTIL::globalLinspace(P4, P3, n);
-//
-//                    Array <Vect3> OMeps1 = UTIL::globalLinspace(OM1, OM2, n);
-//                    Array <Vect3> OMeps2 = UTIL::globalLinspace(OM4, OM3, n);
-//
-//                    //      Subdivision along eps
-//
-//                    for (int k = 0; k < n; ++k) {
-//                        Array <Vect3> Xnu = UTIL::globalLinspace(Peps1[k], Peps2[k], n);
-//                        Array <Vect3> OMnu = UTIL::globalLinspace(OMeps1[k], OMeps2[k], n);
-//                        for (int l = 0; l < n; ++l) {
-//                            //      The following line is multiplied by 2 to make results match. I don't know why...
-//                            Vect3 Om = OMnu[l] * (globalSystem->GambitScale * globalSystem->GambitScale) / (n * n);
-//                            Vect3 P = Xnu[l] * globalSystem->GambitScale;
-//                            for (int m = 0; m < n; ++m)
-//                            {
-//                                OctreeCapsule C(P + GambitScale * Del2 * (0.5 - REAL(rand()) / RAND_MAX), Om/n, true);
-//                                C.AssociatedBody = I;
-//                                globalOctree->Root->EvalCapsule(C);
-//                            }
-//                            
-//                        }
-//                    }
+                    Vect3 G = M4*OM;
 
+                    OctreeCapsule C(X + Vect3(a, b, c), G, true);
+                    C.AssociatedBody = BODY::VortexOwnerID[j] - 1;
+                    globalOctree->Root->EvalCapsule(C);
                 }
+    }
 
-            }
-/*
-            BODY::Bodies[I]->VortonX[J].clear();
-            BODY::Bodies[I]->VortonOM[J].clear();
-            BODY::Bodies[I]->VortonVel[J].clear();
-*/
-        }
+    BODY::VortexPositions.clear();
+    BODY::VortexOmegas.clear();
+    BODY::VortexOwnerID.clear();
 
 
-
-
-    BODY::VortonPositions.clear();
-    BODY::VortonStrengths.clear();
-
-    
 }
 /**************************************************************/
 void SYSTEM::GetFaceVels() {
@@ -354,17 +332,33 @@ void SYSTEM::WriteDomain() {
 
 /**************************************************************/
 void SYSTEM::WriteVorticity() {
-    stringstream outstream;
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        if (globalOctree->AllCells[i]->Omega.Mag() > VORTICITY_CUTOFF) {
-            outstream << globalOctree->AllCells[i]->Position + .5 << " " << globalOctree->AllCells[i]->Omega;
-            for (int q = 0; q < NumTransVars; ++q)
-                outstream << " " << globalOctree->AllCells[i]->TransVars[q];
-            outstream << endl;
+
+
+   
+    Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 6 + (NumTransVars * 3));
+    int count = 0;
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i){
+            DataOut[count][0] = globalOctree->AllCells[i]->Position.x + 0.5;
+            DataOut[count][1] = globalOctree->AllCells[i]->Position.y + 0.5;
+            DataOut[count][2] = globalOctree->AllCells[i]->Position.z + 0.5;
+            DataOut[count][3] = globalOctree->AllCells[i]->Omega.x;
+            DataOut[count][4] = globalOctree->AllCells[i]->Omega.y;
+            DataOut[count][5] = globalOctree->AllCells[i]->Omega.z;
+            int cnt = 6;
+            for (int q = 0; q < NumTransVars; ++q) {
+                DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].x;
+                cnt++;
+                DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].y;
+                cnt++;
+                DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].z;
+                cnt++;
+            }
+            count++;
         }
 
+    globalIO->write_2D_mat(DataOut, string("Domain"), string("Domain"), true);
 
-    globalIO->write_file(outstream, string("f"), string("dat"), true);
+
 }
 
 /**************************************************************/

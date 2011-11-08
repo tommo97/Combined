@@ -54,8 +54,6 @@ public:
     static Array <REAL> dDeltaCp_dDeltaPhi;
     static Array <REAL> LiftHist;
     static Array <PANEL*> AllProtoWakes;
-    static Array <Vect3> VortonPositions;
-    static Array <Vect3> VortonStrengths;
     static REAL Radius, TSR, RHO;
     string Name;
     int ID;

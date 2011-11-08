@@ -34,9 +34,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 using namespace std;
-
+/**************************************************************/
 void TestFMM(int);
-
+/**************************************************************/
 int main(int argc, char *argv[]) {
     system("clear");
 
@@ -44,11 +44,11 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 10;
+    globalSystem->GambitScale = 20;
     globalSystem->MaxP = 3;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
-    globalSystem->dtInit = 1e-3;
+    globalSystem->dtInit = 0.1;
 
 
     UTIL::cpu_t = ticks();
@@ -57,21 +57,16 @@ int main(int argc, char *argv[]) {
 
     UTIL::PreAmble();
 
-    cout << "------- "<< globalSystem->Del2 << " " <<  TIME_STEPPER::MaxTime << " " << globalSystem->NumSubSteps << endl;
-    
     globalSystem->Initialise();
     
-    cout << globalSystem->unscaledVinf << endl;
-    
-    cout << "------- "<< globalSystem->Del2 << " " <<  globalSystem->GambitScale << " " << TIME_STEPPER::MaxTime << " " << globalSystem->NumSubSteps << endl;
-    BODY::BodySubStep(TIME_STEPPER::MaxTime, globalSystem->NumSubSteps);
+//    BODY::BodySubStep(TIME_STEPPER::MaxTime, globalSystem->NumSubSteps);
 
 
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
 
-//    globalSystem->TimeStep();
+    globalSystem->TimeStep();
 
 
     UTIL::PostAmble();
@@ -86,7 +81,7 @@ int main(int argc, char *argv[]) {
 void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
 
     REAL mult, nrm;
-    nrm = sqrt(globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.Dot(diff));
+    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
     mult = -1 / (four_pi * nrm * nrm * nrm);
     vel += mult * diff.Cross(omega);
 }
@@ -95,14 +90,12 @@ void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
 Vect3 globalDirectVel(Vect3 diff, Vect3 omega) {
 
     REAL mult, nrm;
-    nrm = sqrt(globalSystem->GambitScale*globalSystem->GambitScale*globalSystem->Del2 + diff.Dot(diff));
+    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
     mult = -1 / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
 /**************************************************************/
 void UTIL::PostAmble() {
-     cout << "close all; clear all; clc; hold on" << endl;
-    cout << "load Output.mat" << endl;
     //    WriteMATLABMatrix2D("A", "Output.mat", BODY::A);
     WriteMATLABMatrix1DVect3("PointsAsRead", "Output.mat", BODY::PointsAsRead);
     WriteMATLABMatrix1D("AlphaHistory", "Output.mat", BODY::AlphaHistory);
@@ -579,8 +572,8 @@ void UTIL::PreAmble() {
 Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega, REAL del2) {
 
     REAL mult, nrm;
-    nrm = sqrt(diff.Dot(diff));
-    mult = -1 / (del2 + four_pi * nrm * nrm * nrm);
+    nrm = sqrt(del2 + diff.Dot(diff));
+    mult = -1 / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
 

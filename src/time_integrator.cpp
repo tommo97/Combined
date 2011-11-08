@@ -156,9 +156,8 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
 void TIME_STEPPER::time_loop() {
 
     if (first_step) {
-
-
-        dt = globalSystem->dtInit;cout << "### " << dt << " " << globalSystem->NumSubSteps << endl; 
+        dt = globalSystem->dtInit;
+        cout << "### " << dt << " " << globalSystem->NumSubSteps << endl;
         BODY::BodySubStep(globalSystem->dtInit, globalSystem->NumSubSteps);
         //globalSystem->GetPressures(dt);
         //globalIO->write_m();
@@ -167,10 +166,9 @@ void TIME_STEPPER::time_loop() {
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
         globalOctree->GetVels();
-//        globalSystem->GetPanelFMMVelocities(0.0); //  t = t1
+        //        globalSystem->GetPanelFMMVelocities(0.0); //  t = t1
         first_step = false;
-    }
-    else {
+    } else {
         //      Calculate FMM
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
@@ -196,7 +194,7 @@ void TIME_STEPPER::time_loop() {
 
     //
     if (globalTimeStepper->dump_next) {
-        //        globalSystem->WriteDomain();
+//                globalSystem->WriteDomain();
         globalSystem->WriteVorticity();
         //        globalOctree->Reset();
     }
