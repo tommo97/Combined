@@ -152,7 +152,8 @@ public:
     static void WriteMATLABMatrix1DVect3(string vname, string fname,
             Vect3 &data);
 
-
+    static void write1D(string varname, string fname, string &input, int m);
+    static void WriteMATLABString(string vname, string fname, string data);
 
     inline static double rad2deg(double theta) {
         return theta / 0.017453292519943;

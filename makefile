@@ -18,69 +18,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#   -Werror
-#      Consider warnings to be errors, so that compilation stops. This
-#      prevents warnings from scrolling off the top of the screen and being
-#      lost. You won't be able to compile the program until it is completely
-#      warning-free.  You may be tempted to remove this.  DON'T! 
-# 
-#   -Wall
-#      This turns on a set of warnings for common programming problems. You
-#      need -Wall, but it is not enough on its own (for g++). 
-# 
-#   -W
-#      This turns on some extra warnings in g++ not included in -Wall, such 
-#      as missing return values and comparisons between signed and unsigned
-#      integers. 
-# 
-#   -Wshadow
-#      This warns whenever a local variable shadows another local variable.
-#      If two variables have the same name then it is a potential source of
-#      confusion. 
-# 
-#   -fno-common
-#      This option prevents global variables being simultaneously defined in
-#      different object files (you get an error at link time). Such a
-#      variable should be defined in one file and referred to in other files
-#      with an extern declaration. 
-# 
-#   -O3
-#      Turn on optimization. The warnings for uninitialized variables in
-#      -Wall rely on the optimizer to analyze the code. If there is no
-#      optimization then the warnings aren't generated. 
-# 
-#   -g
-#      It always makes sense to put debugging symbols in the executable so
-#      that you can debug it using gdb. The only effect of debugging symbols
-#      is to increase the size of the file, and you can use the "strip"
-#      command to remove them later if necessary.
-# 
-# -ansi -pedantic
-#      Use ISO C++, and reject any non-ANSI extensions. These flags help in
-#      writing portable programs that will compile on other systems.
-# 
-#   -Wconversion
-#      The main use of this option is to warn about conversions from signed
-#      to unsigned integers. For example, unsigned int x = -1. If you need
-#      to perform such a conversion you can use an explicit cast. 
-# 
-#   -Wpointer-arith -Wcast-qual -Wcast-align
-#      These options warn if you try to do pointer arithmetic for types
-#      which don't have a size, such as void, if you remove a const cast
-#      from a pointer, or if you cast a pointer to a type which has a
-#      different size, causing an invalid alignment. 
-# 
-#   -Wwrite-strings
-#      This option gives string constants a const qualifier so that it will
-#      be a compile-time error to attempt to overwrite them. 
-# 
-#   -fshort-enums
-#      This option makes the type of enum as short as possible. Normally
-#      this makes an enum different from an int. Consequently any attempts
-#      to assign a pointer-to-int to a pointer-to-enum will generate a
-#      cast-alignment warning. 
-
-
 
 CC = g++
 OMP_FLAG = -fopenmp 
@@ -93,7 +30,7 @@ vpath %.o obj
 
 ifneq ($(CC),sunCC)
 #	Set up some c++ compiler flags for gcc
-	OPT_FLAGS = -g -O3 -march=native -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
+	OPT_FLAGS = -g -O3 -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
         DEBUG_FLAGS = -O0 -g -Wall -Wextra -Wunused -Wuninitialized -Winit-self -Wshadow -pedantic -W  -Wshadow -fno-common -g -ansi -pedantic -Wconversion -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums
 	OMP_DEBUG_FLAG = $(OMP_FLAG)
 else
@@ -106,7 +43,7 @@ else
 	endif
 endif
 
-
+SVNDEF := -D'SVN_REV="$(shell svnversion -n .)"'
 
 #	Common flags
 CC_PNG_FLAGS = -DNO_FREETYPE
@@ -115,14 +52,14 @@ CC_FLAGS = -m64 -g -I/usr/local/include -I include
 LD_COMMON_FLAGS = -m64 $(OMP_FLAG) -lmatio -lncurses -lm -lz
 LD_DEBUG_COMMON_FLAGS = -m64 $(OMP_DEBUG_FLAG) -lncurses -lm
 
-CC_DEBUG_FLAGS =  -c $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_DEBUG_FLAG) $(DEBUG_FLAGS)
-CC_COMMON_FLAGS = -c $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_FLAG) $(OPT_FLAGS)
+CC_DEBUG_FLAGS =  -c $(SVNDEF) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_DEBUG_FLAG) $(DEBUG_FLAGS)
+CC_COMMON_FLAGS = -c $(SVNDEF) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_FLAG) $(OPT_FLAGS)
 
 
 platform = Linux
 
 ifneq ($(CC),sunCC)
-	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lf77blas -lcblas -latlas -lgsl
+	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lptf77blas -lptcblas -latlas -lgsl
 else
 	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS)  $(OPT_FLAGS) -llapack -lgsl -lgslcblas
 endif
@@ -134,7 +71,7 @@ endif
 
 ifeq ($(OSTYPE), darwin10.0)
  platform = MacOS
- LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lcblas -latlas -lgfortran -lgsl
+ LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lcblas -framework Accelerate -lgfortran
 endif
 
 

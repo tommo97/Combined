@@ -756,12 +756,12 @@ public:
 /**************************************************************/
 template <class C>
 class PanelNeighbSet {
-private:
-    C T, B, L, R;
+
+
 public:
+    C T, B, L, R;
 
     
-
     PanelNeighbSet() {
     };
 

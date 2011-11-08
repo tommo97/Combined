@@ -40,17 +40,6 @@ void TestFMM(int);
 int main(int argc, char *argv[]) {
     system("clear");
 
-    if (argc < 2) {
-        cout << "Incorrect number of input arguments. Command expected is:" << endl;
-        cout << "\t./main case_name" << endl;
-        cout << "where case_name.tar.gz is a bundle in the tarballs directory" << endl;
-        cout << "containing the directory structure:" << endl;
-        cout << "\tcase_name/" << endl << "\tcase_name/case_name.cas" << endl;
-        cout << "\tcase_name/case_name.neu" << endl << "\tcase_name/case_name.mat" << endl;
-        cout << "Aborting." << endl;
-        //        return 1;
-    }
-
     
     SYSTEM System(0);
     
@@ -62,7 +51,6 @@ int main(int argc, char *argv[]) {
     globalSystem->dtInit = 1e-3;
 
 
-    system("clear");
     UTIL::cpu_t = ticks();
 
 
@@ -115,7 +103,12 @@ Vect3 globalDirectVel(Vect3 diff, Vect3 omega) {
 void UTIL::PostAmble() {
      cout << "close all; clear all; clc; hold on" << endl;
     cout << "load Output.mat" << endl;
-//    UTIL::WriteMATLABMatrix2D("A", "Output.mat", BODY::A);
+    //    WriteMATLABMatrix2D("A", "Output.mat", BODY::A);
+    WriteMATLABMatrix1DVect3("PointsAsRead", "Output.mat", BODY::PointsAsRead);
+    WriteMATLABMatrix1D("AlphaHistory", "Output.mat", BODY::AlphaHistory);
+    WriteMATLABMatrix1D("AlphaDotHistory", "Output.mat", BODY::AlphaDotHistory);
+    WriteMATLABMatrix2D("CpHistory", "Output.mat", BODY::CpHistory);
+    WriteMATLABMatrix2D("PanelsAsRead", "Output.mat", BODY::PanelsAsRead);
     for (int i = 0; i < BODY::Surfaces.size(); ++i) {
         UTIL::WriteMATLABMatrix2D("BodySurface" + UTIL::toString(i), "Output.mat", BODY::Surfaces[i]);
         UTIL::WriteMATLABMatrix2D("BodyMainPointIDS" + UTIL::toString(i), "Output.mat", BODY::PtIDS[i]);
@@ -129,7 +122,7 @@ void UTIL::PostAmble() {
         UTIL::WriteMATLABMatrix2D("BodyTipOutboardLSPanelIDS" + UTIL::toString(i), "Output.mat", BODY::OuterTipLSPanelIDS[i]);
     }
 
-        Array < Array <REAL> > TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;
+    Array < Array <REAL> > TRANS1, TRANS2, TRANS3, TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;
         Array <REAL> Mus, Sigmas, PWGammas, CPs, TPrev, Cloc, Rloc, Areas;
         Array <Vect3> Centroids, VCentroids;
     for (int i = 0; i < BODY::Bodies.size(); ++i) {
@@ -156,33 +149,26 @@ void UTIL::PostAmble() {
 
 
 
-        for (int j = 0; j < BODY::Bodies[i]->ProtoWakes0.size(); ++j)
-            for (int k = 0; k < BODY::Bodies[i]->ProtoWakes0[j].size(); ++k) {
-                Array <REAL> t;
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C1.x);
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C2.x);
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C3.x);
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C4.x);
-                TmpPWPtsx.push_back(t);
-                t.clear();
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C1.y);
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C2.y);
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C3.y);
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C4.y);
-                TmpPWPtsy.push_back(t);
-                t.clear();
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C1.z);
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C2.z);
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C3.z);
-                t.push_back(BODY::Bodies[i]->ProtoWakes0[j][k].C4.z);
-                TmpPWPtsz.push_back(t);
-                t.clear();
-                PWGammas.push_back(BODY::Bodies[i]->ProtoWakes[j][k].Gamma);
-            }
+        
 
 
         for (int j = 0; j < BODY::Bodies[i]->Faces.size(); ++j) {
             Array <REAL> t;
+            t.push_back(BODY::Bodies[i]->Faces[j].TRANS[0][0]);
+            t.push_back(BODY::Bodies[i]->Faces[j].TRANS[0][1]);
+            t.push_back(BODY::Bodies[i]->Faces[j].TRANS[0][2]);
+            TRANS1.push_back(t);
+            t.clear();
+            t.push_back(BODY::Bodies[i]->Faces[j].TRANS[1][0]);
+            t.push_back(BODY::Bodies[i]->Faces[j].TRANS[1][1]);
+            t.push_back(BODY::Bodies[i]->Faces[j].TRANS[1][2]);
+            TRANS2.push_back(t);
+            t.clear();
+            t.push_back(BODY::Bodies[i]->Faces[j].TRANS[2][0]);
+            t.push_back(BODY::Bodies[i]->Faces[j].TRANS[2][1]);
+            t.push_back(BODY::Bodies[i]->Faces[j].TRANS[2][2]);
+            TRANS3.push_back(t);
+            t.clear();
             t.push_back(BODY::Bodies[i]->Faces[j].C1.x);
             t.push_back(BODY::Bodies[i]->Faces[j].C2.x);
             t.push_back(BODY::Bodies[i]->Faces[j].C3.x);
@@ -217,30 +203,55 @@ void UTIL::PostAmble() {
     }
 
 
+    Array <Vect3> C1, C2, C3, C4;
+    Array <REAL> GMA;
+     for (int I = 0; I < BODY::Bodies.size(); ++I)
+        for (int i = 0; i < BODY::Bodies[I]->WakePanels.size(); ++i)
+            for (int j = 0; j < BODY::Bodies[I]->WakePanels[i].size(); ++j)
+                for (int k = 0; k < BODY::Bodies[I]->WakePanels[i][j].size(); ++k)
+                {
+                    C1.push_back(BODY::Bodies[I]->WakePanels[i][j][k]->C1);
+                    C2.push_back(BODY::Bodies[I]->WakePanels[i][j][k]->C2);
+                    C3.push_back(BODY::Bodies[I]->WakePanels[i][j][k]->C3);
+                    C4.push_back(BODY::Bodies[I]->WakePanels[i][j][k]->C4);
+                    GMA.push_back(BODY::Bodies[I]->WakePanels[i][j][k]->Gamma);
+                }
 
-        UTIL::WriteMATLABMatrix2D("PhiPrev", "Output.mat", PhiPrev);
-        UTIL::WriteMATLABMatrix2D("BodyPointsX", "Output.mat", TmpPtsx);
-        UTIL::WriteMATLABMatrix2D("BodyPointsY", "Output.mat", TmpPtsy);
-        UTIL::WriteMATLABMatrix2D("BodyPointsZ", "Output.mat", TmpPtsz);
-        UTIL::WriteMATLABMatrix1D("Alpha", "Output.mat", BODY::ATTITUDE[0].y);
-        UTIL::WriteMATLABMatrix1D("IPKC", "Output.mat", (int) BODY::IPKC);
-        UTIL::WriteMATLABMatrix1D("Mu", "Output.mat", Mus);
-        UTIL::WriteMATLABMatrix1D("Cp", "Output.mat", CPs);
-        UTIL::WriteMATLABMatrix1D("Area", "Output.mat", Areas);
-        UTIL::WriteMATLABMatrix1D("Sigma", "Output.mat", Sigmas);
-        UTIL::WriteMATLABMatrix1D("Rloc", "Output.mat", Rloc);
-        UTIL::WriteMATLABMatrix1D("Cloc", "Output.mat", Cloc);
-        UTIL::WriteMATLABMatrix1D("TPrev", "Output.mat", BODY::TimePrev);
-        UTIL::WriteMATLABMatrix1D("Time", "Output.mat", BODY::Time);
-        UTIL::WriteMATLABMatrix1D("Lift", "Output.mat", BODY::LiftHist);
-        UTIL::WriteMATLABMatrix1DVect3("Force", "Output.mat", BODY::ForceHist);
-        UTIL::WriteMATLABMatrix1DVect3("Torque", "Output.mat", BODY::TorqueHist);
-        UTIL::WriteMATLABMatrix1D("NBodies", "Output.mat", BODY::Bodies.size());
-        UTIL::WriteMATLABMatrix1D("NParts", "Output.mat", BODY::Surfaces.size());
-        UTIL::WriteMATLABMatrix1DVect3("CollocPts", "Output.mat", Centroids);
-        UTIL::WriteMATLABMatrix1DVect3("VCollocPts", "Output.mat", VCentroids);
-        UTIL::WriteMATLABMatrix1DVect3("VortonX", "Output.mat", BODY::VortonPositions);
-        UTIL::WriteMATLABMatrix1DVect3("VortonO", "Output.mat", BODY::VortonStrengths);
+    
+    WriteMATLABMatrix1DVect3("WakePanC1", "Output.mat", C1);
+    WriteMATLABMatrix1DVect3("WakePanC2", "Output.mat", C2);
+    WriteMATLABMatrix1DVect3("WakePanC3", "Output.mat", C3);
+    WriteMATLABMatrix1DVect3("WakePanC4", "Output.mat", C4);
+    WriteMATLABMatrix1D("WakePanGamma", "Output.mat", GMA);
+    //WriteMATLABMatrix2D("Amatrix", "Output.mat", BODY::Bodies[0]->localA);
+    //WriteMATLABMatrix2D("Bmatrix", "Output.mat", BODY::Bodies[0]->localB);
+    WriteMATLABMatrix2D("PhiPrev", "Output.mat", PhiPrev);
+    WriteMATLABMatrix2D("TRANS1", "Output.mat", TRANS1);
+    WriteMATLABMatrix2D("TRANS2", "Output.mat", TRANS2);
+    WriteMATLABMatrix2D("TRANS3", "Output.mat", TRANS3);
+    WriteMATLABMatrix2D("BodyPointsX", "Output.mat", TmpPtsx);
+    WriteMATLABMatrix2D("BodyPointsY", "Output.mat", TmpPtsy);
+    WriteMATLABMatrix2D("BodyPointsZ", "Output.mat", TmpPtsz);
+    WriteMATLABMatrix1D("Alpha", "Output.mat", BODY::ATTITUDE[0].y);
+    WriteMATLABMatrix1D("IPKC", "Output.mat", (int) BODY::IPKC);
+    WriteMATLABMatrix1D("Mu", "Output.mat", Mus);
+    WriteMATLABMatrix1D("Cp", "Output.mat", CPs);
+    WriteMATLABMatrix1D("Area", "Output.mat", Areas);
+    WriteMATLABMatrix1D("Sigma", "Output.mat", Sigmas);
+    WriteMATLABMatrix1D("Rloc", "Output.mat", Rloc);
+    WriteMATLABMatrix1D("Cloc", "Output.mat", Cloc);
+    WriteMATLABMatrix1D("TPrev", "Output.mat", BODY::TimePrev);
+    WriteMATLABMatrix1D("Time", "Output.mat", BODY::Time);
+    WriteMATLABMatrix1D("Lift", "Output.mat", BODY::LiftHist);
+    WriteMATLABMatrix1DVect3("Force", "Output.mat", BODY::ForceHist);
+    WriteMATLABMatrix1DVect3("Torque", "Output.mat", BODY::TorqueHist);
+    WriteMATLABMatrix1D("NBodies", "Output.mat", BODY::Bodies.size());
+    WriteMATLABMatrix1D("NParts", "Output.mat", BODY::Surfaces.size());
+    WriteMATLABMatrix1DVect3("CollocPts", "Output.mat", Centroids);
+    WriteMATLABMatrix1DVect3("VCollocPts", "Output.mat", VCentroids);
+    WriteMATLABMatrix1DVect3("VortonX", "Output.mat", BODY::VortexPositions);
+    WriteMATLABMatrix1DVect3("VortonO", "Output.mat", BODY::VortexOmegas);
+    WriteMATLABMatrix1D("VortonOwnerID", "Output.mat", BODY::VortexOwnerID);
         Array <Vect3> AllBodyPointsTransformed(BODY::AllBodyPoints.size(), Vect3(0.0));
 
         //        for (int i = 0; i < BODY::AllBodyPoints.size(); ++i)
@@ -324,15 +335,6 @@ void UTIL::PreAmble() {
     REAL nRevs, maxT, uinf, vinf, winf, rho;
     bool useRevs = false;
     
-    if (!setlocale(LC_CTYPE, "")) {
-        fprintf(stderr, "Can't set the specified locale! "
-                "Check LANG, LC_CTYPE, LC_ALL.\n");
-    }
-    cout << setfill('*') << setw(80) << "*" << endl;
-    cout << "*\t" << "XXX" << "\tω-V Code " << "XXXXXX"
-            << " Copyright© Tom McCombes 2011\t\t\t*" << endl;
-    cout << setfill('*') << setw(80) << "*" << endl;
-
 
     cout << setfill('=') << setw(80) << "=" << endl;
     cout << "\t Simulation Setup: " << endl;
@@ -500,28 +502,29 @@ void UTIL::PreAmble() {
         cout << "\tInput file end." << endl;
         cout << setfill('=') << setw(80) << "=" << endl;
     }
+    UTIL::WriteMATLABString("Input", "Output.mat", outstream.str());
         
         TIME_STEPPER::MaxTime = maxT;
         globalSystem->NumSubSteps = nSteps;
         
-        cout << "\tSimulation Summary:" << endl;
-        cout << "\tRuntime / Sample Number: \t" << TIME_STEPPER::MaxTime << "/" << globalSystem->NumSubSteps << endl;
-        cout << "\tInflow Velocity: \t\t" << globalSystem->unscaledVinf << endl << endl;
         
         
+    cout << "\tSimulation Summary:" << endl;
+    cout << "\tRuntime / Sample Number: \t" << maxT << "/" << nSteps << endl;
+    cout << "\tInflow Velocity: \t\t" << globalSystem->unscaledVinf << endl << endl;
         
 
-        
-        for (int i = 0; i < BODY::Bodies.size(); ++i)
-        {
+    for (int i = 0; i < BODY::Bodies.size(); ++i) {
             cout << setfill('.') << setw(80) << "." << endl;
-            cout << "\tBody " << i+1 << " Summary:" << endl;
+        cout << "\tBody " << i + 1 << " Summary:" << endl;
             cout << "\tCG position: \t\t\t" << BODY::Bodies[i]->CG << endl;
             cout << "\tCG translational velocity: \t"  << BODY::Bodies[i]->Velocity << endl;
             cout << "\tAttitude: \t\t\t" << BODY::Bodies[i]->BodyAngles << endl;
             cout << "\tBody rates: \t\t\t" << BODY::Bodies[i]->BodyRates << endl;
             cout << "\tNeutral file: \t\t\t" <<  infname[i] << endl;
             
+        
+
         }
 //            cout << i+1 << " \t " << BODY::Bodies[i]->CG << " \t " << BODY::Bodies[i]->Velocity << " \t " << BODY::Bodies[i]->BodyAngles << " \t " << BODY::Bodies[i]->BodyRates << " \t " << BODY::Bodies[i]->Name << endl;
         
@@ -534,7 +537,35 @@ void UTIL::PreAmble() {
 
     BODY::PollFaces(); 
     
-    BODY::SetUpProtoWakes(0.1);
+    BODY::SetUpProtoWakes(maxT / nSteps);
+    Array < Array <REAL> > TRANS1, TRANS2, TRANS3, TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;
+    for (int i = 0; i < BODY::Bodies.size(); ++i)
+        for (int j = 0; j < BODY::Bodies[i]->ProtoWakes.size(); ++j)
+            for (int k = 0; k < BODY::Bodies[i]->ProtoWakes[j].size(); ++k) {
+                Array <REAL> t;
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C1.x);
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C2.x);
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C3.x);
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C4.x);
+                TmpPWPtsx.push_back(t);
+                t.clear();
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C1.y);
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C2.y);
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C3.y);
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C4.y);
+                TmpPWPtsy.push_back(t);
+                t.clear();
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C1.z);
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C2.z);
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C3.z);
+                t.push_back(BODY::Bodies[i]->ProtoWakes[j][k].C4.z);
+                TmpPWPtsz.push_back(t);
+                t.clear();
+            }
+
+    WriteMATLABMatrix2D("ProtoWakePointsXInit", "Output.mat", TmpPWPtsx);
+    WriteMATLABMatrix2D("ProtoWakePointsYInit", "Output.mat", TmpPWPtsy);
+    WriteMATLABMatrix2D("ProtoWakePointsZInit", "Output.mat", TmpPWPtsz);
 
     BODY::PollFaces();
 

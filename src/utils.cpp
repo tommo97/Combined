@@ -491,6 +491,38 @@ void UTIL::write2D(string varname, string fname, Array<Array<int> > &input, int 
     delete[] d;
 }
 
+
+void UTIL::WriteMATLABString(string vname, string fname, string data) {
+    int m = (int) strlen(data.c_str());
+    if (m == 0)
+        return;
+    write1D(vname, fname, data, m);
+}
+
+
+void UTIL::write1D(string varname, string fname, string &input, int m) {
+    int dims[2];
+    
+    char *str = new char[strlen(input.c_str())+1];
+
+    mat_t *mat;
+    matvar_t *matvar;
+    strcpy(str,input.c_str());
+
+    dims[0] = 1;
+    dims[1] = (int) strlen(str);
+    
+
+    mat = Mat_Open(fname.c_str(), MAT_ACC_RDWR);
+    if (mat) {
+        matvar = Mat_VarCreate(varname.c_str(), MAT_C_CHAR, MAT_T_INT8, 2, dims, str, 0);
+        Mat_VarWrite(mat, matvar, 0);
+        Mat_VarFree(matvar);
+        Mat_Close(mat);
+    }
+    delete[] str;
+}
+
 void UTIL::write1D(string varname, string fname, Array<double> &input, int m) {
     int dims[2] = {m, 1};
     //double d[m];

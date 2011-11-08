@@ -58,6 +58,7 @@ public:
     static Array <Vect3> VortonStrengths;
     static REAL Radius, TSR, RHO;
     string Name;
+    int ID;
     static Array <REAL> Times;
     Vect3 Rmax;
 #ifdef USEGSL
@@ -69,6 +70,10 @@ public:
     gsl_vector * gslRHS;
 #endif
     static REAL Time;
+    static int SubStep;
+    static Array <Vect3> VortexPositions, VortexOmegas, VortexVelocities;
+    static Array <int> VortexOwnerID;
+    static Array < Array < REAL > > CpHistory;
     static Array <Vect3> TorqueHist;
     static Array <Vect3> ForceHist;
     static Array < Array < Array < int > > > Surfaces;
@@ -90,6 +95,8 @@ public:
     static Array <REAL> RHS;
     static Array <REAL> Mu;
     static Array <REAL> Sigma;
+    static Array <REAL> AlphaHistory;
+    static Array <REAL> AlphaDotHistory;
     static int NumBodies;
     static int NumFaces;
     static Array <BODY*> Bodies;
@@ -104,23 +111,25 @@ public:
 
 	Array <Vect3> AngleHist;
 
+    Array < Array <Vect3> > ProtoWakeLastC1, ProtoWakeLastC2, ProtoWakeLastC3, ProtoWakeLastC4;
+    Array < Array < Array <PANEL*> > > WakePanels;
     Array < Array <REAL> > localA;
     Array < Array <REAL> > localB;
     Array <REAL> localSigma, localRHS, localMu;
+    static Array <Vect3> PointsAsRead;
+    static Array <Array < int > > PanelsAsRead;
 
     Vect3 TRANS[3];
     Array <PANEL> Faces;
-    Array <Array <PANEL> > ProtoWakes, ProtoWakes0;
-    Array < Array < Array < Vect3 > > > VortonX, VortonOM, VortonVel;
-    Array < Array < REAL > > VortonAge;
-    Array < int  > VXSizes, VOMSizes, VVelSizes;
+    Array <Array <PANEL> > ProtoWakes;
+    Array < Array < Array < Vect3> > > VortonX, VortonOM, VortonVel;
     Array <PANEL*> BoundaryFaces, FirstProtoWakes;
 
     Array < Array < Array < Vect3 > > > WakePoints;
     Array < Array < Array < REAL > > > WakeGamma;
     Array < Array < Array < PANEL > > > WkTmp;
 
-    BODY(Vect3 Or, Vect3 At, Vect3 Ve, Vect3 Ra, string Na) : CG(Or), Attitude(At), Velocity(Ve), Name(Na), BodyRates(Ra){
+    BODY(Vect3 Or, Vect3 At, Vect3 Ve, Vect3 Ra, string Na) : CG(Or), Attitude(At), Velocity(Ve), Name(Na), BodyRates(Ra) {
         EulerAngles = Attitude; //  psi theta phi
         SetEulerTrans();
         BodyAngles = Vect3(0.0); //  omx omy omz
@@ -137,7 +146,7 @@ public:
     void GetEulerRates();
     void GetBodyRates();
     void SetEulerTrans();
-    void MoveBody(REAL);
+    void MoveBody();
     void WakeToVortons();
     static bool IPKC;
     static void SetUpProtoWakes(REAL);
@@ -145,7 +154,6 @@ public:
     static void UpdateGlobalInfluenceMatrices();
     static void SplitUpLinearAlgebra();
     static void SetUpInfluenceMatrices();
-    Vect3 GetVel(Vect3);
     void MakeWake();
     static void GetLinearRHS();
     static void GetNonLinearRHS();
@@ -154,4 +162,6 @@ public:
     REAL GetWakePhi(Vect3);
 
 };
-#endif
+
+#endif	/* BODY_HPP */
+

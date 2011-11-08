@@ -196,47 +196,47 @@ void SYSTEM::PutWakesInTree() {
 //                    
 //                    Array <Vect3> Disps = UTIL::globalLinspace(-D, D, n);
                     
-
+/*
                     Vect3 OM1 = BODY::Bodies[I]->VortonOM[J][i][j];
                     Vect3 OM2 = BODY::Bodies[I]->VortonOM[J][i + 1][j];
                     Vect3 OM3 = BODY::Bodies[I]->VortonOM[J][i + 1][j + 1];
                     Vect3 OM4 = BODY::Bodies[I]->VortonOM[J][i][j + 1];
-
+*/
                     //      Position of vortices interpolated between edges 1 and 3
 
-                    Array <Vect3> Peps1 = UTIL::globalLinspace(P1, P2, n);
-                    Array <Vect3> Peps2 = UTIL::globalLinspace(P4, P3, n);
-
-                    Array <Vect3> OMeps1 = UTIL::globalLinspace(OM1, OM2, n);
-                    Array <Vect3> OMeps2 = UTIL::globalLinspace(OM4, OM3, n);
-
-                    //      Subdivision along eps
-
-                    for (int k = 0; k < n; ++k) {
-                        Array <Vect3> Xnu = UTIL::globalLinspace(Peps1[k], Peps2[k], n);
-                        Array <Vect3> OMnu = UTIL::globalLinspace(OMeps1[k], OMeps2[k], n);
-                        for (int l = 0; l < n; ++l) {
-                            //      The following line is multiplied by 2 to make results match. I don't know why...
-                            Vect3 Om = OMnu[l] * (globalSystem->GambitScale * globalSystem->GambitScale) / (n * n);
-                            Vect3 P = Xnu[l] * globalSystem->GambitScale;
-                            for (int m = 0; m < n; ++m)
-                            {
-                                OctreeCapsule C(P + GambitScale * Del2 * (0.5 - REAL(rand()) / RAND_MAX), Om/n, true);
-                                C.AssociatedBody = I;
-                                globalOctree->Root->EvalCapsule(C);
-                            }
-                            
-                        }
-                    }
+//                    Array <Vect3> Peps1 = UTIL::globalLinspace(P1, P2, n);
+//                    Array <Vect3> Peps2 = UTIL::globalLinspace(P4, P3, n);
+//
+//                    Array <Vect3> OMeps1 = UTIL::globalLinspace(OM1, OM2, n);
+//                    Array <Vect3> OMeps2 = UTIL::globalLinspace(OM4, OM3, n);
+//
+//                    //      Subdivision along eps
+//
+//                    for (int k = 0; k < n; ++k) {
+//                        Array <Vect3> Xnu = UTIL::globalLinspace(Peps1[k], Peps2[k], n);
+//                        Array <Vect3> OMnu = UTIL::globalLinspace(OMeps1[k], OMeps2[k], n);
+//                        for (int l = 0; l < n; ++l) {
+//                            //      The following line is multiplied by 2 to make results match. I don't know why...
+//                            Vect3 Om = OMnu[l] * (globalSystem->GambitScale * globalSystem->GambitScale) / (n * n);
+//                            Vect3 P = Xnu[l] * globalSystem->GambitScale;
+//                            for (int m = 0; m < n; ++m)
+//                            {
+//                                OctreeCapsule C(P + GambitScale * Del2 * (0.5 - REAL(rand()) / RAND_MAX), Om/n, true);
+//                                C.AssociatedBody = I;
+//                                globalOctree->Root->EvalCapsule(C);
+//                            }
+//                            
+//                        }
+//                    }
 
                 }
 
             }
-
+/*
             BODY::Bodies[I]->VortonX[J].clear();
             BODY::Bodies[I]->VortonOM[J].clear();
             BODY::Bodies[I]->VortonVel[J].clear();
-
+*/
         }
 
 
@@ -292,15 +292,16 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
         BODY::AllBodyFaces[i]->Vfmm0 = globalOctree->TreeVel(globalSystem->GambitScale * BODY::AllBodyFaces[i]->Centroid);
     }
 
+    BODY::Time += dt;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
-        BODY::Bodies[i]->MoveBody(dt);
+        BODY::Bodies[i]->MoveBody();
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->Vfmm1 = globalOctree->TreeVel(globalSystem->GambitScale * BODY::AllBodyFaces[i]->Centroid);
     }
-
+    BODY::Time -= dt;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
-        BODY::Bodies[i]->MoveBody(-dt);
+        BODY::Bodies[i]->MoveBody();
     
     
 //    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) 

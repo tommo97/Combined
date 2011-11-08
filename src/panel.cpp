@@ -472,10 +472,6 @@ void PANEL::GetEdgeInfo() {
 /**************************************************************/
 void PANEL::SourceDoubletPotential(PANEL *source, PANEL *target, REAL &PhiDoublet, REAL &PhiSource, int i, int j) {
 
-    Vect3 XPg = target->Centroid - source->Centroid;
-    Vect3 XP = VectMultMatrix(source->TRANS, XPg);
-    REAL MagP = XPg.Mag();
-    if (MagP < 5e32 * source->MaxDiagonal) {
     //  Get source panel LCS
 
     Vect3 X1g = source->C1 - source->CollocationPoint;
@@ -495,6 +491,8 @@ void PANEL::SourceDoubletPotential(PANEL *source, PANEL *target, REAL &PhiDouble
             dx4 = D4.x, dy4 = D4.y;
 
 
+    Vect3 XPg = target->Centroid - source->Centroid;
+    Vect3 XP = VectMultMatrix(source->TRANS, XPg);
     
     
 
@@ -588,32 +586,19 @@ void PANEL::SourceDoubletPotential(PANEL *source, PANEL *target, REAL &PhiDouble
         PhiDoublet = 0.5;
 
 
-    PhiSource = -((St1 + St2 + St3 + St4) / four_pi - XP.z * PhiDoublet);
-    } else {
-        PhiSource = -1.0 * source->Area * fabs(XP.z) / (MagP * MagP * MagP * four_pi);
-        PhiDoublet = -1.0 * source->Area / (MagP * four_pi);
-    }
-    //    PhiSource *= 2;
-    //    PhiDoublet *= 2;
+    PhiSource = -2*((St1 + St2 + St3 + St4) / four_pi - XP.z * PhiDoublet);
+    PhiDoublet *= 2;
 
 }
 /**************************************************************/
-void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int i, int j) {
+void PANEL::DoubletPotential(PANEL *source, PANEL *target, REAL &PhiDoublet, int i, int j) {
 
-    Vect3 XPg = target - source->Centroid;
-
-    if (XPg.Mag() < 1e32 * source->MaxDiagonal) {
         //  Get source panel LCS
 
-        Vect3 X1g = source->C1 - source->CollocationPoint;
-        Vect3 X1 = VectMultMatrix(source->TRANS, X1g);
-        Vect3 X2g = source->C2 - source->CollocationPoint;
-        Vect3 X2 = VectMultMatrix(source->TRANS, X2g);
-        Vect3 X3g = source->C3 - source->CollocationPoint;
-        Vect3 X3 = VectMultMatrix(source->TRANS, X3g);
-        Vect3 X4g = source->C4 - source->CollocationPoint;
-        Vect3 X4 = VectMultMatrix(source->TRANS, X4g);
-
+    Vect3 X1 = source->Xcb[0];
+    Vect3 X2 = source->Xcb[1];
+    Vect3 X3 = source->Xcb[2];
+    Vect3 X4 = source->Xcb[3];
 
         Vect3 D1 = X2 - X1, D2 = X3 - X2, D3 = X4 - X3, D4 = X1 - X4;
         REAL dx1 = D1.x, dy1 = D1.y,
@@ -622,9 +607,10 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
                 dx4 = D4.x, dy4 = D4.y;
 
 
-
+    Vect3 XPg = target->Centroid - source->Centroid;
         Vect3 XP = VectMultMatrix(source->TRANS, XPg);
 
+    if (XPg.Mag() < (1e32 * source->MaxDiagonal)) {
 
         REAL z = XP.z;
 
@@ -644,10 +630,11 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
         REAL xy3 = (XP.x - X3.x)*(XP.y - X3.y);
         REAL xy4 = (XP.x - X4.x)*(XP.y - X4.y);
 
-        REAL Dt1, Dt2, Dt3, Dt4;
+        REAL Dt1, Dt2, Dt3, Dt4, St1, St2, St3, St4;
 
         if (sd1 < 1e-12) {
             Dt1 = 0.;
+            St1 = 0.;
         } else {
             REAL s11 = dy1 * xz1 - dx1*xy1;
             REAL c11 = r1 * z*dx1;
@@ -660,6 +647,7 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
 
         if (sd2 < 1e-12) {
             Dt2 = 0.;
+            St2 = 0.;
         } else {
             REAL s21 = dy2 * xz2 - dx2*xy2;
             REAL c21 = r2 * z*dx2;
@@ -672,6 +660,7 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
 
         if (sd3 < 1e-12) {
             Dt3 = 0.;
+            St3 = 0.;
 
         } else {
             REAL s31 = dy3 * xz3 - dx3*xy3;
@@ -685,6 +674,7 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
 
         if (sd4 < 1e-12) {
             Dt4 = 0.;
+            St4 = 0.;
         } else {
             REAL s41 = dy4 * xz4 - dx4*xy4;
             REAL c41 = r4 * z*dx4;
@@ -706,23 +696,8 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
             PhiDoublet = 0.5;
 
 
-//        PhiDoublet *= 2;
-    } else {
-
-        PhiDoublet = -((XPg.x) * source->TRANS[2].x) /
-                (4. * pi * sqrt(pow(pow(XPg.x, 2) + pow(XPg.y, 2) +
-                pow(XPg.z, 2), 3))) -
-                ((XPg.y) * source->TRANS[2].y) /
-                (4. * pi * sqrt(pow(pow(XPg.x, 2) + pow(XPg.y, 2) +
-                pow(XPg.z, 2), 3))) -
-                ((XPg.z) * source->TRANS[2].z) /
-                (4. * pi * sqrt(pow(pow(XPg.x, 2) + pow(XPg.y, 2) +
-                pow(XPg.z, 2), 3)));
-
-        PhiDoublet *= .5*source->Area;
-//        source->SubPan(1, target, 1.0, .0, PhiDoublet, PhiS, VT);
+        PhiDoublet *= 2;
     }
-
 }
 /**************************************************************/
 void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, REAL &PhiSource, int i, int j) {
@@ -849,7 +824,7 @@ void PANEL::SourceDoubletPotential(Vect3 IP, REAL MuIn, REAL SigmaIn, REAL PhiIn
     Vect3 P = VectMultMatrix(TRANS, IP - Centroid);
 
     //    cout << TRANS[0] << endl << TRANS[1] << endl << TRANS[2] << endl;
-    REAL MagP = P.Mag();
+//    REAL MagP = P.Mag();
 
 
     //    if (MagP < FarField * MaxDiagonal)
@@ -1011,11 +986,11 @@ void PANEL::GetNewGlobalPosition() {
 
 
 
+
     if (isBound) {
         if (BoundBC == 0) {
             edgeX1 = C1;
             edgeX2 = C2;
-
         }
         if (BoundBC == 1) {
             edgeX1 = C2;
@@ -1079,7 +1054,7 @@ void PANEL::GetNormal() {
 
     GetEdgeInfo();
 
-    CollocationPoint = Centroid;// - 1e-6*TRANS[2];
+    CollocationPoint = Centroid - 1e-6*TRANS[2];
     Normal = TRANS[2];
 
 }

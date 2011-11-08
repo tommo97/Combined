@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "panel.hpp"
 #include "pgesv.hpp"
 
+Array <Vect3> BODY::VortexPositions, BODY::VortexOmegas, BODY::VortexVelocities;
+Array <int> BODY::VortexOwnerID;
 Array <string> BODY::NAMES;
 Array <REAL> BODY::Times;
 Array <Vect3> BODY::CGS;
@@ -44,7 +46,7 @@ Array <Vect3> BODY::VortonStrengths;
 Array <REAL> BODY::TimePrev = Array <REAL> (4, 0.0);
 REAL BODY::Time = 0;
 REAL BODY::RHO = 1;
-int BODY::BodyPanelIDCounter = 0, BODY::BodyPointIDCounter = 0;
+int BODY::BodyPanelIDCounter = 0, BODY::BodyPointIDCounter = 0, BODY::SubStep = 0;
 Array <Vect3> BODY::TorqueHist;
 Array <Vect3> BODY::ForceHist;
 Array < BODY*> BODY::Bodies;
@@ -56,6 +58,9 @@ Array < Array <REAL> > BODY::B;
 Array < Array <REAL> > BODY::C;
 Array < Array <REAL> > BODY::D;
 Array < Array <REAL> > BODY::LocalChordRadius;
+Array <REAL> BODY::AlphaHistory;
+Array <REAL> BODY::AlphaDotHistory;
+Array < Array <REAL> > BODY::CpHistory;
 Array <REAL> BODY::RHS;
 Array <REAL> BODY::Mu;
 Array <REAL> BODY::Sigma;
@@ -72,6 +77,8 @@ Array < Array <Array <int> > > BODY::TipOutboardUSIDS;
 Array < Array <Array <int> > > BODY::TipOutboardLSIDS;
 Array < Array < Array < int > > > BODY::InnerTipUSPanelIDS, BODY::OuterTipUSPanelIDS;
 Array < Array < Array < int > > > BODY::InnerTipLSPanelIDS, BODY::OuterTipLSPanelIDS;
+Array <Vect3> BODY::PointsAsRead;
+Array <Array < int > > BODY::PanelsAsRead;
 Array <Vect3> BODY::AllBodyPoints;
 bool BODY::IPKC = false;
 int BODY::NumFaces = 0;
@@ -82,105 +89,109 @@ bool BODY::LiftingLineMode;
 /**************************************************************/
 /*  Body functions      */
 /**************************************************************/
-
-/**************************************************************/
-Vect3 BODY::GetVel(Vect3 Target) {
-
-    //    //    // Why can this section not be multi-threaded????
-    Vect3 U(0.0), V(0.0), W(0.0);
-    //        for (int i = 0; i < ProtoWakes.size(); ++i)
-    //            for (int j = 0; j < ProtoWakes[i].size(); ++j)
-    //                U += ProtoWakes[i][j].WakePanelVelocity(Target);
-
-
-    //    V = GetWakeVel(Target);
-
-    //#pragma omp parallel for
-    //        for (int l = 0; l < (int) Faces.size(); ++l) {
-    //            W += Faces[l].SourceVel(Target);
-    //            W += Faces[l].BodyPanelVelocity(Target); //, globalSystem->Del2);
-    //        }
-
-    return U + V + W;
-}
-
-/**************************************************************/
 void BODY::MakeWake() {
 
-
-    for (int i = 0; i < FirstProtoWakes.size(); ++i) {
-        PANEL *tmp = FirstProtoWakes[i];
-        if (VortonVel[i].size() == 0) {
-            Array <Vect3> Pts;
-            Pts.push_back(tmp->C2);
-            while (tmp->Neighb[2]) {
-                Pts.push_back(tmp->C3);
-                tmp = tmp->Neighb[2];
+    Vect3 C1, C2, C3, C4;
+    for (int i = 0; i < ProtoWakes.size(); ++i) {
+        Array <PANEL*> tmp;
+        for (int j = 0; j < ProtoWakes[i].size(); ++j) {
+            if (WakePanels[i].size()==0) {
+                C1 = ProtoWakeLastC2[i][j];
+                C2 = ProtoWakes[i][j].C2;
+                C3 = ProtoWakes[i][j].C3;
+                C4 = ProtoWakeLastC3[i][j];
+            } else {
+                C1 = WakePanels[i].back()[j]->C2;
+                C2 = ProtoWakes[i][j].C2;
+                C3 = ProtoWakes[i][j].C3;
+                C4 = WakePanels[i].back()[j]->C3;
             }
-//            WakePoints[i].push_back(Pts);
-            VortonX[i].push_back(Pts);
-            VortonOM[i].push_back(Array < Vect3 > (Pts.size(), Vect3(0.0)));
-            VortonVel[i].push_back(Array < Vect3 > (Pts.size(), Vect3(0.0)));
+            tmp.push_back(new PANEL(C1, C2, C3, C4));
+            tmp.back()->Gamma = ProtoWakes[i][j].Gamma;
         } 
         
-        int cnt = VortonX[i].front().size();
+        for (int j = 0; j < tmp.size(); ++j)
+            for (int k = 0; k < tmp.size(); ++k)
+                tmp[j]->CheckNeighb(tmp[k]);
 
-        tmp = FirstProtoWakes[i];
-
-
-
-        VortonVel[i].push_front(Array < Vect3 > (cnt, Vect3(0.0)));
-        VortonX[i].push_front(Array < Vect3 > (cnt, Vect3(0.0)));
-        VortonOM[i].push_front(Array < Vect3 > (cnt, Vect3(0.0)));
-        VortonAge[i].push_front(BODY::Time);
-
-        REAL Gamma;
-        Array <Vect3> Pts;
-        Array <REAL> Gms;
-
-        VortonX[i][0][0] = tmp->C1;
+        WakePanels[i].push_back(tmp);
 
 
-
-        for (int j = 0; j < VortonX[i].front().size() - 1; ++j) {
-            VortonX[i][0][j + 1] = tmp->C4;
-
-
-            Gamma = tmp->Gamma;
-
-            VortonOM[i][0][j] += 0.5 * Gamma * (tmp->C2 - tmp->C1);
-            VortonOM[i][0][j] += 0.5 * Gamma * (tmp->C1 - tmp->C4);
-
-            VortonOM[i][1][j] += 0.5 * Gamma * (tmp->C3 - tmp->C2);
-            VortonOM[i][1][j] += 0.5 * Gamma * (tmp->C2 - tmp->C1);
-
-            VortonOM[i][1][j + 1] += 0.5 * Gamma * (tmp->C4 - tmp->C3);
-            VortonOM[i][1][j + 1] += 0.5 * Gamma * (tmp->C3 - tmp->C2);
-
-            VortonOM[i][0][j + 1] += 0.5 * Gamma * (tmp->C1 - tmp->C4);
-            VortonOM[i][0][j + 1] += 0.5 * Gamma * (tmp->C4 - tmp->C3);
-
-            tmp = tmp->Neighb[2];
-        }
-
-      
-        tmp = FirstProtoWakes[i];
-        Pts.push_back(tmp->C1);
-        while (tmp) {
-            Pts.push_back(tmp->C4);
-            Gms.push_back(tmp->Gamma);
-            tmp = tmp->Neighb[2];
-        }
-
-
-
-        WakePoints[i].push_front(Pts);
-        WakeGamma[i].push_front(Gms);
-        Gms.clear();
-        Pts.clear();
     }
 
 
+        Array <Vect3> Pts;
+    Array <Vect3> Oms;
+    for (int i = 0; i < WakePanels.size(); ++i)
+        if (WakePanels[i].size() > 10) {
+            for (int j = 0; j < WakePanels[i][0].size(); ++j) {
+                PANEL *tmp = (WakePanels[i][0][j]);
+
+                Pts.push_back(tmp->C1 + 0.5 * (tmp->C2 - tmp->C1));
+                Pts.push_back(tmp->C2 + 0.5 * (tmp->C3 - tmp->C2));
+                Pts.push_back(tmp->C3 + 0.5 * (tmp->C4 - tmp->C3));
+                Pts.push_back(tmp->C4 + 0.5 * (tmp->C1 - tmp->C4));
+                Oms.push_back(2*tmp->Gamma * (tmp->C2 - tmp->C1));
+                Oms.push_back(2*tmp->Gamma * (tmp->C3 - tmp->C2));
+                Oms.push_back(2*tmp->Gamma * (tmp->C4 - tmp->C3));
+                Oms.push_back(2*tmp->Gamma * (tmp->C1 - tmp->C4));
+                delete tmp;
+
+            }
+            WakePanels[i].pop_front();
+        }
+
+
+
+
+      //      Find unique vortices - this is a total bodge, but I cannot be bothered writing proper code
+
+    Array <Vect3> Posns, Vorts;
+    bool test;
+
+    for (int i = 0; i < Pts.size(); ++i) {
+        test = false;
+        for (int j = 0; j < Posns.size(); ++j) {
+            if (Posns[j] == Pts[i]) {
+                Vorts[j] += Oms[i];
+                test = true;
+                break;
+            }
+        }
+        if (test == false) {
+            Posns.push_back(Pts[i]);
+            Vorts.push_back(Oms[i]);
+        }
+    }
+
+    Pts = Posns;
+    Oms = Vorts;
+
+
+
+      
+    Array <Vect3> TmpX = BODY::VortexPositions;
+    Array <Vect3> TmpO = BODY::VortexOmegas;
+    Array <int> TmpID = BODY::VortexOwnerID;
+    BODY::VortexPositions = Array <Vect3 > (BODY::VortexPositions.size() + Pts.size());
+    BODY::VortexOmegas = Array <Vect3 > (BODY::VortexOmegas.size() + Pts.size());
+    BODY::VortexOwnerID = Array <int> (BODY::VortexOwnerID.size() + Pts.size());
+    for (int j = 0; j < TmpX.size(); ++j) {
+        BODY::VortexPositions[j] = TmpX[j];
+        BODY::VortexOmegas[j] = TmpO[j];
+        BODY::VortexOwnerID[j] = TmpID[j];
+        }
+
+    for (int j = 0; j < Pts.size(); ++j) {
+        BODY::VortexPositions[TmpX.size() + j] = Pts[j];
+        BODY::VortexOmegas[TmpX.size() + j] = Oms[j];
+        BODY::VortexOwnerID[TmpX.size() + j] = this->ID;
+    }
+    Oms.clear();
+        Pts.clear();
+
+
+    BODY::VortexVelocities = Array <Vect3 > (BODY::VortexOwnerID.size(), Vect3(0.0));
 
 }
 
@@ -190,7 +201,9 @@ void BODY::GetLinearRHS() {
 
 
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
         // 	Get point kinematic velocity - rotational part first
@@ -204,9 +217,11 @@ void BODY::GetLinearRHS() {
 
         REAL PhiWake = 0.0;
 
+#ifdef _OPENMP
 #pragma omp parallel for
-        for (int j = 0; j < BODY::VortonPositions.size(); ++j)
-            VWake = VWake - UTIL::globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortonPositions[j], BODY::VortonStrengths[j], globalSystem->Del2);
+#endif
+        for (int j = 0; j < BODY::VortexPositions.size(); ++j)
+            VWake = VWake - globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
 
 
 
@@ -272,7 +287,9 @@ void BODY::GetLinearRHS() {
 
 /**************************************************************/
 void BODY::GetNonLinearRHS() {
+#ifdef _OPENMP
 #pragma omp parallel for  
+#endif 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
 
@@ -325,16 +342,18 @@ void BODY::SplitUpLinearAlgebra() {
 
 
     //  Calculate velocity at all faces
-//    cout << globalSystem->Vinf << endl;
+    Array <PANEL*> srcs;
+    for (int I = 0; I < BODY::Bodies.size(); ++I)
+        for (int J = 0; J < BODY::Bodies[I]->WakePanels.size(); ++J)
+            for (int j = 0; j < BODY::Bodies[I]->WakePanels[J].size(); ++j)
+                for (int k = 0; k < BODY::Bodies[I]->WakePanels[J][j].size(); ++k) {
+                    PANEL *src = BODY::Bodies[I]->WakePanels[J][j][k];
+                    srcs.push_back(src);
+                }
 
-//    Array <Vect3> Posns(globalOctree->AllCells.size()), Omegas(globalOctree->AllCells.size());
-//    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-//        Posns[i] = (globalOctree->AllCells[i]->Position);
-//        Omegas[i] = (globalOctree->AllCells[i]->Omega);
-//    }
-
-
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
         // 	Get point kinematic velocity - rotational part first
@@ -666,70 +685,156 @@ void BODY::LinAlg() {
 void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
     REAL dt = delta_t / n_steps;
-//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-//        BODY::AllBodyFaces[i]->Vfmm0 = BODY::AllBodyFaces[i]->VWake;
-//    }
-    for (int SubStep = 1; SubStep <= n_steps; ++SubStep) {
+
+
+    BODY::CpHistory = UTIL::zeros(n_steps, BODY::AllBodyFaces.size());
+
+
+    for (BODY::SubStep = 1; BODY::SubStep <= n_steps; ++BODY::SubStep) {
+
         BODY::TimePrev[3] = BODY::TimePrev[2];
         BODY::TimePrev[2] = BODY::TimePrev[1];
         BODY::TimePrev[1] = BODY::TimePrev[0];
-        BODY::TimePrev[0] = TIME_STEPPER::SimTime;
+        BODY::TimePrev[0] = TIME_STEPPER::SimTime = BODY::Time;
         
         TIME_STEPPER::SubStepTime += dt;
         TIME_STEPPER::SimTime += dt;
+        BODY::Time = TIME_STEPPER::SimTime;
         BODY::Times.push_back(BODY::Time);
         
+        SplitUpLinearAlgebra();
 
         //      Interpolate face vels for subtimestep...
         for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-            BODY::AllBodyFaces[i]->Vfmm = BODY::AllBodyFaces[i]->Vfmm0 + (SubStep - 1)*(BODY::AllBodyFaces[i]->Vfmm1 - BODY::AllBodyFaces[i]->Vfmm0) / (n_steps - 1);
+            BODY::AllBodyFaces[i]->Vfmm = BODY::AllBodyFaces[i]->Vfmm0 + (BODY::SubStep - 1)*(BODY::AllBodyFaces[i]->Vfmm1 - BODY::AllBodyFaces[i]->Vfmm0) / (n_steps - 1);
         }
 
         //  Check the order of the next few lines
         for (int i = 0; i < BODY::Bodies.size(); ++i) {
-            BODY::Bodies[i]->MoveBody(dt);
+
+
+            REAL k = .5, c = 1.0, U = 1.0;
+            REAL om = 2.0 * U * k / c;
+
+            REAL dalpha = UTIL::deg2rad(5);
+
+            REAL alpha = dalpha;
+            REAL alpha_dot = 0.0;
+
+            if (BODY::Time < 4.733) {
+                alpha = -dalpha * sin(om * BODY::Time);
+                alpha_dot = -om * dalpha * cos(om * BODY::Time);
+            }
+
+            BODY::AlphaHistory.push_back(alpha);
+            BODY::AlphaDotHistory.push_back(alpha_dot);
+
+
+            BODY::Bodies[i]->MoveBody();
             BODY::Bodies[i]->AngleHist.push_back(BODY::Bodies[i]->EulerAngles);
         }
 
-        SplitUpLinearAlgebra();
-
-        //cout << "%\t" << SubStep << " " << globalSystem->Vinf << " " << dt << endl;
-        for (int i = 0; i < NumBodies; ++i)
-            BODY::Bodies[i]->MakeWake();
+        //  Sort Wake Convection
 
 
-        ////        //  Sort Wake Convection
-        int NumVortons = 0;
-        for (int J = 0; J < (int) NumBodies; ++J)
-            for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
-                for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j)
-                    for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k)
-                        NumVortons++;
 
-        Array <Vect3> Vels(NumVortons, Vect3(globalSystem->unscaledVinf));
-        Array <Vect3*> PosPtr(NumVortons);
-        int count = 0;
-        for (int J = 0; J < (int) NumBodies; ++J)
-            for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
-                for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j)
-                    for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k) {
-                        PosPtr[count] = (&BODY::Bodies[J]->VortonX[i][j][k]);
-                        count++;
+
+        //      Pretend that panels are just vortons for the sake of speed...
+        Array <PANEL*> WakePans;
+        for (int I = 0; I < BODY::Bodies.size(); ++I)
+            for (int i = 0; i < BODY::Bodies[I]->WakePanels.size(); ++i)
+                for (int j = 0; j < BODY::Bodies[I]->WakePanels[i].size(); ++j)
+                    for (int k = 0; k < BODY::Bodies[I]->WakePanels[i][j].size(); ++k) {
+                        WakePans.push_back((BODY::Bodies[I]->WakePanels[i][j][k]));
                     }
 
 
 
+        Array <Vect3> PanelEdgeMidpoints(4 * WakePans.size()), PanelEdgeVorticities(4 * WakePans.size());
+
+        int count = 0;
+        for (int i = 0; i < WakePans.size(); ++i) {
+            PanelEdgeMidpoints[count + 0] = WakePans[i]->C1;
+            PanelEdgeMidpoints[count + 1] = WakePans[i]->C2;
+            PanelEdgeMidpoints[count + 2] = WakePans[i]->C3;
+            PanelEdgeMidpoints[count + 3] = WakePans[i]->C4;
+
+            PanelEdgeVorticities[count + 0] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C2 - WakePans[i]->C4);
+            PanelEdgeVorticities[count + 1] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C3 - WakePans[i]->C1);
+            PanelEdgeVorticities[count + 2] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C4 - WakePans[i]->C2);
+            PanelEdgeVorticities[count + 3] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C1 - WakePans[i]->C3);
+            count += 4;
+                    }
+
+
+        //      Find unique vortices - this is a total bodge, but I cannot be bothered writing proper code
+
+        Array <Vect3> Posns, Vorts;
+        bool test;
+
+        for (int i = 0; i < PanelEdgeMidpoints.size(); ++i) {
+            test = false;
+            for (int j = 0; j < Posns.size(); ++j) {
+                if (Posns[j] == PanelEdgeMidpoints[i]) {
+                    Vorts[j] += PanelEdgeVorticities[i];
+                    test = true;
+                    break;
+                }
+            }
+            if (test == false) {
+                Posns.push_back(PanelEdgeMidpoints[i]);
+                Vorts.push_back(PanelEdgeVorticities[i]);
+            }
+        }
+
+        PanelEdgeMidpoints = Posns;
+        PanelEdgeVorticities = Vorts;
 
 
 
 
+        Array <Vect3> V1(WakePans.size()), V2(WakePans.size()), V3(WakePans.size()), V4(WakePans.size());
+        V1 = V2 = V3 = V4 = globalSystem->unscaledVinf;
 
-
+//#ifdef _OPENMP
 //#pragma omp parallel for
-//        for (int i = 0; i < PosPtr.size(); ++i)
-//            for (int j = 0; j < BODY::VortonPositions.size(); ++j)
-//                Vels[i] += UTIL::globalDirectVel(BODY::VortonPositions[j] - *(PosPtr[i]), BODY::VortonStrengths[j], globalSystem->Del2);
+//#endif
+//        for (int i = 0; i < WakePans.size(); ++i) {
+//            for (int j = 0; j < BODY::VortonPositions.size(); ++j) {
+//                V1[i] += globalDirectVel(WakePans[i]->C1 - BODY::VortonPositions[j], BODY::VortonStrengths[j]);
+//                V2[i] += globalDirectVel(WakePans[i]->C2 - BODY::VortonPositions[j], BODY::VortonStrengths[j]);
+//                V3[i] += globalDirectVel(WakePans[i]->C3 - BODY::VortonPositions[j], BODY::VortonStrengths[j]);
+//                V4[i] += globalDirectVel(WakePans[i]->C4 - BODY::VortonPositions[j], BODY::VortonStrengths[j]);
+//            }
 //
+//            for (int j = 0; j < PanelEdgeMidpoints.size(); ++j) {
+//                V1[i] += globalDirectVel(WakePans[i]->C1 - PanelEdgeMidpoints[j], PanelEdgeVorticities[j]);
+//                V2[i] += globalDirectVel(WakePans[i]->C2 - PanelEdgeMidpoints[j], PanelEdgeVorticities[j]);
+//                V3[i] += globalDirectVel(WakePans[i]->C3 - PanelEdgeMidpoints[j], PanelEdgeVorticities[j]);
+//                V4[i] += globalDirectVel(WakePans[i]->C4 - PanelEdgeMidpoints[j], PanelEdgeVorticities[j]);
+//            }
+//        }
+        
+        
+        
+
+        for (int i = 0; i < WakePans.size(); ++i) {
+            WakePans[i]->C1 += dt*V1[i];
+            WakePans[i]->C2 += dt*V2[i];
+            WakePans[i]->C3 += dt*V3[i];
+            WakePans[i]->C4 += dt*V4[i];
+            WakePans[i]->GetNormal();
+        }
+
+
+
+        Array <Vect3> Vels(BODY::VortexPositions.size(), Vect3(globalSystem->unscaledVinf));
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
+//        for (int i = 0; i < BODY::VortexPositions.size(); ++i) {
+//            for (int j = 0; j < BODY::VortexPositions.size(); ++j)
+//                Vels[i] += globalDirectVel(BODY::VortexPositions[i] - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
 //
 //
 //        for (int i = 0; i < BODY::Bodies.size(); ++i)
@@ -737,37 +842,29 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 //                Vels[i] += BODY::Bodies[i]->GetVel(*(PosPtr[j]));
 
 
-
+#ifdef _OPENMP
 #pragma omp parallel for
-        for (int i = 0; i < PosPtr.size(); ++i)
-            *(PosPtr[i]) += dt * Vels[i];
+#endif
+        for (int i = 0; i < BODY::VortexPositions.size(); ++i)
+            BODY::VortexPositions[i] += dt * Vels[i];
+
+
+
+        cout << "%\t" << BODY::SubStep << endl;
+        for (int i = 0; i < NumBodies; ++i)
+            BODY::Bodies[i]->MakeWake();
 
 
 
 
 
-
-
-
-        BODY::VortonPositions.allocate(NumVortons);
-        BODY::VortonStrengths.allocate(NumVortons);
-        count = 0;
-        for (int J = 0; J < (int) NumBodies; ++J)
-            for (int i = 0; i < BODY::Bodies[J]->VortonX.size(); ++i)
-                for (int j = 0; j < BODY::Bodies[J]->VortonX[i].size(); ++j)
-                    for (int k = 0; k < BODY::Bodies[J]->VortonX[i][j].size(); ++k) {
-                        BODY::VortonPositions[count] = (BODY::Bodies[J]->VortonX[i][j][k]);
-                        BODY::VortonStrengths[count] = (BODY::Bodies[J]->VortonOM[i][j][k]);
-                        count++;
+        
+         
+        
+       
                     }
-        //        for (int i = 0; i < BODY::VortonPositions.size(); ++i)
-        //            BODY::VortonPositions[i] += WV[i] * dt;
 
-        //        for (int i = 0; i < BODY::Bodies.size(); ++i)
-        //            BODY::Bodies[i]->WakeToVortons();
     }
-}
-
 /**************************************************************/
 void BODY::SetUpInfluenceMatrices() {
     BODY::A = UTIL::zeros(BODY::NumFaces, BODY::NumFaces);
@@ -879,7 +976,9 @@ void BODY::UpdateGlobalInfluenceMatrices() {
 
         for (int i = 0; i < n; ++i) {
             PANEL *trg = &BODY::Bodies[I]->Faces[i];
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
             for (int j = 0; j < n; ++j) {
                 REAL a = 0, b = 0, c = 0;
                 REAL PhiS = 0.0, PhiD = 0.0;
@@ -937,13 +1036,16 @@ void BODY::PollFaces() {
 /**************************************************************/
 void BODY::SetUpProtoWakes(REAL dt) {
 
+    
+    
     for (int I = 0; I < BODY::Bodies.size(); ++I) {
+        int count = 0;
         Array <PANEL> PWtmp;
         Array <Vect3> ProtoWakePoint1, ProtoWakePoint2;
+        Array <REAL> LL, LR;
 
-        BODY::Bodies[I]->MoveBody(-dt * globalSystem->DS);
-
-
+        BODY::Time = -dt*globalSystem->DS;
+        BODY::Bodies[I]->MoveBody();
         for (int i = 0; i < BODY::Bodies[I]->BoundaryFaces.size(); ++i) {
             Vect3 P1 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX1);
             Vect3 P2 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX2);
@@ -955,55 +1057,171 @@ void BODY::SetUpProtoWakes(REAL dt) {
 
         }
 
+        BODY::Time = 0.0;
+        BODY::Bodies[I]->MoveBody();
 
-        BODY::Bodies[I]->MoveBody(dt * globalSystem->DS);
+            
+            
         for (int i = 0; i < BODY::Bodies[I]->BoundaryFaces.size(); ++i) {
             Vect3 P1 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX1);
             Vect3 P2 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX2);
             if (BODY::Bodies[I]->BoundaryFaces[i]->isTop) {
+                
+
                 PWtmp.push_back(PANEL(P1, ProtoWakePoint1[i], ProtoWakePoint2[i], P2));
                 PWtmp.back().SheddingSurface = BODY::Bodies[I]->BoundaryFaces[i];
+                LL.push_back((P1 - ProtoWakePoint1[i]).Mag());
+                LR.push_back((P2 - ProtoWakePoint2[i]).Mag());
             }
         }
 
+
+//        PWtmp.clear();
+        
+        
+        
+    
+
+
+//        Array <int> NeighbLeft(4), NeighbRight(4);
+//        NeighbLeft[0] = 3;
+//        NeighbRight[0] = 1;
+//        NeighbLeft[1] = 0;
+//        NeighbRight[1] = 2;
+//        NeighbLeft[2] = 1;
+//        NeighbRight[2] = 3;
+//        NeighbLeft[3] = 2;
+//        NeighbRight[3] = 0;
+//
+//        for (int i = 0; i < BODY::Bodies[I]->BoundaryFaces.size(); ++i) {
+//            PANEL *tmpPan = BODY::Bodies[I]->BoundaryFaces[i];
+//
+//            Vect3 P1 = tmpPan->edgeX1;
+//            Vect3 P2 = tmpPan->edgeX2;
+//
+//            Vect3 N1 = tmpPan->TRANS[2];
+//            Vect3 N2 = tmpPan->OtherBoundarySurface->TRANS[2];
+//            Vect3 N = 0.5 * (N1 + N2);
+//            N = N / N.Mag();
+//
+//            Vect3 LeftNormal = N;
+//            Vect3 RightNormal = N;
+//
+//
+//            REAL LeftL = 0.0;
+//            REAL RightL = 0.0;
+//
+//            if (tmpPan->BoundBC == 0) {
+//                LeftL = (tmpPan->C4 - tmpPan->C1).Mag();
+//                RightL = (tmpPan->C3 - tmpPan->C2).Mag();
+//            }
+//
+//            if (tmpPan->BoundBC == 1) {
+//                LeftL = (tmpPan->C1 - tmpPan->C2).Mag();
+//                RightL = (tmpPan->C3 - tmpPan->C4).Mag();
+//            }
+//
+//            if (tmpPan->BoundBC == 2) {
+//                LeftL = (tmpPan->C3 - tmpPan->C2).Mag();
+//                RightL = (tmpPan->C1 - tmpPan->C4).Mag();
+//            }
+//
+//            if (tmpPan->BoundBC == 3) {
+//                LeftL = (tmpPan->C4 - tmpPan->C3).Mag();
+//                RightL = (tmpPan->C2 - tmpPan->C1).Mag();
+//            }
+//
+//
+//
+//
+//
+//
+//            for (int j = 0; j < 4; ++j) {
+//                if (tmpPan->BoundBC == j) {
+//                    if (tmpPan->Neighb[NeighbLeft[j]] && tmpPan->Neighb[NeighbLeft[j]]->isBound) {
+//                        Vect3 NNormal = tmpPan->Neighb[NeighbLeft[j]]->TRANS[2] + tmpPan->Neighb[NeighbLeft[j]]->OtherBoundarySurface->TRANS[2];
+//                        NNormal = NNormal / NNormal.Mag();
+//                        LeftNormal = 0.5 * (LeftNormal + NNormal);
+//                        LeftNormal = LeftNormal / LeftNormal.Mag();
+//                    }
+//
+//                    if (tmpPan->Neighb[NeighbRight[j]] && tmpPan->Neighb[NeighbRight[j]]->isBound) {
+//                        Vect3 NNormal = tmpPan->Neighb[NeighbRight[j]]->TRANS[2] + tmpPan->Neighb[NeighbRight[j]]->OtherBoundarySurface->TRANS[2];
+//                        NNormal = NNormal / NNormal.Mag();
+//                        RightNormal = 0.5 * (RightNormal + NNormal);
+//                        RightNormal = RightNormal / RightNormal.Mag();
+//                    }
+//                }
+//            }
+//            
+//            if (BODY::Bodies[I]->BoundaryFaces[i]->isTop) {
+//                PWtmp.push_back(PANEL(P1, P1 + LL[count]*LeftNormal, P2 + LR[count]*RightNormal, P2));
+//                PWtmp.back().SheddingSurface = BODY::Bodies[I]->BoundaryFaces[i];
+//                count++;
+//            }
+//        }
 
         for (int i = 0; i < PWtmp.size(); ++i)
             for (int j = 0; j < PWtmp.size(); ++j)
                 PWtmp[i].CheckNeighb(&PWtmp[j]);
 
 
+//        PWtmp.clear();
+//
+//        BODY::Bodies[I]->MoveBody(-dt * DS);
+//        for (int i = 0; i < BODY::Bodies[I]->BoundaryFaces.size(); ++i) {
+//            Vect3 P1 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX1);
+//            Vect3 P2 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX2);
+//            P1 = P1 + 0.0 * DS * dt * Vect3(BODY::Vinf);
+//            P2 = P2 + 0.0 * DS * dt * Vect3(BODY::Vinf);
+//
+//            ProtoWakePoint1.push_back(P1);
+//            ProtoWakePoint2.push_back(P2);
+//
+//        }
+//
+//
+//        BODY::Bodies[I]->MoveBody(dt * DS);
+//        for (int i = 0; i < BODY::Bodies[I]->BoundaryFaces.size(); ++i) {
+//            Vect3 P1 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX1);
+//            Vect3 P2 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX2);
+//            if (BODY::Bodies[I]->BoundaryFaces[i]->isTop) {
+//                PWtmp.push_back(PANEL(P1, ProtoWakePoint1[i], ProtoWakePoint2[i], P2));
+//                PWtmp.back().SheddingSurface = BODY::Bodies[I]->BoundaryFaces[i];
+//            }
+//        }
+//
+//
+//        for (int i = 0; i < PWtmp.size(); ++i)
+//            for (int j = 0; j < PWtmp.size(); ++j)
+//                PWtmp[i].CheckNeighb(&PWtmp[j]);
+
+
         int PWcnt = 0;
         for (int i = 0; i < PWtmp.size(); ++i)
-            if (!PWtmp[i].Neighb[2])
+            if (!PWtmp[i].Neighb.T)
                 PWcnt++;
 
         BODY::Bodies[I]->ProtoWakes.allocate(PWcnt);
-        BODY::Bodies[I]->ProtoWakes0.allocate(PWcnt);
+        BODY::Bodies[I]->WakePanels.allocate(PWcnt);
+
         PWcnt = 0;
         for (int i = 0; i < PWtmp.size(); ++i)
-            if (!PWtmp[i].Neighb[2]) {
+            if (!PWtmp[i].Neighb.T) {
 
                 PANEL *tmp = &PWtmp[i];
                 while (tmp) {
                     BODY::Bodies[I]->ProtoWakes[PWcnt].push_back(PANEL(*tmp));
-                    tmp = tmp->Neighb[0];
+                    tmp = tmp->Neighb.B;
                 }
                 PWcnt++;
             }
 
-        BODY::Bodies[I]->ProtoWakes0 = BODY::Bodies[I]->ProtoWakes;
         
-        BODY::Bodies[I]->WakeGamma.allocate(BODY::Bodies[I]->ProtoWakes.size());
-        BODY::Bodies[I]->WakePoints.allocate(BODY::Bodies[I]->ProtoWakes.size());
-        BODY::Bodies[I]->VortonX.allocate(BODY::Bodies[I]->ProtoWakes.size());
-        BODY::Bodies[I]->VortonAge.allocate(BODY::Bodies[I]->ProtoWakes.size());
-        BODY::Bodies[I]->VortonOM.allocate(BODY::Bodies[I]->ProtoWakes.size());
-        BODY::Bodies[I]->VortonVel.allocate(BODY::Bodies[I]->ProtoWakes.size());
-        BODY::Bodies[I]->VXSizes.allocate(BODY::Bodies[I]->ProtoWakes.size());
-        BODY::Bodies[I]->VOMSizes.allocate(BODY::Bodies[I]->ProtoWakes.size());
-        BODY::Bodies[I]->VVelSizes.allocate(BODY::Bodies[I]->ProtoWakes.size());
 
-        BODY::Bodies[I]->FirstProtoWakes.allocate(BODY::Bodies[I]->ProtoWakes.size());
+
+
+
         for (int i = 0; i < BODY::Bodies[I]->ProtoWakes.size(); ++i) {
             for (int j = 0; j < BODY::Bodies[I]->ProtoWakes[i].size(); ++j) {
                 for (int k = 0; k < BODY::Bodies[I]->ProtoWakes[i].size(); ++k)
@@ -1025,24 +1243,16 @@ void BODY::SetUpProtoWakes(REAL dt) {
 
                 BODY::AllProtoWakes.push_back(&BODY::Bodies[I]->ProtoWakes[i][j]);
                 BODY::AllProtoWakes.back()->GetNormal();
-                if (!BODY::Bodies[I]->ProtoWakes[i][j].Neighb[0]) {
+                if (!BODY::Bodies[I]->ProtoWakes[i][j].Neighb.B) {
                     PANEL *tmp = &(BODY::Bodies[I]->ProtoWakes[i][j]);
-                    BODY::Bodies[I]->FirstProtoWakes[i] = tmp;
                     Pts.push_back(tmp->C2);
                     while (tmp) {
                         Pts.push_back(tmp->C3);
-                        tmp = tmp->Neighb[2];
+                        tmp = tmp->Neighb.T;
                     }
                 }
             }
 
-            BODY::Bodies[I]->WakePoints[i].push_back(Pts);
-            BODY::Bodies[I]->VortonX[i].push_back(Pts);
-            BODY::Bodies[I]->VortonOM[i].push_back(Array < Vect3 > (Pts.size(), Vect3(0.0)));
-            BODY::Bodies[I]->VortonVel[i].push_back(Array < Vect3 > (Pts.size(), Vect3(0.0)));
-            BODY::Bodies[I]->VXSizes[i] = Pts.size();
-            BODY::Bodies[I]->VOMSizes[i] = Pts.size();
-            BODY::Bodies[I]->VVelSizes[i] = Pts.size();
             Pts.clear();
 
         }
@@ -1092,14 +1302,18 @@ void BODY::SetEulerTrans() {
 }
 
 /**************************************************************/
-void BODY::MoveBody(REAL dt) {
+void BODY::MoveBody() {
 
     //    First off calculate new Euler angles
-    EulerAngles += dt*EulerRates;
-    //    Now get new cg position in global reference frame
 
-    CG += Velocity*dt;
-//    cout << CG << endl;
+
+//    if (BODY::Time > 0.0) {
+//        EulerRates = Vect3(0.0, BODY::AlphaDotHistory.back(), 0.0);
+//        EulerAngles = Vect3(0.0, BODY::AlphaHistory.back(), 0.0);
+//    }
+    //    Now get new cg position in global reference frame
+    EulerAngles = EulerRates*BODY::Time;
+    CG = Velocity*BODY::Time;
     //    Now set appropriate body rates, and transforms etc.
     SetEulerTrans();
 
@@ -1108,10 +1322,17 @@ void BODY::MoveBody(REAL dt) {
         Faces[i].GetNewGlobalPosition();
     }
 
-    for (int i = 0; i < ProtoWakes.size(); ++i)
+    ProtoWakeLastC1 = ProtoWakeLastC2 = ProtoWakeLastC3 = ProtoWakeLastC4 = Array < Array < Vect3 > > (ProtoWakes.size());
+    for (int i = 0; i < ProtoWakes.size(); ++i) {
+        ProtoWakeLastC1[i] = ProtoWakeLastC2[i] = ProtoWakeLastC3[i] = ProtoWakeLastC4[i] = Array <Vect3 > (ProtoWakes[i].size());
         for (int j = 0; j < ProtoWakes[i].size(); ++j) {
+            ProtoWakeLastC1[i][j] = ProtoWakes[i][j].C1;
+            ProtoWakeLastC2[i][j] = ProtoWakes[i][j].C2;
+            ProtoWakeLastC3[i][j] = ProtoWakes[i][j].C3;
+            ProtoWakeLastC4[i][j] = ProtoWakes[i][j].C4;
             ProtoWakes[i][j].GetNewGlobalPosition();
         }
+}
 }
 
 /**************************************************************/
@@ -1210,6 +1431,8 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
             OuterTipUSPanelIDS_local,
             OuterTipLSPanelIDS_local);
 
+    BODY::PointsAsRead = X;
+    BODY::PanelsAsRead = PNLS;
 
     //  now make sure surfaces actually match ID numbers.....
     
@@ -1366,6 +1589,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
         cout << "%\tmaking body " << endl;
 
         BODY::Bodies.push_back(new BODY(cg, att, vel, rates, name));
+        BODY::Bodies.back()->ID = BODY::Bodies.size();
         cout << "%\tdone. Getting panels: " << BodyPanels[i].size();
 
         BODY::Bodies.back()->GetPanels(BodyPanels[i]);

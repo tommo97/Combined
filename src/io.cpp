@@ -109,8 +109,7 @@ void IO::print_header() {
     if (WRITE_TO_SCREEN)
         cout << setfill('*') << setw(80) << "*" << endl;
     if (WRITE_TO_SCREEN)
-        cout << "*\t" << VERS << "\tω-V Code " << VERSION
-            << " Copyright© Tom McCombes 2011\t\t\t       *" << endl;
+        cout << "*\t" << VERS << "\tω-V Code v." << SVN_REV << " Copyright© Tom McCombes 2011\t\t\t       *" << endl;
 
     if (WRITE_TO_SCREEN)
         cout << setfill('*') << setw(80) << "*" << endl;
@@ -133,13 +132,12 @@ void IO::print_header(ostream& out_stream) {
         out_stream << setfill('*') << setw(81) << "*" << endl << "*          ";
 #ifndef use_NCURSES      
     if (WRITE_TO_FILE)
-        out_stream << VERS << "  ω-V Code " << VERSION
-            << " Copyright© Tom McCombes 2011";
+        out_stream << "\t" << VERS << "  ω-V Code v." << SVN_REV << " Copyright© Tom McCombes 2011";
 #else 
-    if (WRITE_TO_FILE) out_stream << VERS << "  Wake Code " << VERSION << " Copyright© Tom McCombes 2011";
+    if (WRITE_TO_FILE) out_stream << VERS << "  Wake Code v." << SVN_REV << " Copyright© Tom McCombes 2011";
 #endif
     if (WRITE_TO_FILE)
-        out_stream << "\t*" << endl << setfill('*') << setw(81) << "*" << endl;
+        out_stream << "\t\t*" << endl << setfill('*') << setw(81) << "*" << endl;
 
 }
 
