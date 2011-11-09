@@ -1,5 +1,7 @@
 function [XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val, scale)
-data = dlmread(fname);
+load(fname);
+data = Domain;
+clear Domain;
 subs = data(:,1:3);
 subs(:,1) = subs(:,1) - min(data(:,1));
 subs(:,2) = subs(:,2) - min(data(:,2));
