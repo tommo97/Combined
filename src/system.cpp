@@ -173,7 +173,7 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 void SYSTEM::PutWakesInTree() {
 
     int n = (int) GambitScale;
-    REAL h = Del2*GambitScale, d = 1.0, u = 0;
+    REAL h = 5, d = 1.0, u = 0;
     REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;;
   
 
