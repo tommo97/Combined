@@ -71,7 +71,8 @@ public:
     static int SubStep;
     static Array <Vect3> VortexPositions, VortexOmegas, VortexVelocities;
     static Array <int> VortexOwnerID;
-    static Array < Array < REAL > > CpHistory;
+    static Array < Array < REAL > > CpHistory, CpHistoryAll;
+    static Array <REAL> SubTIMES;
     static Array <Vect3> TorqueHist;
     static Array <Vect3> ForceHist;
     static Array < Array < Array < int > > > Surfaces;

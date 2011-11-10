@@ -1,6 +1,6 @@
 clear all; clear mex; close all;
-files = dir('D*00.mat');
-val = 0.5;
+files = dir('R*.mat');
+val = 0;
 s = size(files,1);
 % while s < 100
 %     files = dir('f*.dat');
@@ -84,6 +84,6 @@ colorbar
 VIs = VI;
 figure
 VIs(VIs>5*std(VIs(:))) = 5*std(VIs(:));
-slice(XI,YI,ZI,VIs,[0],[5 10],[])
+slice(XI,YI,ZI,VIs,[0],[],[0])
 axis equal
 shading interp

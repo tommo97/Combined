@@ -6,9 +6,16 @@ Blade.Radius = handles.Span.Radius';
 Blade.Chord = handles.Span.Chord';
 Blade.Theta = handles.Span.Theta';
 
+
 Blade.Reverse = handles.Span.REVERSE;
 
 Blade.isNREL = handles.Span.isNREL;
+Blade.isSOTON = handles.Span.isSOTON
+
+if Blade.isNREL || Blade.isSOTON
+    Blade.n1 = handles.Span.n1;
+    Blade.n2 = handles.Span.n2;
+end
 
 Blade.TransitionPiece = handles.Span.TransitionPiece;
 

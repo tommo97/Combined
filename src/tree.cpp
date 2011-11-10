@@ -127,8 +127,8 @@ void OCTREE::Integrate() {
 #pragma omp parallel for
 #endif
     for (int i = 0; i < AllCells.size(); ++i) {
-        AllCells[i]->GetVelTensor();
-        AllCells[i]->Integrate();
+//        AllCells[i]->GetVelTensor();
+//        AllCells[i]->Integrate();
     }
 #ifdef _OPENMP
 #pragma omp parallel for

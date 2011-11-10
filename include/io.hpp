@@ -85,7 +85,7 @@ public:
 
     void write_file(stringstream &, string outfname, string ext, bool);
     
-    void write_2D_mat(Array < Array <REAL> > &outdata, string vname, string OutName, bool disp);
+    void write_2D_mat(Array < Array < Array <REAL> > > &outdata, Array < string > vname, string OutName, bool disp);
 
     void write_dat();
 

@@ -2,7 +2,7 @@ close all
 clear all
 clc
 
-load Output.mat
+load RunData_000004.mat
 
 
 
@@ -39,37 +39,37 @@ for i = 1:size(CpHistory,1)
 
     M = cross(F,[CollocPts_x CollocPts_y CollocPts_z]);
     Mx(i) = sum(M(:,1));
-%     
-%     CLift = sum(F(:,3))*cosd(8.5) - sum(F(:,1))*sind(8.5);
-%     CL(i) = sum(CLift)./12;
-%     CDrag = Norms(:,1).*Area.*(Cp);
-%     CD(i) = sum(CDrag)./12;
-%     
-%     
-%     
-%     
-%     Mucp0 = Mu(BodySurface0);
-%     CpCp0 = Cp(BodySurface0);
-%     
-%     r = 0;
-%     
-%     
-%     
-%     CPress = zeros(size(Cp(1,:)));
-%     
-%     for j = 1:size(R0,2)
-%         PressChord(j) = interp1(R0(:,j),C0(:,j),r,'cubic');
-%         CPress(j) = interp1(R0(:,j),-CpCp0(:,j),r,'cubic');
-%     end
-%    % clf
-%    % plot(PressChord,CPress);
-%     
-%     Cl(i) = trapz(PressChord,CPress);
-   %  drawnow;
+    
+    CLift = sum(F(:,3))*cosd(8.5) - sum(F(:,1))*sind(8.5);
+    CL(i) = sum(CLift)./12;
+    CDrag = Norms(:,1).*Area.*(Cp);
+    CD(i) = sum(CDrag)./12;
+    
+    
+    
+    
+    Mucp0 = Mu(BodySurface0);
+    CpCp0 = Cp(BodySurface0);
+    
+    r = 0;
+    
+    
+    
+    CPress = zeros(size(Cp(1,:)));
+    
+    for j = 1:size(R0,2)
+        PressChord(j) = interp1(R0(:,j),C0(:,j),r,'cubic');
+        CPress(j) = interp1(R0(:,j),-CpCp0(:,j),r,'cubic');
+    end
+   clf
+   plot(PressChord,CPress);
+    
+    Cl(i) = trapz(PressChord,CPress);
+    drawnow;
     disp(i)
 end
 
-clf
+figure
 
 
 BodyPanPts = [C1;C2;C3;C4];
@@ -115,7 +115,7 @@ view(3)
 
 
 
-% scatter3(VortonX_x(:),VortonX_y(:),VortonX_z(:),'+')
+scatter3(VortonX_x(:),VortonX_y(:),VortonX_z(:),'+')
 % 
 figure
 plot(Times,Force_z)

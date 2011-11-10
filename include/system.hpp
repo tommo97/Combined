@@ -49,7 +49,7 @@ public:
   ~SYSTEM();
   bool PanelMode;
   int num_out;
-	
+  string InputStr;
 
   Array <Vect3> ATTITUDE, VELOCITY, ORIGIN, RATES;
 
@@ -100,7 +100,7 @@ public:
   void GetPanelFMMVelocities(REAL);
   void MoveBodies(REAL, bool);
   void WriteDomain();
-  void WriteVorticity();
+  void WriteData();
   void WritePanelVels();
   void WriteBodies();
     enum exception {

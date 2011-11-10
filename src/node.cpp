@@ -256,7 +256,7 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
     x12 = diff.x * 2;
     x22 = diff.y * 2;
     x32 = diff.z * 2;
-    mult = -1 / (globalSystem->GambitScale * globalSystem->GambitScale * globalSystem->Del2 + diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
+    mult = -1 / (globalSystem->Del2 + diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
 
     /* base case */
     coeffts[0][0][0] = sqrt(-mult);
@@ -614,7 +614,7 @@ void Node::UpdateMomentMults() {
 
 /**************************************************************/
 void Node::RecursivePanelVel(PANEL* Pan){
-    Vect3 P = Position/globalSystem->GambitScale;
+    Vect3 P = Position;
     
     Vect3 R = (Pan->CollocationPoint - P);
     REAL R2 = R.Dot(R);
@@ -655,7 +655,7 @@ void Node::RecursivePanelVel(PANEL* Pan){
         }
     }
     if (DoHere) {
-        PanelVel -= globalSystem->GambitScale*Pan->SourceVel(P);
-        PanelVel -= globalSystem->GambitScale*Pan->BodyPanelVelocity(P);
+        PanelVel -= Pan->SourceVel(P);
+        PanelVel -= Pan->BodyPanelVelocity(P);
     }
 }

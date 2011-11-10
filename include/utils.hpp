@@ -172,7 +172,7 @@ public:
     static Array <Vect3> globalLinspace(Vect3 start, Vect3 end, int n);
     static Vect3 globalDirectVel(Vect3 diff, Vect3 omega, REAL del2);
     static void PreAmble();
-    static void PostAmble();
+    static void PostAmble(string);
 };
 /**************************************************************/
  

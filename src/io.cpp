@@ -633,7 +633,7 @@ void IO::write_file(stringstream &outstream, string OutName, string ext,
     filestr.close();
 }
 /**************************************************************/
-void IO::write_2D_mat(Array < Array <REAL> > &outdata, string vname, string OutName, bool disp) {
+void IO::write_2D_mat(Array < Array < Array <REAL> > > &outdata, Array <string> vname, string OutName, bool disp) {
 
     int ID = -1;
     for (int i = 0; i < NumFiles.size(); ++i)
@@ -657,7 +657,10 @@ void IO::write_2D_mat(Array < Array <REAL> > &outdata, string vname, string OutN
         cout << fname << endl;
     fstream filestr;
 
-    UTIL::WriteMATLABMatrix2D(vname,fname,outdata);
+    for (int i = 0; i < vname.size(); ++i)
+    UTIL::WriteMATLABMatrix2D(vname[i],fname,outdata[i]);
+    
+    UTIL::PostAmble(fname);
     
     NumFiles[ID]++;
     filestr.close();

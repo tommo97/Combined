@@ -173,50 +173,52 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 void SYSTEM::PutWakesInTree() {
 
     int n = (int) GambitScale;
-    REAL h = 5, d = 1.0, u = 0;
+    REAL h = GambitScale*Del2, d = 1.0, u = 0;
     REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;;
   
 
     for (int j = 0; j < BODY::VortexPositions.size(); ++j) {
-        Vect3 X = BODY::VortexPositions[j] * GambitScale;
-        Vect3 OM = -1.0 * BODY::VortexOmegas[j] * GambitScale * GambitScale;
-
-        for (REAL a = -h; a <= h; a+=1.0)
-            for (REAL b = -h; b <= h; b+=1.0)
-                for (REAL c = -h; c <= h; c+=1.0) {
-
-                    M4x = 0.0, M4y = 0.0, M4z = 0.0;
-
-                    u = abs(a / (h * d));
-                    if (u <= 2)
-                        M4x = .5 * (1 - u * (2 - u)*(2 - u));
-                    if (u <= 1)
-                        M4x = 1 - 2.5 * u * u + 1.5 * u * u * u;
-
-                    u = abs(b / (h * d));
-                    if (u <= 2)
-                        M4y = .5 * (1 - u * (2 - u)*(2 - u));
-                    if (u <= 1)
-                        M4y = 1 - 2.5 * u * u + 1.5 * u * u * u;
-
-                    u = abs(c / (h * d));
-                    if (u <= 2)
-                        M4z = .5 * (1 - u * (2 - u)*(2 - u));
-                    if (u <= 1)
-                        M4z = 1 - 2.5 * u * u + 1.5 * u * u * u;
-
-
-                    M4x = M4x / h;
-                    M4y = M4y / h;
-                    M4z = M4z / h;
-                    M4 = M4x*M4y*M4z;
-
-                    Vect3 G = M4*OM;
-
-                    OctreeCapsule C(X + Vect3(a, b, c), G, true);
-                    C.AssociatedBody = BODY::VortexOwnerID[j] - 1;
-                    globalOctree->Root->EvalCapsule(C);
-                }
+        Vect3 X = BODY::VortexPositions[j];
+        Vect3 OM = -1.0 * BODY::VortexOmegas[j];
+        OctreeCapsule C(X, OM, true);
+        C.AssociatedBody = BODY::VortexOwnerID[j] - 1;
+        globalOctree->Root->EvalCapsule(C);
+//        for (REAL a = -h; a <= h; a+=1.0)
+//            for (REAL b = -h; b <= h; b+=1.0)
+//                for (REAL c = -h; c <= h; c+=1.0) {
+//
+//                    M4x = 0.0, M4y = 0.0, M4z = 0.0;
+//
+//                    u = abs(a / (h * d));
+//                    if (u <= 2)
+//                        M4x = .5 * (1 - u * (2 - u)*(2 - u));
+//                    if (u <= 1)
+//                        M4x = 1 - 2.5 * u * u + 1.5 * u * u * u;
+//
+//                    u = abs(b / (h * d));
+//                    if (u <= 2)
+//                        M4y = .5 * (1 - u * (2 - u)*(2 - u));
+//                    if (u <= 1)
+//                        M4y = 1 - 2.5 * u * u + 1.5 * u * u * u;
+//
+//                    u = abs(c / (h * d));
+//                    if (u <= 2)
+//                        M4z = .5 * (1 - u * (2 - u)*(2 - u));
+//                    if (u <= 1)
+//                        M4z = 1 - 2.5 * u * u + 1.5 * u * u * u;
+//
+//
+//                    M4x = M4x / h;
+//                    M4y = M4y / h;
+//                    M4z = M4z / h;
+//                    M4 = M4x*M4y*M4z;
+//
+//                    Vect3 G = M4*OM;
+//
+//                    OctreeCapsule C(X + Vect3(a, b, c), G, true);
+//                    C.AssociatedBody = BODY::VortexOwnerID[j] - 1;
+//                    globalOctree->Root->EvalCapsule(C);
+//                }
     }
 
     BODY::VortexPositions.clear();
@@ -267,21 +269,32 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        BODY::AllBodyFaces[i]->Vfmm0 = globalOctree->TreeVel(globalSystem->GambitScale * BODY::AllBodyFaces[i]->Centroid);
-    }
+        BODY::AllBodyFaces[i]->Vfmm = globalOctree->TreeVel(BODY::AllBodyFaces[i]->Centroid);
+        
+//        if ((i>345) && (i < 400)){
+//            
+//        Vect3 Vel; 
+//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+//            Vel += UTIL::globalDirectVel(globalOctree->AllCells[j]->Position - BODY::AllBodyFaces[i]->CollocationPoint, 
+//                    globalOctree->AllCells[j]->Omega, Del2);
+//        
+//        cout << "------- > " << BODY::AllBodyFaces[i]->Vfmm << " " << Vel << endl;
+//                }
 
-    BODY::Time += dt;
-    for (int i = 0; i < BODY::Bodies.size(); ++i)
-        BODY::Bodies[i]->MoveBody();
-
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        BODY::AllBodyFaces[i]->Vfmm1 = globalOctree->TreeVel(globalSystem->GambitScale * BODY::AllBodyFaces[i]->Centroid);
     }
-    BODY::Time -= dt;
-    for (int i = 0; i < BODY::Bodies.size(); ++i)
-        BODY::Bodies[i]->MoveBody();
-    
-    
+//
+//    BODY::Time += dt;
+//    for (int i = 0; i < BODY::Bodies.size(); ++i)
+//        BODY::Bodies[i]->MoveBody();
+//
+//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+//        BODY::AllBodyFaces[i]->Vfmm1 = globalOctree->TreeVel(BODY::AllBodyFaces[i]->Centroid);
+//    }
+//    BODY::Time -= dt;
+//    for (int i = 0; i < BODY::Bodies.size(); ++i)
+//        BODY::Bodies[i]->MoveBody();
+//    
+//    
 //    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) 
 //        cout << "D " << BODY::AllBodyFaces[i]->VWake << endl << "F " << BODY::AllBodyFaces[i]->Vfmm0 << endl << "R " << BODY::AllBodyFaces[i]->Vfmm0/BODY::AllBodyFaces[i]->VWake << endl << "---" << endl;
         
@@ -331,7 +344,7 @@ void SYSTEM::WriteDomain() {
 }
 
 /**************************************************************/
-void SYSTEM::WriteVorticity() {
+void SYSTEM::WriteData() {
 
 
    
@@ -356,9 +369,22 @@ void SYSTEM::WriteVorticity() {
             count++;
         }
 
-    globalIO->write_2D_mat(DataOut, string("Domain"), string("Domain"), true);
-
-
+    Array < Array < Array <REAL> > > Output;
+    Output.push_back(DataOut);
+    Output.push_back(BODY::CpHistoryAll);
+    
+    Array <Array <REAL> > SubTimes(BODY::SubTIMES.size());
+    for (int i = 0; i < BODY::SubTIMES.size(); ++i)
+        SubTimes[i].push_back(BODY::SubTIMES[i]);
+    
+    Output.push_back(SubTimes);
+    Array <string> OutNames;
+    OutNames.push_back("Domain");
+    OutNames.push_back("CpHistoryAll");
+    OutNames.push_back("SubTimes");
+    globalIO->write_2D_mat(Output, OutNames, string("RunData"), true);
+    BODY::CpHistoryAll.clear();
+    BODY::SubTIMES.clear();
 }
 
 /**************************************************************/

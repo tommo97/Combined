@@ -52,8 +52,11 @@ if ~isempty(Blade.Thickness)
 end
 
 
-if Blade.isNREL
-    RootBlendCoefft = repmat(Blade.TransitionPiece', [1 Blade.NChord]);;
+if Blade.isNREL || Blade.isSOTON
+    RootBlendCoefft = repmat(Blade.TransitionPiece', [1 Blade.NChord]);
+    if isempty(RootBlendCoefft)
+        RootBlendCoefft = repmat(linspace(1,0,Blade.NSpan)', [1 Blade.NChord]);
+    end
 end
 
 TipBlendCoefft = 1-RootBlendCoefft;
@@ -225,6 +228,10 @@ Blade.nPnls = numel(Blade.Panels.c1.Local);
 Blade.nPts = numel(Blade.X);
 Blade.Panels.WakeShedders.LS.Local = MainPans(:,1);
 Blade.Panels.WakeShedders.US.Local = MainPans(:,end);
+if Blade.isNREL || Blade.isSOTON
+    Blade.Panels.WakeShedders.LS.Local = MainPans(Blade.n2:end,1);
+    Blade.Panels.WakeShedders.US.Local = MainPans(Blade.n2:end,end);
+end
 Mp = zeros(size(Blade.N.Local) - 1);
 Mp(:) = 1:numel(Mp);
 t1 = zeros(size(Blade.Tip.Inboard.US.N.Local) - 1); t1(:) = 1:numel(t1); t1 = t1 + max(Mp(:));

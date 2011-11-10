@@ -164,11 +164,10 @@ public:
     Vect3 SourceVel(Vect3);
     REAL GetCp();
     static Vect3 LineVelocity(Vect3 &lineStart, Vect3 &lineEnd, Vect3 &pTarget, REAL gamma_in);
-    static void SourceDoubletPotential(PANEL*, PANEL*, REAL &, REAL &, int, int);
-    static void DoubletPotential(PANEL*, PANEL*, REAL &PhiDoublet, int i, int j);
     static void PointDoublet(Vect3 X0, Vect3 XP, Vect3 &V, Vect3 &Mu, REAL &Phi);
     static void PointSource(Vect3 X0, Vect3 XP, Vect3 &V, REAL &Sigma, REAL &Phi);
     static void SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, REAL &PhiSource, int i, int j);
+    static void DoubletPotential(PANEL*, Vect3 , REAL &PhiDoublet, int i, int j);
     void DivPanel(int n, Array < Array < Vect3 > > &CP, Array < Array < Vect3 > > &N, Array < Array < REAL > > &A);
 
     void SubPan(int n, Vect3 P, REAL  MuNormal, REAL Sigma, REAL &PhiD, REAL &PhiS, Vect3 &V);

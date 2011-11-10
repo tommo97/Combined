@@ -50,7 +50,7 @@ void PANEL::LinearSubPan(PANEL *trg, int n, REAL Mu1, REAL Mu2, REAL &PhiD, Vect
         PANEL T(C1s[i],C1s[i+1],C4s[i+1],C4s[i]);
         T.GetNormal();
         REAL PhiT = 0.0 , tmp;
-        PANEL::SourceDoubletPotential(&T, trg, PhiT, tmp ,0,1);
+        PANEL::SourceDoubletPotential(&T, trg->Centroid, PhiT, tmp ,0,1);
         PhiD += (Mus[i]*PhiT);
     }
 
@@ -470,130 +470,9 @@ void PANEL::GetEdgeInfo() {
 }
 
 /**************************************************************/
-void PANEL::SourceDoubletPotential(PANEL *source, PANEL *target, REAL &PhiDoublet, REAL &PhiSource, int i, int j) {
+void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int i, int j) {
 
     //  Get source panel LCS
-
-    Vect3 X1g = source->C1 - source->CollocationPoint;
-    Vect3 X1 = VectMultMatrix(source->TRANS, X1g);
-    Vect3 X2g = source->C2 - source->CollocationPoint;
-    Vect3 X2 = VectMultMatrix(source->TRANS, X2g);
-    Vect3 X3g = source->C3 - source->CollocationPoint;
-    Vect3 X3 = VectMultMatrix(source->TRANS, X3g);
-    Vect3 X4g = source->C4 - source->CollocationPoint;
-    Vect3 X4 = VectMultMatrix(source->TRANS, X4g);
-
-
-    Vect3 D1 = X2 - X1, D2 = X3 - X2, D3 = X4 - X3, D4 = X1 - X4;
-    REAL    dx1 = D1.x, dy1 = D1.y,
-            dx2 = D2.x, dy2 = D2.y,
-            dx3 = D3.x, dy3 = D3.y,
-            dx4 = D4.x, dy4 = D4.y;
-
-
-    Vect3 XPg = target->Centroid - source->Centroid;
-    Vect3 XP = VectMultMatrix(source->TRANS, XPg);
-    
-    
-
-    REAL x1 = X1.x, x2 = X2.x, x3 = X3.x, x4 = X4.x;
-    REAL y1 = X1.y, y2 = X2.y, y3 = X3.y, y4 = X4.y;
-    REAL x = XP.x, y = XP.y, z = XP.z;
-    
-    Vect3 R1 = XP - X1, R2 = XP - X2, R3 = XP - X3, R4 = XP - X4;
-
-
-
-    REAL sd1 = D1.Mag(), sd2 = D2.Mag(), sd3 = D3.Mag(), sd4 = D4.Mag();
-    REAL r1 = R1.Mag(), r2 = R2.Mag(), r3 = R3.Mag(), r4 = R4.Mag();
-
-    REAL xz1 = (XP.x - X1.x)*(XP.x - X1.x) + XP.z * XP.z;
-    REAL xz2 = (XP.x - X2.x)*(XP.x - X2.x) + XP.z * XP.z;
-    REAL xz3 = (XP.x - X3.x)*(XP.x - X3.x) + XP.z * XP.z;
-    REAL xz4 = (XP.x - X4.x)*(XP.x - X4.x) + XP.z * XP.z;
-    REAL xy1 = (XP.x - X1.x)*(XP.y - X1.y);
-    REAL xy2 = (XP.x - X2.x)*(XP.y - X2.y);
-    REAL xy3 = (XP.x - X3.x)*(XP.y - X3.y);
-    REAL xy4 = (XP.x - X4.x)*(XP.y - X4.y);
-
-    REAL Dt1, Dt2, Dt3, Dt4, St1, St2, St3, St4;
-
-    if (sd1 < 1e-12) {
-        Dt1 = 0.;
-        St1 = 0.;
-    } else {
-        REAL s11 = dy1 * xz1 - dx1*xy1;
-        REAL c11 = r1 * z*dx1;
-        REAL s12 = dy1 * xz2 - dx1*xy2;
-        REAL c12 = r2 * z*dx1;
-        REAL ss1 = s11 * c12 - s12*c11;
-        REAL cc1 = c11 * c12 + s11*s12;
-        Dt1 = atan2(ss1, cc1);
-        St1 = ((x - x1) * dy1 - (y - y1) * dx1) / sd1 * log((r1 + r2 + sd1) / (r1 + r2 - sd1));
-    }
-
-    if (sd2 < 1e-12) {
-        Dt2 = 0.;
-        St2 = 0.;
-    } else {
-        REAL s21 = dy2 * xz2 - dx2*xy2;
-        REAL c21 = r2 * z*dx2;
-        REAL s22 = dy2 * xz3 - dx2*xy3;
-        REAL c22 = r3 * z*dx2;
-        REAL ss2 = s21 * c22 - s22*c21;
-        REAL cc2 = c21 * c22 + s21*s22;
-        Dt2 = atan2(ss2, cc2);
-        St2 = ((x - x2) * dy2 - (y - y2) * dx2) / sd2 * log((r2 + r3 + sd2) / (r2 + r3 - sd2));
-    }
-
-    if (sd3 < 1e-12) {
-        Dt3 = 0.;
-        St3 = 0.;
-
-    } else {
-        REAL s31 = dy3 * xz3 - dx3*xy3;
-        REAL c31 = r3 * z*dx3;
-        REAL s32 = dy3 * xz4 - dx3*xy4;
-        REAL c32 = r4 * z*dx3;
-        REAL ss3 = s31 * c32 - s32*c31;
-        REAL cc3 = c31 * c32 + s31*s32;
-        Dt3 = atan2(ss3, cc3);
-        St3 = ((x - x3) * dy3 - (y - y3) * dx3) / sd3 * log((r3 + r4 + sd3) / (r3 + r4 - sd3));
-    }
-
-    if (sd4 < 1e-12) {
-        Dt4 = 0.;
-        St4 = 0.;
-    } else {
-        REAL s41 = dy4 * xz4 - dx4*xy4;
-        REAL c41 = r4 * z*dx4;
-        REAL s42 = dy4 * xz1 - dx4*xy1;
-        REAL c42 = r1 * z*dx4;
-        REAL ss4 = s41 * c42 - s42*c41;
-        REAL cc4 = c41 * c42 + s41*s42;
-        Dt4 = atan2(ss4, cc4);
-        St4 = ((x - x4) * dy4 - (y - y4) * dx4) / sd4 * log((r4 + r1 + sd4) / (r4 + r1 - sd4));
-    }
-
-
-
-    if (abs(XP.z) < 1e-12)
-        PhiDoublet = 0.0;
-    else
-        PhiDoublet = (Dt1 + Dt2 + Dt3 + Dt4) / four_pi;
-
-    if (i == j)
-        PhiDoublet = 0.5;
-
-
-    PhiSource = -2*((St1 + St2 + St3 + St4) / four_pi - XP.z * PhiDoublet);
-    PhiDoublet *= 2;
-
-}
-/**************************************************************/
-void PANEL::DoubletPotential(PANEL *source, PANEL *target, REAL &PhiDoublet, int i, int j) {
-
-        //  Get source panel LCS
 
     Vect3 X1 = source->Xcb[0];
     Vect3 X2 = source->Xcb[1];
@@ -607,7 +486,7 @@ void PANEL::DoubletPotential(PANEL *source, PANEL *target, REAL &PhiDoublet, int
                 dx4 = D4.x, dy4 = D4.y;
 
 
-    Vect3 XPg = target->Centroid - source->Centroid;
+    Vect3 XPg = target - source->Centroid;
         Vect3 XP = VectMultMatrix(source->TRANS, XPg);
 
     if (XPg.Mag() < (1e32 * source->MaxDiagonal)) {
@@ -701,7 +580,6 @@ void PANEL::DoubletPotential(PANEL *source, PANEL *target, REAL &PhiDoublet, int
 }
 /**************************************************************/
 void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, REAL &PhiSource, int i, int j) {
-
     //  Get source panel LCS
 
     Vect3 X1g = source->C1 - source->CollocationPoint;
@@ -819,162 +697,6 @@ void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet
 
 }
 /**************************************************************/
-void PANEL::SourceDoubletPotential(Vect3 IP, REAL MuIn, REAL SigmaIn, REAL PhiIn[]) {
-    //      PV from panel centre to POI in local frame
-    Vect3 P = VectMultMatrix(TRANS, IP - Centroid);
-
-    //    cout << TRANS[0] << endl << TRANS[1] << endl << TRANS[2] << endl;
-//    REAL MagP = P.Mag();
-
-
-    //    if (MagP < FarField * MaxDiagonal)
-    {
-        Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
-        REAL Pz2 = P.z * P.z;
-
-        Vect4 e(dX1.x * dX1.x + Pz2, dX2.x * dX2.x + Pz2, dX3.x * dX3.x + Pz2, dX4.x * dX4.x + Pz2);
-        Vect4 w(dX1.y * dX1.y, dX2.y * dX2.y, dX3.y * dX3.y, dX4.y * dX4.y);
-        Vect4 h(dX1.x * dX1.y, dX2.x * dX2.y, dX3.x * dX3.y, dX4.x * dX4.y);
-
-
-        Vect4 r = sqrt(e + w);
-
-        REAL aPz = sqrt(Pz2);
-
-        Vect4 alpha, beta, Pzr;
-
-        Pzr = P.z * r;
-
-
-        alpha = (M * e - h) / Pzr;
-        beta = (M * permute_1(e) - permute_1(h)) / permute_1(Pzr);
-        Vect4 Num = alpha - beta;
-        Vect4 Denom = alpha * beta + 1;
-
-        REAL T = 0;
-        if (aPz > 0) {
-            T = 0;
-            if (Num.a != 0.) T += atan2(Num.a, Denom.a);
-            if (Num.b != 0.) T += atan2(Num.b, Denom.b);
-            if (Num.c != 0.) T += atan2(Num.c, Denom.c);
-            if (Num.d != 0.) T += atan2(Num.d, Denom.d);
-            PhiIn[0] = MuIn * T / (four_pi);
-        }
-
-        //        if (fabs(temp - T) > 1e-3)  cout << T << " " << temp << endl;
-        REAL B = 0;
-        B += (D.a == 0. && (r.a + r.b - D.a) > 0.) ? 0.0 : ((dX1.x * DY.a - dX1.y * DX.a) * log((r.a + r.b + D.a) / (r.a + r.b - D.a))) / D.a;
-        B += (D.b == 0. && (r.b + r.c - D.b) > 0.) ? 0.0 : ((dX2.x * DY.b - dX2.y * DX.b) * log((r.b + r.c + D.b) / (r.b + r.c - D.b))) / D.b;
-        B += (D.c == 0. && (r.c + r.d - D.c) > 0.) ? 0.0 : ((dX3.x * DY.c - dX3.y * DX.c) * log((r.c + r.d + D.c) / (r.c + r.d - D.c))) / D.c;
-        B += (D.d == 0. && (r.d + r.a - D.d) > 0.) ? 0.0 : ((dX4.x * DY.d - dX4.y * DX.d) * log((r.d + r.a + D.d) / (r.d + r.a - D.d))) / D.d;
-        PhiIn[1] = SigmaIn * (B - P.z * T) / (four_pi);
-        //    } else {
-        //        PhiIn[0] = -MuIn * Area * fabs(P.z) / (MagP * MagP * MagP * four_pi);
-        //        PhiIn[1] = -SigmaIn * Area / (MagP * four_pi);
-    }
-    //
-    //    Vect3 XP = IP;//VectMultMatrix(TRANS, IP - Centroid);
-    //    Vect3 X1 = C1;//VectMultMatrix(TRANS, C1 - Centroid);
-    //    Vect3 X2 = C2;//VectMultMatrix(TRANS, C2 - Centroid);
-    //    Vect3 X3 = C3;//VectMultMatrix(TRANS, C3 - Centroid);
-    //    Vect3 X4 = C4;//VectMultMatrix(TRANS, C4 - Centroid);
-    //
-    //    Vect3 Xcp = 0.25 * (X1 + X2 + X3 + X4);
-    //    Vect3 D1 = X2 - X4;
-    //    Vect3 D2 = X3 - X1;
-    //    Vect3 n0 = D1.Cross(D2);
-    //    n0 = n0 / n0.Mag();
-    //
-    //    Vect3 A_xi_1 = X2 - X1;
-    //    Vect3 A_xi_2 = X2 - X1;
-    //    Vect3 A_xi_3 = X3 - X4;
-    //    Vect3 A_xi_4 = X3 - X4;
-    //
-    //
-    //    Vect3 A_eta_1 = X4 - X1;
-    //    Vect3 A_eta_2 = X3 - X2;
-    //    Vect3 A_eta_3 = X3 - X2;
-    //    Vect3 A_eta_4 = X4 - X1;
-    //
-    //    REAL a_xi_1 = A_xi_1.Mag();
-    //    A_xi_1 = A_xi_1 / a_xi_1;
-    //    REAL a_eta_1 = A_eta_1.Mag();
-    //    A_eta_1 = A_eta_1 / a_eta_1;
-    //    Vect3 n1 = A_xi_1.Cross(A_eta_1);
-    //    n1 = n1 / n1.Mag();
-    //
-    //    REAL a_xi_2 = A_xi_2.Mag();
-    //    A_xi_2 = A_xi_2 / a_xi_2;
-    //    REAL a_eta_2 = A_eta_2.Mag();
-    //    A_eta_2 = A_eta_2 / a_eta_2;
-    //    Vect3 n2 = A_xi_2.Cross(A_eta_2);
-    //    n2 = n2 / n2.Mag();
-    //
-    //    REAL a_xi_3 = A_xi_3.Mag();
-    //    A_xi_3 = A_xi_3 / a_xi_3;
-    //    REAL a_eta_3 = A_eta_3.Mag();
-    //    A_eta_3 = A_eta_3 / a_eta_3;
-    //    Vect3 n3 = A_xi_3.Cross(A_eta_3);
-    //    n3 = n3 / n3.Mag();
-    //
-    //    REAL a_xi_4 = A_xi_4.Mag();
-    //    A_xi_4 = A_xi_4 / a_xi_4;
-    //    REAL a_eta_4 = A_eta_4.Mag();
-    //    A_eta_4 = A_eta_4 / a_eta_4;
-    //    Vect3 n4 = A_xi_4.Cross(A_eta_4);
-    //    n4 = n4 / n4.Mag();
-    //
-    //    Vect3 R1 = XP - X1;
-    //    Vect3 R2 = XP - X2;
-    //    Vect3 R3 = XP - X3;
-    //    Vect3 R4 = XP - X4;
-    //
-    //    REAL r1 = R1.Mag();
-    //    REAL r2 = R2.Mag();
-    //    REAL r3 = R3.Mag();
-    //    REAL r4 = R4.Mag();
-    //
-    //    Vect3 tx1 = R1.Cross(A_xi_1);
-    //    Vect3 te1 = R1.Cross(A_eta_1);
-    //    Vect3 tx2 = R2.Cross(A_xi_2);
-    //    Vect3 te2 = R2.Cross(A_eta_2);
-    //    Vect3 tx3 = R3.Cross(A_xi_3);
-    //    Vect3 te3 = R3.Cross(A_eta_3);
-    //    Vect3 tx4 = R4.Cross(A_xi_4);
-    //    Vect3 te4 = R4.Cross(A_eta_4);
-    //
-    //    REAL c1 = tx1.Dot(n1 / a_xi_1);
-    //    REAL c2 = te2.Dot(n2 / a_eta_2);
-    //    REAL c3 = tx3.Dot(n3 / a_xi_3);
-    //    REAL c4 = te4.Dot(n4 / a_eta_4);
-    //
-    //    REAL l1 = log((r1 + r2 + a_xi_1)  / (r1 + r2 - a_xi_1));
-    //    REAL l2 = log((r2 + r3 + a_eta_2) / (r2 + r3 - a_eta_2));
-    //    REAL l3 = log((r3 + r4 + a_xi_3)  / (r3 + r4 - a_xi_3));
-    //    REAL l4 = log((r4 + r1 + a_eta_4) / (r4 + r1 - a_eta_4));
-    //
-    //    REAL tex1 = tx1.Dot(te1);
-    //    REAL tex2 = tx2.Dot(te2);
-    //    REAL tex3 = tx3.Dot(te3);
-    //    REAL tex4 = tx4.Dot(te4);
-    //    REAL beta_1 = atan2((r1 * R1.Dot(n1)) , tex1 + 1e-6);
-    //    REAL beta_2 = atan2((r2 * R2.Dot(n2)) , tex2 + 1e-6);
-    //    REAL beta_3 = atan2((r3 * R3.Dot(n3)) , tex3 + 1e-6);
-    //    REAL beta_4 = atan2((r4 * R4.Dot(n4)) , tex4 + 1e-6);
-    //
-    //
-    //
-    //    REAL ID = (1.0 / (4.0 * pi))*(beta_1 - beta_2 + beta_3 - beta_4);
-    //    REAL IS = (-1.0 / (4.0 * pi))*(c1 * l1 + c2 * l2 - c3 * l3 - c4 * l4) - n0.Dot(IP - Xcp) * ID;
-    //
-    ////    if (XP == CollocationPoint)
-    ////        ID = -0.5;
-    //
-    //
-    //
-    //    PhiIn[0] = MuIn * ID;
-    //    PhiIn[1] = SigmaIn * IS;
-}
 
 /**************************************************************/
 void PANEL::GetNewGlobalPosition() {
@@ -1015,38 +737,60 @@ void PANEL::GetNormal() {
     Centroid = 0.25 * (C1 + C2 + C3 + C4);
 
     Vect3 R1 = C2 - C1, R2 = C3 - C2, R3 = C4 - C3, R4 = C1 - C4;
+    REAL R1Mag = R1.Mag(), R2Mag = R2.Mag(), R3Mag = R3.Mag(), R4Mag = R4.Mag();
 
-    if (R1.Mag() < 1e-6)
-        Centroid = (C2 + C3 + C4) / 3;
-
-    if (R2.Mag() < 1e-6)
-        Centroid = (C1 + C3 + C4) / 3;
-
-    if (R3.Mag() < 1e-6)
-        Centroid = (C1 + C2 + C4) / 3;
-
-    if (R4.Mag() < 1e-6)
-        Centroid = (C1 + C2 + C3) / 3;
-
-
-
-    //   First diagonal
+    
+        //   First diagonal
     Vect3 D1 = C3 - C1;
     //   Second diagonal
     Vect3 D2 = C4 - C2;
     //   TRANS[2]
     Vect3 CR = D1.Cross(D2);
     //   local Z (aka unit normal)
-    TRANS[2] = CR / CR.Mag();
+    REAL CRMag = CR.Mag();
+    if (CRMag > 0)
+        TRANS[2] = CR / (CRMag);
+    else
+        TRANS[2] = Vect3(0.0);
+    
+    
+    if (((R1Mag == 0) && (R3Mag == 0)) || ((R2Mag == 0) && (R4Mag == 0))) {
+        Centroid = 0.25 * (C1 + C2 + C3 + C4);
+
+        Area = 0.5*(D1.Mag() + D2.Mag());
+        
+    } else {
+
+            Area = 0.5 * CR.Mag();
+
+        if (R1Mag < 1e-6)
+        Centroid = (C2 + C3 + C4) / 3;
+
+        if (R2Mag < 1e-6)
+        Centroid = (C1 + C3 + C4) / 3;
+
+        if (R3Mag < 1e-6)
+        Centroid = (C1 + C2 + C4) / 3;
+
+        if (R4Mag < 1e-6)
+        Centroid = (C1 + C2 + C3) / 3;
+    }   
 
 
-    Area = 0.5 * CR.Mag();
+
+
+
 
     Vect3 VJ = 0.5 * (C3 + C4) - Centroid;
 
 
     //  Unit vectors of the same
-    TRANS[1] = VJ / VJ.Mag();
+    
+    REAL VJMag = VJ.Mag();
+    if (VJMag > 0)
+        TRANS[1] = VJ / (VJMag);
+    else
+        TRANS[1] = Vect3(0.0);
     //    Get local Y
     TRANS[0] = TRANS[1].Cross(TRANS[2]);
 
@@ -1054,11 +798,10 @@ void PANEL::GetNormal() {
 
     GetEdgeInfo();
 
-    CollocationPoint = Centroid - 1e-6*TRANS[2];
+    CollocationPoint = Centroid;
     Normal = TRANS[2];
 
 }
-
 /**************************************************************/
 void PANEL::CheckNeighb(PANEL *Face) {
     if (Face != this) {

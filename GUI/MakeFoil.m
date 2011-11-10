@@ -72,6 +72,13 @@ if t==1
     Foil.N00xx.LS.Data = - y;
 end
 
+if t==0
+
+    Foil.N00xx.US.Data(2:end-1) = 0.01;
+
+    Foil.N00xx.LS.Data(2:end-1) = -0.01;
+end
+
 Aerofoil.N0012.X = linspace(0,1,1000);
 Aerofoil.N0012.US = interp1(Foil.N0012.US.x,Foil.N0012.US.Data,Aerofoil.N0012.X,'cubic');
 Aerofoil.N0012.LS = interp1(Foil.N0012.LS.x,Foil.N0012.LS.Data,Aerofoil.N0012.X,'cubic');

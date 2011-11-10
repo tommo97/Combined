@@ -174,7 +174,7 @@ void TIME_STEPPER::time_loop() {
         globalOctree->InitVelsGetLaplacian();
         globalOctree->GetVels();
         //      Calculate Panel contribution to FVM face fluxes
-        globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
+//        globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
         //      Get Timestep length
         time_step();
         globalIO->stat_step();
@@ -183,7 +183,7 @@ void TIME_STEPPER::time_loop() {
         //      Advance panels to t + dt
         BODY::BodySubStep(dt, globalSystem->NumSubSteps);
         //      Advance FVM to t + dt
-        globalOctree->FVM(); //  t = t0
+//        globalOctree->FVM(); //  t = t0
         globalOctree->Integrate(); //  t = t0 -> t1
         //      Bin panel wake into tree
         globalSystem->PutWakesInTree();
@@ -195,7 +195,7 @@ void TIME_STEPPER::time_loop() {
     //
     if (globalTimeStepper->dump_next) {
 //                globalSystem->WriteDomain();
-        globalSystem->WriteVorticity();
+        globalSystem->WriteData();
         //        globalOctree->Reset();
     }
 
@@ -222,7 +222,7 @@ void TIME_STEPPER::time_step() {
     //  Calculate timestep length such that no body travels further than a single cell
     REAL OmRMax = 0;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
-        OmRMax = globalSystem->GambitScale * max(OmRMax, max(fabs(BODY::Bodies[i]->Velocity + BODY::Bodies[i]->BodyRates.Cross(BODY::Bodies[i]->Rmax))));
+        OmRMax = max(OmRMax, max(fabs(BODY::Bodies[i]->Velocity + BODY::Bodies[i]->BodyRates.Cross(BODY::Bodies[i]->Rmax))));
 
     dt = min(dt,cfl_lim/OmRMax);
     
