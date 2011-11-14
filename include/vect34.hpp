@@ -82,12 +82,12 @@ class Vect3
 	inline Vect3 operator <  (const REAL B) 	{return Vect3((REAL) x<B, 	(REAL) y<B, 	(REAL) z<B);}
 	inline Vect3 operator >= (const REAL B) 	{return Vect3((REAL) x>=B, 	(REAL) y>=B, 	(REAL) z>=B);}
 	inline Vect3 operator <= (const REAL B) 	{return Vect3((REAL) x<=B, 	(REAL) y<=B, 	(REAL) z<=B);}
-	inline Vect3 operator >  (const Vect3 B) 	{return Vect3((REAL) x>B.x, 	(REAL) y>B.x, 	(REAL) z>B.x);}
-	inline Vect3 operator <  (const Vect3 B) 	{return Vect3((REAL) x<B.x, 	(REAL) y<B.x, 	(REAL) z<B.x);}
-	inline Vect3 operator >= (const Vect3 B) 	{return Vect3((REAL) x>=B.x, 	(REAL) y>=B.x, 	(REAL) z>=B.x);}
-	inline Vect3 operator <= (const Vect3 B) 	{return Vect3((REAL) x<=B.x, 	(REAL) y<=B.x, 	(REAL) z<=B.x);}
-	inline bool operator ==  (const Vect3 B) 	{return ((x==B.x) && 	(y==B.y) && 	(z==B.z));}
-	inline bool operator !=  (const Vect3 B) 	{return ((x!=B.x) || 	(y!=B.y) || 	(z!=B.z));}
+        inline bool operator >  (const Vect3 B) 	{return bool ((x>B.x) || ((x==B.x) && (y>B.y)) || ((x==B.x) && (y==B.y) && (z>B.z)));}
+    	inline bool operator <  (const Vect3 B) 	{return bool ((x<B.x) || ((x==B.x) && (y<B.y)) || ((x==B.x) && (y==B.y) && (z<B.z)));}
+        inline bool operator >=  (const Vect3 B) 	{return bool ((x>B.x) || ((x==B.x) && (y>B.y)) || ((x==B.x) && (y==B.y) && (z>=B.z)));}
+    	inline bool operator <=  (const Vect3 B) 	{return bool ((x<B.x) || ((x==B.x) && (y<B.y)) || ((x==B.x) && (y==B.y) && (z<=B.z)));}
+	inline bool operator ==  (const Vect3 B) 	{return bool ((x==B.x) && (y==B.y) && (z==B.z));}
+	inline bool operator !=  (const Vect3 B) 	{return bool ((x!=B.x) || (y!=B.y) || (z!=B.z));}
 	/*    void operator = (REAL ix, REAL iy, REAL iz) {x = ix; y = iy; z = iz;}*/
 	//	Floating point type operators
 	inline friend Vect3 fabs(const Vect3 B) {return Vect3(fabs(B.x), fabs(B.y), fabs(B.z));}

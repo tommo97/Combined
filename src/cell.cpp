@@ -619,7 +619,7 @@ void FVMCell::CollapseToIP(OctreeCapsule &IP) {
     for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
         for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
             for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
-                IP.Velocity -= (pow(IP.tPosition - Parent->Position, k1, k2, k3) /
+                IP.Velocity += (pow(IP.tPosition - Parent->Position, k1, k2, k3) /
                     (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3])) *
                 (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
 
@@ -631,7 +631,7 @@ void FVMCell::CollapseToIP(OctreeCapsule &IP) {
                         for (int be = 0; be < 2; ++be)
                             for (int ce = 0; ce < 2; ++ce)
                                 if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad)
-                                    globalDirectVel(Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - IP.tPosition,
+                                    globalDirectVel(IP.tPosition - Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position,
                                         static_cast<FVMCell*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce])->Omega,
                                         IP.Velocity);
 }

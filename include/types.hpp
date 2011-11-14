@@ -59,7 +59,7 @@ using namespace std;
 #define NX 300
 #define NY 300
 //  Disables bounds checking in Array class... use with caution. Make sure code runs, and doesn't change...
-#define ARRAY_NO_CHECK
+//#define ARRAY_NO_CHECK
 
 
 //  Some simulation parameters
@@ -306,6 +306,29 @@ public:
     };
 
     OctreeCapsule(const OctreeCapsule &A) : S(A.S), Position(A.Position), Omega(A.Omega), tPosition(A.tPosition), has_load(A.has_load), IP(A.IP) {
+    }
+    inline bool operator>(const OctreeCapsule B) {
+        return Position > B.Position;
+    }
+
+    inline bool operator<(const OctreeCapsule B) {
+        return Position < B.Position;
+    }
+
+    inline bool operator >=(const OctreeCapsule B) {
+        return Position >= B.Position;
+    }
+
+    inline bool operator <=(const OctreeCapsule B) {
+        return Position <= B.Position;
+    }
+
+    inline bool operator ==(const OctreeCapsule B) {
+        return Position == B.Position;
+    }
+
+    inline bool operator !=(const OctreeCapsule B) {
+        return Position != B.Position;
     }
 };
 

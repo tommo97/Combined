@@ -1,6 +1,6 @@
 clear all; clear mex; close all;
-files = dir('R*.mat');
-val = 0;
+files = dir('D*00.mat');
+val = 0.2;
 s = size(files,1);
 % while s < 100
 %     files = dir('f*.dat');
@@ -9,7 +9,7 @@ s = size(files,1);
 %     pause(60);
 % end
 
-scale = 20;
+scale = 80;
 
 makemovie = false;
 fname = files(s).name;

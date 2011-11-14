@@ -102,7 +102,7 @@ void SYSTEM::Initialise() {
 void SYSTEM::TimeStep() {
 
     cout << "----------------------- " << TIME_STEPPER::SimTime  << " " << TIME_STEPPER::MaxTime << endl;
-    while (TIME_STEPPER::SimTime < (TIME_STEPPER::MaxTime - 1e-3))
+    while (TIME_STEPPER::SimTime < (TIME_STEPPER::MaxTime))
         globalTimeStepper->time_loop();
 
     if (WRITE_TO_SCREEN) cout << "Finished at sim time: " << TIME_STEPPER::SimTime << endl;
@@ -172,58 +172,119 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
 
-    int n = (int) GambitScale;
-    REAL h = GambitScale*Del2, d = 1.0, u = 0;
-    REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;;
-  
+    REAL h = 4, d = 1.0, u = 0;
+    REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;
 
+
+
+
+
+    int count = 0;
+    for (REAL a = -h; a <= h; a += 1.0)
+        count++;
+
+    Array <Vect3> Xs(BODY::VortexPositions.size() * count * count * count), Oms(BODY::VortexPositions.size() * count * count * count);
+    Array <int> Owners(BODY::VortexPositions.size() * count * count * count);
+
+    count = 0;
     for (int j = 0; j < BODY::VortexPositions.size(); ++j) {
         Vect3 X = BODY::VortexPositions[j];
-        Vect3 OM = -1.0 * BODY::VortexOmegas[j];
-        OctreeCapsule C(X, OM, true);
-        C.AssociatedBody = BODY::VortexOwnerID[j] - 1;
-        globalOctree->Root->EvalCapsule(C);
-//        for (REAL a = -h; a <= h; a+=1.0)
-//            for (REAL b = -h; b <= h; b+=1.0)
-//                for (REAL c = -h; c <= h; c+=1.0) {
-//
-//                    M4x = 0.0, M4y = 0.0, M4z = 0.0;
-//
-//                    u = abs(a / (h * d));
-//                    if (u <= 2)
-//                        M4x = .5 * (1 - u * (2 - u)*(2 - u));
-//                    if (u <= 1)
-//                        M4x = 1 - 2.5 * u * u + 1.5 * u * u * u;
-//
-//                    u = abs(b / (h * d));
-//                    if (u <= 2)
-//                        M4y = .5 * (1 - u * (2 - u)*(2 - u));
-//                    if (u <= 1)
-//                        M4y = 1 - 2.5 * u * u + 1.5 * u * u * u;
-//
-//                    u = abs(c / (h * d));
-//                    if (u <= 2)
-//                        M4z = .5 * (1 - u * (2 - u)*(2 - u));
-//                    if (u <= 1)
-//                        M4z = 1 - 2.5 * u * u + 1.5 * u * u * u;
-//
-//
-//                    M4x = M4x / h;
-//                    M4y = M4y / h;
-//                    M4z = M4z / h;
-//                    M4 = M4x*M4y*M4z;
-//
-//                    Vect3 G = M4*OM;
-//
-//                    OctreeCapsule C(X + Vect3(a, b, c), G, true);
-//                    C.AssociatedBody = BODY::VortexOwnerID[j] - 1;
-//                    globalOctree->Root->EvalCapsule(C);
-//                }
+        Vect3 OM = BODY::VortexOmegas[j];
+        //        OctreeCapsule C(X, OM, true);
+        //        C.AssociatedBody = BODY::VortexOwnerID[j] - 1;
+        //        globalOctree->Root->EvalCapsule(C);
+
+
+        for (REAL a = -h; a <= h; a += 1.0) {
+            M4x = 0.0;
+            u = abs(a / (h * d));
+            if (u <= 2)
+                M4x = .5 * (1 - u * (2 - u)*(2 - u));
+            if (u <= 1)
+                M4x = 1 - 2.5 * u * u + 1.5 * u * u * u;
+            M4x = M4x / h;
+            for (REAL b = -h; b <= h; b += 1.0) {
+                M4y = 0.0;
+                u = abs(b / (h * d));
+                if (u <= 2)
+                    M4y = .5 * (1 - u * (2 - u)*(2 - u));
+                if (u <= 1)
+                    M4y = 1 - 2.5 * u * u + 1.5 * u * u * u;
+                M4y = M4y / h;
+                for (REAL c = -h; c <= h; c += 1.0) {
+
+                    u = abs(c / (h * d));
+                    if (u <= 2)
+                        M4z = .5 * (1 - u * (2 - u)*(2 - u));
+                    if (u <= 1)
+                        M4z = 1 - 2.5 * u * u + 1.5 * u * u * u;
+
+                    M4z = M4z / h;
+                    M4 = M4x * M4y*M4z;
+
+                    Vect3 G = M4*OM;
+                    Xs[count] = Vect3(floor(X.x + a) + 0.5, floor(X.y + b) + 0.5, floor(X.z + c) + 0.5);
+                    Oms[count] = (G);
+                    Owners[count] = (BODY::VortexOwnerID[j] - 1);
+                    count++;
+                }
+            }
+        }
     }
 
-    BODY::VortexPositions.clear();
-    BODY::VortexOmegas.clear();
-    BODY::VortexOwnerID.clear();
+
+
+
+
+    Array <OctreeCapsule> Test(Xs.size());
+
+    for (int i = 0; i < Test.size(); ++i) {
+        Test[i] = OctreeCapsule(Xs[i], Oms[i], true);
+        Test[i].AssociatedBody = Owners[i];
+    }
+
+    cout << "Sorting..." << endl;
+
+    unsigned long int t0 = ticks();
+    Array<OctreeCapsule>::QuickSortB(Test);
+    unsigned long int t1 = ticks();
+    Vect3 min_diff = 1e16;
+    int num_unique = 1;
+    for (int i = 1; i < Test.size(); ++i) {
+        if (Test[i] < Test[i - 1])
+            cout << "Error in sort..." << endl;
+
+        min_diff = min(min_diff, Test[i].Position - Test[i - 1].Position);
+
+        if (Test[i] != Test[i - 1])
+            num_unique++;
+    }
+
+
+    cout << "Minimum difference: " << min_diff << " time: " << (REAL) (t1 - t0) << " unique elements: " << num_unique << endl;
+
+
+
+    Array <OctreeCapsule> unique_data(num_unique);
+    num_unique = 1;
+    unique_data[num_unique - 1] = Test[0];
+
+    for (int i = 1; i < Test.size(); ++i) {
+        if (Test[i] != Test[i - 1]) {
+            num_unique++;
+            unique_data[num_unique - 1] = Test[i];
+        } else
+            unique_data[num_unique - 1].Omega += Test[i].Omega;
+    }
+
+
+
+    for (int i = 0; i < unique_data.size(); ++i) 
+        globalOctree->Root->EvalCapsule(unique_data[i]);
+
+        BODY::VortexPositions.clear();
+        BODY::VortexOmegas.clear();
+        BODY::VortexOwnerID.clear();
 
 
 }

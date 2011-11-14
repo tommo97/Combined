@@ -65,10 +65,10 @@ for i = 1:length(files)
        
         
         Cl(count) = trapz(PressChord,-CPress);
-        %clf
-        %plot(PressChord,CPress);
+        clf
+        plot(PressChord,CPress);
         disp([i j Cl(count)])
-        %drawnow
+        drawnow
     end
 end
 % clf

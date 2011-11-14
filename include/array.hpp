@@ -82,8 +82,97 @@ public:
 
     Array & operator=(const Array&);
     Array & operator=(const T&);
+    std::vector <T> & ReturnVector(){
+        return std::vector <T> (data_,data_ + length);
+    };
 
     void clear();
+    
+    static int partition(Array <T> &y, int f, int l) {
+        int up, down;
+        T temp, piv = y[f];
+        up = f;
+        down = l;
+        goto partLS;
+        do {
+            temp = y[up];
+            y[up] = y[down];
+            y[down] = temp;
+partLS:
+            while (y[up] <= piv && up < l) {
+                up++;
+            }
+            while (y[down] > piv && down > f) {
+                down--;
+            }
+        } while (down > up);
+        y[f] = y[down];
+        y[down] = piv;
+        return down;
+    };
+
+    static void quicksort1(Array <T> &x, int first, int last) {
+        int pivIndex = 0;
+        if (first < last) {
+            pivIndex = Array::partition(x, first, last);
+            Array::quicksort1(x, first, (pivIndex - 1));
+            Array::quicksort1(x, (pivIndex + 1), last);
+        }
+    };
+
+    static void QuickSortA(Array <T> &In) {
+        Array::quicksort1(In, 0, In.size() - 1);
+    };
+
+    static void QuickSortB(Array <T> &In) {
+        Array::quicksort2(In, 0, In.size() - 1);
+    };
+    
+    static void quicksort2(Array <T> &list, int beg, int end) {
+        T piv;
+        T tmp;
+
+        int l, r, p;
+
+        while (beg < end) // This while loop will avoid the second recursive call
+        {
+            l = beg;
+            p = (beg + end) / 2;
+            r = end;
+
+            piv = list[p];
+
+            while (1) {
+                while ((l <= r) && (list[l]  <= piv)) l++;
+                while ((l <= r) && (list[r]  > piv)) r--;
+
+                if (l > r) break;
+
+                tmp = list[l];
+                list[l] = list[r];
+                list[r] = tmp;
+
+                if (p == r) p = l;
+
+                l++;
+                r--;
+            }
+
+            list[p] = list[r];
+            list[r] = piv;
+            r--;
+
+            // Recursion on the shorter side & loop (with new indexes) on the longer
+            if ((r - beg)<(end - l)) {
+                quicksort2(list, beg, r);
+                beg = l;
+            } else {
+                quicksort2(list, l, end);
+                end = r;
+            }
+        }
+    };
+    
 
     void pop(int);
     Array& push_back(const T&);
@@ -189,10 +278,6 @@ public:
         return L;
     }
     
-
-
-
-
     inline friend Array <T> fabs(const Array<T> A) {
         Array <T> L(A.length);
         for (int i = 0; i < A.length; ++i)

@@ -29,10 +29,25 @@ vpath %.hpp include
 vpath %.o obj
 
 
+platform = Linux
+
+ifeq ($(OSTYPE), darwin9.0)
+ platform = MacOS
+endif
+
+ifeq ($(OSTYPE), darwin10.0)
+ platform = MacOS
+endif
+
+
 ifneq ($(CC),sunCC)
 #	Set up some c++ compiler flags for gcc
+ifeq ($(platform), Linux)
 	OPT_FLAGS = -g -O3 -march=native -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
-        DEBUG_FLAGS = -O0 -g -Wall -Wextra -Wunused -Wuninitialized -Winit-self -Wshadow -W  -Wshadow -fno-common -g -ansi -pedantic -Wconversion -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums
+else
+	OPT_FLAGS = -g -O3 -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
+endif
+	DEBUG_FLAGS = -O0 -g -Wall -Wextra -Wunused -Wuninitialized -Winit-self -Wshadow -W  -Wshadow -fno-common -g -ansi -pedantic -Wconversion -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums
 	OMP_DEBUG_FLAG = $(OMP_FLAG)
 	
 else
@@ -59,27 +74,22 @@ CC_DEBUG_FLAGS =  -c $(SVNDEF) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_DEBUG_FLAG) $(D
 CC_COMMON_FLAGS = -c $(SVNDEF) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_FLAG) $(OPT_FLAGS)
 
 
-platform = Linux
-
-ifneq ($(CC),sunCC)
-    ifeq ($(OMP_FLAG),-fopenmp)
-	    LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lptf77blas -lptcblas -latlas -lgsl
-	else
-	    LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lf77blas -lcblas -latlas -lgsl
-	endif
+ifeq ($(platform), MacOS)
+    LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lcblas -framework Accelerate -lgfortran -lgsl
 else
+    ifneq ($(CC),sunCC)
+	ifeq ($(OMP_FLAG),-fopenmp)
+	        LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lptf77blas -lptcblas -latlas -lgsl
+	    else
+		LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -L/usr/local/atlas/lib/ -llapack -lf77blas -lcblas -latlas -lgsl
+	endif
+    else
 	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS)  $(OPT_FLAGS) -llapack -lgsl -lgslcblas
+    endif
 endif
 
-ifeq ($(OSTYPE), darwin9.0)
- platform = MacOS
- LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lcblas -latlas -lgfortran -lgsl
-endif
 
-ifeq ($(OSTYPE), darwin10.0)
- platform = MacOS
- LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS) -lcblas -framework Accelerate -lgfortran
-endif
+
 
 
 

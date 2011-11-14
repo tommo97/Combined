@@ -162,10 +162,52 @@ void TIME_STEPPER::time_loop() {
         //globalSystem->GetPressures(dt);
         //globalIO->write_m();
         //globalSystem->WriteBodies();
+        
+        Array < Vect3 > Posns, Vdir, VdirTree;
+        Posns.push_back(Vect3(10,20,30));
+        Posns.push_back(Vect3(20,-10,20));
+        Posns.push_back(Vect3(-30,30,10));
+        Posns.push_back(Vect3(40,40,0));
+        Posns.push_back(Vect3(50,-10,-10));
+        Posns.push_back(Vect3(60,20,-20));
+
+        for (int i = 0; i < Posns.size(); ++i) {
+            Vect3 Vel(0.0, 0.0, 0.0);
+            for (int j = 0; j < BODY::VortexPositions.size(); ++j)
+                Vel += globalDirectVel(Posns[i] - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
+            Vdir.push_back(Vel);
+
+        }
+        
         globalSystem->PutWakesInTree();
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
         globalOctree->GetVels();
+        
+
+        for (int i = 0; i < Posns.size(); ++i) {
+            Vect3 Vel(0.0, 0.0, 0.0);
+            
+            for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+                Vel += globalDirectVel(Posns[i] - globalOctree->AllCells[j]->Position, globalOctree->AllCells[j]->Omega);
+            VdirTree.push_back(Vel);
+
+        }
+        
+
+        
+        
+
+
+        
+        for (int i = 0; i < Posns.size(); ++i)
+            cout << "VD: " << Vdir[i] << ", VDTree: " << VdirTree[i] << " VFMM: " << globalOctree->TreeVel(Posns[i]) << endl;
+        
+        
+        
+        
+        
+        
         //        globalSystem->GetPanelFMMVelocities(0.0); //  t = t1
         first_step = false;
     } else {
