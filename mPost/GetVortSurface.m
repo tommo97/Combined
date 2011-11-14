@@ -1,6 +1,6 @@
 clear all; clear mex; close all;
-files = dir('D*00.mat');
-val = 0.2;
+files = dir('R*00.mat');
+val = 1;
 s = size(files,1);
 % while s < 100
 %     files = dir('f*.dat');

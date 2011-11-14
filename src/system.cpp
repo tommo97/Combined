@@ -138,10 +138,6 @@ void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
     for (int SubStep = 1; SubStep <= n_steps; ++SubStep) {
 
 
-
-        globalTimeStepper->substep_time = SubStep*dt;
-        globalTimeStepper->sim_time += dt;
-
     }
 
 }
@@ -172,29 +168,71 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
 
+
+
+
+
+
+    int Num2Insert = 0, Num2Keep = 0;
+
+    Array <bool> toInsert(BODY::VortexPositions.size(), false);
+    for (int i = 0; i < BODY::VortexPositions.size(); ++i)
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (GambitScale * .5)) {
+            Num2Insert++;
+            toInsert[i] = true;
+        } else
+            Num2Keep++;
+
+
+    if (Num2Insert == 0)
+        return;
+
+
+    Array <Vect3> XtoInsert(Num2Insert), XtoKeep(Num2Keep), OMtoInsert(Num2Insert), OMtoKeep(Num2Keep);
+    Array <Vect3*> Origins2Keep(Num2Keep);
+    Array <int> IDtoInsert(Num2Insert), IDtoKeep(Num2Keep);
+
+    int InsertCount = 0, KeepCount = 0;
+    for (int i = 0; i < BODY::VortexPositions.size(); ++i)
+        if (toInsert[i]) {
+            XtoInsert[InsertCount] = BODY::VortexPositions[i];
+            OMtoInsert[InsertCount] = BODY::VortexOmegas[i];
+            IDtoInsert[InsertCount] = BODY::VortexOwnerID[i];
+            InsertCount++;
+        } else {
+            XtoKeep[KeepCount] = BODY::VortexPositions[i];
+            OMtoKeep[KeepCount] = BODY::VortexOmegas[i];
+            IDtoKeep[KeepCount] = BODY::VortexOwnerID[i];
+            Origins2Keep[KeepCount] = BODY::VortexOrigins[i];
+            KeepCount++;
+        }
+
+
+
+    
+
+
     REAL h = 4, d = 1.0, u = 0;
     REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;
-
-
-
-
-
     int count = 0;
     for (REAL a = -h; a <= h; a += 1.0)
         count++;
 
-    Array <Vect3> Xs(BODY::VortexPositions.size() * count * count * count), Oms(BODY::VortexPositions.size() * count * count * count);
-    Array <int> Owners(BODY::VortexPositions.size() * count * count * count);
+
+    Array <Vect3> Xs(Num2Insert * (count * count * count)), Oms(Num2Insert * (count * count * count));
+    Array <int> Owners(Num2Insert * (count * count * count));
 
     count = 0;
-    for (int j = 0; j < BODY::VortexPositions.size(); ++j) {
-        Vect3 X = BODY::VortexPositions[j];
-        Vect3 OM = BODY::VortexOmegas[j];
+
+    for (int j = 0; j < XtoInsert.size(); ++j) {
+        Vect3 X = XtoInsert[j];
+        Vect3 OM = OMtoInsert[j];
+        int ID = IDtoInsert[j];
         //        OctreeCapsule C(X, OM, true);
         //        C.AssociatedBody = BODY::VortexOwnerID[j] - 1;
         //        globalOctree->Root->EvalCapsule(C);
 
-
+        //
         for (REAL a = -h; a <= h; a += 1.0) {
             M4x = 0.0;
             u = abs(a / (h * d));
@@ -225,7 +263,7 @@ void SYSTEM::PutWakesInTree() {
                     Vect3 G = M4*OM;
                     Xs[count] = Vect3(floor(X.x + a) + 0.5, floor(X.y + b) + 0.5, floor(X.z + c) + 0.5);
                     Oms[count] = (G);
-                    Owners[count] = (BODY::VortexOwnerID[j] - 1);
+                    Owners[count] = (ID - 1);
                     count++;
                 }
             }
@@ -243,11 +281,9 @@ void SYSTEM::PutWakesInTree() {
         Test[i].AssociatedBody = Owners[i];
     }
 
-    cout << "Sorting..." << endl;
 
-    unsigned long int t0 = ticks();
     Array<OctreeCapsule>::QuickSortB(Test);
-    unsigned long int t1 = ticks();
+
     Vect3 min_diff = 1e16;
     int num_unique = 1;
     for (int i = 1; i < Test.size(); ++i) {
@@ -260,10 +296,7 @@ void SYSTEM::PutWakesInTree() {
             num_unique++;
     }
 
-
-    cout << "Minimum difference: " << min_diff << " time: " << (REAL) (t1 - t0) << " unique elements: " << num_unique << endl;
-
-
+    cout << "----- " << Num2Insert << " " << Num2Keep << " " << Test.size() << " " << num_unique <<  endl;
 
     Array <OctreeCapsule> unique_data(num_unique);
     num_unique = 1;
@@ -277,14 +310,16 @@ void SYSTEM::PutWakesInTree() {
             unique_data[num_unique - 1].Omega += Test[i].Omega;
     }
 
-
-
-    for (int i = 0; i < unique_data.size(); ++i) 
+    for (int i = 0; i < unique_data.size(); ++i) {
         globalOctree->Root->EvalCapsule(unique_data[i]);
+    }
 
-        BODY::VortexPositions.clear();
-        BODY::VortexOmegas.clear();
-        BODY::VortexOwnerID.clear();
+
+
+    BODY::VortexPositions = XtoKeep;
+    BODY::VortexOmegas = OMtoKeep;
+    BODY::VortexOwnerID = IDtoKeep;
+    BODY::VortexOrigins = Origins2Keep;
 
 
 }
@@ -327,22 +362,63 @@ void SYSTEM::GetFaceVels() {
 
 /**************************************************************/
 void SYSTEM::GetPanelFMMVelocities(REAL dt) {
+    
 
+    Array <Vect3> V2(BODY::AllBodyFaces.size()), V1(BODY::AllBodyFaces.size());
 
+    BODY::Time += dt;
+    for (int i = 0; i < BODY::Bodies.size(); ++i)
+        BODY::Bodies[i]->MoveBody();
+
+#pragma omp parallel for
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        BODY::AllBodyFaces[i]->Vfmm = globalOctree->TreeVel(BODY::AllBodyFaces[i]->Centroid);
-        
-//        if ((i>345) && (i < 400)){
-//            
-//        Vect3 Vel; 
+        PANEL *trg = BODY::AllBodyFaces[i];
+        V2[i] = globalOctree->TreeVel(trg->Centroid);
 //        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-//            Vel += UTIL::globalDirectVel(globalOctree->AllCells[j]->Position - BODY::AllBodyFaces[i]->CollocationPoint, 
-//                    globalOctree->AllCells[j]->Omega, Del2);
-//        
-//        cout << "------- > " << BODY::AllBodyFaces[i]->Vfmm << " " << Vel << endl;
-//                }
-
+//            V2[i] += globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
+//                globalOctree->AllCells[j]->Omega);
     }
+
+    BODY::Time -= dt;
+    for (int i = 0; i < BODY::Bodies.size(); ++i)
+        BODY::Bodies[i]->MoveBody();
+#pragma omp parallel for
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        PANEL *trg = BODY::AllBodyFaces[i];
+        V1[i] = globalOctree->TreeVel(trg->Centroid);
+//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+//            V1[i] += globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
+//                globalOctree->AllCells[j]->Omega);
+    }
+    
+        
+        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i){
+            BODY::AllBodyFaces[i]->dVFMM_dt = (1/dt) * (V2[i]-V1[i]);
+            BODY::AllBodyFaces[i]->Vfmm = V1[i];
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+//    BODY::Time -= dt;
+//    for (int i = 0; i < BODY::Bodies.size(); ++i)
+//        BODY::Bodies[i]->MoveBody();
+//    
+//    
+//    #pragma omp parallel for
+//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+//        PANEL *trg = BODY::AllBodyFaces[i];
+//        trg->Vfmm0 = Vect3(0.0); //globalOctree->TreeVel(trg->Centroid);
+//
+//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+//            trg->Vfmm0 += globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
+//                globalOctree->AllCells[j]->Omega);
+//    }
 //
 //    BODY::Time += dt;
 //    for (int i = 0; i < BODY::Bodies.size(); ++i)

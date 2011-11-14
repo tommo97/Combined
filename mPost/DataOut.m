@@ -3,7 +3,7 @@
 
 clear all
 clc
-%close all
+close all
 files = dir('R*.mat');
 
 count = 0;

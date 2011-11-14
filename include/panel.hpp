@@ -52,7 +52,7 @@ public:
     PanelNeighbSet <PANEL*> Neighb;
     PanelNeighbSet <REAL> Theta;
     Array <REAL> PhiPrev;
-
+    Vect3 dVFMM_dt;
     void CN() {
 
 //        if (!Neighb.L)
@@ -89,7 +89,7 @@ public:
         TRANS[0] = TRANS[1] = TRANS[2] = Vect3(0.);
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
-        Vfmm = Vect3(0.);
+        Vfmm = dVFMM_dt = Vect3(0.);
     }
 
     PANEL(Vect3 P1, Vect3 P2, Vect3 P3, Vect3 P4) {
@@ -109,7 +109,7 @@ public:
         GetNormal();
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
-        Vfmm = Vect3(0.);
+        Vfmm = dVFMM_dt = Vect3(0.);
     }
 
     PANEL(const PANEL &C) {
@@ -151,6 +151,7 @@ public:
         dF = C.dF;
         ID = C.ID;
         Vfmm = C.Vfmm;
+        dVFMM_dt = C.dVFMM_dt;
     }
 
 

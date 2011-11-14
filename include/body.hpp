@@ -39,7 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class BODY {
 public:
-    static Array <Vect3> CGS;
+    static Array <Vect3> CGS, VX, VO;
     Vect3 CG, CGo;
     static Array <Vect3> ATTITUDE;
     Vect3 Attitude;
@@ -70,6 +70,7 @@ public:
     static REAL Time;
     static int SubStep;
     static Array <Vect3> VortexPositions, VortexOmegas, VortexVelocities;
+    static Array <Vect3*> VortexOrigins;
     static Array <int> VortexOwnerID;
     static Array < Array < REAL > > CpHistory, CpHistoryAll;
     static Array <REAL> SubTIMES;

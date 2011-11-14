@@ -216,19 +216,25 @@ void TIME_STEPPER::time_loop() {
         globalOctree->InitVelsGetLaplacian();
         globalOctree->GetVels();
         //      Calculate Panel contribution to FVM face fluxes
-//        globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
+        //        globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
         //      Get Timestep length
         time_step();
         globalIO->stat_step();
         //      Get FMM Vels on Panels @ t and t+dt
-        globalSystem->GetPanelFMMVelocities(dt); //  t = t1
-        //      Advance panels to t + dt
-        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
         //      Advance FVM to t + dt
-//        globalOctree->FVM(); //  t = t0
+        //        globalOctree->FVM(); //  t = t0
         globalOctree->Integrate(); //  t = t0 -> t1
         //      Bin panel wake into tree
+        //      Advance panels to t + dt
+        
+        globalSystem->GetPanelFMMVelocities(dt); //  t = t1
+
+        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
+
         globalSystem->PutWakesInTree();
+
+
+
 
     }
 

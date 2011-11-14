@@ -34,10 +34,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "pgesv.hpp"
 
 Array <Vect3> BODY::VortexPositions, BODY::VortexOmegas, BODY::VortexVelocities;
+Array <Vect3*> BODY::VortexOrigins;
 Array <int> BODY::VortexOwnerID;
 Array <string> BODY::NAMES;
 Array <REAL> BODY::Times;
-Array <Vect3> BODY::CGS;
+Array <Vect3> BODY::CGS, BODY::VX, BODY::VO;
 Array <Vect3> BODY::RATES;
 Array <Vect3> BODY::VELOCITY;
 Array <Vect3> BODY::ATTITUDE;
@@ -108,12 +109,13 @@ void BODY::MakeWake() {
             }
             tmp.push_back(new PANEL(C1, C2, C3, C4));
             tmp.back()->Gamma = ProtoWakes[i][j].Gamma;
+            tmp.back()->SheddingSurface = ProtoWakes[i][j].SheddingSurface;
         }
 
         for (int j = 0; j < tmp.size(); ++j)
             for (int k = 0; k < tmp.size(); ++k)
                 tmp[j]->CheckNeighb(tmp[k]);
-
+        
         WakePanels[i].push_back(tmp);
 
 
@@ -122,6 +124,7 @@ void BODY::MakeWake() {
 
     Array <Vect3> Pts;
     Array <Vect3> Oms;
+    Array <Vect3*> Origins;
     for (int i = 0; i < WakePanels.size(); ++i)
         if (WakePanels[i].size() > 10) {
             for (int j = 0; j < WakePanels[i][0].size(); ++j) {
@@ -134,6 +137,10 @@ void BODY::MakeWake() {
                 Oms.push_back((2.) * tmp->Gamma * (tmp->C3 - tmp->C2));
                 Oms.push_back((2.) * tmp->Gamma * (tmp->C4 - tmp->C3));
                 Oms.push_back((2.) * tmp->Gamma * (tmp->C1 - tmp->C4));
+                Origins.push_back(&(tmp->SheddingSurface->CollocationPoint));
+                Origins.push_back(&(tmp->SheddingSurface->CollocationPoint));
+                Origins.push_back(&(tmp->SheddingSurface->CollocationPoint));
+                Origins.push_back(&(tmp->SheddingSurface->CollocationPoint));
                 delete tmp;
 
             }
@@ -146,6 +153,7 @@ void BODY::MakeWake() {
     //      Find unique vortices - this is a total bodge, but I cannot be bothered writing proper code
 
     Array <Vect3> Posns, Vorts;
+    Array <Vect3*> Orgns;
     bool test;
 
     for (int i = 0; i < Pts.size(); ++i) {
@@ -160,35 +168,16 @@ void BODY::MakeWake() {
         if (test == false) {
             Posns.push_back(Pts[i]);
             Vorts.push_back(Oms[i]);
+            Orgns.push_back(Origins[i]);
         }
     }
 
-    Pts = Posns;
-    Oms = Vorts;
 
-
-
-
-    Array <Vect3> TmpX = BODY::VortexPositions;
-    Array <Vect3> TmpO = BODY::VortexOmegas;
-    Array <int> TmpID = BODY::VortexOwnerID;
-    BODY::VortexPositions = Array <Vect3 > (BODY::VortexPositions.size() + Pts.size());
-    BODY::VortexOmegas = Array <Vect3 > (BODY::VortexOmegas.size() + Pts.size());
-    BODY::VortexOwnerID = Array <int> (BODY::VortexOwnerID.size() + Pts.size());
-    for (int j = 0; j < TmpX.size(); ++j) {
-        BODY::VortexPositions[j] = TmpX[j];
-        BODY::VortexOmegas[j] = TmpO[j];
-        BODY::VortexOwnerID[j] = TmpID[j];
-    }
-
-    for (int j = 0; j < Pts.size(); ++j) {
-        BODY::VortexPositions[TmpX.size() + j] = Pts[j];
-        BODY::VortexOmegas[TmpX.size() + j] = Oms[j];
-        BODY::VortexOwnerID[TmpX.size() + j] = this->ID;
-    }
-    Oms.clear();
-    Pts.clear();
-
+    BODY::VortexPositions.push_back(Posns);// = Array <Vect3 > (BODY::VortexPositions.size() + Pts.size());
+    BODY::VortexOmegas.push_back(Vorts);// = Array <Vect3 > (BODY::VortexOmegas.size() + Pts.size());
+    BODY::VortexOwnerID.push_back(Array <int> (Pts.size(), this->ID));// = Array <int> (BODY::VortexOwnerID.size() + Pts.size());
+    BODY::VortexOrigins.push_back(Orgns);
+    
 
     BODY::VortexVelocities = Array <Vect3 > (BODY::VortexOwnerID.size(), Vect3(0.0));
 
@@ -369,9 +358,13 @@ void BODY::SplitUpLinearAlgebra() {
         REAL PhiWake = 0.0;
 
         for (int j = 0; j < BODY::VortexPositions.size(); ++j)
-            VWake = VWake + globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
-        
-        VWake = VWake + trg->Vfmm;
+            VWake += globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
+
+//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+//            VWake += globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
+//                globalOctree->AllCells[j]->Omega);
+
+        VWake += trg->Vfmm;
 
 
         Array <REAL> PhiD(srcs.size(), 0.0);
@@ -703,11 +696,11 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
         SplitUpLinearAlgebra();
 
-//        //      Interpolate face vels for subtimestep...
-//        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-//            BODY::AllBodyFaces[i]->Vfmm = BODY::AllBodyFaces[i]->Vfmm0 + (BODY::SubStep - 1)*(BODY::AllBodyFaces[i]->Vfmm1 - BODY::AllBodyFaces[i]->Vfmm0) / (n_steps - 1);
-//        }
 
+//        //      Interpolate face vels for subtimestep...
+        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+            BODY::AllBodyFaces[i]->Vfmm += dt*BODY::AllBodyFaces[i]->dVFMM_dt;
+        }
         //  Check the order of the next few lines
         for (int i = 0; i < BODY::Bodies.size(); ++i) {
 
