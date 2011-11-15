@@ -45,12 +45,12 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 32;
+    globalSystem->GambitScale = 64;
     globalSystem->MaxP = 5;
-    globalSystem->Del2 = 1.0;
+    globalSystem->Del2 = 4;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
-    globalSystem->h = 4;
+    globalSystem->h = 8;
 
 
     UTIL::cpu_t = ticks();
