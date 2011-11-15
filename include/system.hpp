@@ -41,7 +41,7 @@ class SYSTEM
 public:
   int MaxP, NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval, NumTransVars;
   bool LiftingLineMode, ZeroBodyRelativeMotion;
-  REAL dtInit, GambitScale, Del2, DS;
+  REAL dtInit, GambitScale, Del2, DS, h;
   REAL Mu,Nu,Rho,Temp;
   string NeuFile, CaseName, WorkingDir;
   Vect3 scaledVinf, unscaledVinf;

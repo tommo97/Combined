@@ -661,7 +661,10 @@ void IO::write_2D_mat(Array < Array < Array <REAL> > > &outdata, Array <string> 
     UTIL::WriteMATLABMatrix2D(vname[i],fname,outdata[i]);
     
     UTIL::PostAmble(fname);
-    
+    UTIL::WriteMATLABMatrix1D("Del2", fname, globalSystem->Del2);
+    UTIL::WriteMATLABMatrix1D("h", fname, globalSystem->h);
+    UTIL::WriteMATLABMatrix1D("GambitScale", fname, globalSystem->GambitScale);
+    UTIL::WriteMATLABMatrix1D("MaxP", fname, globalSystem->MaxP);
     NumFiles[ID]++;
     filestr.close();
 }

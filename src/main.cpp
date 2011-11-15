@@ -41,84 +41,16 @@ void TestFMM(int);
 int main(int argc, char *argv[]) {
     system("clear");
 
-//    srand((unsigned) time(NULL));
-//    
-//
-//    Array <Vect3> Test(1000000);
-//    
-//    for (int i = 0; i < Test.size(); ++i)
-//    {
-//        Test[i].x = floor(200*(0.5-(REAL(rand()) / RAND_MAX))) + 0.5;
-//        Test[i].y = floor(200*(0.5-(REAL(rand()) / RAND_MAX))) + 0.5;
-//        Test[i].z = floor(200*(0.5-(REAL(rand()) / RAND_MAX))) + 0.5;
-//    }
-//    
-//    cout << "Sorting..." << endl;
-//    Test[123] = Test[765];
-//    
-//    Test[948] = Test[1855];
-//    
-//    Array <Vect3> Hold = Test;
-//    unsigned long int t0 = ticks();
-//    Test.QuickSortB();
-//    unsigned long int t1 = ticks();
-//    Vect3 min_diff = 1e16;
-//    int num_unique = 1;
-//    for (int i = 1; i < Test.size(); ++i) {
-//        if (Test[i] < Test[i - 1])
-//            cout << "Error in sort..." << endl;
-//
-//        min_diff = min(min_diff, Test[i] - Test[i - 1]);
-//        
-//        if (Test[i] != Test[i-1])
-//            num_unique++;
-//    }
-//    
-//
-//    cout << "Minimum difference: " << min_diff << " time: " << (REAL) (t1 - t0) << " unique elements: " << num_unique << endl;
-//
-//    Test = Hold;
-//    t0 = ticks();
-//    Test.QuickSortB();
-//    t1 = ticks();
-//
-//   min_diff = 1e16;
-//   num_unique = 1;
-//    for (int i = 1; i < Test.size(); ++i) {
-//        if  (Test[i] < Test[i - 1])
-//            cout << "Error in sort..." << endl;
-//
-//        min_diff = min(min_diff, Test[i] - Test[i - 1]);
-//        
-//        if (Test[i] != Test[i-1])
-//            num_unique++;
-//    }
-//    
-//
-//    cout << "Minimum difference: " << min_diff << " time: " << (REAL) (t1 - t0) << " unique elements: " << num_unique << endl;
-//
-//
-//    Array <Vect3> unique_data(num_unique);
-//    num_unique = 1;
-//    unique_data[num_unique - 1] = Test[0];
-//
-//    for (int i = 1; i < Test.size(); ++i) {
-//        if (Test[i] != Test[i - 1]){
-//            num_unique++;
-//            unique_data[num_unique - 1] = Test[i];
-//        }
-//    }
-    
-//    return 0;
 
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 16;
+    globalSystem->GambitScale = 32;
     globalSystem->MaxP = 5;
-    globalSystem->Del2 = 0.25;
+    globalSystem->Del2 = 1.0;
     globalSystem->DS = .3;
-    globalSystem->dtInit = 0.1;
+    globalSystem->dtInit = 0.05;
+    globalSystem->h = 4;
 
 
     UTIL::cpu_t = ticks();
@@ -168,6 +100,11 @@ Vect3 globalDirectVel(Vect3 diff, Vect3 omega) {
 /**************************************************************/
 void UTIL::PostAmble(string fname) {
     //    WriteMATLABMatrix2D("A", fname, BODY::A);
+    
+
+    
+    
+    
     WriteMATLABMatrix1DVect3("PointsAsRead", fname, BODY::PointsAsRead);
     WriteMATLABMatrix1D("AlphaHistory", fname, BODY::AlphaHistory);
     WriteMATLABMatrix1D("AlphaDotHistory", fname, BODY::AlphaDotHistory);
@@ -366,6 +303,7 @@ void UTIL::PostAmble(string fname) {
     UTIL::WriteMATLABMatrix1D("NeighbIDs2", fname, NeighbIDs2);
     UTIL::WriteMATLABMatrix1D("NeighbIDs3", fname, NeighbIDs3);
     UTIL::WriteMATLABMatrix1D("NeighbIDs1", fname, NeighbIDs1);
+
     UTIL::WriteMATLABMatrix1D("isBound", fname, isBound);
     UTIL::WriteMATLABMatrix1D("BoundEdge", fname, BoundEdge);
     UTIL::WriteMATLABMatrix1D("OtherBCIDs", fname, OtherBCIDs);

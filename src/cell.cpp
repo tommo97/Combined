@@ -192,11 +192,11 @@ void FVMCell::Report() {
                         for (int be = 0; be < 2; ++be)
                             for (int ce = 0; ce < 2; ++ce)
                                 if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
-                                    Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
+                                    Vect3 PV = Position - Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position;
                                     globalDirectVel(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, Vfmm);
                                 }
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        Vect3 PV = globalOctree->AllCells[i]->Position - Position;
+        Vect3 PV = Position - globalOctree->AllCells[i]->Position;
         globalDirectVel(PV, globalOctree->AllCells[i]->Omega, Vel);
         globalDirectVel(PV - Vect3(.0, .5, .0), globalOctree->AllCells[i]->Omega, VelN);
         globalDirectVel(PV + Vect3(.0, .5, .0), globalOctree->AllCells[i]->Omega, VelS);
@@ -359,7 +359,7 @@ void FVMCell::vCollapseVField() {
                                 for (int be = 0; be < 2; ++be)
                                     for (int ce = 0; ce < 2; ++ce)
                                         if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
-                                            Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
+                                            Vect3 PV = Position - Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position;
 #ifdef COLLAPSE_TO_FACES
                                             globalDirectVel(PV - Node::NeighbOffset[i], Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, FaceVels[i]);
 #else

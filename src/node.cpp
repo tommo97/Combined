@@ -573,13 +573,13 @@ void Node::UpdateMomentMults() {
                         FaceCllpsMlt[ix][iy][iz][k1][k2] = Array < NeighbSet <REAL> > (globalSystem->MaxP);
 
                         for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
-                            CllpsMlt[ix][iy][iz][k1][k2][k3] = -pow(Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].N = -pow(Vect3(0., 0.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].S = -pow(Vect3(0., -.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].E = -pow(Vect3(0.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].W = -pow(Vect3(-.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].T = -pow(Vect3(0., .0, 0.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].B = -pow(Vect3(0., .0, -.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            CllpsMlt[ix][iy][iz][k1][k2][k3] = pow(Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].N = pow(Vect3(0., 0.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].S = pow(Vect3(0., -.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].E = pow(Vect3(0.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].W = pow(Vect3(-.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].T = pow(Vect3(0., .0, 0.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].B = pow(Vect3(0., .0, -.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
                             //  The minus sign here is to fix a bizarre bug - velocities were coming out negative.
                         }
                     }

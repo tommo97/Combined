@@ -1,16 +1,65 @@
-%function DataOut()
-
-
 clear all
+%close all
 clc
-close all
+
+set(0,'defaulttextinterpreter','none','defaultaxesposition',[0.10    0.10    .89    .8]);
 files = dir('R*.mat');
 
+
+%   Find out the interpolation weights
+load(files(1).name);
+r = 0;
+Rads = Rloc;
+Chrd = Cloc;
+R0 = Rads(BodySurface0);
+C0 = Chrd(BodySurface0);
+
+
+Xcp0 = CollocPts_x(BodySurface0);
+Ycp0 = CollocPts_y(BodySurface0);
+Zcp0 = CollocPts_z(BodySurface0);
+PressChord = zeros(size(C0(1,:)));
+Cp = CpHistoryAll(1,:)';
+CPress = zeros(size(Cp(1,:)));
+
+
+
+chord_mlt = zeros(size(R0));
+
+for i = 1:size(R0,2)
+    Ri = R0(:,i);
+    
+    ind = find(Ri==r);
+    
+    if isempty(ind)
+        ind_below = find(Ri<r);
+        Rib = Ri(max(ind_below));
+        
+        ind_above = find(Ri>r);
+        Riu = Ri(min(ind_above));
+        
+        ratio = (r - Rib)/(Riu - Rib);
+        
+        C1 = (1-ratio);
+        C2 = ratio;
+        chord_mlt(max(ind_below),i) = C1;
+        chord_mlt(min(ind_above),i) = C2;
+    else
+
+       chord_mlt(ind) = 1;
+    end
+    
+    
+    
+end
+
+        
+        PressChord = sum(chord_mlt.*C0,1);
+        
+  
 count = 0;
 for i = 1:length(files)
     load(files(i).name);
-    
-    
     
     C1 = [BodyPointsX(:,1) BodyPointsY(:,1) BodyPointsZ(:,1)];
     C2 = [BodyPointsX(:,2) BodyPointsY(:,2) BodyPointsZ(:,2)];
@@ -30,7 +79,6 @@ for i = 1:length(files)
     Xcp0 = CollocPts_x(BodySurface0);
     Ycp0 = CollocPts_y(BodySurface0);
     Zcp0 = CollocPts_z(BodySurface0);
-    PressChord = zeros(size(C0(1,:)));
     
     
     for j = 1:size(CpHistoryAll,1)
@@ -42,9 +90,9 @@ for i = 1:length(files)
         Mx(j) = sum(M(:,1));
         
         CLift = sum(F(:,3))*cosd(8.5) - sum(F(:,1))*sind(8.5);
-        CL(j) = sum(CLift)./12;
+        CL(j) = sum(CLift)./4;
         CDrag = Norms(:,1).*Area.*(Cp);
-        CD(j) = sum(CDrag)./12;
+        CD(j) = sum(CDrag)./4;
         
         
         
@@ -52,25 +100,23 @@ for i = 1:length(files)
         Mucp0 = Mu(BodySurface0);
         CpCp0 = Cp(BodySurface0);
         
-        r = 0;
+      
         
         
         
-        CPress = zeros(size(Cp(1,:)));
+        CPress = sum(-chord_mlt.*CpCp0,1);
         
-        for k = 1:size(R0,2)
-            PressChord(k) = interp1(R0(:,k),C0(:,k),r,'cubic');
-            CPress(k) = interp1(R0(:,k),-CpCp0(:,k),r,'cubic');
-        end
        
         
         Cl(count) = trapz(PressChord,-CPress);
-        clf
-        plot(PressChord,CPress);
+        %clf
+        %plot(PressChord,CPress);
         disp([i j Cl(count)])
-        drawnow
+        %drawnow
     end
 end
+% plot(PressChord,CPress);
+% figure
 % clf
 % 
 % 

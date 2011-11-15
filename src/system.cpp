@@ -170,6 +170,7 @@ void SYSTEM::PutWakesInTree() {
 
 
 
+    unsigned long int t0 = ticks();
 
 
 
@@ -211,8 +212,8 @@ void SYSTEM::PutWakesInTree() {
 
     
 
-
-    REAL h = 4, d = 1.0, u = 0;
+    
+    REAL d = 1.0, u = 0;
     REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;
     int count = 0;
     for (REAL a = -h; a <= h; a += 1.0)
@@ -283,7 +284,6 @@ void SYSTEM::PutWakesInTree() {
 
 
     Array<OctreeCapsule>::QuickSortB(Test);
-
     Vect3 min_diff = 1e16;
     int num_unique = 1;
     for (int i = 1; i < Test.size(); ++i) {
@@ -296,7 +296,6 @@ void SYSTEM::PutWakesInTree() {
             num_unique++;
     }
 
-    cout << "----- " << Num2Insert << " " << Num2Keep << " " << Test.size() << " " << num_unique <<  endl;
 
     Array <OctreeCapsule> unique_data(num_unique);
     num_unique = 1;
@@ -314,6 +313,8 @@ void SYSTEM::PutWakesInTree() {
         globalOctree->Root->EvalCapsule(unique_data[i]);
     }
 
+    unsigned long int t1 = ticks();
+    cout << "----- " << Num2Insert << " " << Num2Keep << " " << Test.size() << " " << num_unique << " " << t1-t0 << endl;
 
 
     BODY::VortexPositions = XtoKeep;
@@ -339,19 +340,20 @@ void SYSTEM::GetFaceVels() {
 //    }
     
     
-//#ifdef _OPENMP
-//#pragma omp parallel for
-//#endif
-//    for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-//        for (int i = 0; i < NumBodies; ++i)
-//#ifdef COLLAPSE_TO_FACES
-//            for (int k = 0; k < 6; ++k)
-//                if ((k == 0) || (k == 2) || (k == 4) || !globalOctree->AllCells[j]->Neighb[k])
-//                    globalOctree->AllCells[j]->FaceVels[k] +=
-//                        Bodies[i]->GetVel(globalOctree->AllCells[j]->Position + Node::NeighbOffset[k]);
-//#else
-//            globalOctree->AllCells[j]->Velocity += Bodies[i]->GetVel(globalOctree->AllCells[j]->Position);
-//#endif
+/*#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+        for (int i = 0; i < NumBodies; ++i)
+#ifdef COLLAPSE_TO_FACES
+            for (int k = 0; k < 6; ++k)
+                if ((k == 0) || (k == 2) || (k == 4) || !globalOctree->AllCells[j]->Neighb[k])
+                    globalOctree->AllCells[j]->FaceVels[k] +=
+                        Bodies[i]->GetVel(globalOctree->AllCells[j]->Position + Node::NeighbOffset[k]);
+#else
+            globalOctree->AllCells[j]->Velocity += Bodies[i]->GetVel(globalOctree->AllCells[j]->Position);
+#endif
+*/
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -363,33 +365,46 @@ void SYSTEM::GetFaceVels() {
 /**************************************************************/
 void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     
+    int sz = BODY::AllBodyFaces.size();
+    Array <Vect3> P1(sz), P2(sz), V2(sz), V1(sz);
 
-    Array <Vect3> V2(BODY::AllBodyFaces.size()), V1(BODY::AllBodyFaces.size());
+#pragma omp parallel for
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
+        P1[i] = BODY::AllBodyFaces[i]->CollocationPoint;
+
 
     BODY::Time += dt;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
         BODY::Bodies[i]->MoveBody();
 
 #pragma omp parallel for
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        PANEL *trg = BODY::AllBodyFaces[i];
-        V2[i] = globalOctree->TreeVel(trg->Centroid);
-//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-//            V2[i] += globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
-//                globalOctree->AllCells[j]->Omega);
-    }
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
+        P2[i] = BODY::AllBodyFaces[i]->CollocationPoint;
 
+    
     BODY::Time -= dt;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
         BODY::Bodies[i]->MoveBody();
-#pragma omp parallel for
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        PANEL *trg = BODY::AllBodyFaces[i];
-        V1[i] = globalOctree->TreeVel(trg->Centroid);
-//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-//            V1[i] += globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
-//                globalOctree->AllCells[j]->Omega);
-    }
+    
+
+    V1 = Vect3(0.0);
+    V2 = V1;
+//#pragma omp parallel for
+//    for (int i = 0; i < sz; ++i) {
+//        for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
+//            V1[i] += globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
+//                    globalOctree->AllCells[j]->Omega);
+//            V2[i] += globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
+//                    globalOctree->AllCells[j]->Omega);
+//        }
+//    }
+
+    for (int i = 0; i < sz; ++i)
+        V1[i] = globalOctree->TreeVel(P1[i]);
+
+    for (int i = 0; i < sz; ++i)
+        V2[i] = globalOctree->TreeVel(P2[i]);
+    
     
         
         for (int i = 0; i < BODY::AllBodyFaces.size(); ++i){
@@ -397,48 +412,6 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
             BODY::AllBodyFaces[i]->Vfmm = V1[i];
         }
         
-        
-        
-        
-        
-        
-        
-        
-        
-//    BODY::Time -= dt;
-//    for (int i = 0; i < BODY::Bodies.size(); ++i)
-//        BODY::Bodies[i]->MoveBody();
-//    
-//    
-//    #pragma omp parallel for
-//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-//        PANEL *trg = BODY::AllBodyFaces[i];
-//        trg->Vfmm0 = Vect3(0.0); //globalOctree->TreeVel(trg->Centroid);
-//
-//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-//            trg->Vfmm0 += globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
-//                globalOctree->AllCells[j]->Omega);
-//    }
-//
-//    BODY::Time += dt;
-//    for (int i = 0; i < BODY::Bodies.size(); ++i)
-//        BODY::Bodies[i]->MoveBody();
-//
-//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-//        BODY::AllBodyFaces[i]->Vfmm1 = globalOctree->TreeVel(BODY::AllBodyFaces[i]->Centroid);
-//    }
-//    BODY::Time -= dt;
-//    for (int i = 0; i < BODY::Bodies.size(); ++i)
-//        BODY::Bodies[i]->MoveBody();
-//    
-//    
-//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) 
-//        cout << "D " << BODY::AllBodyFaces[i]->VWake << endl << "F " << BODY::AllBodyFaces[i]->Vfmm0 << endl << "R " << BODY::AllBodyFaces[i]->Vfmm0/BODY::AllBodyFaces[i]->VWake << endl << "---" << endl;
-        
-//    for (int i = 0; i < NumBodies; ++i)
-//        for (int j = 0; j < Bodies[i]->Faces.size(); ++j)
-//            Bodies[i]->Faces[j]->Vfmm =
-//                globalOctree->TreeVel(Bodies[i]->Faces[j]->CollocationPoint->vP);
 
 }
 

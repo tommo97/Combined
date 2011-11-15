@@ -121,26 +121,35 @@ void BODY::MakeWake() {
 
     }
 
-
-    Array <Vect3> Pts;
-    Array <Vect3> Oms;
-    Array <Vect3*> Origins;
+    int n = 3;
+    Array <Vect3> Pts, tPts;
+    Array <Vect3> Oms, tOms;
+    Array <Vect3*> Origins, tOrigins;
     for (int i = 0; i < WakePanels.size(); ++i)
         if (WakePanels[i].size() > 10) {
             for (int j = 0; j < WakePanels[i][0].size(); ++j) {
                 PANEL *tmp = (WakePanels[i][0][j]);
-                Pts.push_back(tmp->C1 + 0.5 * (tmp->C2 - tmp->C1));
-                Pts.push_back(tmp->C2 + 0.5 * (tmp->C3 - tmp->C2));
-                Pts.push_back(tmp->C3 + 0.5 * (tmp->C4 - tmp->C3));
-                Pts.push_back(tmp->C4 + 0.5 * (tmp->C1 - tmp->C4));
-                Oms.push_back((2.) * tmp->Gamma * (tmp->C2 - tmp->C1));
-                Oms.push_back((2.) * tmp->Gamma * (tmp->C3 - tmp->C2));
-                Oms.push_back((2.) * tmp->Gamma * (tmp->C4 - tmp->C3));
-                Oms.push_back((2.) * tmp->Gamma * (tmp->C1 - tmp->C4));
-                Origins.push_back(&(tmp->SheddingSurface->CollocationPoint));
-                Origins.push_back(&(tmp->SheddingSurface->CollocationPoint));
-                Origins.push_back(&(tmp->SheddingSurface->CollocationPoint));
-                Origins.push_back(&(tmp->SheddingSurface->CollocationPoint));
+                for (int k = 0; k < n; ++k) {
+                    tPts.push_back(tmp->C1 + (k * 1.0/(n-1)) * (tmp->C2 - tmp->C1));
+                    tPts.push_back(tmp->C2 + (k * 1.0/(n-1)) * (tmp->C3 - tmp->C2));
+                    tPts.push_back(tmp->C3 + (k * 1.0/(n-1)) * (tmp->C4 - tmp->C3));
+                    tPts.push_back(tmp->C4 + (k * 1.0/(n-1)) * (tmp->C1 - tmp->C4));
+                    tOms.push_back((1.0/n) * tmp->Gamma * (tmp->C2 - tmp->C1));
+                    tOms.push_back((1.0/n) * tmp->Gamma * (tmp->C3 - tmp->C2));
+                    tOms.push_back((1.0/n) * tmp->Gamma * (tmp->C4 - tmp->C3));
+                    tOms.push_back((1.0/n) * tmp->Gamma * (tmp->C1 - tmp->C4));
+                    tOrigins.push_back(&(tmp->SheddingSurface->CollocationPoint));
+                    tOrigins.push_back(&(tmp->SheddingSurface->CollocationPoint));
+                    tOrigins.push_back(&(tmp->SheddingSurface->CollocationPoint));
+                    tOrigins.push_back(&(tmp->SheddingSurface->CollocationPoint));
+                }
+
+                Pts.push_back(tPts);
+                Oms.push_back(tOms);
+                Origins.push_back(tOrigins);
+                tPts.clear();
+                tOms.clear();
+                tOrigins.clear();
                 delete tmp;
 
             }

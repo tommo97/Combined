@@ -1,6 +1,6 @@
 clear all; clear mex; close all;
-files = dir('R*00.mat');
-val = 1;
+files = dir('R*.mat');
+val = 2;
 s = size(files,1);
 % while s < 100
 %     files = dir('f*.dat');
@@ -9,7 +9,7 @@ s = size(files,1);
 %     pause(60);
 % end
 
-scale = 80;
+scale = 16;
 
 makemovie = false;
 fname = files(s).name;
@@ -83,7 +83,8 @@ colorbar
 
 VIs = VI;
 figure
-VIs(VIs>5*std(VIs(:))) = 5*std(VIs(:));
-slice(XI,YI,ZI,VIs,[0],[],[0])
+%VIs(VIs>3*std(VIs(:))) = 3*std(VIs(:));
+slice(XI,YI,ZI,VIs,[0],[4:4:max(abs(YI(:)))-4],[])
 axis equal
-shading interp
+shading flat
+set(gcf,'Renderer','OpenGL')
