@@ -287,7 +287,7 @@ void TIME_STEPPER::time_step() {
 
 
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = dt_euler / 10.0 ;//min(dt_euler / 25, cfl_lim / (OmRMax));
+    REAL dt_lagrange = dt_euler / 10 ;//min(dt_euler / 25, cfl_lim / (OmRMax));
 
     int nss = ceil(dt_euler / dt_lagrange);
 
