@@ -4,6 +4,7 @@ blade.REVERSE = false;
 blade.isNREL = false;   %   for transisition piece
 blade.isSOTON = false;  %   for transisition piece
 blade.TransitionPiece = [];
+blade.SWEEP = [];
 switch blade.type;
     case 'NREL UAE' % User selects Peaks.
         %%  NRELBlade -- NREL data
@@ -561,11 +562,28 @@ switch blade.type;
         % x = [x fliplr(4-x)];
         % y = [y fliplr(y)];
         
-        blade.RADIUS = linspace(-600,600);
+        blade.RADIUS = linspace(-10,10);
         blade.THETA =   0*ones(size(blade.RADIUS));
         blade.CHORD =  1*ones(size(blade.RADIUS));
         blade.THICKNESS = [];
+        
+    case 'Wing'
+        blade.RADIUS = linspace(-10,10)/5;
+        blade.THETA =   [linspace(5,0,50) linspace(0,5,50)];
+        
+        theta = [4.4  4.3 3.8 3.5 3 2.9 2.5 2 1.9 1.5 0.6 0.1 -0.6 -2 -5.5];
+        
+        r = linspace(0.1, 0.975,numel(theta))*max(blade.RADIUS);
+        theta = -[fliplr(theta) theta];
+        r = [fliplr(-r) r];
+        blade.THETA = interp1(r,theta,blade.RADIUS,'cubic','extrap');
+        blade.THETA(20:40) = blade.THETA(20:40)-10;
+        blade.THETA(60:80) = blade.THETA(60:80)-10;
+        
+        blade.CHORD =  [linspace(3.983,17.7,50)/17.7 linspace(17.7,3.983,50)/17.7];
+        blade.SWEEP =  sind(33.5)*[linspace(10,0,50) linspace(0,10,50)]/5;
 end
+
 
 minrad = min(blade.RADIUS);
 maxrad = max(blade.RADIUS);
@@ -617,6 +635,12 @@ if ~isempty(blade.y)
     if ~isempty(blade.THICKNESS)
         blade.Thickness = interp1(blade.RADIUS,blade.THICKNESS,blade.Radius,'cubic');
     end
+    if ~isempty(blade.SWEEP)
+        blade.Sweep = interp1(blade.RADIUS,blade.SWEEP,blade.Radius,'cubic');
+    else
+            blade.Sweep = zeros(size(blade.Radius));
+    end
+
 end
 
 PlotBlade(blade);

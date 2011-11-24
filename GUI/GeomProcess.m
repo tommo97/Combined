@@ -5,7 +5,7 @@ function Blade = GeomProcess(handles)
 Blade.Radius = handles.Span.Radius';
 Blade.Chord = handles.Span.Chord';
 Blade.Theta = handles.Span.Theta';
-
+Blade.Sweep = handles.Span.Sweep';
 
 Blade.Reverse = handles.Span.REVERSE;
 

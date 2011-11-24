@@ -428,7 +428,7 @@ if get(handles.timestamp,'Value')
 end
 set(handles.fullname_box,'String',handles.fullname);
 handles = MakeNEU(handles);
-handles = WriteCaseFile(handles);
+%handles = WriteCaseFile(handles);
 Bodies = handles.Bodies;
 %save(['../mat_files/' handles.fullname '.mat'],'Bodies');
 DispMsg(handles);

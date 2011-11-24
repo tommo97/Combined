@@ -73,19 +73,21 @@ LowerS.n = RootBlendCoefft.*RLowerS.n + TipBlendCoefft.*TLowerS.n;
 LowerS.m = RootBlendCoefft.*RLowerS.m + TipBlendCoefft.*TLowerS.m;
 %%   Scale and twist
 thetas = repmat(Blade.Theta,[1 Blade.NChord]);
+sweeps = repmat(Blade.Sweep,[1 Blade.NChord]);
 if (Blade.Reverse)
     thetas = -thetas;
+    sweeps = -sweeps;
 end
 chords = repmat(Blade.Chord,[1 Blade.NChord]);
 
 
-Blade.Upper.x = chords.*(UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
+Blade.Upper.x = sweeps + chords.*(UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
 Blade.Upper.y = UpperS.y;
 Blade.Upper.z = chords.*(UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas));
 Blade.Upper.n = UpperS.n;
 Blade.Upper.m = UpperS.m;
 
-Blade.Lower.x = chords.*(LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
+Blade.Lower.x = sweeps + chords.*(LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
 Blade.Lower.y = LowerS.y;
 Blade.Lower.z = chords.*(LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas));
 Blade.Lower.n = LowerS.n;
