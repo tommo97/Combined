@@ -6,11 +6,18 @@ Blade.Radius = handles.Span.Radius';
 Blade.Chord = handles.Span.Chord';
 Blade.Theta = handles.Span.Theta';
 Blade.Sweep = handles.Span.Sweep';
+Blade.RoundTips = handles.Span.RoundTips;
+
+
+if Blade.RoundTips
+    Blade.num_tip_pans = handles.Span.num_tip_pans;
+    %disp(Blade.num_tip_pans);
+end
 
 Blade.Reverse = handles.Span.REVERSE;
 
 Blade.isNREL = handles.Span.isNREL;
-Blade.isSOTON = handles.Span.isSOTON
+Blade.isSOTON = handles.Span.isSOTON;
 
 if Blade.isNREL || Blade.isSOTON
     Blade.n1 = handles.Span.n1;

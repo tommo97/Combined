@@ -106,6 +106,10 @@ handles.Span.DistPanel.bell_button = handles.span_bell;
 handles.Span.DistPanel.num_panels = handles.span_pan_count;
 handles.Span.DistPanel.bell_param = handles.span_bell_param;
 handles.Span.DistPanel.NumPanels = handles.span_pan_count;
+
+
+handles.Span.tip_pan_count = handles.tip_pan_count;
+handles.Span.RoundTips = false;
 handles.Span.Cutout.Root = 0;
 handles.Span.Cutout.Tip = 0;
 set(handles.Span.DistPanel.bell_param,'enable','off')
@@ -237,6 +241,7 @@ function chord_bell_param_CreateFcn(source, eventdata, handles)
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
 end
+
 function span_pans_buttongroup_SelectionChangeFcn(source, eventdata)
 %retrieve GUI data, i.e. the handles structure
 handles = guidata(source); 
@@ -245,14 +250,17 @@ handles.Span = UpdateSpan(handles.Span);
 guidata(source, handles);
 %updates the handles structure
 guidata(source, handles);
+
 function span_pan_count_Callback(source, eventdata, handles)
 handles.Span.DistPanel = PanelDistButtonsParam(handles.Span.DistPanel);
 handles.Span = UpdateSpan(handles.Span);
 guidata(source, handles);
+
 function span_pan_count_CreateFcn(source, eventdata, handles)
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
 end
+
 function span_bell_param_Callback(source, eventdata, handles)
 handles.Span.DistPanel = PanelDistButtonsParam(handles.Span.DistPanel);
 handles.Span = UpdateSpan(handles.Span);
@@ -261,6 +269,7 @@ function span_bell_param_CreateFcn(source, eventdata, handles)
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
 end
+
 % --- Executes on button press in MakeBlade.
 function MakeBlade_Callback(source, eventdata, handles)
 handles.Blade = GeomProcess(handles);
@@ -799,3 +808,47 @@ function r_upon_R_CreateFcn(source, eventdata, handles)
 if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(source,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in rounded_tips.
+function rounded_tips_Callback(source, eventdata, handles)
+% hObject    handle to rounded_tips (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+state = get(source,'Value');
+handles.Span.RoundTips = state;
+
+
+if state
+    set(handles.Span.tip_pan_count,'enable','on')
+    set(handles.Span.tip_pan_count,'string','2')
+    handles.Span.num_tip_pans = 2;
+    
+else
+    set(handles.Span.tip_pan_count,'enable','off')
+    set(handles.Span.tip_pan_count,'string','Num. Pans.')
+    handles.Span.num_tip_pans = [];
+end
+guidata(source, handles);
+
+
+function tip_pan_count_Callback(source, eventdata, handles)
+% hObject    handle to tip_pan_count (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of tip_pan_count as text
+handles.Span.num_tip_pans = str2double(get(source,'String'));
+guidata(source, handles);
+% --- Executes during object creation, after setting all properties.
+function tip_pan_count_CreateFcn(source, eventdata, handles)
+% hObject    handle to tip_pan_count (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(source,'BackgroundColor','white');
+end
+guidata(source, handles);
