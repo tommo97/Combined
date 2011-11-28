@@ -78,6 +78,7 @@ IO::IO() {
         cout << " " << VERS << "; Number of threads: "
             << globalSystem->NumThreads << endl;
 #endif
+    latest_file.clear();
 }
 
 /**************************************************************/
@@ -538,7 +539,7 @@ void IO::stat_step() {
 
     out_stream << "\t" << FVMCell::NumCells;
     if (globalTimeStepper->dump_next) {
-        out_stream << "\t<-W";
+        out_stream << "\t   *";
     } else {
         out_stream << "\t   ";
     }
@@ -573,8 +574,10 @@ void IO::display_stat_step() {
         //mvprintw(4,0,"%s",out.c_str());
         refresh();
 #else
-        if (WRITE_TO_SCREEN)
-            cout << step_data.c_str() << endl;
+        if (WRITE_TO_SCREEN) {
+            cout << step_data.c_str() << " " << latest_file << endl;
+            latest_file.clear();
+        }
 #endif
     }
 
@@ -633,7 +636,7 @@ void IO::write_file(stringstream &outstream, string OutName, string ext,
     filestr.close();
 }
 /**************************************************************/
-void IO::write_2D_mat(Array < Array < Array <REAL> > > &outdata, Array <string> vname, string OutName, bool disp) {
+void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName, bool disp) {
 
     int ID = -1;
     for (int i = 0; i < NumFiles.size(); ++i)
@@ -653,12 +656,29 @@ void IO::write_2D_mat(Array < Array < Array <REAL> > > &outdata, Array <string> 
     int pad = 6 - num.str().length();
     fname += "_" + globalSystem->CaseName + string(pad, '0') + num.str() + ".mat";
     num_file++;
-    if (WRITE_TO_SCREEN && disp)
-        cout << fname << endl;
+    latest_file = "<-W " + fname;
+//    if (WRITE_TO_SCREEN && disp)
+//        cout << fname << endl;
     fstream filestr;
 
-    for (int i = 0; i < vname.size(); ++i)
-    UTIL::WriteMATLABMatrix2D(vname[i],fname,outdata[i]);
+    for (int i = 0; i < outdata.Int1DArrays.size(); ++i)
+        UTIL::WriteMATLABMatrix1D(outdata.Int1DArrayStrings[i], fname, outdata.Int1DArrays[i]);
+
+    for (int i = 0; i < outdata.Double1DArrays.size(); ++i)
+        UTIL::WriteMATLABMatrix1D(outdata.Double1DArrayStrings[i], fname, outdata.Double1DArrays[i]);
+
+    for (int i = 0; i < outdata.Vect1DArrays.size(); ++i)
+        UTIL::WriteMATLABMatrix1DVect3(outdata.Vect1DArrayStrings[i], fname, outdata.Vect1DArrays[i]);
+
+    for (int i = 0; i < outdata.Int2DArrays.size(); ++i)
+        UTIL::WriteMATLABMatrix2D(outdata.Int2DArrayStrings[i], fname, outdata.Int2DArrays[i]);
+
+    for (int i = 0; i < outdata.Double2DArrays.size(); ++i)
+        UTIL::WriteMATLABMatrix2D(outdata.Double2DArrayStrings[i], fname, outdata.Double2DArrays[i]);
+
+    for (int i = 0; i < outdata.Vect2DArrays.size(); ++i)
+        UTIL::WriteMATLABMatrix2DVect3(outdata.Vect2DArrayStrings[i], fname, outdata.Vect2DArrays[i]);
+    
     
     UTIL::PostAmble(fname);
     UTIL::WriteMATLABMatrix1D("Del2", fname, globalSystem->Del2);

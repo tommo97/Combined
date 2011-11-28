@@ -675,6 +675,42 @@ void UTIL::WriteMATLABMatrix1D(string vname, string fname, Array<int> &data) {
 
 }
 
+
+void UTIL::ReadBinaryVect3(Array <Vect3> &tmp, string fname) {
+
+    int length;
+    double * buffer;
+
+    ifstream infile;
+
+    infile.open(fname.c_str(), ios::binary);
+
+    if (infile.is_open()) {
+        // get length of file:
+        infile.seekg(0, ios::end);
+        length = infile.tellg();
+        infile.seekg(0, ios::beg);
+
+        // allocate memory:
+        buffer = new double [length / (sizeof (double))];
+
+        // read data as a block:
+        infile.read((char *) buffer, length);
+        infile.close();
+        int sz = length / (3 * sizeof (double));
+        cout << "Reading " << length << " bytes, equiv to " << length / (sizeof (double)) << " doubles or " << length / (3 * sizeof (double)) << " Vect3 " << endl;
+
+        tmp.allocate(sz);
+
+        for (int i = 0; i < sz; ++i)
+            tmp[i] = Vect3(buffer[i], buffer[i + sz], buffer[i + 2 * sz]);
+
+
+        delete[] buffer;
+    } else {
+        cout << "Error opening file " << fname << endl;
+    }
+}
 /**************************************************************/
 Array <REAL> UTIL::globalLinspace(REAL start, REAL end, int n) {
     Array <REAL> output(n);

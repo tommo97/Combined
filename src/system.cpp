@@ -101,10 +101,12 @@ void SYSTEM::Initialise() {
 /**************************************************************/
 void SYSTEM::TimeStep() {
 
-    cout << "----------------------- " << TIME_STEPPER::SimTime  << " " << TIME_STEPPER::MaxTime << endl;
-    while (TIME_STEPPER::SimTime < (TIME_STEPPER::MaxTime))
+    while ((TIME_STEPPER::SimTime < (TIME_STEPPER::MaxTime)) && (!globalTimeStepper->last_step))
         globalTimeStepper->time_loop();
 
+    //  Final loop since last_step will exit the previous loop
+    globalTimeStepper->time_loop();
+    
     if (WRITE_TO_SCREEN) cout << "Finished at sim time: " << TIME_STEPPER::SimTime << endl;
 }
 
@@ -314,7 +316,7 @@ void SYSTEM::PutWakesInTree() {
     }
 
     unsigned long int t1 = ticks();
-    cout << "----- " << Num2Insert << " " << Num2Keep << " " << Test.size() << " " << num_unique << " " << t1-t0 << endl;
+//    cout << "----- " << Num2Insert << " " << Num2Keep << " " << Test.size() << " " << num_unique << " " << t1-t0 << endl;
 
 
     BODY::VortexPositions = XtoKeep;
@@ -326,40 +328,24 @@ void SYSTEM::PutWakesInTree() {
 }
 /**************************************************************/
 void SYSTEM::GetFaceVels() {
-    for (int i = 0; i < Node::NumNodes; ++i)
-        Node::AllNodes[i]->PanelVel = Vect3(0.0);
 
-//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
-//        globalOctree->Root->RecursivePanelVel(BODY::AllBodyFaces[i]);
-//
-//    globalOctree->Root->RecursivePassPanelVelsDown();
-//
-//    for (int i = 0; i < globalOctree->AllCells.size(); ++i){
-////        cout << globalOctree->AllCells[i]->Velocity << " " << globalOctree->AllCells[i]->PanelVel << endl;
-//        globalOctree->AllCells[i]->Velocity += globalOctree->AllCells[i]->PanelVel;
-//    }
-    
-    
-/*#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-        for (int i = 0; i < NumBodies; ++i)
-#ifdef COLLAPSE_TO_FACES
-            for (int k = 0; k < 6; ++k)
-                if ((k == 0) || (k == 2) || (k == 4) || !globalOctree->AllCells[j]->Neighb[k])
-                    globalOctree->AllCells[j]->FaceVels[k] +=
-                        Bodies[i]->GetVel(globalOctree->AllCells[j]->Position + Node::NeighbOffset[k]);
-#else
-            globalOctree->AllCells[j]->Velocity += Bodies[i]->GetVel(globalOctree->AllCells[j]->Position);
-#endif
-*/
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->SetVelsEqual();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        globalOctree->AllCells[i]->PanelVel = Vect3(0.0);
 
+        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j)
+            globalOctree->AllCells[i]->PanelVel += BODY::AllBodyFaces[j]->BodyPanelVelocity(globalOctree->AllCells[i]->Position);
+
+
+        for (int j = 0; j < BODY::AllProtoWakes.size(); ++j)
+            globalOctree->AllCells[i]->PanelVel += BODY::AllProtoWakes[j]->VortexPanelVelocity(globalOctree->AllCells[i]->Position);
+
+        globalOctree->AllCells[i]->Velocity += globalOctree->AllCells[i]->PanelVel;
+        
+        globalOctree->AllCells[i]->SetVelsEqual();
+    }
 }
 
 /**************************************************************/
@@ -456,10 +442,12 @@ void SYSTEM::WriteDomain() {
 /**************************************************************/
 void SYSTEM::WriteData() {
 
-
+   MATLABOutputStruct Output;
+   
    
     Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 6 + (NumTransVars * 3));
     int count = 0;
+    Vect3 Mins(1e32,1e32,1e32), Maxs(-1e32,-1e32,-1e32);
     for (int i = 0; i < globalOctree->AllCells.size(); ++i){
             DataOut[count][0] = globalOctree->AllCells[i]->Position.x + 0.5;
             DataOut[count][1] = globalOctree->AllCells[i]->Position.y + 0.5;
@@ -477,23 +465,64 @@ void SYSTEM::WriteData() {
                 cnt++;
             }
             count++;
+            
+            Mins = min(globalOctree->AllCells[i]->Position,Mins);
+            Maxs = max(globalOctree->AllCells[i]->Position,Maxs);
+            
         }
 
-    Array < Array < Array <REAL> > > Output;
-    Output.push_back(DataOut);
-    Output.push_back(BODY::CpHistoryAll);
+    cout << "Domain Size: " << Maxs - Mins << endl;
     
-    Array <Array <REAL> > SubTimes(BODY::SubTIMES.size());
-    for (int i = 0; i < BODY::SubTIMES.size(); ++i)
-        SubTimes[i].push_back(BODY::SubTIMES[i]);
+    Array < Array <Vect3> > BodyVelSliceY, TreeVelSliceY,  Posns;
+    int imax = 1, jmax = 1;
+    for (int i = (int) Mins.x - 48; i < (int) Maxs.x + 48; ++i)
+        imax++;
+    for (int j = (int) Mins.z - 48; j < (int) Maxs.z + 48; ++j)
+        jmax++;
+
     
-    Output.push_back(SubTimes);
-    Array <string> OutNames;
-    OutNames.push_back("Domain");
-    OutNames.push_back("CpHistoryAll");
-    OutNames.push_back("SubTimes");
-    globalIO->write_2D_mat(Output, OutNames, string("RunData"), true);
+    Posns = TreeVelSliceY = BodyVelSliceY = UTIL::zerosv(imax,jmax);
+    for (int i = 0; i < imax; ++i)
+        for (int j = 0; j < jmax; ++j)
+        {
+            Posns[i][j] = Mins + Vect3(i-48.0,0.0,j-48.0);
+            TreeVelSliceY[i][j] = globalOctree->TreeVel(Posns[i][j]);
+            
+            for (int k = 0; k < BODY::AllBodyFaces.size(); ++k)
+            {
+                BodyVelSliceY[i][j] += BODY::AllBodyFaces[k]->SourceVel(Posns[i][j]);
+                BodyVelSliceY[i][j] += BODY::AllBodyFaces[k]->BodyPanelVelocity(Posns[i][j]);
+            }
+        }
+    
+    
+
+
+    Output.Double2DArrays.push_back(DataOut);
+    Output.Double2DArrayStrings.push_back(string("Domain"));
+
+    Output.Double2DArrays.push_back(BODY::CpHistoryAll);
+    Output.Double2DArrayStrings.push_back(string("CpHistoryAll"));
+
+    Output.Double2DArrays.push_back(BODY::CpHistoryAllD);
+    Output.Double2DArrayStrings.push_back(string("CpHistoryAllD"));
+
+
+    Output.Double1DArrays.push_back(BODY::SubTIMES);
+    Output.Double1DArrayStrings.push_back(string("CpHistoryAllD"));
+
+    Output.Vect2DArrays.push_back(TreeVelSliceY);
+    Output.Vect2DArrayStrings.push_back(string("TreeVelSliceY"));
+
+    Output.Vect2DArrays.push_back(BodyVelSliceY);
+    Output.Vect2DArrayStrings.push_back(string("BodyVelSliceY"));  
+    
+    Output.Vect2DArrays.push_back(Posns);
+    Output.Vect2DArrayStrings.push_back(string("SlicePositions"));  
+    
+    globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
     BODY::CpHistoryAll.clear();
+    BODY::CpHistoryAllD.clear();
     BODY::SubTIMES.clear();
 }
 

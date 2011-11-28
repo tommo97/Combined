@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "vect34.hpp"
 unsigned long int Node::NumNodes = 0;
 unsigned long int Node::NodeCount = 0;
-Array <Node*> Node::AllNodes;
+Array <Node*> Node::AllNodes, Node::UpList, Node::DownList;
 
 /**************************************************************/
 Node::~Node() {
@@ -620,7 +620,7 @@ void Node::RecursivePanelVel(PANEL* Pan){
     REAL R2 = R.Dot(R);
     bool DoHere = true;
 
-    if (R2 < (PANEL::FarField * Pan->MaxDiagonal)*(PANEL::FarField * Pan->MaxDiagonal) || (R2 < (0.25*size*size))) {
+    if (R2 < (0.75*size*size)) {                //      If panel centroid is inside node, do at children
         if (Children[0][0][0]) {
             DoHere = false;
             Children[0][0][0]->RecursivePanelVel(Pan);
@@ -655,7 +655,6 @@ void Node::RecursivePanelVel(PANEL* Pan){
         }
     }
     if (DoHere) {
-        PanelVel -= Pan->SourceVel(P);
-        PanelVel -= Pan->BodyPanelVelocity(P);
+        PanelVel += Pan->BodyPanelVelocity(P);
     }
 }

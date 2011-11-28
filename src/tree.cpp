@@ -82,6 +82,8 @@ void OCTREE::Reset() {
     AllCells.assign(FVMCell::NumCells, NULL);
     Node::AllNodes.allocate(Node::NumNodes);
     Node::NodeCount = 0;
+    Node::UpList.clear();
+    Node::DownList.clear();
     Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
 }
 /**************************************************************/

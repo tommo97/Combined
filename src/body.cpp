@@ -60,6 +60,7 @@ Array < Array <REAL> > BODY::LocalChordRadius;
 Array <REAL> BODY::AlphaHistory;
 Array <REAL> BODY::AlphaDotHistory;
 Array < Array <REAL> > BODY::CpHistory, BODY::CpHistoryAll;
+Array < Array <REAL> > BODY::CpHistoryD, BODY::CpHistoryAllD;
 Array <REAL> BODY::SubTIMES;
 Array <REAL> BODY::RHS;
 Array <REAL> BODY::Mu;
@@ -295,7 +296,7 @@ void BODY::GetNonLinearRHS() {
         //  Iterate over all protowake panels
         REAL PhiWake = 0.0;
         for (int j = 0; j < BODY::AllProtoWakes.size(); ++j) {
-            U += BODY::AllProtoWakes[j]->WakePanelVelocity(Pos);
+            U += BODY::AllProtoWakes[j]->VortexPanelVelocity(Pos);
             //            REAL fid = 0;
             //            PANEL::DoubletPotential(BODY::AllProtoWakes[j], Pos, fid, 1, 2);
             //            PhiWake += BODY::AllProtoWakes[j]->Gamma * fid;
@@ -320,7 +321,16 @@ void BODY::GetNonLinearRHS() {
         }
 
 }
-
+/**************************************************************/
+void BODY::GetPanelVels() {
+    for (int i = 0; i < Faces.size(); ++i) {
+        Faces[i].Vd = Vect3(0.0);
+        for (int j = 0; j < Faces.size(); ++j) {
+            Faces[i].Vd += -Faces[j].Mu * localVD[i][j];
+            Faces[i].Vd += Faces[j].Sigma * localVS[i][j];
+        }
+    }
+};
 /**************************************************************/
 void BODY::SplitUpLinearAlgebra() {
 
@@ -446,6 +456,8 @@ void BODY::SplitUpLinearAlgebra() {
             BODY::Bodies[I]->Faces[i].Mu = BODY::Bodies[I]->Faces[i].Gamma = BODY::Bodies[I]->localMu[i];
     }
 
+    
+
 
     for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->PhiPrev[3] = BODY::AllBodyFaces[i]->PhiPrev[2];
@@ -454,11 +466,16 @@ void BODY::SplitUpLinearAlgebra() {
         BODY::AllBodyFaces[i]->PhiPrev[0] = BODY::AllBodyFaces[i]->Mu;
     }
 
+    for (int I = 0; I < BODY::Bodies.size(); ++I)
+        BODY::Bodies[I]->GetPanelVels();
+    
     REAL Lift = 0.0, incrementalCp = 0.0;
     Vect3 Torque(0.), Force(0.);
     for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i) {
         REAL Cp = BODY::AllBodyFaces[i]->GetCp();
         BODY::CpHistory[BODY::SubStep - 1][i] = Cp;
+        Cp = BODY::AllBodyFaces[i]->GetCpD();
+        BODY::CpHistoryD[BODY::SubStep - 1][i] = Cp;
         Vect3 F = Cp * BODY::AllBodyFaces[i]->Area * BODY::AllBodyFaces[i]->TRANS[2];
         Lift += F.z;
         Vect3 dQ = BODY::AllBodyFaces[i]->dF.Cross(BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG);
@@ -689,6 +706,9 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
     BODY::CpHistoryAll.push_back(BODY::CpHistory);
     BODY::CpHistory = UTIL::zeros(n_steps, BODY::AllBodyFaces.size());
+    
+    BODY::CpHistoryAllD.push_back(BODY::CpHistoryD);
+    BODY::CpHistoryD = UTIL::zeros(n_steps, BODY::AllBodyFaces.size());
     BODY::SubTIMES = BODY::Times;
 
     for (BODY::SubStep = 1; BODY::SubStep <= n_steps; ++BODY::SubStep) {
@@ -855,13 +875,6 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
             BODY::Bodies[i]->MakeWake();
 
 
-
-
-
-
-
-
-
     }
 
 }
@@ -974,14 +987,15 @@ void BODY::UpdateGlobalInfluenceMatrices() {
         int n = BODY::Bodies[I]->Faces.size();
         BODY::Bodies[I]->localA = UTIL::zeros(n, n);
         BODY::Bodies[I]->localB = UTIL::zeros(n, n);
-
+        BODY::Bodies[I]->localVS = UTIL::zerosv(n, n);
+        BODY::Bodies[I]->localVD = UTIL::zerosv(n, n);
         for (int i = 0; i < n; ++i) {
             PANEL *trg = &BODY::Bodies[I]->Faces[i];
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
             for (int j = 0; j < n; ++j) {
-                REAL a = 0, b = 0, c = 0;
+                REAL a = 0, b = 0, c = 0, vt1 = 0, vt2 = 0;
                 REAL PhiS = 0.0, PhiD = 0.0;
                 PANEL *src = &BODY::Bodies[I]->Faces[j];
                 PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
@@ -993,12 +1007,24 @@ void BODY::UpdateGlobalInfluenceMatrices() {
 
 
                 c = PhiD;
+
+                src->Mu = 1.0;
+                BODY::Bodies[I]->localVD[i][j] = VectMultMatrix(trg->TRANS, src->BodyPanelVelocity(trg->CollocationPoint));
+                
+                src->Sigma = 1.0;
+                BODY::Bodies[I]->localVS[i][j] = VectMultMatrix(trg->TRANS, src->SourceVel(trg->CollocationPoint));
+                
+                
                 if (BODY::Bodies[I]->Faces[j].isBound) {
                     PhiS = 0.0, PhiD = 0.0;
                     src = BODY::Bodies[I]->Faces[j].AttachedProtoWake;
 
                     PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, 1, 2);
                     a += (BODY::Bodies[I]->Faces[j].isTop) ? PhiD : -PhiD;
+                    
+                    src->Mu = 1.0;
+                    Vect3 VD = VectMultMatrix(trg->TRANS,src->BodyPanelVelocity(trg->CollocationPoint));
+                    BODY::Bodies[I]->localVD[i][j] += (BODY::Bodies[I]->Faces[j].isTop) ? VD : -VD;
                 }
 
 

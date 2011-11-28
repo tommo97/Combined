@@ -88,16 +88,15 @@ void PANEL::SubPan(int n, Vect3 P, REAL  MuNormal, REAL SigmaIn, REAL &PhiD, REA
             Vect3 MuT = MuNormal * A[k][l] * N[k][l];
             REAL SigmaT = SigmaIn * A[k][l];
             PANEL::PointDoublet(CP[k][l], P, V, MuT, PhiD);
-            PANEL::PointSource(CP[k][l], P, V, SigmaT, PhiS);
+            PANEL::PointSource(P - CP[k][l], V, SigmaT, PhiS);
         }
 }
 
 
 /**************************************************************/
-void PANEL::PointSource(Vect3 X0, Vect3 XP, Vect3 &V, REAL &Sigma, REAL &Phi) {
-    Vect3 D = XP - X0;
+void PANEL::PointSource(Vect3 D, Vect3 &V, REAL &Sigma, REAL &Phi) {
 
-    REAL mult = Sigma/(4.*pi*sqrt(pow(D.x,2) + pow(D.y,2) + pow(D.z,2)));
+    REAL mult = Sigma/(4.*pi*D.Mag());
 
     V.x -= D.x*mult;
     V.y -= D.y*mult;
@@ -191,6 +190,48 @@ void PANEL::DivPanel(int n, Array < Array < Vect3 > > &CP, Array < Array < Vect3
 
         }
 
+}
+/**************************************************************/
+REAL PANEL::GetCpD() {
+    Vect3 Vinf(globalSystem->unscaledVinf);
+    
+    Vect3 Vref = Vinf - Vkin; 
+    REAL Vref2 = Vref.Dot(Vref); 
+
+    //  Calculate dphi by dt...
+    REAL gradT = (Mu - GammaPrev) / (BODY::Time - BODY::TimePrev[0]);
+    if (BODY::TimePrev[1] > 0) {
+        REAL t0 = BODY::Time;
+        REAL t1 = BODY::TimePrev[0];
+        REAL t2 = BODY::TimePrev[1];
+
+        Array < Array <REAL> > A = UTIL::zeros(3, 3);
+
+        A[0][0] = 1;
+        A[0][1] = t0;
+        A[0][2] = t0*t0;
+        A[1][0] = 1;
+        A[1][1] = t1;
+        A[1][2] = t1*t1;
+        A[2][0] = 1;
+        A[2][1] = t2;
+        A[2][2] = t2*t2;
+
+        Array <REAL> RHS(3, 0.0);
+        RHS[0] = Mu;
+        RHS[1] = PhiPrev[0];
+        RHS[2] = PhiPrev[1];
+
+        Array <REAL> x = pgesv(A, RHS);
+
+        gradT = x[1] + 2 * x[2] * t0;
+
+    }
+    REAL Vmag = (Vd + VectMultMatrix(TRANS,VCentroid)).Mag();
+    REAL Cpress = 1 - (Vmag*Vmag + 0*2 * gradT) / Vref2;
+    
+    
+    return Cpress;
 }
 /**************************************************************/
 REAL PANEL::GetCp() {
@@ -303,7 +344,7 @@ REAL PANEL::GetCp() {
     REAL Veta = V.Dot(eta) + VCentroid.Dot(eta) + DMuDeta;
     REAL Vxi = V.Dot(xi) + VCentroid.Dot(xi) + DMuDxi;
 
-
+    
     //Vect3 Vel = Vkin + globalSystem->Vinf;
     Vect3 Vref = Vinf - Vkin; //VCentroid
     REAL Vref2 = Vref.Dot(Vref); //Vkin.Dot(Vkin) + Vinf.Dot(Vinf);
@@ -346,7 +387,7 @@ REAL PANEL::GetCp() {
 }
 
 /**************************************************************/
-Vect3 PANEL::WakePanelVelocity(Vect3 pTarget) {
+Vect3 PANEL::VortexPanelVelocity(Vect3 pTarget) {
     Vect3 V;
     V += PANEL::LineVelocity(C1, C2, pTarget, Gamma);
     V += PANEL::LineVelocity(C2, C3, pTarget, Gamma);
@@ -358,20 +399,12 @@ Vect3 PANEL::WakePanelVelocity(Vect3 pTarget) {
 /**************************************************************/
 Vect3 PANEL::BodyPanelVelocity(Vect3 pTarget) {
     Vect3 V;
-    V += PANEL::LineVelocity(C1, C2, pTarget, Mu);
-    V += PANEL::LineVelocity(C2, C3, pTarget, Mu);
-    V += PANEL::LineVelocity(C3, C4, pTarget, Mu);
-    V += PANEL::LineVelocity(C4, C1, pTarget, Mu);
-    return V;
-}
-
-/**************************************************************/
-Vect3 PANEL::SourceVel(Vect3 pTarget) {
     //      PV from panel centre to POI in local frame
     Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
+    
     REAL MagP = P.Mag(), Mult = Sigma / two_pi;
 
-    if (MagP < FarField * MaxDiagonal) {
+    if (MagP < 5 * MaxDiagonal) {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
         REAL Pz2 = P.z * P.z;
@@ -408,9 +441,80 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
                 (D.d == 0.0) ? 0.0 : log((r.d + r.a - D.d) / (r.d + r.a + D.d)) / D.d);
 
         //  This return value has been changed......
-        return VectMultMatrixTranspose(TRANS, Vect3(sum(B * DY) * Mult, sum(B * DX) * Mult, T * Mult));
+        Vect3 Vout = VectMultMatrixTranspose(TRANS, Vect3(sum(B * DY) * Mult, sum(B * DX) * Mult, T * Mult));
+        V = Vect3(Vout.x, -Vout.y, Vout.z);
+
+        V += PANEL::LineVelocity(C1, C2, pTarget, Mu);
+        V += PANEL::LineVelocity(C2, C3, pTarget, Mu);
+        V += PANEL::LineVelocity(C3, C4, pTarget, Mu);
+        V += PANEL::LineVelocity(C4, C1, pTarget, Mu);
+    
+    
+    } else {
+        REAL P3 = (MagP * MagP * MagP);
+        V = VectMultMatrixTranspose(TRANS, -Mult * Area * P / P3);
+
+
+        REAL P5 = MagP * MagP * P3;
+        Mult = Area * Mu / (two_pi * P5);
+
+        REAL u = 3 * Mult * P.x * P.z;
+        REAL v = 3 * Mult * P.y * P.z;
+        REAL w = - Mult * (P.x * P.x + P.y * P.y - 2 * P.z * P.z);
+        V += VectMultMatrixTranspose(TRANS, Vect3(u,v,w));
+    }
+        
+
+    return V;
+}
+
+/**************************************************************/
+Vect3 PANEL::SourceVel(Vect3 pTarget) {
+    //      PV from panel centre to POI in local frame
+    Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
+    REAL MagP = P.Mag(), Mult = Sigma / two_pi;
+
+    if (MagP < 5 * MaxDiagonal) {
+
+        Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
+        REAL Pz2 = P.z * P.z;
+
+        Vect4 e(dX1.x * dX1.x + Pz2, dX2.x * dX2.x + Pz2, dX3.x * dX3.x + Pz2, dX4.x * dX4.x + Pz2);
+        Vect4 w(dX1.y * dX1.y, dX2.y * dX2.y, dX3.y * dX3.y, dX4.y * dX4.y);
+
+        Vect4 h(dX1.x * dX1.y, dX2.x * dX2.y, dX3.x * dX3.y, dX4.x * dX4.y);
+
+        Vect4 r = sqrt(e + w);
+
+        Vect4 alpha, beta, Pzr;
+        REAL aPz = sqrt(Pz2);
+
+        Pzr = P.z * r;
+        alpha = (M * e - h) / Pzr;
+        beta = (M * permute_1(e) - permute_1(h)) / permute_1(Pzr);
+        Vect4 Num = alpha - beta;
+        Vect4 Denom = alpha * beta + 1;
+
+        REAL T = 0;
+
+        if (aPz > 0) {
+            T = 0;
+            if (Num.a != 0.) T += atan2(Num.a, Denom.a);
+            if (Num.b != 0.) T += atan2(Num.b, Denom.b);
+            if (Num.c != 0.) T += atan2(Num.c, Denom.c);
+            if (Num.d != 0.) T += atan2(Num.d, Denom.d);
+        }
+
+        Vect4 B((D.a == 0.0) ? 0.0 : log((r.a + r.b - D.a) / (r.a + r.b + D.a)) / D.a,
+                (D.b == 0.0) ? 0.0 : log((r.b + r.c - D.b) / (r.b + r.c + D.b)) / D.b,
+                (D.c == 0.0) ? 0.0 : log((r.c + r.d - D.c) / (r.c + r.d + D.c)) / D.c,
+                (D.d == 0.0) ? 0.0 : log((r.d + r.a - D.d) / (r.d + r.a + D.d)) / D.d);
+
+        //  This return value has been changed......
+        Vect3 Vout = VectMultMatrixTranspose(TRANS, Vect3(sum(B * DY) * Mult, sum(B * DX) * Mult, T * Mult));
+        return Vect3(Vout.x,-Vout.y,Vout.z);
     } else
-        return VectMultMatrixTranspose(TRANS, Mult * Area * P / (MagP * MagP * MagP));
+        return VectMultMatrixTranspose(TRANS, -Mult * Area * P / (MagP * MagP * MagP));
 
 }
 
@@ -428,10 +532,10 @@ Vect3 PANEL::LineVelocity(Vect3 &lineStart, Vect3 &lineEnd, Vect3 &pTarget, REAL
 
     if ((MagR1 > 0) && (MagR2 > 0) && (C2 > 0)) {
         Vect3 R0 = lineEnd - lineStart;
-        REAL Mult = gamma_in / (C2 * four_pi);
+        REAL Mult = gamma_in / (C2 * two_pi);
         REAL K = Mult * ((R0.Dot(R1) / MagR1) - (R0.Dot(R2) / MagR2));
 
-        Vout -= K*C;
+        Vout += K*C;
     }
 
 //        Vout =  - UTIL::globalDirectVel(pTarget - lineStart, 0.5*gamma_in*(lineEnd - lineStart));

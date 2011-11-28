@@ -38,7 +38,7 @@ REAL TIME_STEPPER::SubStepTime = 0;
 TIME_STEPPER::TIME_STEPPER() {
     dt_prev = 1e16;
     dx = dy = dz = 1.0;
-    ChangeOver = false;
+    ChangeOver = last_step = false;
     n = -1;
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
@@ -243,7 +243,10 @@ void TIME_STEPPER::time_loop() {
 
     //
     if (globalTimeStepper->dump_next) {
-//                globalSystem->WriteDomain();
+        //                globalSystem->WriteDomain();
+//        globalOctree->Reset();
+//        globalOctree->InitVelsGetLaplacian();
+//        globalOctree->GetVels();
         globalSystem->WriteData();
         //        globalOctree->Reset();
     }
@@ -280,6 +283,8 @@ void TIME_STEPPER::time_step() {
     dump_next = false;
 
     if ((TIME_STEPPER::SimTime + dt >= t_out) || (TIME_STEPPER::SimTime + dt >= TIME_STEPPER::MaxTime)) {
+        if (TIME_STEPPER::SimTime + dt >= TIME_STEPPER::MaxTime)
+            last_step = true;
         dump_next = true;
         dt = dt_euler = min(t_out - TIME_STEPPER::SimTime, TIME_STEPPER::MaxTime - TIME_STEPPER::SimTime);
         t_out += dt_out;
@@ -287,7 +292,7 @@ void TIME_STEPPER::time_step() {
 
 
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = dt_euler / 10 ;//min(dt_euler / 25, cfl_lim / (OmRMax));
+    REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (OmRMax));
 
     int nss = ceil(dt_euler / dt_lagrange);
 
