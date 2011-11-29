@@ -43,7 +43,7 @@ TIME_STEPPER::TIME_STEPPER() {
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
     cfl_lim = 0.45;
-    dt_out = 1;
+    dt_out = .25;
     t_out = dt_out;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();
@@ -224,14 +224,13 @@ void TIME_STEPPER::time_loop() {
         //      Advance FVM to t + dt
         globalOctree->FVM(); //  t = t0
 
-        //      Bin panel wake into tree
+        
         //      Advance panels to t + dt
-
         globalSystem->GetPanelFMMVelocities(dt); //  t = t1
         globalOctree->Integrate(); //  t = t0 -> t1
 
         BODY::BodySubStep(dt, globalSystem->NumSubSteps);
-
+        //      Bin panel wake into tree
         globalSystem->PutWakesInTree();
 
 

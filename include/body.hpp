@@ -58,6 +58,7 @@ public:
     string Name;
     int ID;
     static Array <REAL> Times;
+    static REAL WaitLenghts;
     Vect3 Rmax;
 #ifdef USEGSL
     gsl_matrix * gslA; //  A (doublet) influence coefficient matrix for this body
@@ -73,6 +74,7 @@ public:
     static Array <Vect3*> VortexOrigins;
     static Array <int> VortexOwnerID;
     static Array < Array < REAL > > CpHistory, CpHistoryAll;
+    static Array < Array < REAL > > CpHistoryD, CpHistoryAllD;
     static Array <REAL> SubTIMES;
     static Array <Vect3> TorqueHist;
     static Array <Vect3> ForceHist;
@@ -115,6 +117,8 @@ public:
     Array < Array < Array <PANEL*> > > WakePanels;
     Array < Array <REAL> > localA;
     Array < Array <REAL> > localB;
+    Array < Array <Vect3> > localVD;
+    Array < Array <Vect3> > localVS;
     Array <REAL> localSigma, localRHS, localMu;
     static Array <Vect3> PointsAsRead;
     static Array <Array < int > > PanelsAsRead;
@@ -141,6 +145,7 @@ public:
     };
 
     
+    void GetPanelVels();
     static void ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, Vect3 vel, Vect3 att, Vect3 rates, bool flip, int plane);
     void GetPanels(Array <PANEL> &PANELS);
     void GetEulerRates();

@@ -52,6 +52,8 @@ public:
     Array <Vect3> Deriv;
 
     int age;
+    
+    REAL Phi;
 
     Vect3 VelTensor[3];
 

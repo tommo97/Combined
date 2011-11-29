@@ -48,7 +48,7 @@ class TIME_STEPPER
         static REAL MaxTime, SimTime, SubStepTime;
         REAL *A;
         REAL lambda, mu, nu;
-        bool dump_next, first_step, ChangeOver;
+        bool dump_next, first_step, ChangeOver, last_step;
         Vect3 centre;
         int num_images, RKStep;
         long int cpu_t;

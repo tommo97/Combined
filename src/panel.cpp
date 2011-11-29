@@ -74,93 +74,7 @@ void PANEL::LinearSubPan(PANEL *trg, int n, REAL Mu1, REAL Mu2, REAL &PhiD, Vect
 //        }
 //    }
 }
-/**************************************************************/
-void PANEL::SubPan(int n, Vect3 P, REAL  MuNormal, REAL SigmaIn, REAL &PhiD, REAL &PhiS, Vect3 &V) {
 
-
-    Array < Array < Vect3 > > CP, N;
-    Array < Array <REAL> > A;
-
-    DivPanel(n, CP, N, A);
-
-    for (int k = 0; k < n; ++k)
-        for (int l = 0; l < n; ++l) {
-            Vect3 MuT = MuNormal * A[k][l] * N[k][l];
-            REAL SigmaT = SigmaIn * A[k][l];
-            PANEL::PointDoublet(CP[k][l], P, V, MuT, PhiD);
-            PANEL::PointSource(P - CP[k][l], V, SigmaT, PhiS);
-        }
-}
-
-
-/**************************************************************/
-void PANEL::PointSource(Vect3 D, Vect3 &V, REAL &Sigma, REAL &Phi) {
-
-    REAL mult = Sigma/(4.*pi*D.Mag());
-
-    V.x -= D.x*mult;
-    V.y -= D.y*mult;
-    V.z -= D.z*mult;
-
-    Phi += mult;
-}
-/**************************************************************/
-void PANEL::PointDoublet(Vect3 X0, Vect3 XP, Vect3 &V, Vect3 &Mu, REAL &Phi) {
-
-    Vect3 D = XP - X0;
-
-    V.x += (3 * pow(D.x, 2) * Mu.x) /
-            (4. * pi * pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 2.5)) -
-            Mu.x / (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 3))) +
-            (3 * (D.x)*(D.y) * Mu.y) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 5))) +
-            (3 * (D.x)*(D.z) * Mu.z) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 5)));
-
-
-    V.y += (3 * (D.x)*(D.y) * Mu.x) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 5))) +
-            (3 * pow(D.y, 2) * Mu.y) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 5))) -
-            Mu.y / (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 3))) +
-            (3 * (D.y)*(D.z) * Mu.z) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 5)));
-
-    V.z += (3 * (D.x)*(D.z) * Mu.x) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 5))) +
-            (3 * (D.y)*(D.z) * Mu.y) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 5))) -
-            Mu.z / (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 3))) +
-            (3 * pow(D.z, 2) * Mu.z) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 5)));
-
-
-
-
-
-    Phi += -((D.x) * Mu.x) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 3))) -
-            ((D.y) * Mu.y) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 3))) -
-            ((D.z) * Mu.z) /
-            (4. * pi * sqrt(pow(pow(D.x, 2) + pow(D.y, 2) +
-            pow(D.z, 2), 3)));
-
-}
 /**************************************************************/
 void PANEL::DivPanel(int n, Array < Array < Vect3 > > &CP, Array < Array < Vect3 > > &N, Array < Array < REAL > > &A)
 {
@@ -404,7 +318,7 @@ Vect3 PANEL::BodyPanelVelocity(Vect3 pTarget) {
     
     REAL MagP = P.Mag(), Mult = Sigma / two_pi;
 
-    if (MagP < 5 * MaxDiagonal) {
+    if (MagP < PANEL::FarField * MaxDiagonal) {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
         REAL Pz2 = P.z * P.z;
@@ -452,7 +366,7 @@ Vect3 PANEL::BodyPanelVelocity(Vect3 pTarget) {
     
     } else {
         REAL P3 = (MagP * MagP * MagP);
-        V = VectMultMatrixTranspose(TRANS, -Mult * Area * P / P3);
+        Vect3 VS = -Mult * Area * P / P3;
 
 
         REAL P5 = MagP * MagP * P3;
@@ -461,7 +375,8 @@ Vect3 PANEL::BodyPanelVelocity(Vect3 pTarget) {
         REAL u = 3 * Mult * P.x * P.z;
         REAL v = 3 * Mult * P.y * P.z;
         REAL w = - Mult * (P.x * P.x + P.y * P.y - 2 * P.z * P.z);
-        V += VectMultMatrixTranspose(TRANS, Vect3(u,v,w));
+        Vect3 VD(u,v,w);
+        V = VectMultMatrixTranspose(TRANS, VS + VD);
     }
         
 
@@ -474,7 +389,7 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
     Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
     REAL MagP = P.Mag(), Mult = Sigma / two_pi;
 
-    if (MagP < 5 * MaxDiagonal) {
+    if (MagP < PANEL::FarField * MaxDiagonal) {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
         REAL Pz2 = P.z * P.z;
@@ -572,16 +487,22 @@ void PANEL::GetEdgeInfo() {
 
     D = sqrt(DX * DX + DY * DY);
 }
-
 /**************************************************************/
-void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int i, int j) {
+REAL PANEL::WakePanelPotential(Vect3 target) {
 
-    //  Get source panel LCS
+    REAL PhiDoublet = 0.0;
+    Vect3 XPg = target - Centroid;
+    Vect3 XP = VectMultMatrix(TRANS, XPg);
 
-    Vect3 X1 = source->Xcb[0];
-    Vect3 X2 = source->Xcb[1];
-    Vect3 X3 = source->Xcb[2];
-    Vect3 X4 = source->Xcb[3];
+    if (abs(XP.z) < 1e-12)
+        PhiDoublet = 0.5;
+    else {
+        //  Get source panel LCS
+
+        Vect3 X1 = Xcb[0];
+        Vect3 X2 = Xcb[1];
+        Vect3 X3 = Xcb[2];
+        Vect3 X4 = Xcb[3];
 
         Vect3 D1 = X2 - X1, D2 = X3 - X2, D3 = X4 - X3, D4 = X1 - X4;
         REAL dx1 = D1.x, dy1 = D1.y,
@@ -590,12 +511,128 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
                 dx4 = D4.x, dy4 = D4.y;
 
 
-    Vect3 XPg = target - source->Centroid;
-        Vect3 XP = VectMultMatrix(source->TRANS, XPg);
 
-    if (XPg.Mag() < (1e32 * source->MaxDiagonal)) {
+        
+        if (XP.Dot(XP) < (5.0 * MaxDiagonal)*(5.0 * MaxDiagonal)) {
 
-        REAL z = XP.z;
+            REAL z = XP.z;
+
+            Vect3 R1 = XP - X1, R2 = XP - X2, R3 = XP - X3, R4 = XP - X4;
+
+
+
+            REAL sd1 = D1.Dot(D1), sd2 = D2.Dot(D2), sd3 = D3.Dot(D3), sd4 = D4.Dot(D4);
+            REAL r1 = R1.Mag(), r2 = R2.Mag(), r3 = R3.Mag(), r4 = R4.Mag();
+
+            REAL xz1 = (XP.x - X1.x)*(XP.x - X1.x) + XP.z * XP.z;
+            REAL xz2 = (XP.x - X2.x)*(XP.x - X2.x) + XP.z * XP.z;
+            REAL xz3 = (XP.x - X3.x)*(XP.x - X3.x) + XP.z * XP.z;
+            REAL xz4 = (XP.x - X4.x)*(XP.x - X4.x) + XP.z * XP.z;
+            REAL xy1 = (XP.x - X1.x)*(XP.y - X1.y);
+            REAL xy2 = (XP.x - X2.x)*(XP.y - X2.y);
+            REAL xy3 = (XP.x - X3.x)*(XP.y - X3.y);
+            REAL xy4 = (XP.x - X4.x)*(XP.y - X4.y);
+
+            REAL Dt1, Dt2, Dt3, Dt4, St1, St2, St3, St4;
+
+            if (sd1 < 1e-12) {
+                Dt1 = 0.;
+                St1 = 0.;
+            } else {
+                REAL s11 = dy1 * xz1 - dx1*xy1;
+                REAL c11 = r1 * z*dx1;
+                REAL s12 = dy1 * xz2 - dx1*xy2;
+                REAL c12 = r2 * z*dx1;
+                REAL ss1 = s11 * c12 - s12*c11;
+                REAL cc1 = c11 * c12 + s11*s12;
+                Dt1 = atan2(ss1, cc1);
+            }
+
+            if (sd2 < 1e-12) {
+                Dt2 = 0.;
+                St2 = 0.;
+            } else {
+                REAL s21 = dy2 * xz2 - dx2*xy2;
+                REAL c21 = r2 * z*dx2;
+                REAL s22 = dy2 * xz3 - dx2*xy3;
+                REAL c22 = r3 * z*dx2;
+                REAL ss2 = s21 * c22 - s22*c21;
+                REAL cc2 = c21 * c22 + s21*s22;
+                Dt2 = atan2(ss2, cc2);
+            }
+
+            if (sd3 < 1e-12) {
+                Dt3 = 0.;
+                St3 = 0.;
+
+            } else {
+                REAL s31 = dy3 * xz3 - dx3*xy3;
+                REAL c31 = r3 * z*dx3;
+                REAL s32 = dy3 * xz4 - dx3*xy4;
+                REAL c32 = r4 * z*dx3;
+                REAL ss3 = s31 * c32 - s32*c31;
+                REAL cc3 = c31 * c32 + s31*s32;
+                Dt3 = atan2(ss3, cc3);
+            }
+
+            if (sd4 < 1e-12) {
+                Dt4 = 0.;
+                St4 = 0.;
+            } else {
+                REAL s41 = dy4 * xz4 - dx4*xy4;
+                REAL c41 = r4 * z*dx4;
+                REAL s42 = dy4 * xz1 - dx4*xy1;
+                REAL c42 = r1 * z*dx4;
+                REAL ss4 = s41 * c42 - s42*c41;
+                REAL cc4 = c41 * c42 + s41*s42;
+                Dt4 = atan2(ss4, cc4);
+            }
+
+            PhiDoublet = (Dt1 + Dt2 + Dt3 + Dt4) / two_pi;
+        }
+        else {
+            REAL MagP = XPg.Mag();
+            REAL Mult = Area / (4 * two_pi * MagP * MagP * MagP);
+            PhiDoublet = XPg.Dot(NC1) + XPg.Dot(NC2) + XPg.Dot(NC3) + XPg.Dot(NC4);
+            PhiDoublet *= Mult;
+        }
+    }
+    return PhiDoublet * Gamma;
+}
+/**************************************************************/
+REAL PANEL::BodyPanelPotential(Vect3 target) {
+    //  Get source panel LCS
+    REAL PhiSource = 0.0, PhiDoublet = 0.0;
+    Vect3 XPg = target - Centroid;
+    
+    if ((XPg.Dot(XPg) > Mu*ValidRange) && (XPg.Dot(XPg) > Sigma*ValidRange))
+        return 0.0;
+    
+    if (XPg.Dot(XPg) < ((PANEL::FarField * MaxDiagonal)*(PANEL::FarField * MaxDiagonal)) ){
+
+        Vect3 X1g = C1 - CollocationPoint;
+        Vect3 X1 = VectMultMatrix(TRANS, X1g);
+        Vect3 X2g = C2 - CollocationPoint;
+        Vect3 X2 = VectMultMatrix(TRANS, X2g);
+        Vect3 X3g = C3 - CollocationPoint;
+        Vect3 X3 = VectMultMatrix(TRANS, X3g);
+        Vect3 X4g = C4 - CollocationPoint;
+        Vect3 X4 = VectMultMatrix(TRANS, X4g);
+
+
+        Vect3 D1 = X2 - X1, D2 = X3 - X2, D3 = X4 - X3, D4 = X1 - X4;
+        REAL dx1 = D1.x, dy1 = D1.y,
+                dx2 = D2.x, dy2 = D2.y,
+                dx3 = D3.x, dy3 = D3.y,
+                dx4 = D4.x, dy4 = D4.y;
+
+
+
+        Vect3 XP = VectMultMatrix(TRANS, XPg);
+
+        REAL x1 = X1.x, x2 = X2.x, x3 = X3.x, x4 = X4.x;
+        REAL y1 = X1.y, y2 = X2.y, y3 = X3.y, y4 = X4.y;
+        REAL x = XP.x, y = XP.y, z = XP.z;
 
         Vect3 R1 = XP - X1, R2 = XP - X2, R3 = XP - X3, R4 = XP - X4;
 
@@ -626,6 +663,7 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
             REAL ss1 = s11 * c12 - s12*c11;
             REAL cc1 = c11 * c12 + s11*s12;
             Dt1 = atan2(ss1, cc1);
+            St1 = ((x - x1) * dy1 - (y - y1) * dx1) / sd1 * log((r1 + r2 + sd1) / (r1 + r2 - sd1));
         }
 
         if (sd2 < 1e-12) {
@@ -639,6 +677,7 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
             REAL ss2 = s21 * c22 - s22*c21;
             REAL cc2 = c21 * c22 + s21*s22;
             Dt2 = atan2(ss2, cc2);
+            St2 = ((x - x2) * dy2 - (y - y2) * dx2) / sd2 * log((r2 + r3 + sd2) / (r2 + r3 - sd2));
         }
 
         if (sd3 < 1e-12) {
@@ -653,6 +692,7 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
             REAL ss3 = s31 * c32 - s32*c31;
             REAL cc3 = c31 * c32 + s31*s32;
             Dt3 = atan2(ss3, cc3);
+            St3 = ((x - x3) * dy3 - (y - y3) * dx3) / sd3 * log((r3 + r4 + sd3) / (r3 + r4 - sd3));
         }
 
         if (sd4 < 1e-12) {
@@ -666,6 +706,137 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
             REAL ss4 = s41 * c42 - s42*c41;
             REAL cc4 = c41 * c42 + s41*s42;
             Dt4 = atan2(ss4, cc4);
+            St4 = ((x - x4) * dy4 - (y - y4) * dx4) / sd4 * log((r4 + r1 + sd4) / (r4 + r1 - sd4));
+        }
+          if (abs(XP.z) < 1e-12)
+            PhiDoublet = 0.0;
+        else
+            PhiDoublet = (Dt1 + Dt2 + Dt3 + Dt4) / four_pi;
+
+
+        PhiSource = -2 * ((St1 + St2 + St3 + St4) / four_pi - XP.z * PhiDoublet);
+        PhiDoublet *= 2;
+        
+    } else {
+        REAL MagP = XPg.Mag();
+        REAL Mult = Area / (4 * two_pi * MagP * MagP * MagP);
+        PhiDoublet = XPg.Dot(NC1) + XPg.Dot(NC2) + XPg.Dot(NC3) + XPg.Dot(NC4);
+        PhiDoublet *= Mult;
+
+        PhiSource = Area / (two_pi * MagP);
+    }
+    
+    if ((abs(PhiSource) < 1e-6) && (abs(PhiDoublet) < 1e-6))
+        ValidRange = XPg.Mag();
+    
+    
+    return PhiSource*Sigma + PhiDoublet*Mu;
+}
+/**************************************************************/
+void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, REAL &PhiSource, int i, int j) {
+    //  Get source panel LCS
+    PhiSource = PhiDoublet = 0.0;
+    Vect3 XPg = target - source->Centroid;
+    
+    if (XPg.Dot(XPg) < ((PANEL::FarField * source->MaxDiagonal)*(PANEL::FarField * source->MaxDiagonal)) ){
+
+        Vect3 X1g = source->C1 - source->CollocationPoint;
+        Vect3 X1 = VectMultMatrix(source->TRANS, X1g);
+        Vect3 X2g = source->C2 - source->CollocationPoint;
+        Vect3 X2 = VectMultMatrix(source->TRANS, X2g);
+        Vect3 X3g = source->C3 - source->CollocationPoint;
+        Vect3 X3 = VectMultMatrix(source->TRANS, X3g);
+        Vect3 X4g = source->C4 - source->CollocationPoint;
+        Vect3 X4 = VectMultMatrix(source->TRANS, X4g);
+
+
+        Vect3 D1 = X2 - X1, D2 = X3 - X2, D3 = X4 - X3, D4 = X1 - X4;
+        REAL dx1 = D1.x, dy1 = D1.y,
+                dx2 = D2.x, dy2 = D2.y,
+                dx3 = D3.x, dy3 = D3.y,
+                dx4 = D4.x, dy4 = D4.y;
+
+
+
+        Vect3 XP = VectMultMatrix(source->TRANS, XPg);
+
+        REAL x1 = X1.x, x2 = X2.x, x3 = X3.x, x4 = X4.x;
+        REAL y1 = X1.y, y2 = X2.y, y3 = X3.y, y4 = X4.y;
+        REAL x = XP.x, y = XP.y, z = XP.z;
+
+        Vect3 R1 = XP - X1, R2 = XP - X2, R3 = XP - X3, R4 = XP - X4;
+
+
+
+        REAL sd1 = D1.Mag(), sd2 = D2.Mag(), sd3 = D3.Mag(), sd4 = D4.Mag();
+        REAL r1 = R1.Mag(), r2 = R2.Mag(), r3 = R3.Mag(), r4 = R4.Mag();
+
+        REAL xz1 = (XP.x - X1.x)*(XP.x - X1.x) + XP.z * XP.z;
+        REAL xz2 = (XP.x - X2.x)*(XP.x - X2.x) + XP.z * XP.z;
+        REAL xz3 = (XP.x - X3.x)*(XP.x - X3.x) + XP.z * XP.z;
+        REAL xz4 = (XP.x - X4.x)*(XP.x - X4.x) + XP.z * XP.z;
+        REAL xy1 = (XP.x - X1.x)*(XP.y - X1.y);
+        REAL xy2 = (XP.x - X2.x)*(XP.y - X2.y);
+        REAL xy3 = (XP.x - X3.x)*(XP.y - X3.y);
+        REAL xy4 = (XP.x - X4.x)*(XP.y - X4.y);
+
+        REAL Dt1, Dt2, Dt3, Dt4, St1, St2, St3, St4;
+
+        if (sd1 < 1e-12) {
+            Dt1 = 0.;
+            St1 = 0.;
+        } else {
+            REAL s11 = dy1 * xz1 - dx1*xy1;
+            REAL c11 = r1 * z*dx1;
+            REAL s12 = dy1 * xz2 - dx1*xy2;
+            REAL c12 = r2 * z*dx1;
+            REAL ss1 = s11 * c12 - s12*c11;
+            REAL cc1 = c11 * c12 + s11*s12;
+            Dt1 = atan2(ss1, cc1);
+            St1 = ((x - x1) * dy1 - (y - y1) * dx1) / sd1 * log((r1 + r2 + sd1) / (r1 + r2 - sd1));
+        }
+
+        if (sd2 < 1e-12) {
+            Dt2 = 0.;
+            St2 = 0.;
+        } else {
+            REAL s21 = dy2 * xz2 - dx2*xy2;
+            REAL c21 = r2 * z*dx2;
+            REAL s22 = dy2 * xz3 - dx2*xy3;
+            REAL c22 = r3 * z*dx2;
+            REAL ss2 = s21 * c22 - s22*c21;
+            REAL cc2 = c21 * c22 + s21*s22;
+            Dt2 = atan2(ss2, cc2);
+            St2 = ((x - x2) * dy2 - (y - y2) * dx2) / sd2 * log((r2 + r3 + sd2) / (r2 + r3 - sd2));
+        }
+
+        if (sd3 < 1e-12) {
+            Dt3 = 0.;
+            St3 = 0.;
+
+        } else {
+            REAL s31 = dy3 * xz3 - dx3*xy3;
+            REAL c31 = r3 * z*dx3;
+            REAL s32 = dy3 * xz4 - dx3*xy4;
+            REAL c32 = r4 * z*dx3;
+            REAL ss3 = s31 * c32 - s32*c31;
+            REAL cc3 = c31 * c32 + s31*s32;
+            Dt3 = atan2(ss3, cc3);
+            St3 = ((x - x3) * dy3 - (y - y3) * dx3) / sd3 * log((r3 + r4 + sd3) / (r3 + r4 - sd3));
+        }
+
+        if (sd4 < 1e-12) {
+            Dt4 = 0.;
+            St4 = 0.;
+        } else {
+            REAL s41 = dy4 * xz4 - dx4*xy4;
+            REAL c41 = r4 * z*dx4;
+            REAL s42 = dy4 * xz1 - dx4*xy1;
+            REAL c42 = r1 * z*dx4;
+            REAL ss4 = s41 * c42 - s42*c41;
+            REAL cc4 = c41 * c42 + s41*s42;
+            Dt4 = atan2(ss4, cc4);
+            St4 = ((x - x4) * dy4 - (y - y4) * dx4) / sd4 * log((r4 + r1 + sd4) / (r4 + r1 - sd4));
         }
 
 
@@ -679,126 +850,17 @@ void PANEL::DoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, int 
             PhiDoublet = 0.5;
 
 
+        PhiSource = -2 * ((St1 + St2 + St3 + St4) / four_pi - XP.z * PhiDoublet);
         PhiDoublet *= 2;
-    }
-}
-/**************************************************************/
-void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, REAL &PhiSource, int i, int j) {
-    //  Get source panel LCS
-
-    Vect3 X1g = source->C1 - source->CollocationPoint;
-    Vect3 X1 = VectMultMatrix(source->TRANS, X1g);
-    Vect3 X2g = source->C2 - source->CollocationPoint;
-    Vect3 X2 = VectMultMatrix(source->TRANS, X2g);
-    Vect3 X3g = source->C3 - source->CollocationPoint;
-    Vect3 X3 = VectMultMatrix(source->TRANS, X3g);
-    Vect3 X4g = source->C4 - source->CollocationPoint;
-    Vect3 X4 = VectMultMatrix(source->TRANS, X4g);
-
-
-    Vect3 D1 = X2 - X1, D2 = X3 - X2, D3 = X4 - X3, D4 = X1 - X4;
-    REAL dx1 = D1.x, dy1 = D1.y,
-            dx2 = D2.x, dy2 = D2.y,
-            dx3 = D3.x, dy3 = D3.y,
-            dx4 = D4.x, dy4 = D4.y;
-
-
-    Vect3 XPg = target - source->Centroid;
-    Vect3 XP = VectMultMatrix(source->TRANS, XPg);
-
-    REAL x1 = X1.x, x2 = X2.x, x3 = X3.x, x4 = X4.x;
-    REAL y1 = X1.y, y2 = X2.y, y3 = X3.y, y4 = X4.y;
-    REAL x = XP.x, y = XP.y, z = XP.z;
-
-    Vect3 R1 = XP - X1, R2 = XP - X2, R3 = XP - X3, R4 = XP - X4;
-
-
-
-    REAL sd1 = D1.Mag(), sd2 = D2.Mag(), sd3 = D3.Mag(), sd4 = D4.Mag();
-    REAL r1 = R1.Mag(), r2 = R2.Mag(), r3 = R3.Mag(), r4 = R4.Mag();
-
-    REAL xz1 = (XP.x - X1.x)*(XP.x - X1.x) + XP.z * XP.z;
-    REAL xz2 = (XP.x - X2.x)*(XP.x - X2.x) + XP.z * XP.z;
-    REAL xz3 = (XP.x - X3.x)*(XP.x - X3.x) + XP.z * XP.z;
-    REAL xz4 = (XP.x - X4.x)*(XP.x - X4.x) + XP.z * XP.z;
-    REAL xy1 = (XP.x - X1.x)*(XP.y - X1.y);
-    REAL xy2 = (XP.x - X2.x)*(XP.y - X2.y);
-    REAL xy3 = (XP.x - X3.x)*(XP.y - X3.y);
-    REAL xy4 = (XP.x - X4.x)*(XP.y - X4.y);
-
-    REAL Dt1, Dt2, Dt3, Dt4, St1, St2, St3, St4;
-
-    if (sd1 < 1e-12) {
-        Dt1 = 0.;
-        St1 = 0.;
+        
     } else {
-        REAL s11 = dy1 * xz1 - dx1*xy1;
-        REAL c11 = r1 * z*dx1;
-        REAL s12 = dy1 * xz2 - dx1*xy2;
-        REAL c12 = r2 * z*dx1;
-        REAL ss1 = s11 * c12 - s12*c11;
-        REAL cc1 = c11 * c12 + s11*s12;
-        Dt1 = atan2(ss1, cc1);
-        St1 = ((x - x1) * dy1 - (y - y1) * dx1) / sd1 * log((r1 + r2 + sd1) / (r1 + r2 - sd1));
+        REAL MagP = XPg.Mag();
+        REAL Mult = source->Area / (4 * two_pi * MagP * MagP * MagP);
+        PhiDoublet = XPg.Dot(source->NC1) + XPg.Dot(source->NC2) + XPg.Dot(source->NC3) + XPg.Dot(source->NC4);
+        PhiDoublet *= Mult;
+
+        PhiSource = source->Area / (two_pi * MagP);
     }
-
-    if (sd2 < 1e-12) {
-        Dt2 = 0.;
-        St2 = 0.;
-    } else {
-        REAL s21 = dy2 * xz2 - dx2*xy2;
-        REAL c21 = r2 * z*dx2;
-        REAL s22 = dy2 * xz3 - dx2*xy3;
-        REAL c22 = r3 * z*dx2;
-        REAL ss2 = s21 * c22 - s22*c21;
-        REAL cc2 = c21 * c22 + s21*s22;
-        Dt2 = atan2(ss2, cc2);
-        St2 = ((x - x2) * dy2 - (y - y2) * dx2) / sd2 * log((r2 + r3 + sd2) / (r2 + r3 - sd2));
-    }
-
-    if (sd3 < 1e-12) {
-        Dt3 = 0.;
-        St3 = 0.;
-
-    } else {
-        REAL s31 = dy3 * xz3 - dx3*xy3;
-        REAL c31 = r3 * z*dx3;
-        REAL s32 = dy3 * xz4 - dx3*xy4;
-        REAL c32 = r4 * z*dx3;
-        REAL ss3 = s31 * c32 - s32*c31;
-        REAL cc3 = c31 * c32 + s31*s32;
-        Dt3 = atan2(ss3, cc3);
-        St3 = ((x - x3) * dy3 - (y - y3) * dx3) / sd3 * log((r3 + r4 + sd3) / (r3 + r4 - sd3));
-    }
-
-    if (sd4 < 1e-12) {
-        Dt4 = 0.;
-        St4 = 0.;
-    } else {
-        REAL s41 = dy4 * xz4 - dx4*xy4;
-        REAL c41 = r4 * z*dx4;
-        REAL s42 = dy4 * xz1 - dx4*xy1;
-        REAL c42 = r1 * z*dx4;
-        REAL ss4 = s41 * c42 - s42*c41;
-        REAL cc4 = c41 * c42 + s41*s42;
-        Dt4 = atan2(ss4, cc4);
-        St4 = ((x - x4) * dy4 - (y - y4) * dx4) / sd4 * log((r4 + r1 + sd4) / (r4 + r1 - sd4));
-    }
-
-
-
-    if (abs(XP.z) < 1e-12)
-        PhiDoublet = 0.0;
-    else
-        PhiDoublet = (Dt1 + Dt2 + Dt3 + Dt4) / four_pi;
-
-    if (i == j)
-        PhiDoublet = 0.5;
-
-
-    PhiSource = -2 * ((St1 + St2 + St3 + St4) / four_pi - XP.z * PhiDoublet);
-    PhiDoublet *= 2;
-
 }
 /**************************************************************/
 
@@ -841,23 +903,34 @@ void PANEL::GetNormal() {
     Centroid = 0.25 * (C1 + C2 + C3 + C4);
 
     Vect3 R1 = C2 - C1, R2 = C3 - C2, R3 = C4 - C3, R4 = C1 - C4;
-    REAL R1Mag = R1.Mag(), R2Mag = R2.Mag(), R3Mag = R3.Mag(), R4Mag = R4.Mag();
+    REAL R1Mag = R1.Dot(R1), R2Mag = R2.Dot(R2), R3Mag = R3.Dot(R3), R4Mag = R4.Dot(R4);
 
-    
-        //   First diagonal
+
+    //   First diagonal
     Vect3 D1 = C3 - C1;
     //   Second diagonal
     Vect3 D2 = C4 - C2;
-    //   TRANS[2]
+
     Vect3 CR = D1.Cross(D2);
-    //   local Z (aka unit normal)
+
+    REAL D1Mag = D1.Mag();
+    D1 /= D1Mag;
+
+    REAL D2Mag = D2.Mag();
+    D2 /= D2Mag;
+    
+    
+    MaxDiagonal = max(D1Mag, D2Mag);
+    REAL MinDiagonal = min(D1Mag, D2Mag);
+    //   TRANS[2]
+
     REAL CRMag = CR.Mag();
-    if (CRMag > 0)
-        TRANS[2] = CR / (CRMag);
-    else
+    if (MinDiagonal == 0)
         TRANS[2] = Vect3(0.0);
-    
-    
+    else
+        TRANS[2] = CR/CRMag;
+
+
     if (((R1Mag == 0) && (R3Mag == 0)) || ((R2Mag == 0) && (R4Mag == 0))) {
         Centroid = 0.25 * (C1 + C2 + C3 + C4);
 
@@ -865,23 +938,29 @@ void PANEL::GetNormal() {
         
     } else {
 
-            Area = 0.5 * CR.Mag();
+            Area = 0.5 * CRMag;
 
-        if (R1Mag < 1e-6)
+        if (R1Mag < 1e-12)
         Centroid = (C2 + C3 + C4) / 3;
 
-        if (R2Mag < 1e-6)
+        if (R2Mag < 1e-12)
         Centroid = (C1 + C3 + C4) / 3;
 
-        if (R3Mag < 1e-6)
+        if (R3Mag < 1e-12)
         Centroid = (C1 + C2 + C4) / 3;
 
-        if (R4Mag < 1e-6)
+        if (R4Mag < 1e-12)
         Centroid = (C1 + C2 + C3) / 3;
     }   
 
-
-
+    R1 /= R1.Mag();
+    R2 /= R2.Mag();
+    R3 /= R3.Mag();
+    R4 /= R4.Mag();
+    NC1 = R1.Cross(R4);
+    NC2 = R2.Cross(R1);
+    NC3 = R3.Cross(R2);
+    NC4 = R4.Cross(R3);
 
 
 
@@ -898,7 +977,7 @@ void PANEL::GetNormal() {
     //    Get local Y
     TRANS[0] = TRANS[1].Cross(TRANS[2]);
 
-    MaxDiagonal = max(D1.Mag(), D2.Mag());
+
 
     GetEdgeInfo();
 

@@ -50,11 +50,11 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 100;
+    globalSystem->GambitScale = 80;
     globalSystem->MaxP = 5;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
-    globalSystem->dtInit = 0.05;
+    globalSystem->dtInit = 0.015;
     globalSystem->h = 2;
 
 
@@ -723,7 +723,6 @@ void WeeAmble() {
             //   Divide panel into 4 subpanels, each with a centroid doublet
             int n = 25;
             Vect3 VT;
-            src->SubPan(n, trg->CollocationPoint, 1.0, 1.0, FiDd[i][j], FiSd[i][j], VT);
         }
 
     }
@@ -760,8 +759,9 @@ void WeeAmble() {
     cout << "Vels -------" << endl;
 
 
+//        PANEL P(Vect3(-0.91, -1.32, 0.15), Vect3(1.4, -2.1, -0.3), Vect3(1.8, 1.6, 1.25), Vect3(-1.2, 1.8, 0.189));
 
-    PANEL P(Vect3(-0.91, -1.32, 0.15), Vect3(1.4, -2.1, -0.3), Vect3(1.8, 1.6, 1.25), Vect3(-1.2, 1.8, 0.189));
+    PANEL P(Vect3(-1, -1, 0), Vect3(1, -1, 0), Vect3(1, 1, 0), Vect3(-1, 1, 0));
     PANEL *src = &P;
     Vect3 Target = Vect3(3.21, 4.32, 5.43);
     REAL PhiD = 0, PhiS = 0;
@@ -770,15 +770,12 @@ void WeeAmble() {
 
     PhiD = 0, PhiS = 0;
     VT = 0.0;
-    P.SubPan(100, Target, 1.0, .0, PhiD, PhiS, VT);
-    cout << "Dir:  " << VT << " <-- from 100 subpanels" << endl;
 
-    P.Mu = 1.0;
-    P.Sigma = 1.0;
+    P.Gamma = 1.0;
     VT = 0.0;
-    VT = P.BodyPanelVelocity(Target);
-    cout << "LinD: " << VT << " <-- BodyPanelVelocity()" << endl;
-
+    VT = P.VortexPanelVelocity(Target);
+    cout << "LinD: " << VT << " <-- VortexPanelVelocity()" << endl;
+    P.Sigma = 1.0;
 
 
     REAL dlta = 1e-6;
@@ -787,16 +784,12 @@ void WeeAmble() {
     REAL PhiDE = 0, PhiDW = 0, PhiDEd = 0, PhiDWd = 0;
     REAL PhiSE = 0, PhiSW = 0, PhiSEd = 0, PhiSWd = 0;
 
-    P.SubPan(100, Target + dx, 1.0, 1.0, PhiDE, PhiSE, VT);
-    P.SubPan(100, Target - dx, 1.0, 1.0, PhiDW, PhiSW, VT);
     PANEL::SourceDoubletPotential(src, Target + dx, PhiDEd, PhiSEd, 1, 2);
     PANEL::SourceDoubletPotential(src, Target - dx, PhiDWd, PhiSWd, 1, 2);
 
     REAL PhiDN = 0, PhiDS = 0, PhiDNd = 0, PhiDSd = 0;
     REAL PhiSN = 0, PhiSS = 0, PhiSNd = 0, PhiSSd = 0;
 
-    P.SubPan(100, Target + dy, 1.0, 1.0, PhiDN, PhiSN, VT);
-    P.SubPan(100, Target - dy, 1.0, 1.0, PhiDS, PhiSS, VT);
     PANEL::SourceDoubletPotential(src, Target + dy, PhiDNd, PhiSNd, 1, 2);
     PANEL::SourceDoubletPotential(src, Target - dy, PhiDSd, PhiSSd, 1, 2);
 
@@ -804,8 +797,6 @@ void WeeAmble() {
     REAL PhiDT = 0, PhiDB = 0, PhiDTd = 0, PhiDBd = 0;
     REAL PhiST = 0, PhiSB = 0, PhiSTd = 0, PhiSBd = 0;
 
-    P.SubPan(100, Target + dz, 1.0, 1.0, PhiDT, PhiST, VT);
-    P.SubPan(100, Target - dz, 1.0, 1.0, PhiDB, PhiSB, VT);
     PANEL::SourceDoubletPotential(src, Target + dz, PhiDTd, PhiSTd, 1, 2);
     PANEL::SourceDoubletPotential(src, Target - dz, PhiDBd, PhiSBd, 1, 2);
 
@@ -816,18 +807,12 @@ void WeeAmble() {
     GraD = GraD / (2 * dlta);
     Vect3 GraS = Vect3((PhiSEd - PhiSWd), (PhiSNd - PhiSSd), (PhiSTd - PhiSBd));
     GraS = GraS / (2 * dlta);
-    cout << "GraD: " << GraD100 << " <-- From c.diff on phi using 100 subpanels" << endl;
     cout << "GraD: " << GraD << " <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
     cout << "GraS: " << GraS << " <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
-    cout << "GraS: " << (PhiSE - PhiSW) / (2 * dlta) << " ";
-    cout << (PhiSN - PhiSS) / (2 * dlta) << " ";
-    cout << (PhiST - PhiSB) / (2 * dlta) << " <-- From c.diff on phi using 100 subpanels" << endl;
     cout << "LinO: " << P.SourceVel(Target) << " <-- From SourceVel()" << endl;
     PhiD = 0, PhiS = 0;
     VT = 0.0;
-    P.SubPan(100, Target, 0.0, 1.0, PhiD, PhiS, VT);
 
-    cout << "LinS: " << VT << " <-- From direct using 100 subpanels" << endl;
 
 
 
@@ -838,12 +823,8 @@ void WeeAmble() {
 
     cout << PhiD << " " << PhiS << endl;
     PhiD = 0, PhiS = 0;
-    P.SubPan(100, Target, 1.0, 1.0, PhiD, PhiS, VT);
 
     cout << PhiD << " " << PhiS << endl;
-
-
-
 
 
     //  Test multipole for panels
@@ -854,8 +835,8 @@ void WeeAmble() {
      
      P.Sigma = P.Gamma = P.Mu = 1.0;
      
-     int n = 100000;
-     Array <Vect3> VelsD(n), VelsS(n), Targets(n), VelsP(n), Err(n);
+     int n = 1000000;
+     Array <Vect3> Targets(n);
      for (int i = 0; i < n; ++i)
      {
         REAL x = 100.0 * (0.5 - REAL(rand()) / REAL(RAND_MAX));
@@ -864,32 +845,111 @@ void WeeAmble() {
         Targets[i] = Vect3(x,y,z);
      }
          
-     unsigned long int t1 = ticks();
+     REAL tmp;
+     
+     
+     
+     
+     // Test to see if it is quicker to calculate velocities or potentials at what would be cell centroids...
+
+    // First calc velocities with no farfield
+    PANEL::FarField = 1e32;
+    unsigned long int t1 = ticks();
+    P.Sigma = 1.0;
+    P.Mu = 1.0;
+    
+    
+     Array <Vect3> VelsFull(n);
+     Array <REAL> PhiDFull(n),PhiSFull(n);
+
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
     for (int i = 0; i < n; ++i) {
-        VelsS[i] = P.SourceVel(Targets[i]);
-        VelsD[i] = P.VortexPanelVelocity(Targets[i]);
+        VelsFull[i] = P.BodyPanelVelocity(Targets[i]);
     }
-     
+
+    //  Now calc potential
     unsigned long int t2 = ticks();
+
 #ifdef _OPENMP
 #pragma omp parallel for
-#endif   
-     for (int i = 0; i < n; ++i)
-         VelsP[i] = P.BodyPanelVelocity(Targets[i]);
-        
-    unsigned long int t3 = ticks();
-    REAL Emag = 0.;
-    for (int i = 0; i < n; ++i){
-        Err[i] = (VelsD[i] + VelsS[i]) - VelsP[i];
-        if (Err[i].Mag() > Emag)
-        cout << Targets[i] << " " << VelsD[i] + VelsS[i] << " " <<  VelsP[i] << endl;
-        Emag = max(Emag, Err[i].Mag());
+#endif
+    for (int i = 0; i < n; ++i) {
+        PhiDFull[i] = 0.0;
+        PhiSFull[i] = 0.0;
+        PANEL::SourceDoubletPotential(&P, Targets[i], PhiDFull[i], PhiSFull[i], 1, 2);
+    }  
+     
+     unsigned long int t3 = ticks();
+
+    PANEL::FarField = 5.0;
+    Array <Vect3> VelsFF(n);
+    Array <REAL> PhiDFF(n), PhiSFF(n);
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < n; ++i) {
+        VelsFF[i] = P.BodyPanelVelocity(Targets[i]);
+    }
+
+    //  Now calc potential
+    unsigned long int t4 = ticks();
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < n; ++i) {
+        PhiDFF[i] = 0.0;
+        PhiSFF[i] = 0.0;
+        PANEL::SourceDoubletPotential(&P, Targets[i], PhiDFF[i], PhiSFF[i], 1, 2);
+    }
+    unsigned long int t5 = ticks();
+
+
+
+    REAL EPhiDMag = 0.0, EPhiSMag = 0.0, EVelMag = 0.0;
+
+
+    for (int i = 0; i < n; ++i) {
+        REAL PhiDerr = abs(PhiDFull[i] - PhiDFF[i]);
+        REAL r = (Targets[i] - P.Centroid).Mag() / P.MaxDiagonal;
+        if (PhiDerr > EPhiDMag) {
+            cout << r << " PhiD " << PhiDerr << " " << PhiDFull[i] << " " << PhiDFF[i] << endl;
+            EPhiDMag = PhiDerr;
+        }
+
+    }
+
+    for (int i = 0; i < n; ++i) {
+        REAL PhiSerr = abs(PhiSFull[i] - PhiSFF[i]);
+        REAL r = (Targets[i] - P.Centroid).Mag() / P.MaxDiagonal;
+
+
+        if (PhiSerr > EPhiSMag) {
+            cout << r << " PhiS " << PhiSerr << " " << PhiSFull[i] << " " << PhiSFF[i] << endl;
+            EPhiSMag = PhiSerr;
+        }
+
+
+    }
+
+    for (int i = 0; i < n; ++i) {
+        REAL VErr = (VelsFull[i] - VelsFF[i]).Mag();
+        REAL r = (Targets[i] - P.Centroid).Mag() / P.MaxDiagonal;
+
+
+        if (VErr > EVelMag) {
+            cout << r << " Vels " << VErr << " " << VelsFull[i] << " " << VelsFF[i] << endl;
+            EVelMag = VErr;
+        }
     }
     
-    cout << t2-t1 << " " << t3 - t2 << " " << Emag << endl;
+    cout << "t for full velocity calc: " << t2 - t1 << "\t ms" << endl;
+    cout << "t for fast velocity calc: " << t4 - t3 << "\t ms" << endl;
+    cout << "t for full potental calc: " << t3 - t2 << "\t ms" << endl;
+    cout << "t for fast potental calc: " << t5 - t4 << "\t ms" << endl;
 //        
 //    for (int i = 0; i < 1000; ++i) {
 //

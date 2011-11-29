@@ -92,14 +92,14 @@ void FVMCell::Integrate() {
             TransVars[q].z = 0.0;
         Omega += TransVars[q];
     }
-    if (Omega.Mag() > VORTICITY_CUTOFF)
+    if (Omega.Dot(Omega) > (VORTICITY_CUTOFF*VORTICITY_CUTOFF))
         HasLoad = true;
 }
 /**************************************************************/
 void FVMCell::CheckActive() {
     if (!HasLoad) {
         for (int i = 0; i < 6; ++i) {
-            if (Neighb[i] && Neighb[i]->Omega.Mag() > VORTICITY_CUTOFF) {
+            if (Neighb[i] && Neighb[i]->Omega.Dot(Neighb[i]->Omega) > (VORTICITY_CUTOFF*VORTICITY_CUTOFF)) {
                 HasLoad = true;
                 return;
             }
@@ -308,9 +308,6 @@ void FVMCell::vCheckNeighbs() {
 
 void FVMCell::SetVelsEqual() {
 
-    if (Neighb.S) FaceVels.S = static_cast<FVMCell*> (Neighb.S)->FaceVels.N;
-    if (Neighb.W) FaceVels.W = static_cast<FVMCell*> (Neighb.W)->FaceVels.E;
-    if (Neighb.B) FaceVels.B = static_cast<FVMCell*> (Neighb.B)->FaceVels.T;
 #ifndef COLLAPSE_TO_FACES
     FaceVels = Velocity;
     if (Neighb.S) FaceVels.S = .5*(Velocity + static_cast<FVMCell*> (Neighb.S)->Velocity);
@@ -320,6 +317,18 @@ void FVMCell::SetVelsEqual() {
     if (Neighb.E) FaceVels.E = .5*(Velocity + static_cast<FVMCell*> (Neighb.E)->Velocity);
     if (Neighb.T) FaceVels.T = .5*(Velocity + static_cast<FVMCell*> (Neighb.T)->Velocity);
 #endif
+    if (Neighb.N)
+        FaceVels.N.y += (static_cast<FVMCell*> (Neighb.N)->Phi - Phi);
+    if (Neighb.S)
+        FaceVels.S.y += (Phi - static_cast<FVMCell*> (Neighb.S)->Phi);
+    if (Neighb.E)
+        FaceVels.E.x += (static_cast<FVMCell*> (Neighb.E)->Phi - Phi);
+    if (Neighb.W)
+        FaceVels.W.x += (Phi - static_cast<FVMCell*> (Neighb.W)->Phi);
+    if (Neighb.T)
+        FaceVels.T.z += (static_cast<FVMCell*> (Neighb.T)->Phi - Phi);
+    if (Neighb.B)
+        FaceVels.B.z += (Phi - static_cast<FVMCell*> (Neighb.B)->Phi);
 }
 
 /**************************************************************/

@@ -170,17 +170,13 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
 
-
-
     unsigned long int t0 = ticks();
-
-
 
     int Num2Insert = 0, Num2Keep = 0;
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
     for (int i = 0; i < BODY::VortexPositions.size(); ++i)
-        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (GambitScale * .5)) {
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (BODY::WaitLenghts)) {
             Num2Insert++;
             toInsert[i] = true;
         } else
@@ -333,24 +329,25 @@ void SYSTEM::GetFaceVels() {
 #pragma omp parallel for
 #endif
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        globalOctree->AllCells[i]->PanelVel = Vect3(0.0);
+        globalOctree->AllCells[i]->Phi = 0.0;
 
+
+        //      The following are multiplied by a half since the alogrithm used for potentials assumes potential on surface
         for (int j = 0; j < BODY::AllBodyFaces.size(); ++j)
-            globalOctree->AllCells[i]->PanelVel += BODY::AllBodyFaces[j]->BodyPanelVelocity(globalOctree->AllCells[i]->Position);
-
+            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllBodyFaces[j]->BodyPanelPotential(globalOctree->AllCells[i]->Position);
 
         for (int j = 0; j < BODY::AllProtoWakes.size(); ++j)
-            globalOctree->AllCells[i]->PanelVel += BODY::AllProtoWakes[j]->VortexPanelVelocity(globalOctree->AllCells[i]->Position);
-
-        globalOctree->AllCells[i]->Velocity += globalOctree->AllCells[i]->PanelVel;
-        
-        globalOctree->AllCells[i]->SetVelsEqual();
+            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllProtoWakes[j]->WakePanelPotential(globalOctree->AllCells[i]->Position);
     }
+
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->SetVelsEqual();
+
 }
 
 /**************************************************************/
 void SYSTEM::GetPanelFMMVelocities(REAL dt) {
-    
+
     int sz = BODY::AllBodyFaces.size();
     Array <Vect3> P1(sz), P2(sz), V2(sz), V1(sz);
 
@@ -367,37 +364,37 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
         P2[i] = BODY::AllBodyFaces[i]->CollocationPoint;
 
-    
+
     BODY::Time -= dt;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
         BODY::Bodies[i]->MoveBody();
-    
+
 
     V1 = Vect3(0.0);
     V2 = V1;
-//#pragma omp parallel for
-//    for (int i = 0; i < sz; ++i) {
-//        for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
-//            V1[i] += globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
-//                    globalOctree->AllCells[j]->Omega);
-//            V2[i] += globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
-//                    globalOctree->AllCells[j]->Omega);
-//        }
-//    }
+    //#pragma omp parallel for
+    //    for (int i = 0; i < sz; ++i) {
+    //        for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
+    //            V1[i] += globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
+    //                    globalOctree->AllCells[j]->Omega);
+    //            V2[i] += globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
+    //                    globalOctree->AllCells[j]->Omega);
+    //        }
+    //    }
 
     for (int i = 0; i < sz; ++i)
         V1[i] = globalOctree->TreeVel(P1[i]);
 
     for (int i = 0; i < sz; ++i)
         V2[i] = globalOctree->TreeVel(P2[i]);
-    
-    
-        
-        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i){
-            BODY::AllBodyFaces[i]->dVFMM_dt = (1/dt) * (V2[i]-V1[i]);
-            BODY::AllBodyFaces[i]->Vfmm = V1[i];
-        }
-        
+
+
+
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        BODY::AllBodyFaces[i]->dVFMM_dt = (1 / dt) * (V2[i] - V1[i]);
+        BODY::AllBodyFaces[i]->Vfmm = V1[i];
+    }
+
 
 }
 

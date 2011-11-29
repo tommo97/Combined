@@ -875,4 +875,30 @@ public:
     };
 };
 
+/**************************************************************/
+class Vect3;
+
+class MATLABOutputStruct {
+public:
+    Array < Array < int > > Int1DArrays;
+    Array < std::string > Int1DArrayStrings;
+
+    Array < Array < double > > Double1DArrays;
+    Array < std::string > Double1DArrayStrings;
+
+    Array < Array < Vect3 > > Vect1DArrays;
+    Array < std::string > Vect1DArrayStrings;
+
+    Array < Array < Array < int> > > Int2DArrays;
+    Array < std::string > Int2DArrayStrings;
+
+    Array < Array < Array <double> > > Double2DArrays;
+    Array < std::string > Double2DArrayStrings;
+
+    Array < Array < Array <Vect3> > > Vect2DArrays;
+    Array < std::string > Vect2DArrayStrings;
+
+    
+};
+/**************************************************************/
 #endif /* if !defined(ARRAY_INCL) */

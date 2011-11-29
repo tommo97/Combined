@@ -112,6 +112,7 @@ public:
         return ss.str();
     }
 
+    static double FastInverseSqrt(double);
 
     static int read_neu(string infname,
             Array<Vect3> &X,
@@ -154,6 +155,8 @@ public:
 
     static void write1D(string varname, string fname, string &input, int m);
     static void WriteMATLABString(string vname, string fname, string data);
+    
+    static void ReadBinaryVect3(Array <Vect3> &, string);
 
     inline static double rad2deg(double theta) {
         return theta / 0.017453292519943;
@@ -167,7 +170,9 @@ public:
     static double interp2(Array<Array<double> > &X, Array<Array<double> > &Y, Array<Array<
             double> > &Z, double Xi, double Yi);
 
-
+    static double interp3(Array < Array<Array<double> > > &X,  Array < Array<Array<double> > > &Y, Array <Array<Array<
+            double> > > &Z, double Xi, double Yi, double Zi);
+    
     static Array <REAL> globalLinspace(REAL start, REAL end, int n);
     static Array <Vect3> globalLinspace(Vect3 start, Vect3 end, int n);
     static Vect3 globalDirectVel(Vect3 diff, Vect3 omega, REAL del2);

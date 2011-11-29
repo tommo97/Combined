@@ -33,6 +33,26 @@ long unsigned int UTIL::cpu_t = 0;
 
 
 /**************************************************************/
+/*      This piece of code is for fast reciprocal square root approximation as used in Quake*/
+double UTIL::FastInverseSqrt( double number )
+{
+        long i;
+        double x2, y;
+        const double threehalfs = 1.5F;
+ 
+        x2 = number * 0.5F;
+        y  = number;
+        i  = * ( long * ) &y;                       // evil floating point bit level hacking
+        i  = 0x5fe6eb50c7aa19f9 - ( i >> 1 );       // what the fuck?
+        y  = * ( double * ) &i;
+        y  = y * ( threehalfs - ( x2 * y * y ) );   // 1st iteration
+        y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
+ 
+        return y;
+}
+
+/**************************************************************/
+
 int UTIL::read_neu(string infname,
         Array<Vect3> &X,
         Array<Array<int> > &PNLS,

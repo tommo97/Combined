@@ -52,7 +52,7 @@ public:
 //    vector <REAL> x, y, z;
 //    Array < Array <REAL> > domain;
 //    Gnuplot *Plot;
-    string pad, filename, directory, image_type, file_type, out_name, suffix, OS, Home;
+    string pad, filename, directory, image_type, file_type, out_name, suffix, OS, Home, latest_file;
     string top_header, top_data, top_command;
     string ProcessID, header, step_data, step_header;
     ofstream currentOfstream;
@@ -85,7 +85,7 @@ public:
 
     void write_file(stringstream &, string outfname, string ext, bool);
     
-    void write_2D_mat(Array < Array < Array <REAL> > > &outdata, Array < string > vname, string OutName, bool disp);
+    void writeMATLABOutputStruct(MATLABOutputStruct &, string , bool );
 
     void write_dat();
 

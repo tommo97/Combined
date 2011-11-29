@@ -39,10 +39,12 @@ class PANEL {
 public:
     static REAL FarField;
 
-    Vect3 C1, C2, C3, C4, Centroid, CollocationPoint, Normal, Eta, Epsilon, TRANS[3], edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, Vkin, VWake, VCentroid, dF;
+    Vect3 C1, C2, C3, C4, Vd, Centroid, CollocationPoint, Normal, Eta, Epsilon, TRANS[3], edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, Vkin, VWake, VCentroid, dF;
     Array <Vect3> Xcb;
     Vect4 DX, DY, M, D;
     Vect3 C1o, C2o, C3o, C4o;
+    Vect3 NC1, NC2, NC3, NC4;
+    REAL DoubletValidRange2, ValidRange;
     REAL Phi, Sigma, Mu, Gamma, MuPrev, GammaPrev, Cloc, Rloc;
     REAL Area, MaxDiagonal, Vn;
     BODY *Owner;
@@ -75,7 +77,7 @@ public:
 
     PANEL()
     {
-        C1 = C2 = C3 = C4 = C1o = C2o = C3o = C4o = edgeX1 = edgeX2 = dF = Vect3(0.0);
+        C1 = C2 = C3 = C4 = C1o = C2o = C3o = C4o = NC1 = NC2 = NC3 = NC4 = edgeX1 = edgeX2 = dF = Vect3(0.0);
         Sigma = Mu = 0.0;
         Gamma = Phi = 0.0;
         Area = MaxDiagonal = Sigma = Mu = Gamma = Vn = MuPrev = GammaPrev = 0.0;
@@ -90,6 +92,7 @@ public:
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
         Vfmm = dVFMM_dt = Vect3(0.);
+        DoubletValidRange2 = ValidRange = 1e32;
     }
 
     PANEL(Vect3 P1, Vect3 P2, Vect3 P3, Vect3 P4) {
@@ -110,6 +113,8 @@ public:
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
         Vfmm = dVFMM_dt = Vect3(0.);
+                DoubletValidRange2 = ValidRange = 1e32;
+
     }
 
     PANEL(const PANEL &C) {
@@ -152,6 +157,14 @@ public:
         ID = C.ID;
         Vfmm = C.Vfmm;
         dVFMM_dt = C.dVFMM_dt;
+        NC1 = C.NC1;
+        NC2 = C.NC2; 
+        NC3 = C.NC3; 
+        NC4 = C.NC4;
+        DoubletValidRange2 = C.DoubletValidRange2;
+        ValidRange = C.ValidRange;
+
+        
     }
 
 
@@ -160,15 +173,26 @@ public:
     void CheckNeighb(PANEL *Face);
     void SourceDoubletPotential(Vect3 IP, REAL Mu, REAL Sigma, REAL Phi[]);
     void GetEdgeInfo();
+    
+    
     Vect3 BodyPanelVelocity(Vect3);
-    Vect3 WakePanelVelocity(Vect3);
+    REAL BodyPanelPotential(Vect3);
+    REAL WakePanelPotential(Vect3);
+    Vect3 VortexPanelVelocity(Vect3);
+    
+    
     Vect3 SourceVel(Vect3);
     REAL GetCp();
+    REAL GetCpD();
     static Vect3 LineVelocity(Vect3 &lineStart, Vect3 &lineEnd, Vect3 &pTarget, REAL gamma_in);
     static void PointDoublet(Vect3 X0, Vect3 XP, Vect3 &V, Vect3 &Mu, REAL &Phi);
-    static void PointSource(Vect3 X0, Vect3 XP, Vect3 &V, REAL &Sigma, REAL &Phi);
+    static void PointSource(Vect3 D, Vect3 &V, REAL &Sigma, REAL &Phi);
     static void SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet, REAL &PhiSource, int i, int j);
-    static void DoubletPotential(PANEL*, Vect3 , REAL &PhiDoublet, int i, int j);
+    
+    
+    
+    
+    
     void DivPanel(int n, Array < Array < Vect3 > > &CP, Array < Array < Vect3 > > &N, Array < Array < REAL > > &A);
 
     void SubPan(int n, Vect3 P, REAL  MuNormal, REAL Sigma, REAL &PhiD, REAL &PhiS, Vect3 &V);

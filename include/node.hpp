@@ -45,7 +45,7 @@ public:
     Node(Node *parent, int i, int j, int k);
     static Node *Root;
     static unsigned long int NumNodes, NodeCount;
-    static Array <Node*> AllNodes;
+    static Array <Node*> AllNodes, UpList, DownList;
     Node *Parent;
     int x, y, z, m;
     long unsigned int ID;
