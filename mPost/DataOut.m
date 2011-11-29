@@ -1,5 +1,5 @@
 clear all
-%close all
+close all
 clc
 
 set(0,'defaulttextinterpreter','none','defaultaxesposition',[0.10    0.10    .89    .8]);
@@ -8,7 +8,7 @@ files = dir('R*.mat');
 
 %   Find out the interpolation weights
 load(files(1).name);
-r = 0;
+r = 0.5;
 Rads = Rloc;
 Chrd = Cloc;
 R0 = Rads(BodySurface0);
@@ -22,7 +22,7 @@ PressChord = zeros(size(C0(1,:)));
 Cp = CpHistoryAll(1,:)';
 CPress = zeros(size(Cp(1,:)));
 
-
+load FDC0015.mat
 
 chord_mlt = zeros(size(R0));
 
@@ -45,18 +45,18 @@ for i = 1:size(R0,2)
         chord_mlt(max(ind_below),i) = C1;
         chord_mlt(min(ind_above),i) = C2;
     else
-
-       chord_mlt(ind) = 1;
+        
+        chord_mlt(ind) = 1;
     end
     
     
     
 end
 
-        
-        PressChord = sum(chord_mlt.*C0,1);
-        
-  
+
+PressChord = sum(chord_mlt.*C0,1);
+
+
 count = 0;
 for i = 1:length(files)
     load(files(i).name);
@@ -84,6 +84,7 @@ for i = 1:length(files)
     for j = 1:size(CpHistoryAll,1)
         count = count + 1;
         Cp = CpHistoryAll(j,:)';
+        CpD = CpHistoryAllD(j,:)';
         F = -[Area.*Cp.*Norms(:,1) Area.*Cp.*Norms(:,2) Area.*Cp.*Norms(:,3)];
         
         M = cross(F,[CollocPts_x CollocPts_y CollocPts_z]);
@@ -99,75 +100,84 @@ for i = 1:length(files)
         
         Mucp0 = Mu(BodySurface0);
         CpCp0 = Cp(BodySurface0);
-        
-      
-        
-        
-        
         CPress = sum(-chord_mlt.*CpCp0,1);
-        
-       
-        
         Cl(count) = trapz(PressChord,-CPress);
-        %clf
-        %plot(PressChord,CPress);
+        
+        
+        CpCp0D = CpD(BodySurface0);
+        CPressD = sum(-chord_mlt.*CpCp0D,1);
+        
+        clf
+        plot(PressChord,CPress);
+        hold all
+        plot(PressChord,CPressD);
+        scatter(FDC0015_0211_8pt5(:,1),FDC0015_0211_8pt5(:,2));
         disp([i j Cl(count)])
-        %drawnow
+        drawnow
     end
 end
+figure
 % plot(PressChord,CPress);
 % figure
 % clf
-% 
-% 
+%
+%
 % BodyPanPts = [C1;C2;C3;C4];
 % PtIDS = 1:4*length(C1);
 % PtIDS = reshape(PtIDS,length(C1),4);
-% 
+%
 % p = patch('Vertices',BodyPanPts,...
 %     'Faces',PtIDS,'FaceVertexCData',Cp(:),...
 %     'FaceColor','flat','EdgeColor','none');
 % set(gcf,'Renderer','OpenGL')
 % hold all
-% 
+%
 % WakePanPts = [WakePanC1_x WakePanC1_y WakePanC1_z;
 %     WakePanC2_x WakePanC2_y WakePanC2_z;
 %     WakePanC3_x WakePanC3_y WakePanC3_z;
 %     WakePanC4_x WakePanC4_y WakePanC4_z];
-% 
+%
 % PtIDS = 1:4*length(WakePanC1_x);
 % PtIDS = reshape(PtIDS,length(WakePanC1_x),4);
-% 
+%
 % p2 = patch('Vertices',WakePanPts,...
 %     'Faces',PtIDS,'FaceVertexCData',WakePanGamma(:),...
 %     'FaceColor','flat','EdgeColor','k');
-% 
-% 
+%
+%
 % % ProtoWakePanPts = [ProtoWakePointsX(:,1) ProtoWakePointsY(:,1) ProtoWakePointsZ(:,1);
 % %     ProtoWakePointsX(:,2) ProtoWakePointsY(:,2) ProtoWakePointsZ(:,2);
 % %     ProtoWakePointsX(:,3) ProtoWakePointsY(:,3) ProtoWakePointsZ(:,3);
 % %     ProtoWakePointsX(:,4) ProtoWakePointsY(:,4) ProtoWakePointsZ(:,4)];
-% % 
-% % 
-% % 
-% % 
+% %
+% %
+% %
+% %
 % % PtIDS = 1:4*length(ProtoWakePointsX(:,1));
 % % PtIDS = reshape(PtIDS,length(ProtoWakePointsX(:,1)),4);
-% % 
+% %
 % % p3 = patch('Vertices',ProtoWakePanPts,...
 % %    'Faces',PtIDS,'FaceVertexCData',ProtoWakeGamma(:),...
 % %    'FaceColor','flat','EdgeColor','k');
-% 
+%
 % axis equal tight
 % view(3)
-% 
+%
 
 
 %scatter3(VortonX_x(:),VortonX_y(:),VortonX_z(:),'+')
-% 
+%
 %figure
+a = 1;
+b =  ones(100,1)/100;
+
 plot(SubTimes(2:end),Cl(2:end))
-%plot(Times,CL,'-b')
 hold all
+Cl = smooth(Cl,250,'rloess');
+plot(SubTimes(2:end),Cl(2:end))
+figure
+semilogy(0.5*(SubTimes(2:end-1) + SubTimes(3:end)),abs(diff(Cl(2:end))))
+%plot(Times,CL,'-b')
+
 %plot(Times,Cl,'-k')
 %plot(Times,2*pi*AlphaHistory,'-r')
