@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     globalSystem->MaxP = 5;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
-    globalSystem->dtInit = 0.015;
+    globalSystem->dtInit = 0.0015;
     globalSystem->h = 2;
 
 
@@ -255,7 +255,14 @@ void UTIL::PostAmble(string fname) {
                     GMA.push_back(BODY::Bodies[I]->WakePanels[i][j][k]->Gamma);
                 }
 
-
+    
+    for (int i = 0; i < BODY::AllProtoWakes.size(); ++i) {
+        C1.push_back(BODY::AllProtoWakes[i]->C1);
+        C2.push_back(BODY::AllProtoWakes[i]->C2);
+        C3.push_back(BODY::AllProtoWakes[i]->C3);
+        C4.push_back(BODY::AllProtoWakes[i]->C4);
+        GMA.push_back(BODY::AllProtoWakes[i]->Gamma);
+    }
     WriteMATLABMatrix1DVect3("WakePanC1", fname, C1);
     WriteMATLABMatrix1DVect3("WakePanC2", fname, C2);
     WriteMATLABMatrix1DVect3("WakePanC3", fname, C3);
@@ -569,7 +576,7 @@ void UTIL::PreAmble() {
 
     BODY::PollFaces();
 
-    BODY::SetUpProtoWakes(maxT / nSteps);
+    BODY::SetUpProtoWakes(0.01);
     Array < Array <REAL> > TRANS1, TRANS2, TRANS3, TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
         for (int j = 0; j < BODY::Bodies[i]->ProtoWakes.size(); ++j)

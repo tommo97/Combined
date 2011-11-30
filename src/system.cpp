@@ -176,7 +176,7 @@ void SYSTEM::PutWakesInTree() {
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
     for (int i = 0; i < BODY::VortexPositions.size(); ++i)
-        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (BODY::WaitLenghts)) {
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (0. * BODY::WaitLenghts)) {
             Num2Insert++;
             toInsert[i] = true;
         } else
@@ -260,7 +260,7 @@ void SYSTEM::PutWakesInTree() {
                     M4 = M4x * M4y*M4z;
 
                     Vect3 G = M4*OM;
-                    Xs[count] = Vect3(floor(X.x + a) + 0.5, floor(X.y + b) + 0.5, floor(X.z + c) + 0.5);
+                    Xs[count] = Vect3(round(X.x + a), round(X.y + b), round(X.z + c));
                     Oms[count] = (G);
                     Owners[count] = (ID - 1);
                     count++;
