@@ -43,7 +43,7 @@ TIME_STEPPER::TIME_STEPPER() {
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
     cfl_lim = 0.45;
-    dt_out = 0.1;
+    dt_out = 0.5;
     t_out = dt_out;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();
@@ -211,8 +211,6 @@ void TIME_STEPPER::time_loop() {
         //        globalSystem->GetPanelFMMVelocities(0.0); //  t = t1
         first_step = false;
     } else {
-                globalSystem->PutWakesInTree();
-
         //      Calculate FMM
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
@@ -234,6 +232,7 @@ void TIME_STEPPER::time_loop() {
         BODY::BodySubStep(dt, globalSystem->NumSubSteps);
         //      Bin panel wake into tree
 
+        globalSystem->PutWakesInTree();
 
 
 
@@ -267,6 +266,7 @@ void TIME_STEPPER::time_step() {
     REAL dt_euler = cfl_lim / srad.Mag(); //(srad.x + srad.y + srad.z);
     if (srad.Mag() == 0.0) dt_euler = globalSystem->dtInit;
 
+    dt = dt_euler;
 
     //  Calculate timestep length such that no body travels further than a single cell
     REAL OmRMax = 0.0;
@@ -284,9 +284,6 @@ void TIME_STEPPER::time_step() {
     
    
     
-    dt = dt_euler;//min(dt_euler,cfl_lim/OmRMax);
-    
-   
     //  Check to see if this takes us over a time when we should be writing some output
     dump_next = false;
 
@@ -300,7 +297,7 @@ void TIME_STEPPER::time_step() {
 
 
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = dt_euler / 10 ;//min(dt_euler / 25, cfl_lim / (OmRMax));
+    REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (OmRMax));
 
     int nss = ceil(dt_euler / dt_lagrange);
 

@@ -431,7 +431,7 @@ void BODY::SplitUpLinearAlgebra() {
 
         for (int i = 0; i < n; ++i)
             BODY::Bodies[I]->localRHS[i] += BODY::Bodies[I]->Faces[i].Phi;
-
+            
         BODY::Bodies[I]->localMu = Array <REAL > (n, 0.0);
 
 

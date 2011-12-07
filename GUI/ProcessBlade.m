@@ -212,11 +212,11 @@ else
     LowerS.m = [repmat(LowerS.m(1,:),[sz+1,1]); LowerS.m; repmat(LowerS.m(end,:),[sz+1,1])];
     LowerS.n = [repmat(LowerS.n(1,:),[sz+1,1]); LowerS.n; repmat(LowerS.n(end,:),[sz+1,1])];
     
-    figure; surf(UpperS.x, UpperS.y, UpperS.z); axis equal; view(3)
-    hold all
-    surf(LowerS.x, LowerS.y, LowerS.z); axis equal; view(3)
+%     figure; surf(UpperS.x, UpperS.y, UpperS.z); axis equal; view(3)
+%     hold all
+%     surf(LowerS.x, LowerS.y, LowerS.z); axis equal; view(3)
     
-    a = 1;
+
 end
 
 
@@ -367,6 +367,17 @@ Blade.nPnls = numel(Blade.Panels.c1.Local);
 Blade.nPts = numel(Blade.X);
 Blade.Panels.WakeShedders.LS.Local = MainPans(:,1);
 Blade.Panels.WakeShedders.US.Local = MainPans(:,end);
+
+if Blade.RoundTips
+    n = Blade.num_tip_pans+1;
+    Blade.Panels.WakeShedders.LS.Local = MainPans(n:(end-n),1);
+    Blade.Panels.WakeShedders.US.Local = MainPans(n:(end-n),end);
+    if Blade.isNREL || Blade.isSOTON
+            Blade.Panels.WakeShedders.LS.Local = MainPans((n+Blade.n2):(end-n),1);
+        Blade.Panels.WakeShedders.US.Local = MainPans((n+Blade.n2):(end-n),end);
+    end
+end
+    
 if Blade.isNREL || Blade.isSOTON
     Blade.Panels.WakeShedders.LS.Local = MainPans(Blade.n2:end,1);
     Blade.Panels.WakeShedders.US.Local = MainPans(Blade.n2:end,end);

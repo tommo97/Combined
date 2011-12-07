@@ -318,7 +318,7 @@ Vect3 PANEL::BodyPanelVelocity(Vect3 pTarget) {
     
     REAL MagP = P.Mag(), Mult = Sigma / two_pi;
 
-    if (MagP < PANEL::FarField * MaxDiagonal) {
+    if (MagP < 1e32*PANEL::FarField * MaxDiagonal) {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
         REAL Pz2 = P.z * P.z;
@@ -389,7 +389,7 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
     Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
     REAL MagP = P.Mag(), Mult = Sigma / two_pi;
 
-    if (MagP < PANEL::FarField * MaxDiagonal) {
+    if (MagP < 1e32*PANEL::FarField * MaxDiagonal) {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
         REAL Pz2 = P.z * P.z;
@@ -605,8 +605,8 @@ REAL PANEL::BodyPanelPotential(Vect3 target) {
     REAL PhiSource = 0.0, PhiDoublet = 0.0;
     Vect3 XPg = target - Centroid;
     
-    if ((XPg.Dot(XPg) > Mu*ValidRange) && (XPg.Dot(XPg) > Sigma*ValidRange))
-        return 0.0;
+//    if ((XPg.Dot(XPg) > Mu*ValidRange) && (XPg.Dot(XPg) > Sigma*ValidRange))
+//        return 0.0;
     
     if (XPg.Dot(XPg) < ((PANEL::FarField * MaxDiagonal)*(PANEL::FarField * MaxDiagonal)) ){
 
@@ -726,8 +726,8 @@ REAL PANEL::BodyPanelPotential(Vect3 target) {
         PhiSource = Area / (two_pi * MagP);
     }
     
-    if ((abs(PhiSource) < 1e-6) && (abs(PhiDoublet) < 1e-6))
-        ValidRange = XPg.Mag();
+//    if ((abs(PhiSource) < 1e-6) && (abs(PhiDoublet) < 1e-6))
+//        ValidRange = XPg.Mag();
     
     
     return PhiSource*Sigma + PhiDoublet*Mu;

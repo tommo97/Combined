@@ -61,8 +61,6 @@ using namespace std;
 #define piover2 1.570796326794897
 //#define two_pi 6.283185307179586
 //#define four_pi 12.56637061435917
-#define SCALE_FACTOR 1.0
-#define VRTX_DIA_SQRD 0.1
 
 #include "array.hpp"
 #include "vect34.hpp"

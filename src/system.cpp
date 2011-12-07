@@ -176,7 +176,7 @@ void SYSTEM::PutWakesInTree() {
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
     for (int i = 0; i < BODY::VortexPositions.size(); ++i)
-        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (0. * BODY::WaitLenghts)) {
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (GambitScale * .05)) {
             Num2Insert++;
             toInsert[i] = true;
         } else
@@ -325,20 +325,20 @@ void SYSTEM::PutWakesInTree() {
 /**************************************************************/
 void SYSTEM::GetFaceVels() {
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        globalOctree->AllCells[i]->Phi = 0.0;
-
-
-        //      The following are multiplied by a half since the alogrithm used for potentials assumes potential on surface
-        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j)
-            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllBodyFaces[j]->BodyPanelPotential(globalOctree->AllCells[i]->Position);
-
-        for (int j = 0; j < BODY::AllProtoWakes.size(); ++j)
-            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllProtoWakes[j]->WakePanelPotential(globalOctree->AllCells[i]->Position);
-    }
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
+//    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+//        globalOctree->AllCells[i]->Phi = 0.0;
+//
+//
+//        //      The following are multiplied by a half since the alogrithm used for potentials assumes potential on surface
+//        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j)
+//            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllBodyFaces[j]->BodyPanelPotential(globalOctree->AllCells[i]->Position);
+//
+//        for (int j = 0; j < BODY::AllProtoWakes.size(); ++j)
+//            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllProtoWakes[j]->WakePanelPotential(globalOctree->AllCells[i]->Position);
+//    }
 
     for (int i = 0; i < globalOctree->AllCells.size(); ++i)
         globalOctree->AllCells[i]->SetVelsEqual();
@@ -440,7 +440,120 @@ void SYSTEM::WriteDomain() {
 void SYSTEM::WriteData() {
 
    MATLABOutputStruct Output;
+
+   REAL DistTravelled = (BODY::Bodies[0]->CG - BODY::Bodies[0]->CGo).Mag();
+   REAL tmpX = BODY::Bodies[0]->CG.x - (2.0 * GambitScale * 0.4);
+   int nSlices = 2+floor(DistTravelled/(GambitScale * 0.4));
+   int I = 0;
    
+   while (I <= nSlices)
+    {
+       cout << I << " " << nSlices << " " << tmpX << endl;
+        int NC = round(globalSystem->GambitScale);
+        Array < Array < Vect3 > > DomainSliceXNormalWakeVel = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > DomainSliceXNormalBodyVel = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > DomainSliceXNormalProtoWakeVel = UTIL::zerosv(NC, NC);
+
+        Array < Array < Vect3 > > DomainSliceXNormalPosn = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > DomainSliceXNormalPosnPlus = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > DomainSliceXNormalPosnMinus = UTIL::zerosv(NC, NC);
+
+        Array < Array < REAL > > DomainSliceXNormalBodyPhi = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > DomainSliceXNormalBodyPhiPlus = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > DomainSliceXNormalBodyPhiMinus = UTIL::zeros(NC, NC);
+
+        Array < Array < REAL > > DomainSliceXNormalProtoWakePhi = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > DomainSliceXNormalProtoWakePhiPlus = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > DomainSliceXNormalProtoWakePhiMinus = UTIL::zeros(NC, NC);
+
+        Array <REAL> yzs = UTIL::globalLinspace(-0.5, 0.5, NC + 1);
+
+#pragma omp parallel for
+        for (int i = 0; i < NC; ++i)
+            for (int j = 0; j < NC; ++j) {
+                DomainSliceXNormalPosn[i][j].x = tmpX;
+                DomainSliceXNormalPosn[i][j].y = yzs[i] * globalSystem->GambitScale;
+                DomainSliceXNormalPosn[i][j].z = yzs[j] * globalSystem->GambitScale;
+                Vect3 Pos = DomainSliceXNormalPosn[i][j];
+                for (int k = 0; k < globalOctree->AllCells.size(); ++k)
+                    DomainSliceXNormalWakeVel[i][j] += globalDirectVel(Pos - globalOctree->AllCells[k]->Position, globalOctree->AllCells[k]->Omega);
+
+                for (int k = 0; k < BODY::AllProtoWakes.size(); ++k)
+                    DomainSliceXNormalProtoWakeVel[i][j] += BODY::AllProtoWakes[k]->VortexPanelVelocity(Pos);
+
+                for (int k = 0; k < BODY::AllBodyFaces.size(); ++k)
+                    DomainSliceXNormalBodyVel[i][j] += BODY::AllBodyFaces[k]->BodyPanelVelocity(Pos);
+
+                DomainSliceXNormalPosnPlus[i][j] = DomainSliceXNormalPosn[i][j] + Vect3(1., 0., 0.);
+                DomainSliceXNormalPosnMinus[i][j] = DomainSliceXNormalPosn[i][j] - Vect3(1., 0., 0.);
+
+
+
+                for (int k = 0; k < BODY::AllProtoWakes.size(); ++k) {
+                    Pos = DomainSliceXNormalPosn[i][j];
+                    DomainSliceXNormalProtoWakePhi[i][j] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
+                    Pos = DomainSliceXNormalPosnPlus[i][j];
+                    DomainSliceXNormalProtoWakePhiPlus[i][j] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
+                    Pos = DomainSliceXNormalPosnMinus[i][j];
+                    DomainSliceXNormalProtoWakePhiMinus[i][j] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
+                }
+
+                for (int k = 0; k < BODY::AllBodyFaces.size(); ++k) {
+                    Pos = DomainSliceXNormalPosn[i][j];
+                    DomainSliceXNormalBodyPhi[i][j] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
+                    Pos = DomainSliceXNormalPosnPlus[i][j];
+                    DomainSliceXNormalBodyPhiPlus[i][j] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
+                    Pos = DomainSliceXNormalPosnMinus[i][j];
+                    DomainSliceXNormalBodyPhiMinus[i][j] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
+
+                }
+
+
+
+            }
+
+        string SliceName = UTIL::toString(I);
+        
+        Output.Vect2DArrays.push_back(DomainSliceXNormalWakeVel);
+        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalWakeVel" + SliceName));
+
+        Output.Vect2DArrays.push_back(DomainSliceXNormalBodyVel);
+        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalBodyVel" + SliceName));
+
+        Output.Vect2DArrays.push_back(DomainSliceXNormalProtoWakeVel);
+        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalProtoWakeVel" + SliceName));
+
+        Output.Vect2DArrays.push_back(DomainSliceXNormalPosn);
+        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalPosn" + SliceName));
+
+        Output.Double2DArrays.push_back(DomainSliceXNormalProtoWakePhi);
+        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalProtoWakePhi" + SliceName));
+
+        Output.Double2DArrays.push_back(DomainSliceXNormalProtoWakePhiPlus);
+        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalProtoWakePhiPlus" + SliceName));
+
+        Output.Double2DArrays.push_back(DomainSliceXNormalProtoWakePhiMinus);
+        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalProtoWakePhiMinus" + SliceName));
+
+        Output.Double2DArrays.push_back(DomainSliceXNormalBodyPhi);
+        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalBodyPhi" + SliceName));
+
+        Output.Double2DArrays.push_back(DomainSliceXNormalBodyPhiPlus);
+        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalBodyPhiPlus" + SliceName));
+
+        Output.Double2DArrays.push_back(DomainSliceXNormalBodyPhiMinus);
+        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalBodyPhiMinus" + SliceName));
+
+        Output.Vect2DArrays.push_back(DomainSliceXNormalPosnMinus);
+        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalPosnMinus" + SliceName));
+
+        Output.Vect2DArrays.push_back(DomainSliceXNormalPosnPlus);
+        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalPosnPlus" + SliceName));
+        
+        
+        tmpX += GambitScale * 0.4;
+        I++;
+    }
    
     Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 6 + (NumTransVars * 3));
     int count = 0;
@@ -468,32 +581,6 @@ void SYSTEM::WriteData() {
             
         }
 
-    cout << "Domain Size: " << Maxs - Mins << endl;
-    
-    Array < Array <Vect3> > BodyVelSliceY, TreeVelSliceY,  Posns;
-    int imax = 1, jmax = 1;
-    for (int i = (int) Mins.x - 48; i < (int) Maxs.x + 48; ++i)
-        imax++;
-    for (int j = (int) Mins.z - 48; j < (int) Maxs.z + 48; ++j)
-        jmax++;
-
-    
-    Posns = TreeVelSliceY = BodyVelSliceY = UTIL::zerosv(imax,jmax);
-    for (int i = 0; i < imax; ++i)
-        for (int j = 0; j < jmax; ++j)
-        {
-            Posns[i][j] = Mins + Vect3(i-48.0,0.0,j-48.0);
-            TreeVelSliceY[i][j] = globalOctree->TreeVel(Posns[i][j]);
-            
-            for (int k = 0; k < BODY::AllBodyFaces.size(); ++k)
-            {
-                BodyVelSliceY[i][j] += BODY::AllBodyFaces[k]->SourceVel(Posns[i][j]);
-                BodyVelSliceY[i][j] += BODY::AllBodyFaces[k]->BodyPanelVelocity(Posns[i][j]);
-            }
-        }
-    
-    
-
 
     Output.Double2DArrays.push_back(DataOut);
     Output.Double2DArrayStrings.push_back(string("Domain"));
@@ -504,18 +591,9 @@ void SYSTEM::WriteData() {
     Output.Double2DArrays.push_back(BODY::CpHistoryAllD);
     Output.Double2DArrayStrings.push_back(string("CpHistoryAllD"));
 
-
     Output.Double1DArrays.push_back(BODY::SubTIMES);
     Output.Double1DArrayStrings.push_back(string("CpHistoryAllD"));
 
-    Output.Vect2DArrays.push_back(TreeVelSliceY);
-    Output.Vect2DArrayStrings.push_back(string("TreeVelSliceY"));
-
-    Output.Vect2DArrays.push_back(BodyVelSliceY);
-    Output.Vect2DArrayStrings.push_back(string("BodyVelSliceY"));  
-    
-    Output.Vect2DArrays.push_back(Posns);
-    Output.Vect2DArrayStrings.push_back(string("SlicePositions"));  
     
     globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
     BODY::CpHistoryAll.clear();
