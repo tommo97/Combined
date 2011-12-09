@@ -3,8 +3,8 @@ files = dir('R*.mat');
 close all
 s = size(files,1);
 
-scale = 50;
-val = 5
+scale = 16;
+val = .5
 fname = files(s).name;
 load(fname)
 
@@ -25,69 +25,10 @@ isocolors(XI,YI,ZI,VIx,p1);
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 hold all
 
-return
-drawnow
-
-
-n = 50;
-
-
-y = min(Domain(:,2)):1:max(Domain(:,2));
-z = min(Domain(:,3)):1:max(Domain(:,3));
-[rotorplaney rotorplanez] = meshgrid(y,z);
-rotorplaneu = zeros(size(rotorplaney));
-rotorplanev = zeros(size(rotorplaney));
-rotorplanew = zeros(size(rotorplaney));
-DEL2 = 0.25;
-
-for i = 1:numel(rotorplaney)
-    
-    y = rotorplaney(i);
-    x = Time * -1 * scale;
-    z = rotorplanez(i);
-    
-    dx = x - Domain(:,1);
-    dy = y - Domain(:,2);
-    dz = z - Domain(:,3);
-    
-    
-    
-    
-    nrm = sqrt(DEL2 + dx.*dx + dy.*dy + dz.*dz);
-    
-    mult = 1 ./ (4 * pi .* nrm .* nrm .* nrm);
-    
-    omx = Domain(:,4);
-    omy = Domain(:,5);
-    omz = Domain(:,6);
-    
-    Vx = mult.*(omy.*dz - omz.*dy);
-    Vy = mult.*(omz.*dx - omx.*dz);
-    Vz = mult.*(omx.*dy - omy.*dx);
-    
-    rotorplaneu(i) = rotorplaneu(i) + sum(Vx);
-    rotorplanev(i) = rotorplanev(i) + sum(Vy);
-    rotorplanew(i) = rotorplanew(i) + sum(Vz);
-    
-    disp(i)
-end
-
-
-figure
-[C,h] = contour(rotorplaney/scale,rotorplanez/scale,(rotorplanew/scale));
-set(h,'ShowText','on','TextStep',get(h,'LevelStep')*2)
-axis equal tight
-grid on
-box on
-xlabel('$y$[m]')
-yl = ylabel('$z$[m]')
-set(yl,'Rotation',0)
-mlf2pdf(gcf,'ZVel64x64jet')
 
 
 
 ViewParams = GetViewParams;
-return
 
 load(fname)
 
@@ -168,7 +109,7 @@ VIs = VI;
 figure
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 VIs(VIs>5*std(VIs(:))) = 5*std(VIs(:));
-slice(XI,YI,ZI,VIs,[0],[ ],[])
+slice(XI,YI,ZI,VIs,[0],[0.1 0.2 0.5 1 2 4 6],[])
 axis equal
 shading flat
 box on

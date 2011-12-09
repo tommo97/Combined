@@ -50,11 +50,11 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 50;
+    globalSystem->GambitScale = 16;
     globalSystem->MaxP = 5;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
-    globalSystem->dtInit = 0.01;
+    globalSystem->dtInit = 0.05;
     globalSystem->h = 4;
 
 

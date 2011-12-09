@@ -49,7 +49,7 @@ public:
 
     NeighbSet <Vect3> FaceVels;
 
-    Array <Vect3> Deriv;
+    Array <Vect3> Deriv, IPs, IPVels;
 
     int age;
     

@@ -43,7 +43,7 @@ TIME_STEPPER::TIME_STEPPER() {
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
     cfl_lim = 0.45;
-    dt_out = 0.5;
+    dt_out = 5;
     t_out = dt_out;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();
@@ -211,10 +211,21 @@ void TIME_STEPPER::time_loop() {
         //        globalSystem->GetPanelFMMVelocities(0.0); //  t = t1
         first_step = false;
     } else {
+        globalSystem->PutWakesInTree();
+
         //      Calculate FMM
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
         globalOctree->GetVels();
+
+
+
+        if (globalTimeStepper->dump_next) {
+            globalSystem->WriteData();
+        }
+
+
+
         //      Calculate Panel contribution to FVM face fluxes
         globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
         //      Get Timestep length
@@ -224,7 +235,7 @@ void TIME_STEPPER::time_loop() {
         //      Advance FVM to t + dt
         globalOctree->FVM(); //  t = t0
 
-        
+
         //      Advance panels to t + dt
         globalSystem->GetPanelFMMVelocities(dt); //  t = t1
         globalOctree->Integrate(); //  t = t0 -> t1
@@ -232,24 +243,10 @@ void TIME_STEPPER::time_loop() {
         BODY::BodySubStep(dt, globalSystem->NumSubSteps);
         //      Bin panel wake into tree
 
-        globalSystem->PutWakesInTree();
 
 
 
     }
-
-
-
-    //
-    if (globalTimeStepper->dump_next) {
-        //                globalSystem->WriteDomain();
-//        globalOctree->Reset();
-//        globalOctree->InitVelsGetLaplacian();
-//        globalOctree->GetVels();
-        globalSystem->WriteData();
-        //        globalOctree->Reset();
-    }
-
 }
 
 /**************************************************************/
@@ -284,6 +281,9 @@ void TIME_STEPPER::time_step() {
     
    
     
+    //dt = min(dt_euler,cfl_lim/OmRMax);
+    
+   
     //  Check to see if this takes us over a time when we should be writing some output
     dump_next = false;
 
@@ -297,7 +297,7 @@ void TIME_STEPPER::time_step() {
 
 
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (OmRMax));
+    REAL dt_lagrange = dt_euler / 10 ;//min(dt_euler / 25, cfl_lim / (OmRMax));
 
     int nss = ceil(dt_euler / dt_lagrange);
 

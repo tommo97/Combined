@@ -176,7 +176,7 @@ void SYSTEM::PutWakesInTree() {
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
     for (int i = 0; i < BODY::VortexPositions.size(); ++i)
-        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (GambitScale * .05)) {
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (0 * GambitScale * .25)) {
             Num2Insert++;
             toInsert[i] = true;
         } else
@@ -445,116 +445,142 @@ void SYSTEM::WriteData() {
    REAL tmpX = BODY::Bodies[0]->CG.x - (2.0 * GambitScale * 0.4);
    int nSlices = 2+floor(DistTravelled/(GambitScale * 0.4));
    int I = 0;
-   
-   while (I <= nSlices)
+   Array <REAL> SlicePlanesX(7);
+
+    SlicePlanesX[0] = 0.1 * GambitScale;
+    SlicePlanesX[1] = 0.2 * GambitScale;
+    SlicePlanesX[2] = 0.5 * GambitScale;
+    SlicePlanesX[3] = 1.0 * GambitScale;
+    SlicePlanesX[4] = 2.0 * GambitScale;
+    SlicePlanesX[5] = 4.0 * GambitScale;
+    SlicePlanesX[6] = 6.0 * GambitScale;
+    
+    Array <string> Names(7);
+    Names[0] = "0pt1";
+    Names[1] = "0pt2";
+    Names[2] = "0pt5";
+    Names[3] = "1pt0";
+    Names[4] = "2pt0";
+    Names[5] = "4pt0";
+    Names[6] = "6pt0";
+    
+    int NC = 0;
+    
+    int JKmin = floor(-5*GambitScale), JKmax = ceil(5*GambitScale);
+    Array <REAL> PS;
+    for (int J = JKmin; J < JKmax; ++J){
+        NC ++;
+        PS.push_back(J * 1.0);
+    }
+
+    for (int I = 0; I < SlicePlanesX.size(); ++I)
     {
-       cout << I << " " << nSlices << " " << tmpX << endl;
-        int NC = round(globalSystem->GambitScale);
-        Array < Array < Vect3 > > DomainSliceXNormalWakeVel = UTIL::zerosv(NC, NC);
-        Array < Array < Vect3 > > DomainSliceXNormalBodyVel = UTIL::zerosv(NC, NC);
-        Array < Array < Vect3 > > DomainSliceXNormalProtoWakeVel = UTIL::zerosv(NC, NC);
+        cout << I << endl;
+        Array < Array < Vect3 > > SliceWakeVel = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > SliceVortonWakeVel = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > SliceBodyVel = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > SliceProtoWakeVel = UTIL::zerosv(NC, NC);
 
-        Array < Array < Vect3 > > DomainSliceXNormalPosn = UTIL::zerosv(NC, NC);
-        Array < Array < Vect3 > > DomainSliceXNormalPosnPlus = UTIL::zerosv(NC, NC);
-        Array < Array < Vect3 > > DomainSliceXNormalPosnMinus = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > SlicePosn = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > SlicePosnPlus = UTIL::zerosv(NC, NC);
+        Array < Array < Vect3 > > SlicePosnMinus = UTIL::zerosv(NC, NC);
 
-        Array < Array < REAL > > DomainSliceXNormalBodyPhi = UTIL::zeros(NC, NC);
-        Array < Array < REAL > > DomainSliceXNormalBodyPhiPlus = UTIL::zeros(NC, NC);
-        Array < Array < REAL > > DomainSliceXNormalBodyPhiMinus = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > SliceBodyPhi = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > SliceBodyPhiPlus = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > SliceBodyPhiMinus = UTIL::zeros(NC, NC);
 
-        Array < Array < REAL > > DomainSliceXNormalProtoWakePhi = UTIL::zeros(NC, NC);
-        Array < Array < REAL > > DomainSliceXNormalProtoWakePhiPlus = UTIL::zeros(NC, NC);
-        Array < Array < REAL > > DomainSliceXNormalProtoWakePhiMinus = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > SliceProtoWakePhi = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > SliceProtoWakePhiPlus = UTIL::zeros(NC, NC);
+        Array < Array < REAL > > SliceProtoWakePhiMinus = UTIL::zeros(NC, NC);
 
-        Array <REAL> yzs = UTIL::globalLinspace(-0.5, 0.5, NC + 1);
+        for (int J = 0; J < PS.size(); ++J)
+            for (int K = 0; K < PS.size(); ++K) {
+                Vect3 Pos(BODY::Bodies[0]->CG.x + SlicePlanesX[I], PS[J], PS[K]);
+
+                SlicePosn[J][K] = Pos;
+                SlicePosnPlus[J][K] = Pos + Vect3(1, 0, 0);
+                SlicePosnMinus[J][K] = Pos - Vect3(1, 0, 0);
+
+                SliceWakeVel[J][K] = globalOctree->TreeVel(Pos);
+
+            }
 
 #pragma omp parallel for
-        for (int i = 0; i < NC; ++i)
-            for (int j = 0; j < NC; ++j) {
-                DomainSliceXNormalPosn[i][j].x = tmpX;
-                DomainSliceXNormalPosn[i][j].y = yzs[i] * globalSystem->GambitScale;
-                DomainSliceXNormalPosn[i][j].z = yzs[j] * globalSystem->GambitScale;
-                Vect3 Pos = DomainSliceXNormalPosn[i][j];
-                for (int k = 0; k < globalOctree->AllCells.size(); ++k)
-                    DomainSliceXNormalWakeVel[i][j] += globalDirectVel(Pos - globalOctree->AllCells[k]->Position, globalOctree->AllCells[k]->Omega);
+        for (int J = 0; J < PS.size(); ++J)
+            for (int K = 0; K < PS.size(); ++K) {
+                Vect3 Pos = SlicePosn[J][K];
+                for (int k = 0; k < BODY::VortexPositions.size(); ++k)
+                    SliceVortonWakeVel[J][K] += globalDirectVel(Pos - BODY::VortexPositions[k], BODY::VortexOmegas[k]);
 
                 for (int k = 0; k < BODY::AllProtoWakes.size(); ++k)
-                    DomainSliceXNormalProtoWakeVel[i][j] += BODY::AllProtoWakes[k]->VortexPanelVelocity(Pos);
-
+                    SliceProtoWakeVel[J][K] += BODY::AllProtoWakes[k]->VortexPanelVelocity(Pos);
                 for (int k = 0; k < BODY::AllBodyFaces.size(); ++k)
-                    DomainSliceXNormalBodyVel[i][j] += BODY::AllBodyFaces[k]->BodyPanelVelocity(Pos);
-
-                DomainSliceXNormalPosnPlus[i][j] = DomainSliceXNormalPosn[i][j] + Vect3(1., 0., 0.);
-                DomainSliceXNormalPosnMinus[i][j] = DomainSliceXNormalPosn[i][j] - Vect3(1., 0., 0.);
+                    SliceBodyVel[J][K] += BODY::AllBodyFaces[k]->BodyPanelVelocity(Pos);
 
 
 
                 for (int k = 0; k < BODY::AllProtoWakes.size(); ++k) {
-                    Pos = DomainSliceXNormalPosn[i][j];
-                    DomainSliceXNormalProtoWakePhi[i][j] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
-                    Pos = DomainSliceXNormalPosnPlus[i][j];
-                    DomainSliceXNormalProtoWakePhiPlus[i][j] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
-                    Pos = DomainSliceXNormalPosnMinus[i][j];
-                    DomainSliceXNormalProtoWakePhiMinus[i][j] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
+                    Pos = SlicePosn[J][K];
+                    SliceProtoWakePhi[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
+                    Pos = SlicePosnPlus[J][K];
+                    SliceProtoWakePhiPlus[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
+                    Pos = SlicePosnMinus[J][K];
+                    SliceProtoWakePhiMinus[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
                 }
-
+                
                 for (int k = 0; k < BODY::AllBodyFaces.size(); ++k) {
-                    Pos = DomainSliceXNormalPosn[i][j];
-                    DomainSliceXNormalBodyPhi[i][j] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
-                    Pos = DomainSliceXNormalPosnPlus[i][j];
-                    DomainSliceXNormalBodyPhiPlus[i][j] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
-                    Pos = DomainSliceXNormalPosnMinus[i][j];
-                    DomainSliceXNormalBodyPhiMinus[i][j] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
-
+                    Pos = SlicePosn[J][K];
+                    SliceBodyPhi[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
+                    Pos = SlicePosnPlus[J][K];
+                    SliceBodyPhiPlus[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
+                    Pos = SlicePosnMinus[J][K];
+                    SliceBodyPhiMinus[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
                 }
-
-
-
             }
 
-        string SliceName = UTIL::toString(I);
+        string SliceName = Names[I];
+        Output.Vect2DArrays.push_back(SliceWakeVel);
+        Output.Vect2DArrayStrings.push_back(string("SliceWakeVel" + SliceName));
+
+        Output.Vect2DArrays.push_back(SliceVortonWakeVel);
+        Output.Vect2DArrayStrings.push_back(string("SliceVortonWakeVel" + SliceName));
         
-        Output.Vect2DArrays.push_back(DomainSliceXNormalWakeVel);
-        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalWakeVel" + SliceName));
+        Output.Vect2DArrays.push_back(SliceBodyVel);
+        Output.Vect2DArrayStrings.push_back(string("SliceBodyVel" + SliceName));
 
-        Output.Vect2DArrays.push_back(DomainSliceXNormalBodyVel);
-        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalBodyVel" + SliceName));
+        Output.Vect2DArrays.push_back(SliceProtoWakeVel);
+        Output.Vect2DArrayStrings.push_back(string("SliceProtoWakeVel" + SliceName));
 
-        Output.Vect2DArrays.push_back(DomainSliceXNormalProtoWakeVel);
-        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalProtoWakeVel" + SliceName));
+        Output.Vect2DArrays.push_back(SlicePosn);
+        Output.Vect2DArrayStrings.push_back(string("SlicePosn" + SliceName));
 
-        Output.Vect2DArrays.push_back(DomainSliceXNormalPosn);
-        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalPosn" + SliceName));
+        Output.Double2DArrays.push_back(SliceProtoWakePhi);
+        Output.Double2DArrayStrings.push_back(string("SliceProtoWakePhi" + SliceName));
 
-        Output.Double2DArrays.push_back(DomainSliceXNormalProtoWakePhi);
-        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalProtoWakePhi" + SliceName));
+        Output.Double2DArrays.push_back(SliceProtoWakePhiPlus);
+        Output.Double2DArrayStrings.push_back(string("SliceProtoWakePhiPlus" + SliceName));
 
-        Output.Double2DArrays.push_back(DomainSliceXNormalProtoWakePhiPlus);
-        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalProtoWakePhiPlus" + SliceName));
+        Output.Double2DArrays.push_back(SliceProtoWakePhiMinus);
+        Output.Double2DArrayStrings.push_back(string("SliceProtoWakePhiMinus" + SliceName));
 
-        Output.Double2DArrays.push_back(DomainSliceXNormalProtoWakePhiMinus);
-        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalProtoWakePhiMinus" + SliceName));
+        Output.Double2DArrays.push_back(SliceBodyPhi);
+        Output.Double2DArrayStrings.push_back(string("SliceBodyPhi" + SliceName));
 
-        Output.Double2DArrays.push_back(DomainSliceXNormalBodyPhi);
-        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalBodyPhi" + SliceName));
+        Output.Double2DArrays.push_back(SliceBodyPhiPlus);
+        Output.Double2DArrayStrings.push_back(string("SliceBodyPhiPlus" + SliceName));
 
-        Output.Double2DArrays.push_back(DomainSliceXNormalBodyPhiPlus);
-        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalBodyPhiPlus" + SliceName));
+        Output.Double2DArrays.push_back(SliceBodyPhiMinus);
+        Output.Double2DArrayStrings.push_back(string("SliceBodyPhiMinus" + SliceName));
 
-        Output.Double2DArrays.push_back(DomainSliceXNormalBodyPhiMinus);
-        Output.Double2DArrayStrings.push_back(string("DomainSliceXNormalBodyPhiMinus" + SliceName));
+        Output.Vect2DArrays.push_back(SlicePosnMinus);
+        Output.Vect2DArrayStrings.push_back(string("SlicePosnMinus" + SliceName));
 
-        Output.Vect2DArrays.push_back(DomainSliceXNormalPosnMinus);
-        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalPosnMinus" + SliceName));
-
-        Output.Vect2DArrays.push_back(DomainSliceXNormalPosnPlus);
-        Output.Vect2DArrayStrings.push_back(string("DomainSliceXNormalPosnPlus" + SliceName));
-        
-        
-        tmpX += GambitScale * 0.4;
-        I++;
+        Output.Vect2DArrays.push_back(SlicePosnPlus);
+        Output.Vect2DArrayStrings.push_back(string("SlicePosnPlus" + SliceName));
     }
-   
+    
+    
+    
     Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 6 + (NumTransVars * 3));
     int count = 0;
     Vect3 Mins(1e32,1e32,1e32), Maxs(-1e32,-1e32,-1e32);

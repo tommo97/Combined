@@ -297,15 +297,15 @@ public:
     int S, AssociatedBody;
     Vect3 Position, Omega, tPosition, Velocity;
 
-    bool has_load, IP;
+    bool has_load, IP, toMonitor;
 
-    OctreeCapsule() : S(OCTREE_SIZE / 2), has_load(false), IP(false) {
+    OctreeCapsule() : S(OCTREE_SIZE / 2), has_load(false), IP(false), toMonitor(false) {
     };
 
-    OctreeCapsule(Vect3 P, Vect3 O, bool t) : S(OCTREE_SIZE / 2), Position(P), Omega(O), tPosition(P), has_load(t), IP(false) {
+    OctreeCapsule(Vect3 P, Vect3 O, bool t) : S(OCTREE_SIZE / 2), Position(P), Omega(O), tPosition(P), has_load(t), IP(false), toMonitor(false) {
     };
 
-    OctreeCapsule(const OctreeCapsule &A) : S(A.S), Position(A.Position), Omega(A.Omega), tPosition(A.tPosition), has_load(A.has_load), IP(A.IP) {
+    OctreeCapsule(const OctreeCapsule &A) : S(A.S), Position(A.Position), Omega(A.Omega), tPosition(A.tPosition), has_load(A.has_load), IP(A.IP), toMonitor(A.toMonitor) {
     }
     inline bool operator>(const OctreeCapsule B) {
         return Position > B.Position;

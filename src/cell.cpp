@@ -628,6 +628,7 @@ void FVMCell::MUSCL() {
 
 /**************************************************************/
 void FVMCell::CollapseToIP(OctreeCapsule &IP) {
+    
     for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
         for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
             for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
