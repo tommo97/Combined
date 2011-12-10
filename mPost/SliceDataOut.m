@@ -1,5 +1,5 @@
 clear all; clear mex; clc;
-files = dir('R*.mat');
+files = dir('R*0001.mat');
 
 close all
 s = size(files,1);
@@ -39,9 +39,9 @@ for i = 1:length(names)
     eval(['Phi{i}.Body = Data.SliceBodyPhi' names{i} ';']);
     
     %[Vel{i}.Body.y Vel{i}.Body.z] = gradient(Phi{i}.Body);
-    Vel{i}.x = -Vel{i}.ProtoWake.x + Vel{i}.Wake.x - Vel{i}.Vorton.x - Vel{i}.Body.x;
-    Vel{i}.y = -Vel{i}.ProtoWake.y + Vel{i}.Wake.y - Vel{i}.Vorton.y - Vel{i}.Body.y;
-    Vel{i}.z = -Vel{i}.ProtoWake.z + Vel{i}.Wake.z - Vel{i}.Vorton.z - Vel{i}.Body.z;
+    Vel{i}.x = 0*Vel{i}.ProtoWake.x + Vel{i}.Wake.x;% - Vel{i}.Vorton.x - Vel{i}.Body.x;
+    Vel{i}.y = 0*Vel{i}.ProtoWake.y + Vel{i}.Wake.y;% - Vel{i}.Vorton.y - Vel{i}.Body.y;
+    Vel{i}.z = 0*Vel{i}.ProtoWake.z + Vel{i}.Wake.z;% - Vel{i}.Vorton.z - Vel{i}.Body.z;
     
     eval(['Pos{i}.x = Data.SlicePosn' names{i} '_x;']);
     eval(['Pos{i}.y = Data.SlicePosn' names{i} '_y;']);

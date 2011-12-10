@@ -3,8 +3,8 @@ files = dir('R*.mat');
 close all
 s = size(files,1);
 
-scale = 16;
-val = .5
+scale = 1;
+val = 1
 fname = files(s).name;
 load(fname)
 

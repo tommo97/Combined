@@ -439,13 +439,81 @@ void SYSTEM::WriteDomain() {
 /**************************************************************/
 void SYSTEM::WriteData() {
 
-   MATLABOutputStruct Output;
+    MATLABOutputStruct Output;
+    
+    Vect3 Maxs, Mins;
+    Maxs = -1e32;
+    Mins = 1e32;
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+    {
+        Maxs.x = max(globalOctree->AllCells[i]->Position.x,Maxs.x);
+        Maxs.y = max(globalOctree->AllCells[i]->Position.y,Maxs.y);
+        Maxs.z = max(globalOctree->AllCells[i]->Position.z,Maxs.z);
+        
+        Mins.x = min(globalOctree->AllCells[i]->Position.x,Mins.x);
+        Mins.y = min(globalOctree->AllCells[i]->Position.y,Mins.y);
+        Mins.z = min(globalOctree->AllCells[i]->Position.z,Mins.z);
+        
+    }
+    
+    int sx = (Maxs.x - Mins.x) + 1;
+    int sy = (Maxs.y - Mins.y) + 1;
+    int sz = (Maxs.z - Mins.z) + 1;
+    
+    
+    cout << sx << " " << sy << " " << sz << " " << Maxs << " " << Mins << endl;
+    
+    int cnt = 0;
+    REAL tmpx = Mins.x;
+    while (tmpx <= Maxs.x) {
+        REAL tmpy = Mins.y;
+        while (tmpy <= Maxs.y) {
+            REAL tmpz = Mins.z;
+            while (tmpz <= Maxs.z) {
+                tmpz += 1;
+                cnt++;
+            }
+            tmpy += 1;
+        }
+        tmpx += 1;
+    }
+    cout << cnt << endl;
+    Array <Vect3> Positions(cnt), Velocities(cnt);
+    cnt = 0;
+    tmpx = Mins.x;
+    while (tmpx <= Maxs.x) {
+        REAL tmpy = Mins.y;
+        while (tmpy <= Maxs.y) {
+            REAL tmpz = Mins.z;
+            while (tmpz <= Maxs.z) {
+                Positions[cnt] = Vect3(tmpx,tmpy,tmpz);
+                tmpz += 1;
+                cnt++;
+            }
+            tmpy += 1;
+        }
+        tmpx += 1;
+    }
+    
+    
+    for (int i = 0; i < Positions.size(); ++i)
+        Velocities[i] = globalOctree->TreeVel(Positions[i]);
+    
+    
 
-   REAL DistTravelled = (BODY::Bodies[0]->CG - BODY::Bodies[0]->CGo).Mag();
-   REAL tmpX = BODY::Bodies[0]->CG.x - (2.0 * GambitScale * 0.4);
-   int nSlices = 2+floor(DistTravelled/(GambitScale * 0.4));
-   int I = 0;
-   Array <REAL> SlicePlanesX(7);
+    Output.Vect1DArrays.push_back(Positions);
+    Output.Vect1DArrayStrings.push_back(string("CellPositions"));
+
+    Output.Vect1DArrays.push_back(Velocities);
+    Output.Vect1DArrayStrings.push_back(string("CellVelocities"));   
+    
+    
+
+    REAL DistTravelled = (BODY::Bodies[0]->CG - BODY::Bodies[0]->CGo).Mag();
+    REAL tmpX = BODY::Bodies[0]->CG.x - (2.0 * GambitScale * 0.4);
+    int nSlices = 2 + floor(DistTravelled / (GambitScale * 0.4));
+    int I = 0;
+    Array <REAL> SlicePlanesX(7);
 
     SlicePlanesX[0] = 0.1 * GambitScale;
     SlicePlanesX[1] = 0.2 * GambitScale;
@@ -454,7 +522,7 @@ void SYSTEM::WriteData() {
     SlicePlanesX[4] = 2.0 * GambitScale;
     SlicePlanesX[5] = 4.0 * GambitScale;
     SlicePlanesX[6] = 6.0 * GambitScale;
-    
+
     Array <string> Names(7);
     Names[0] = "0pt1";
     Names[1] = "0pt2";
@@ -463,18 +531,17 @@ void SYSTEM::WriteData() {
     Names[4] = "2pt0";
     Names[5] = "4pt0";
     Names[6] = "6pt0";
-    
+
     int NC = 0;
-    
-    int JKmin = floor(-5*GambitScale), JKmax = ceil(5*GambitScale);
+
+    int JKmin = floor(-5 * GambitScale), JKmax = ceil(5 * GambitScale);
     Array <REAL> PS;
-    for (int J = JKmin; J < JKmax; ++J){
-        NC ++;
+    for (int J = JKmin; J < JKmax; ++J) {
+        NC++;
         PS.push_back(J * 1.0);
     }
 
-    for (int I = 0; I < SlicePlanesX.size(); ++I)
-    {
+    for (int I = 0; I < SlicePlanesX.size(); ++I) {
         cout << I << endl;
         Array < Array < Vect3 > > SliceWakeVel = UTIL::zerosv(NC, NC);
         Array < Array < Vect3 > > SliceVortonWakeVel = UTIL::zerosv(NC, NC);
@@ -527,7 +594,7 @@ void SYSTEM::WriteData() {
                     Pos = SlicePosnMinus[J][K];
                     SliceProtoWakePhiMinus[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
                 }
-                
+
                 for (int k = 0; k < BODY::AllBodyFaces.size(); ++k) {
                     Pos = SlicePosn[J][K];
                     SliceBodyPhi[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
@@ -544,7 +611,7 @@ void SYSTEM::WriteData() {
 
         Output.Vect2DArrays.push_back(SliceVortonWakeVel);
         Output.Vect2DArrayStrings.push_back(string("SliceVortonWakeVel" + SliceName));
-        
+
         Output.Vect2DArrays.push_back(SliceBodyVel);
         Output.Vect2DArrayStrings.push_back(string("SliceBodyVel" + SliceName));
 
@@ -578,34 +645,34 @@ void SYSTEM::WriteData() {
         Output.Vect2DArrays.push_back(SlicePosnPlus);
         Output.Vect2DArrayStrings.push_back(string("SlicePosnPlus" + SliceName));
     }
-    
-    
-    
+
+
+
     Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 6 + (NumTransVars * 3));
     int count = 0;
-    Vect3 Mins(1e32,1e32,1e32), Maxs(-1e32,-1e32,-1e32);
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i){
-            DataOut[count][0] = globalOctree->AllCells[i]->Position.x + 0.5;
-            DataOut[count][1] = globalOctree->AllCells[i]->Position.y + 0.5;
-            DataOut[count][2] = globalOctree->AllCells[i]->Position.z + 0.5;
-            DataOut[count][3] = globalOctree->AllCells[i]->Omega.x;
-            DataOut[count][4] = globalOctree->AllCells[i]->Omega.y;
-            DataOut[count][5] = globalOctree->AllCells[i]->Omega.z;
-            int cnt = 6;
-            for (int q = 0; q < NumTransVars; ++q) {
-                DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].x;
-                cnt++;
-                DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].y;
-                cnt++;
-                DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].z;
-                cnt++;
-            }
-            count++;
-            
-            Mins = min(globalOctree->AllCells[i]->Position,Mins);
-            Maxs = max(globalOctree->AllCells[i]->Position,Maxs);
-            
+    Mins = Vect3(1e32, 1e32, 1e32); Maxs = Vect3(-1e32, -1e32, -1e32);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        DataOut[count][0] = globalOctree->AllCells[i]->Position.x + 0.5;
+        DataOut[count][1] = globalOctree->AllCells[i]->Position.y + 0.5;
+        DataOut[count][2] = globalOctree->AllCells[i]->Position.z + 0.5;
+        DataOut[count][3] = globalOctree->AllCells[i]->Omega.x;
+        DataOut[count][4] = globalOctree->AllCells[i]->Omega.y;
+        DataOut[count][5] = globalOctree->AllCells[i]->Omega.z;
+        int cnt = 6;
+        for (int q = 0; q < NumTransVars; ++q) {
+            DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].x;
+            cnt++;
+            DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].y;
+            cnt++;
+            DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].z;
+            cnt++;
         }
+        count++;
+
+        Mins = min(globalOctree->AllCells[i]->Position, Mins);
+        Maxs = max(globalOctree->AllCells[i]->Position, Maxs);
+
+    }
 
 
     Output.Double2DArrays.push_back(DataOut);
@@ -620,7 +687,7 @@ void SYSTEM::WriteData() {
     Output.Double1DArrays.push_back(BODY::SubTIMES);
     Output.Double1DArrayStrings.push_back(string("CpHistoryAllD"));
 
-    
+
     globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
     BODY::CpHistoryAll.clear();
     BODY::CpHistoryAllD.clear();

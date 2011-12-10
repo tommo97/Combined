@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 16;
+    globalSystem->GambitScale = 10;
     globalSystem->MaxP = 5;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
