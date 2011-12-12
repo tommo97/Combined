@@ -2,11 +2,11 @@ clear all; clear mex; clc;
 files = dir('R*.mat');
 close all
 s = size(files,1);
-
-scale = 1;
-val = 1
 fname = files(s).name;
 load(fname)
+scale = GambitScale;
+val = 7.5
+
 
 XCG = scale * Time * 1.0;
 THETA = Time * BodyRates0_x;
