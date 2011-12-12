@@ -238,10 +238,17 @@ void TIME_STEPPER::time_loop() {
 
         //      Advance panels to t + dt
         globalSystem->GetPanelFMMVelocities(dt); //  t = t1
+        for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+            if ((globalOctree->AllCells[i]->Position - BODY::Bodies[0].CG).Mag() > (globalSystem->GambitScale * 8 * 0.4)) {
+                globalOctree->AllCells[i]->Omega = Vect3(0.0, 0.0, 0.0);
+                globalOctree->AllCells[i]->HasLoad = false;
+            }
         globalOctree->Integrate(); //  t = t0 -> t1
 
         BODY::BodySubStep(dt, globalSystem->NumSubSteps);
         //      Bin panel wake into tree
+
+        
 
 
 
@@ -281,7 +288,7 @@ void TIME_STEPPER::time_step() {
     
    
     
-    //dt = min(dt_euler,cfl_lim/OmRMax);
+    dt = min(dt_euler,cfl_lim/OmRMax);
     
    
     //  Check to see if this takes us over a time when we should be writing some output
