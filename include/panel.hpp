@@ -39,13 +39,14 @@ class PANEL {
 public:
     static REAL FarField;
 
-    Vect3 C1, C2, C3, C4, Vd, Centroid, CollocationPoint, Normal, Eta, Epsilon, TRANS[3], edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, Vkin, VWake, VCentroid, dF;
+    Vect3 C1, C2, C3, C4, Vd, Centroid, CollocationPoint, Normal, Eta, Epsilon;
+    Vect3 TRANS[3], edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, VWakePrev, Vkin, VWake, VCentroid, dF;
     Array <Vect3> Xcb;
     Vect4 DX, DY, M, D;
     Vect3 C1o, C2o, C3o, C4o;
     Vect3 NC1, NC2, NC3, NC4;
     REAL DoubletValidRange2, ValidRange;
-    REAL Phi, Sigma, Mu, Gamma, MuPrev, GammaPrev, Cloc, Rloc;
+    REAL Phi, Sigma, Mu, Gamma, MuPrev, GammaPrev, Cloc, Rloc, PhiWakePrev;
     REAL Area, MaxDiagonal, Vn;
     BODY *Owner;
     bool isBound, isWake, isTop;
@@ -79,7 +80,7 @@ public:
     {
         C1 = C2 = C3 = C4 = C1o = C2o = C3o = C4o = NC1 = NC2 = NC3 = NC4 = edgeX1 = edgeX2 = dF = Vect3(0.0);
         Sigma = Mu = 0.0;
-        Gamma = Phi = 0.0;
+        Gamma = Phi = PhiWakePrev = 0.0;
         Area = MaxDiagonal = Sigma = Mu = Gamma = Vn = MuPrev = GammaPrev = 0.0;
         Centroid = CollocationPoint = Vect3(.25 * (C1 + C2 + C3 + C4));
         Owner = NULL;
@@ -91,7 +92,7 @@ public:
         TRANS[0] = TRANS[1] = TRANS[2] = Vect3(0.);
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
-        Vfmm = dVFMM_dt = Vect3(0.);
+        Vfmm = dVFMM_dt = VWakePrev = Vect3(0.);
         DoubletValidRange2 = ValidRange = 1e32;
     }
 
@@ -99,7 +100,7 @@ public:
         C1  = P1; C2  = P2; C3  = P3; C4  = P4;
         C1o = C1; C2o = C2; C3o = C3; C4o = C4;
         edgeX1 = edgeX2 = dF = Vect3(0.0);
-        Sigma = Mu = 0.0;
+        Sigma = Mu = PhiWakePrev = 0.0;
         Gamma = Phi = Sigma = Mu = 0.0;
         Area = MaxDiagonal = Gamma = Vn = MuPrev = GammaPrev = 0.0;
         Centroid = Vect3(.25 * (C1 + C2 + C3 + C4));
@@ -112,7 +113,7 @@ public:
         GetNormal();
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
-        Vfmm = dVFMM_dt = Vect3(0.);
+        Vfmm = dVFMM_dt = VWakePrev =  Vect3(0.);
                 DoubletValidRange2 = ValidRange = 1e32;
 
     }
@@ -163,7 +164,8 @@ public:
         NC4 = C.NC4;
         DoubletValidRange2 = C.DoubletValidRange2;
         ValidRange = C.ValidRange;
-
+        PhiWakePrev = C.PhiWakePrev;
+        VWakePrev = C.VWakePrev;
         
     }
 

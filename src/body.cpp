@@ -37,7 +37,7 @@ Array <Vect3> BODY::VortexPositions, BODY::VortexOmegas, BODY::VortexVelocities;
 Array <Vect3*> BODY::VortexOrigins;
 Array <int> BODY::VortexOwnerID;
 Array <string> BODY::NAMES;
-Array <REAL>  BODY::Times;
+Array <REAL> BODY::Times;
 REAL BODY::WaitLenghts;
 Array <Vect3> BODY::CGS, BODY::VX, BODY::VO;
 Array <Vect3> BODY::RATES;
@@ -94,6 +94,8 @@ bool BODY::LiftingLineMode;
 /**************************************************************/
 void BODY::MakeWake() {
 
+    if (WakePanels[0].size() == 0)
+        cout << "!!!!!!!!!!!!! No Wake Panels!" << endl;
     Vect3 C1, C2, C3, C4;
     for (int i = 0; i < ProtoWakes.size(); ++i) {
         Array <PANEL*> tmp;
@@ -117,7 +119,7 @@ void BODY::MakeWake() {
         for (int j = 0; j < tmp.size(); ++j)
             for (int k = 0; k < tmp.size(); ++k)
                 tmp[j]->CheckNeighb(tmp[k]);
-        
+
         WakePanels[i].push_back(tmp);
 
 
@@ -128,18 +130,18 @@ void BODY::MakeWake() {
     Array <Vect3> Oms, tOms;
     Array <Vect3*> Origins, tOrigins;
     for (int i = 0; i < WakePanels.size(); ++i)
-        if (WakePanels[i].size() > 10) {
+        if (WakePanels[i].size() > 25) {
             for (int j = 0; j < WakePanels[i][0].size(); ++j) {
                 PANEL *tmp = (WakePanels[i][0][j]);
                 for (int k = 0; k < n; ++k) {
-                    tPts.push_back(tmp->C1 + (k * 1.0/(n-1)) * (tmp->C2 - tmp->C1));
-                    tPts.push_back(tmp->C2 + (k * 1.0/(n-1)) * (tmp->C3 - tmp->C2));
-                    tPts.push_back(tmp->C3 + (k * 1.0/(n-1)) * (tmp->C4 - tmp->C3));
-                    tPts.push_back(tmp->C4 + (k * 1.0/(n-1)) * (tmp->C1 - tmp->C4));
-                    tOms.push_back((1.0/n) * tmp->Gamma * (tmp->C2 - tmp->C1));
-                    tOms.push_back((1.0/n) * tmp->Gamma * (tmp->C3 - tmp->C2));
-                    tOms.push_back((1.0/n) * tmp->Gamma * (tmp->C4 - tmp->C3));
-                    tOms.push_back((1.0/n) * tmp->Gamma * (tmp->C1 - tmp->C4));
+                    tPts.push_back(tmp->C1 + (k * 1.0 / (n - 1)) * (tmp->C2 - tmp->C1));
+                    tPts.push_back(tmp->C2 + (k * 1.0 / (n - 1)) * (tmp->C3 - tmp->C2));
+                    tPts.push_back(tmp->C3 + (k * 1.0 / (n - 1)) * (tmp->C4 - tmp->C3));
+                    tPts.push_back(tmp->C4 + (k * 1.0 / (n - 1)) * (tmp->C1 - tmp->C4));
+                    tOms.push_back((1.0 / n) * tmp->Gamma * (tmp->C2 - tmp->C1));
+                    tOms.push_back((1.0 / n) * tmp->Gamma * (tmp->C3 - tmp->C2));
+                    tOms.push_back((1.0 / n) * tmp->Gamma * (tmp->C4 - tmp->C3));
+                    tOms.push_back((1.0 / n) * tmp->Gamma * (tmp->C1 - tmp->C4));
                     tOrigins.push_back(&(tmp->SheddingSurface->CollocationPoint));
                     tOrigins.push_back(&(tmp->SheddingSurface->CollocationPoint));
                     tOrigins.push_back(&(tmp->SheddingSurface->CollocationPoint));
@@ -184,11 +186,11 @@ void BODY::MakeWake() {
     }
 
 
-    BODY::VortexPositions.push_back(Posns);// = Array <Vect3 > (BODY::VortexPositions.size() + Pts.size());
-    BODY::VortexOmegas.push_back(Vorts);// = Array <Vect3 > (BODY::VortexOmegas.size() + Pts.size());
-    BODY::VortexOwnerID.push_back(Array <int> (Pts.size(), this->ID));// = Array <int> (BODY::VortexOwnerID.size() + Pts.size());
+    BODY::VortexPositions.push_back(Posns); // = Array <Vect3 > (BODY::VortexPositions.size() + Pts.size());
+    BODY::VortexOmegas.push_back(Vorts); // = Array <Vect3 > (BODY::VortexOmegas.size() + Pts.size());
+    BODY::VortexOwnerID.push_back(Array <int> (Pts.size(), this->ID)); // = Array <int> (BODY::VortexOwnerID.size() + Pts.size());
     BODY::VortexOrigins.push_back(Orgns);
-    
+
 
     BODY::VortexVelocities = Array <Vect3 > (BODY::VortexOwnerID.size(), Vect3(0.0));
 
@@ -220,7 +222,7 @@ void BODY::GetLinearRHS() {
 #pragma omp parallel for
 #endif
         for (int j = 0; j < BODY::VortexPositions.size(); ++j)
-            VWake = VWake - globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
+            VWake = VWake + globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
 
 
 
@@ -322,16 +324,18 @@ void BODY::GetNonLinearRHS() {
         }
 
 }
+
 /**************************************************************/
 void BODY::GetPanelVels() {
-    for (int i = 0; i < Faces.size(); ++i) {
-        Faces[i].Vd = Vect3(0.0);
-        for (int j = 0; j < Faces.size(); ++j) {
-            Faces[i].Vd += -Faces[j].Mu * localVD[i][j];
-            Faces[i].Vd += Faces[j].Sigma * localVS[i][j];
-        }
-    }
+//    for (int i = 0; i < Faces.size(); ++i) {
+//        Faces[i].Vd = Vect3(0.0);
+//        for (int j = 0; j < Faces.size(); ++j) {
+//            Faces[i].Vd += -Faces[j].Mu * localVD[i][j];
+//            Faces[i].Vd += Faces[j].Sigma * localVS[i][j];
+//        }
+//    }
 };
+
 /**************************************************************/
 void BODY::SplitUpLinearAlgebra() {
 
@@ -359,7 +363,7 @@ void BODY::SplitUpLinearAlgebra() {
                     srcs.push_back(src);
                 }
 
-    
+
     cout << BODY::VortexPositions.size() << " " << BODY::AllBodyFaces.size() << endl;
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -380,21 +384,19 @@ void BODY::SplitUpLinearAlgebra() {
         REAL PhiWake = 0.0;
 
         for (int j = 0; j < BODY::VortexPositions.size(); ++j)
-            VWake += globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
+            VWake += 1.0*globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
 
-        
-        
-//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-//            VWake += globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
-//                globalOctree->AllCells[j]->Omega);
+        /*        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+                    VWake += 2.0*globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
+                        globalOctree->AllCells[j]->Omega);
+         */
+        VWake += 1.0*trg->Vfmm;
 
-        VWake += trg->Vfmm;
-
-        for (int j = 0; j < srcs.size(); ++j) 
+        for (int j = 0; j < srcs.size(); ++j)
             PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
 
 
-        trg->Phi = PhiWake;
+        trg->Phi = PhiWake + trg->PhiWakePrev;
         trg->Vkin = Vkin;
         trg->VWake = VWake;
         trg->VCentroid = globalSystem->unscaledVinf - Vkin + VWake;
@@ -431,7 +433,7 @@ void BODY::SplitUpLinearAlgebra() {
 
         for (int i = 0; i < n; ++i)
             BODY::Bodies[I]->localRHS[i] += BODY::Bodies[I]->Faces[i].Phi;
-            
+
         BODY::Bodies[I]->localMu = Array <REAL > (n, 0.0);
 
 
@@ -453,7 +455,7 @@ void BODY::SplitUpLinearAlgebra() {
             BODY::Bodies[I]->Faces[i].Mu = BODY::Bodies[I]->Faces[i].Gamma = BODY::Bodies[I]->localMu[i];
     }
 
-    
+
 
 
     for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i) {
@@ -466,13 +468,13 @@ void BODY::SplitUpLinearAlgebra() {
     /*  This is when we use the direct face vel calc
     for (int I = 0; I < BODY::Bodies.size(); ++I)
         BODY::Bodies[I]->GetPanelVels();
-    */
+     */
     REAL Lift = 0.0, incrementalCp = 0.0;
     Vect3 Torque(0.), Force(0.);
     for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i) {
         REAL Cp = BODY::AllBodyFaces[i]->GetCp();
         BODY::CpHistory[BODY::SubStep - 1][i] = Cp;
-        Cp = 0;//BODY::AllBodyFaces[i]->GetCpD();
+        Cp = 0; //BODY::AllBodyFaces[i]->GetCpD();
         BODY::CpHistoryD[BODY::SubStep - 1][i] = Cp;
         Vect3 F = Cp * BODY::AllBodyFaces[i]->Area * BODY::AllBodyFaces[i]->TRANS[2];
         Lift += F.z;
@@ -704,7 +706,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
     BODY::CpHistoryAll.push_back(BODY::CpHistory);
     BODY::CpHistory = UTIL::zeros(n_steps, BODY::AllBodyFaces.size());
-    
+
     BODY::CpHistoryAllD.push_back(BODY::CpHistoryD);
     BODY::CpHistoryD = UTIL::zeros(n_steps, BODY::AllBodyFaces.size());
     BODY::SubTIMES = BODY::Times;
@@ -724,10 +726,10 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         SplitUpLinearAlgebra();
 
 
-//        //      Interpolate face vels for subtimestep...
+        //        //      Interpolate face vels for subtimestep...
         for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-            BODY::AllBodyFaces[i]->Vfmm += dt*BODY::AllBodyFaces[i]->dVFMM_dt;
-        }
+             BODY::AllBodyFaces[i]->Vfmm += dt*BODY::AllBodyFaces[i]->dVFMM_dt;
+         }
         //  Check the order of the next few lines
         for (int i = 0; i < BODY::Bodies.size(); ++i) {
 
@@ -875,6 +877,11 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
     }
 
+
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        BODY::AllBodyFaces[i]->PhiWakePrev = 0.0; //BODY::AllBodyFaces[i]->Phi;
+        //        BODY::AllBodyFaces[i]->VWakePrev = BODY::AllBodyFaces[i]->VWake;
+    }
 }
 
 /**************************************************************/
@@ -986,8 +993,8 @@ void BODY::UpdateGlobalInfluenceMatrices() {
         int n = BODY::Bodies[I]->Faces.size();
         BODY::Bodies[I]->localA = UTIL::zeros(n, n);
         BODY::Bodies[I]->localB = UTIL::zeros(n, n);
-        BODY::Bodies[I]->localVS = UTIL::zerosv(n, n);
-        BODY::Bodies[I]->localVD = UTIL::zerosv(n, n);
+        //BODY::Bodies[I]->localVS = UTIL::zerosv(n, n);
+        //BODY::Bodies[I]->localVD = UTIL::zerosv(n, n);
         for (int i = 0; i < n; ++i) {
             PANEL *trg = &BODY::Bodies[I]->Faces[i];
 #ifdef _OPENMP
@@ -1009,23 +1016,23 @@ void BODY::UpdateGlobalInfluenceMatrices() {
 
                 src->Mu = 1.0;
                 src->Sigma = 0.0;
-                BODY::Bodies[I]->localVD[i][j] = VectMultMatrix(trg->TRANS, src->BodyPanelVelocity(trg->CollocationPoint));
-                
+                //BODY::Bodies[I]->localVD[i][j] = VectMultMatrix(trg->TRANS, src->BodyPanelVelocity(trg->CollocationPoint));
+
                 src->Mu = 0.0;
                 src->Sigma = 1.0;
-                BODY::Bodies[I]->localVS[i][j] = VectMultMatrix(trg->TRANS, src->BodyPanelVelocity(trg->CollocationPoint));
-                
-                
+                //BODY::Bodies[I]->localVS[i][j] = VectMultMatrix(trg->TRANS, src->BodyPanelVelocity(trg->CollocationPoint));
+
+
                 if (BODY::Bodies[I]->Faces[j].isBound) {
                     PhiS = 0.0, PhiD = 0.0;
                     src = BODY::Bodies[I]->Faces[j].AttachedProtoWake;
 
                     PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, 1, 2);
                     a += (BODY::Bodies[I]->Faces[j].isTop) ? PhiD : -PhiD;
-                    
+
                     src->Gamma = 1.0;
-                    Vect3 VD = VectMultMatrix(trg->TRANS,src->VortexPanelVelocity(trg->CollocationPoint));
-                    BODY::Bodies[I]->localVD[i][j] += (BODY::Bodies[I]->Faces[j].isTop) ? VD : -VD;
+                    Vect3 VD = VectMultMatrix(trg->TRANS, src->VortexPanelVelocity(trg->CollocationPoint));
+                    //BODY::Bodies[I]->localVD[i][j] += (BODY::Bodies[I]->Faces[j].isTop) ? VD : -VD;
                 }
 
 
@@ -1676,13 +1683,13 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
                     }
                 }
     }
-    
-        BODY::WaitLenghts = 0.0;
-        for (int i = 0; i < NumBodies; ++i)
+
+    BODY::WaitLenghts = 0.0;
+    for (int i = 0; i < NumBodies; ++i)
         for (int j = 0; j < BODY::Bodies[i]->Faces.size(); ++j)
-            BODY::WaitLenghts = max(BODY::WaitLenghts,BODY::Bodies[i]->Faces[j].MaxDiagonal);
-        
-        cout << "WaitLength -----------------> " << BODY::WaitLenghts << endl;
+            BODY::WaitLenghts = max(BODY::WaitLenghts, BODY::Bodies[i]->Faces[j].MaxDiagonal);
+
+    cout << "WaitLength -----------------> " << BODY::WaitLenghts << endl;
 }
 
 

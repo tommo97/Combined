@@ -176,7 +176,7 @@ void SYSTEM::PutWakesInTree() {
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
     for (int i = 0; i < BODY::VortexPositions.size(); ++i)
-        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (0 * GambitScale * .25)) {
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (GambitScale * .05)) {
             Num2Insert++;
             toInsert[i] = true;
         } else
@@ -391,7 +391,7 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        BODY::AllBodyFaces[i]->dVFMM_dt = (1 / dt) * (V2[i] - V1[i]);
+        BODY::AllBodyFaces[i]->dVFMM_dt = (1.0 / dt) * (V2[i] - V1[i]);
         BODY::AllBodyFaces[i]->Vfmm = V1[i];
     }
 

@@ -48,9 +48,9 @@ int main(int argc, char *argv[]) {
 //    return 1;
 
     SYSTEM System(0);
-
+    
     //  Some default values
-    globalSystem->GambitScale = 50;
+    globalSystem->GambitScale = 25;
     globalSystem->MaxP = 5;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
@@ -65,7 +65,8 @@ int main(int argc, char *argv[]) {
     UTIL::PreAmble();
 
     globalSystem->Initialise();
-
+    globalSystem->VortonsXs.clear();
+    globalSystem->VortonOmegas.clear();
 
     //    Array <Vect3> X, OM;
     //

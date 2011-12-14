@@ -52,6 +52,7 @@ public:
   string InputStr;
 
   Array <Vect3> ATTITUDE, VELOCITY, ORIGIN, RATES;
+  Array <Vect3> VortonsXs, VortonOmegas;
 
 #ifdef USEGSL
   gsl_matrix * globalA;     //  A (doublet) influence coefficient matrix for this body

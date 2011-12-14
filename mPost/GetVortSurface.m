@@ -5,7 +5,7 @@ s = size(files,1);
 fname = files(s).name;
 load(fname)
 scale = GambitScale;
-val = 7.5
+val = 6
 
 
 XCG = scale * Time * 1.0;
@@ -55,7 +55,7 @@ axis equal tight; lighting phong; camlight right;
 set(gca,'Projection','perspective')
 
 
-
+material dull
 
 
 

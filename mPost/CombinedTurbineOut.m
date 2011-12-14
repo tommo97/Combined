@@ -1,8 +1,7 @@
 clear all
 clc
-hold all
 load RunData_000001.mat
-
+hold all
 c = 'b';
 s = 'o';
 scale = GambitScale;
@@ -23,13 +22,4 @@ CP = -2*BodyRates0_x*Torque_x/(VEL(1)*denom);
 plot(Times,(smooth(CP,25)),[c '-']);
 
 scatter(0:0.1:max(Times),interp1(Times,smooth(CP,25),0:0.1:max(Times)),[c s],'filled')
-axis tight
-ax = axis;
-dax = [ax(2)-ax(1) ax(4)-ax(3)];
-ddax = 0.025*dax;
-ax = [ax(1)-ddax(1) ax(2)+ddax(1) ax(3)-ddax(2) ax(4)+ddax(2)];
-axis(ax);
-axis square
 
-grid on 
-box on
