@@ -221,12 +221,15 @@ void TIME_STEPPER::time_loop() {
 
 
         if (globalTimeStepper->dump_next) {
-            globalSystem->WriteData();
+            
+            if (TIME_STEPPER::SimTime < 5.0)
             for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-                if ((globalOctree->AllCells[i]->Position - BODY::Bodies[0]->CG).Mag() > (globalSystem->GambitScale * 8 * 0.4)) {
+                if (((globalOctree->AllCells[i]->Position - BODY::Bodies[0]->CG).Mag() > (globalSystem->GambitScale * 2.0 * 5.03))) {
                     globalOctree->AllCells[i]->Omega = Vect3(0.0, 0.0, 0.0);
+                    globalOctree->AllCells[i]->TransVars = Vect3(0.0, 0.0, 0.0);
                     globalOctree->AllCells[i]->HasLoad = false;
                 }
+            globalSystem->WriteData();
         }
 
 

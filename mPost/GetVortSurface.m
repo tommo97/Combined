@@ -5,21 +5,24 @@ s = size(files,1);
 fname = files(s).name;
 load(fname)
 scale = GambitScale;
-val = 6
+val = 7.5
 
 
 XCG = scale * Time * 1.0;
 THETA = Time * BodyRates0_x;
 
-[XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val,scale);
+[XI,YI,ZI,VI, VIx, VIy, VIz, x,y,z, U, V, W] = extract(fname,val,scale);
+
+[curlx,curly,curlz,cav] = curl(y,x,z,V,U,W) ;
+OM = sqrt(curlx.^2 + curly.^2 + curlz.^2);
 YI = YI + XCG/scale;
 p1 = patch(isosurface(XI,YI,ZI,VI,val));
-isonormals(XI,YI,ZI,VI,p1);
-isocolors(XI,YI,ZI,VIx,p1);
+isonormals(XI,YI,ZI,OM,p1);
+%isocolors(XI,YI,ZI,VIx,p1);
 set(p1,'FaceColor',[0.8 0.8 0.8],'EdgeColor','none')
 
 
-isocolors(XI,YI,ZI,VIx,p1);
+%isocolors(XI,YI,ZI,VIx,p1);
 
 
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
@@ -104,8 +107,12 @@ set(p1,'CData',i1:1:i2);
 axis equal tight
 view(3)
 
-
-VIs = VI;
+[sx sy sz] = meshgrid(0,-0.4:0.1:.4,-0.4:.1:0.4);
+x = x - min(x(:));
+h = streamline(y/scale,x/scale,z/scale,V/scale,1+U/scale,W/scale,sx,sy,sz);
+%h = streamline(x,y,z,u,v,w,sx,sy,sz);
+set(h,'Color','red')
+VIs = V;
 figure
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 VIs(VIs>5*std(VIs(:))) = 5*std(VIs(:));

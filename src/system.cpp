@@ -444,71 +444,71 @@ void SYSTEM::WriteData() {
     Vect3 Maxs, Mins;
     Maxs = -1e32;
     Mins = 1e32;
-//    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-//    {
-//        Maxs.x = max(globalOctree->AllCells[i]->Position.x,Maxs.x);
-//        Maxs.y = max(globalOctree->AllCells[i]->Position.y,Maxs.y);
-//        Maxs.z = max(globalOctree->AllCells[i]->Position.z,Maxs.z);
-//        
-//        Mins.x = min(globalOctree->AllCells[i]->Position.x,Mins.x);
-//        Mins.y = min(globalOctree->AllCells[i]->Position.y,Mins.y);
-//        Mins.z = min(globalOctree->AllCells[i]->Position.z,Mins.z);
-//        
-//    }
-//    
-//    int sx = (Maxs.x - Mins.x) + 1;
-//    int sy = (Maxs.y - Mins.y) + 1;
-//    int sz = (Maxs.z - Mins.z) + 1;
-//    
-//    
-//    cout << sx << " " << sy << " " << sz << " " << Maxs << " " << Mins << endl;
-//    
-//    int cnt = 0;
-//    REAL tmpx = Mins.x;
-//    while (tmpx <= Maxs.x) {
-//        REAL tmpy = Mins.y;
-//        while (tmpy <= Maxs.y) {
-//            REAL tmpz = Mins.z;
-//            while (tmpz <= Maxs.z) {
-//                tmpz += 1;
-//                cnt++;
-//            }
-//            tmpy += 1;
-//        }
-//        tmpx += 1;
-//    }
-//    cout << cnt << endl;
-//    Array <Vect3> Positions(cnt), Velocities(cnt);
-//    cnt = 0;
-//    tmpx = Mins.x;
-//    while (tmpx <= Maxs.x) {
-//        REAL tmpy = Mins.y;
-//        while (tmpy <= Maxs.y) {
-//            REAL tmpz = Mins.z;
-//            while (tmpz <= Maxs.z) {
-//                Positions[cnt] = Vect3(tmpx,tmpy,tmpz);
-//                tmpz += 1;
-//                cnt++;
-//            }
-//            tmpy += 1;
-//        }
-//        tmpx += 1;
-//    }
-//    
-//    
-//    for (int i = 0; i < Positions.size(); ++i)
-//        Velocities[i] = globalOctree->TreeVel(Positions[i]);
-//    
-//    
-//
-//    Output.Vect1DArrays.push_back(Positions);
-//    Output.Vect1DArrayStrings.push_back(string("CellPositions"));
-//
-//    Output.Vect1DArrays.push_back(Velocities);
-//    Output.Vect1DArrayStrings.push_back(string("CellVelocities"));   
-//    
-//    
-//
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+    {
+        Maxs.x = max(globalOctree->AllCells[i]->Position.x,Maxs.x);
+        Maxs.y = max(globalOctree->AllCells[i]->Position.y,Maxs.y);
+        Maxs.z = max(globalOctree->AllCells[i]->Position.z,Maxs.z);
+        
+        Mins.x = min(globalOctree->AllCells[i]->Position.x,Mins.x);
+        Mins.y = min(globalOctree->AllCells[i]->Position.y,Mins.y);
+        Mins.z = min(globalOctree->AllCells[i]->Position.z,Mins.z);
+        
+    }
+    
+    int sx = (Maxs.x - Mins.x) + 1;
+    int sy = (Maxs.y - Mins.y) + 1;
+    int sz = (Maxs.z - Mins.z) + 1;
+    
+    
+    cout << sx << " " << sy << " " << sz << " " << Maxs << " " << Mins << endl;
+    
+    int cnt = 0;
+    REAL tmpx = Mins.x;
+    while (tmpx <= Maxs.x) {
+        REAL tmpy = Mins.y;
+        while (tmpy <= Maxs.y) {
+            REAL tmpz = Mins.z;
+            while (tmpz <= Maxs.z) {
+                tmpz += 1;
+                cnt++;
+            }
+            tmpy += 1;
+        }
+        tmpx += 1;
+    }
+    cout << cnt << endl;
+    Array <Vect3> Positions(cnt), Velocities(cnt);
+    cnt = 0;
+    tmpx = Mins.x;
+    while (tmpx <= Maxs.x) {
+        REAL tmpy = Mins.y;
+        while (tmpy <= Maxs.y) {
+            REAL tmpz = Mins.z;
+            while (tmpz <= Maxs.z) {
+                Positions[cnt] = Vect3(tmpx,tmpy,tmpz);
+                tmpz += 1;
+                cnt++;
+            }
+            tmpy += 1;
+        }
+        tmpx += 1;
+    }
+    
+    
+    for (int i = 0; i < Positions.size(); ++i)
+        Velocities[i] = globalOctree->TreeVel(Positions[i]);
+    
+    
+
+    Output.Vect1DArrays.push_back(Positions);
+    Output.Vect1DArrayStrings.push_back(string("CellPositions"));
+
+    Output.Vect1DArrays.push_back(Velocities);
+    Output.Vect1DArrayStrings.push_back(string("CellVelocities"));   
+    
+    
+
 //    REAL DistTravelled = (BODY::Bodies[0]->CG - BODY::Bodies[0]->CGo).Mag();
 //    REAL tmpX = BODY::Bodies[0]->CG.x - (2.0 * GambitScale * 0.4);
 //    int nSlices = 2 + floor(DistTravelled / (GambitScale * 0.4));
@@ -645,7 +645,7 @@ void SYSTEM::WriteData() {
 //        Output.Vect2DArrays.push_back(SlicePosnPlus);
 //        Output.Vect2DArrayStrings.push_back(string("SlicePosnPlus" + SliceName));
 //    }
-
+//
 
 
     Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 6 + (NumTransVars * 3));

@@ -50,12 +50,13 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 25;
+    globalSystem->GambitScale = 5;
     globalSystem->MaxP = 5;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
     globalSystem->h = 4;
+
 
 
     UTIL::cpu_t = ticks();
@@ -100,8 +101,9 @@ int main(int argc, char *argv[]) {
 
 
 
-    //    BODY::BodySubStep(TIME_STEPPER::MaxTime, globalSystem->NumSubSteps);
+//        BODY::BodySubStep(TIME_STEPPER::MaxTime, globalSystem->NumSubSteps);
 
+        
 
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;

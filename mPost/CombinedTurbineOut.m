@@ -2,14 +2,14 @@ clear all
 clc
 load RunData_000001.mat
 hold all
-c = 'b';
+c = 'g';
 s = 'o';
 scale = GambitScale;
 
 OMEGA = [BodyRates0_x BodyRates0_y BodyRates0_z];
-VEL = [1 0 0] * scale;
+VEL = [10 0 0] * scale;
 
-R = 0.4 * scale;
+R = 5.03 * scale;
 
 denom = 0.5*1027*VEL(1)*VEL(1)*2*pi*R*R;
 
