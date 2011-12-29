@@ -214,18 +214,25 @@ void TIME_STEPPER::time_loop() {
         //        globalSystem->GetPanelFMMVelocities(0.0); //  t = t1
         first_step = false;
     } else {
-//        cout << "I0 " << globalIO->ReturnMemPercent() << endl;
+        
+        
+        //      Bin panel wake into tree
         long unsigned int t1 = ticks();
         globalSystem->PutWakesInTree();
         long unsigned int t2 = ticks();
         cpu_sort_t = t2-t1;
+        
+        
         //      Calculate FMM
+        long unsigned int t3 = ticks();
         globalOctree->Reset();
+        long unsigned int t4 = ticks();
         globalOctree->InitVelsGetLaplacian();
+        long unsigned int t5 = ticks();
         globalOctree->GetVels();
 
 
-
+        //      Produce Output
         if (globalTimeStepper->dump_next) {
             
             if (TIME_STEPPER::SimTime < 5.0)
@@ -241,30 +248,56 @@ void TIME_STEPPER::time_loop() {
 
 
         //      Calculate Panel contribution to FVM face fluxes
+        long unsigned int t6 = ticks();
         globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
+        
+        
         //      Get Timestep length
+        long unsigned int t7 = ticks();
         time_step();
+        
+        //      Display Status
+        long unsigned int t8 = ticks();
         globalIO->stat_step();
         
+        
         //      Get FMM Vels on Panels @ t and t+dt
-        //      Advance FVM to t + dt
-        globalOctree->FVM(); //  t = t0
-        long unsigned int t3 = ticks();
-        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
-        long unsigned int t4 = ticks();
-        cpu_ss_t = t4-t3;
-        //      Advance panels to t + dt
+        long unsigned int t9 = ticks();
         globalSystem->GetPanelFMMVelocities(dt); //  t = t1
-      
+        
+        //      Advance FVM to t + dt
+        long unsigned int t10 = ticks();
+        globalOctree->FVM(); //  t = t0
+        long unsigned int t11 = ticks();
+        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
+        long unsigned int t12 = ticks();
+        cpu_ss_t = t12-t11;
+        
+        
+        //      Evolve dw/dt
         globalOctree->Integrate(); //  t = t0 -> t1
-
-        //      Bin panel wake into tree
+        long unsigned int t13 = ticks();
 
         
 
 
-        cout << "Substep CPU time: " << double(cpu_ss_t)/1000.0 << endl <<"sort CPU time: " << double(cpu_sort_t)/1000.0 << endl <<"# Vortons: " << BODY::VortexPositions.size() << " # faces: " << BODY::AllBodyFaces.size() << endl;
+        cout << "# Vortons                : " << BODY::VortexPositions.size() << endl;
+        cout << "# faces                  : " << BODY::AllBodyFaces.size() << endl;
 
+        
+        cout << "Bin panel wake into tree : " << double(t2-t1)/1000.0 << endl;
+        cout << "Calculate FMM: reset()   : " << double(t4-t3)/1000.0 << endl;
+        cout << "InitVelsGetLaplacian     : " << double(t5-t4)/1000.0 << endl;
+        cout << "GetVels()                : " << double(t6-t5)/1000.0 << endl;
+        cout << "GetFaceVels()            : " << double(t7-t6)/1000.0 << endl;
+        cout << "time_step()              : " << double(t8-t7)/1000.0 << endl;
+        cout << "stat_step                : " << double(t9-t8)/1000.0 << endl;
+        cout << "GetPanelFMMVelocities(.) : " << double(t10-t9)/1000.0 << endl;
+        cout << "FVM                      : " << double(t11-t10)/1000.0 << endl;
+        cout << "BodySubStep              : " << double(t12-t11)/1000.0 << endl;
+        cout << "Integrate                : " << double(t13-t12)/1000.0 << endl;
+        cout << "Total....................: " << double(t13-t1)/1000.0 << endl;
+        
     }
 }
 
