@@ -461,51 +461,51 @@ void SYSTEM::WriteData() {
     int sz = (Maxs.z - Mins.z) + 1;
     
     
-    cout << sx << " " << sy << " " << sz << " " << Maxs << " " << Mins << endl;
-    
-    int cnt = 0;
-    REAL tmpx = Mins.x;
-    while (tmpx <= Maxs.x) {
-        REAL tmpy = Mins.y;
-        while (tmpy <= Maxs.y) {
-            REAL tmpz = Mins.z;
-            while (tmpz <= Maxs.z) {
-                tmpz += 1;
-                cnt++;
-            }
-            tmpy += 1;
-        }
-        tmpx += 1;
-    }
-    cout << cnt << endl;
-    Array <Vect3> Positions(cnt), Velocities(cnt);
-    cnt = 0;
-    tmpx = Mins.x;
-    while (tmpx <= Maxs.x) {
-        REAL tmpy = Mins.y;
-        while (tmpy <= Maxs.y) {
-            REAL tmpz = Mins.z;
-            while (tmpz <= Maxs.z) {
-                Positions[cnt] = Vect3(tmpx,tmpy,tmpz);
-                tmpz += 1;
-                cnt++;
-            }
-            tmpy += 1;
-        }
-        tmpx += 1;
-    }
-    
-    
-    for (int i = 0; i < Positions.size(); ++i)
-        Velocities[i] = globalOctree->TreeVel(Positions[i]);
-    
-    
-
-    Output.Vect1DArrays.push_back(Positions);
-    Output.Vect1DArrayStrings.push_back(string("CellPositions"));
-
-    Output.Vect1DArrays.push_back(Velocities);
-    Output.Vect1DArrayStrings.push_back(string("CellVelocities"));   
+//    cout << sx << " " << sy << " " << sz << " " << Maxs << " " << Mins << endl;
+//    
+//    int cnt = 0;
+//    REAL tmpx = Mins.x;
+//    while (tmpx <= Maxs.x) {
+//        REAL tmpy = Mins.y;
+//        while (tmpy <= Maxs.y) {
+//            REAL tmpz = Mins.z;
+//            while (tmpz <= Maxs.z) {
+//                tmpz += 1;
+//                cnt++;
+//            }
+//            tmpy += 1;
+//        }
+//        tmpx += 1;
+//    }
+//    cout << cnt << endl;
+//    Array <Vect3> Positions(cnt), Velocities(cnt);
+//    cnt = 0;
+//    tmpx = Mins.x;
+//    while (tmpx <= Maxs.x) {
+//        REAL tmpy = Mins.y;
+//        while (tmpy <= Maxs.y) {
+//            REAL tmpz = Mins.z;
+//            while (tmpz <= Maxs.z) {
+//                Positions[cnt] = Vect3(tmpx,tmpy,tmpz);
+//                tmpz += 1;
+//                cnt++;
+//            }
+//            tmpy += 1;
+//        }
+//        tmpx += 1;
+//    }
+//    
+//    
+//    for (int i = 0; i < Positions.size(); ++i)
+//        Velocities[i] = globalOctree->TreeVel(Positions[i]);
+//    
+//    
+//
+//    Output.Vect1DArrays.push_back(Positions);
+//    Output.Vect1DArrayStrings.push_back(string("CellPositions"));
+//
+//    Output.Vect1DArrays.push_back(Velocities);
+//    Output.Vect1DArrayStrings.push_back(string("CellVelocities"));   
     
     
 
@@ -685,7 +685,7 @@ void SYSTEM::WriteData() {
     Output.Double2DArrayStrings.push_back(string("CpHistoryAllD"));
 
     Output.Double1DArrays.push_back(BODY::SubTIMES);
-    Output.Double1DArrayStrings.push_back(string("CpHistoryAllD"));
+    Output.Double1DArrayStrings.push_back(string("SubTimes"));
 
 
     globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
