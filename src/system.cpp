@@ -281,35 +281,39 @@ void SYSTEM::PutWakesInTree() {
     }
 
 
-    Array<OctreeCapsule>::QuickSortB(Test);
-    Vect3 min_diff = 1e16;
-    int num_unique = 1;
-    for (int i = 1; i < Test.size(); ++i) {
-        if (Test[i] < Test[i - 1])
-            cout << "Error in sort..." << endl;
-
-        min_diff = min(min_diff, Test[i].Position - Test[i - 1].Position);
-
-        if (Test[i] != Test[i - 1])
-            num_unique++;
+       for (int i = 0; i < Test.size(); ++i) {
+        globalOctree->Root->EvalCapsule(Test[i]);
     }
-
-
-    Array <OctreeCapsule> unique_data(num_unique);
-    num_unique = 1;
-    unique_data[num_unique - 1] = Test[0];
-
-    for (int i = 1; i < Test.size(); ++i) {
-        if (Test[i] != Test[i - 1]) {
-            num_unique++;
-            unique_data[num_unique - 1] = Test[i];
-        } else
-            unique_data[num_unique - 1].Omega += Test[i].Omega;
-    }
-
-    for (int i = 0; i < unique_data.size(); ++i) {
-        globalOctree->Root->EvalCapsule(unique_data[i]);
-    }
+//    Array<OctreeCapsule>::QuickSortB(Test);
+//    Vect3 min_diff = 1e16;
+//    int num_unique = 1;
+//    for (int i = 1; i < Test.size(); ++i) {
+//        if (Test[i] < Test[i - 1])
+//            cout << "Error in sort..." << endl;
+//
+//        min_diff = min(min_diff, Test[i].Position - Test[i - 1].Position);
+//
+//        if (Test[i] != Test[i - 1])
+//            num_unique++;
+//    }
+//
+//
+//    Array <OctreeCapsule> unique_data(num_unique);
+//    num_unique = 1;
+//    unique_data[num_unique - 1] = Test[0];
+//
+//    for (int i = 1; i < Test.size(); ++i) {
+//        if (Test[i] != Test[i - 1]) {
+//            num_unique++;
+//            unique_data[num_unique - 1] = Test[i];
+//        } else
+//            unique_data[num_unique - 1].Omega += Test[i].Omega;
+//    }
+//    cout << "I1 " << globalIO->ReturnMemPercent() << endl;
+//    for (int i = 0; i < unique_data.size(); ++i) {
+//        globalOctree->Root->EvalCapsule(unique_data[i]);
+//    }
+//    cout << "I2 " << globalIO->ReturnMemPercent() << endl;
 
     unsigned long int t1 = ticks();
 //    cout << "----- " << Num2Insert << " " << Num2Keep << " " << Test.size() << " " << num_unique << " " << t1-t0 << endl;

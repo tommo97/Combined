@@ -77,6 +77,14 @@ public:
 
     void WriteBinary();
 
+    REAL ReturnMemPercent() {
+        top_data = "\t\t" + globalGetStdoutFromCommand(top_command);
+        double MEM_PERCENT, temp;
+        stringstream psdata;
+        psdata << top_data;
+        psdata >> temp >> MEM_PERCENT;
+        return MEM_PERCENT;
+    }
     string StringToLower(string);
 
     string StringToUpper(string);
@@ -129,6 +137,10 @@ public:
     enum exception {
         NO_FILE
     };
+    
+        class OutOfMemory {
+    };
+
 
 };
 

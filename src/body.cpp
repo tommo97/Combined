@@ -364,7 +364,6 @@ void BODY::SplitUpLinearAlgebra() {
                 }
 
 
-    cout << BODY::VortexPositions.size() << " " << BODY::AllBodyFaces.size() << endl;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -886,10 +885,10 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
 /**************************************************************/
 void BODY::SetUpInfluenceMatrices() {
-    BODY::A = UTIL::zeros(BODY::NumFaces, BODY::NumFaces);
-    BODY::B = UTIL::zeros(BODY::NumFaces, BODY::NumFaces);
-    if (BODY::IPKC)
-        BODY::C = UTIL::zeros(BODY::NumFaces, BODY::NumFaces);
+    //BODY::A = UTIL::zeros(BODY::NumFaces, BODY::NumFaces);
+    //BODY::B = UTIL::zeros(BODY::NumFaces, BODY::NumFaces);
+    //if (BODY::IPKC)
+    //    BODY::C = UTIL::zeros(BODY::NumFaces, BODY::NumFaces);
     BODY::RHS = Array <REAL > (BODY::NumFaces, 0.0);
     BODY::Mu = Array <REAL > (BODY::NumFaces, 0.0);
     BODY::Sigma = Array <REAL > (BODY::NumFaces, 0.0);

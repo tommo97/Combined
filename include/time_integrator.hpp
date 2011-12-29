@@ -51,9 +51,9 @@ class TIME_STEPPER
         bool dump_next, first_step, ChangeOver, last_step;
         Vect3 centre;
         int num_images, RKStep;
-        long int cpu_t;
+        long int cpu_t, cpu_ss_t, cpu_sort_t;
         Vect3 srad, CFL;
-
+        bool show_rundata;
 #ifdef TIMER
         long int cpu_t_fmm_e;
         long int cpu_t_fvm_e;

@@ -518,12 +518,13 @@ void IO::stat_step() {
     stringstream out_stream;
 
 #ifndef use_NCURSES
-    if (globalTimeStepper->n % HEADER_OUTPUT == 0) {
+    if ((globalTimeStepper->n % HEADER_OUTPUT == 0) || (globalTimeStepper->show_rundata)) {
 #ifdef TOP
         top_data = "\t\t" + globalGetStdoutFromCommand(top_command);
         out_stream << top_header << endl << top_data << endl;
 #endif
         out_stream << step_header << endl;
+        globalTimeStepper->show_rundata = false;
     }
 #endif
     out_stream.setf(ios::fixed, ios::floatfield);
@@ -547,6 +548,25 @@ void IO::stat_step() {
 
     if (WRITE_TO_SCREEN)
         display_stat_step();
+
+    double MEM_PERCENT, temp;
+    stringstream psdata;
+    psdata << top_data;
+    psdata >> temp >> MEM_PERCENT;
+
+    if (MEM_PERCENT > 95) {
+        cout << setfill('!') << setw(80) << "!" << endl;
+
+        cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
+        cout << "Memory used: " << MEM_PERCENT << "%" << endl;
+
+        cout << setfill('!') << setw(80) << "!" << endl;
+        throw OutOfMemory();
+
+
+    }
+
+    
     //            if (WRITE_TO_FILE) write_stat_step();
 }
 

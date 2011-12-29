@@ -318,7 +318,7 @@ Vect3 PANEL::BodyPanelVelocity(Vect3 pTarget) {
     
     REAL MagP = P.Mag(), Mult = Sigma / two_pi;
 
-    if (MagP < 1e32*PANEL::FarField * MaxDiagonal) {
+    if (MagP < PANEL::FarField * MaxDiagonal) {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
         REAL Pz2 = P.z * P.z;
@@ -389,7 +389,7 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
     Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
     REAL MagP = P.Mag(), Mult = Sigma / two_pi;
 
-    if (MagP < 1e32*PANEL::FarField * MaxDiagonal) {
+    if (MagP < PANEL::FarField * MaxDiagonal) {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
         REAL Pz2 = P.z * P.z;

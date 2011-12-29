@@ -47,7 +47,7 @@ TIME_STEPPER::TIME_STEPPER() {
     t_out = dt_out;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();
-    dump_next = false;
+    dump_next = show_rundata = false;
     first_step = true;
 }
 /**************************************************************/
@@ -158,7 +158,9 @@ void TIME_STEPPER::time_loop() {
     if (first_step) {
         dt = globalSystem->dtInit;
         cout << "### " << dt << " " << globalSystem->NumSubSteps << endl;
+        long unsigned int t1 = ticks();
         BODY::BodySubStep(globalSystem->dtInit, globalSystem->NumSubSteps);
+        long unsigned int t2 = ticks();
         //globalSystem->GetPressures(dt);
         //globalIO->write_m();
         //globalSystem->WriteBodies();
@@ -178,8 +180,9 @@ void TIME_STEPPER::time_loop() {
             Vdir.push_back(Vel);
 
         }
-        
+        long unsigned int t3 = ticks();
         globalSystem->PutWakesInTree();
+        long unsigned int t4 = ticks();
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
         globalOctree->GetVels();
@@ -211,8 +214,11 @@ void TIME_STEPPER::time_loop() {
         //        globalSystem->GetPanelFMMVelocities(0.0); //  t = t1
         first_step = false;
     } else {
+//        cout << "I0 " << globalIO->ReturnMemPercent() << endl;
+        long unsigned int t1 = ticks();
         globalSystem->PutWakesInTree();
-
+        long unsigned int t2 = ticks();
+        cpu_sort_t = t2-t1;
         //      Calculate FMM
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
@@ -239,12 +245,14 @@ void TIME_STEPPER::time_loop() {
         //      Get Timestep length
         time_step();
         globalIO->stat_step();
+        
         //      Get FMM Vels on Panels @ t and t+dt
         //      Advance FVM to t + dt
         globalOctree->FVM(); //  t = t0
-
+        long unsigned int t3 = ticks();
         BODY::BodySubStep(dt, globalSystem->NumSubSteps);
-
+        long unsigned int t4 = ticks();
+        cpu_ss_t = t4-t3;
         //      Advance panels to t + dt
         globalSystem->GetPanelFMMVelocities(dt); //  t = t1
       
@@ -255,7 +263,7 @@ void TIME_STEPPER::time_loop() {
         
 
 
-
+        cout << "Substep CPU time: " << double(cpu_ss_t)/1000.0 << endl <<"sort CPU time: " << double(cpu_sort_t)/1000.0 << endl <<"# Vortons: " << BODY::VortexPositions.size() << " # faces: " << BODY::AllBodyFaces.size() << endl;
 
     }
 }
