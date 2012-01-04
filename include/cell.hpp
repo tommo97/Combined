@@ -76,6 +76,8 @@ public:
 
     void vCheckNeighbs();
     
+    void vMakeNodeAtTrans(Array < int > &){};
+    
     void vReList();
 
     void vApplyRecursively(BranchFuncPtr down, FVMCellFuncPtr bottom, BranchFuncPtr up);

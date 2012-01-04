@@ -59,7 +59,7 @@ using namespace std;
 #define NX 300
 #define NY 300
 //  Disables bounds checking in Array class... use with caution. Make sure code runs, and doesn't change...
-#define ARRAY_NO_CHECK
+//#define ARRAY_NO_CHECK
 
 
 //  Some simulation parameters
@@ -97,7 +97,7 @@ class OctreeCapsule;
 #define _EPS 1e-3
 #define _EPS2 1e-6
 #define _TOL 1e-12
-#define VORTICITY_CUTOFF 1e-9
+#define VORTICITY_CUTOFF 1e-4
 #else
 #define REAL float
 #define _EPS 1e-3

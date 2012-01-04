@@ -849,6 +849,8 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
 
         Array <Vect3> Vels(BODY::VortexPositions.size(), Vect3(globalSystem->unscaledVinf));
+       
+        
         //#ifdef _OPENMP
         //#pragma omp parallel for
         //#endif
@@ -862,9 +864,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         //                Vels[i] += BODY::Bodies[i]->GetVel(*(PosPtr[j]));
 
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+
         for (int i = 0; i < BODY::VortexPositions.size(); ++i)
             BODY::VortexPositions[i] += dt * Vels[i];
 

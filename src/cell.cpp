@@ -260,45 +260,46 @@ void FVMCell::vCheckNeighbs() {
         //  Should make some neighbours here for the FVM
         //  Quickest and easiest way is to drop some more capsules in to octree
         if (!Neighb.N) {
-            OctreeCapsule C;
-            C.has_load = false;
-            C.Position = C.tPosition = Position + Vect3(.0, 1.0, .0);
-            Root->EvalCapsule(C);
+            Array <int> t = this->Trans;
+            Trans2Neighb(t, m, 0);
+            t.pop_front();
+            globalOctree->Root->MakeNodeAtTrans(t);
         }
 
         if (!Neighb.S) {
-            OctreeCapsule C;
-            C.has_load = false;
-            C.Position = C.tPosition = Position - Vect3(.0, 1.0, .0);
-            Root->EvalCapsule(C);
+            Array <int> t = this->Trans;
+            Trans2Neighb(t, m, 1);
+            t.pop_front();
+            globalOctree->Root->MakeNodeAtTrans(t);
         }
 
         if (!Neighb.E) {
-            OctreeCapsule C;
-            C.has_load = false;
-            C.Position = C.tPosition = Position + Vect3(1.0, .0, .0);
-            Root->EvalCapsule(C);
+
+            Array <int> t = this->Trans;
+            Trans2Neighb(t, m, 2);
+            t.pop_front();
+            globalOctree->Root->MakeNodeAtTrans(t);
         }
 
         if (!Neighb.W) {
-            OctreeCapsule C;
-            C.has_load = false;
-            C.Position = C.tPosition = Position - Vect3(1.0, .0, .0);
-            Root->EvalCapsule(C);
+            Array <int> t = this->Trans;
+            Trans2Neighb(t, m, 3);
+            t.pop_front();
+            globalOctree->Root->MakeNodeAtTrans(t);
         }
 #ifdef MODE_3D
         if (!Neighb.T) {
-            OctreeCapsule C;
-            C.has_load = false;
-            C.Position = C.tPosition = Position + Vect3(.0, .0, 1.0);
-            Root->EvalCapsule(C);
+            Array <int> t = this->Trans;
+            Trans2Neighb(t, m, 4);
+            t.pop_front();
+            globalOctree->Root->MakeNodeAtTrans(t);
         }
 
         if (!Neighb.B) {
-            OctreeCapsule C;
-            C.has_load = false;
-            C.Position = C.tPosition = Position - Vect3(.0, .0, 1.0);
-            Root->EvalCapsule(C);
+            Array <int> t = this->Trans;
+            Trans2Neighb(t, m, 5);
+            t.pop_front();
+            globalOctree->Root->MakeNodeAtTrans(t);
         }
 #endif
     }
@@ -391,9 +392,11 @@ void FVMCell::vPassMmnts2Prnt() {
     if (HasLoad) {
         for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
             for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
-
                 for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
                     (static_cast<Branch*> (Parent))->Moments[k1][k2][k3] += Omega * pow(Dx, k1, k2, k3);
+            
+//            for (int i = 0; i < Node::MomentSize; ++i)
+//                (static_cast<Branch*> (Parent))->Moments[Node::CellMomentIndex[0][i]][Node::CellMomentIndex[1][i]][Node::CellMomentIndex[2][i]] += Omega * pow(Dx,Node::CellMomentIndex[0][i],Node::CellMomentIndex[1][i],Node::CellMomentIndex[2][i]);
         Parent->HasLoad = true;
     }
 }

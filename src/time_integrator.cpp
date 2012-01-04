@@ -38,7 +38,7 @@ REAL TIME_STEPPER::SubStepTime = 0;
 TIME_STEPPER::TIME_STEPPER() {
     dt_prev = 1e16;
     dx = dy = dz = 1.0;
-    ChangeOver = last_step = false;
+    ChangeOver = last_step = PruneNow = false;
     n = -1;
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
@@ -225,6 +225,8 @@ void TIME_STEPPER::time_loop() {
         
         //      Calculate FMM
         long unsigned int t3 = ticks();
+        if (!fmod((REAL) n, 100.0))
+            PruneNow = true;
         globalOctree->Reset();
         long unsigned int t4 = ticks();
         globalOctree->InitVelsGetLaplacian();

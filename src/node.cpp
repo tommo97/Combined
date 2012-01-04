@@ -31,7 +31,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "cell.hpp"
 #include "vect34.hpp"
 unsigned long int Node::NumNodes = 0;
-unsigned long int Node::NodeCount = 0;
+unsigned long int Node::NodeCount = 0; 
+int Node::MomentSize = 0;
+Array <Array <int> > Node::CellMomentIndex(3, Array <int> ());
+
+
 Array <Node*> Node::AllNodes, Node::UpList, Node::DownList;
 
 /**************************************************************/
@@ -430,6 +434,21 @@ void Node::EvalCapsule(OctreeCapsule &c) {
 
 /**************************************************************/
 void Node::UpdateMomentMults() {
+    
+    for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
+        for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
+            for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
+            {
+                Node::MomentSize++;
+                Node::CellMomentIndex[0].push_back(k1);
+                Node::CellMomentIndex[1].push_back(k2);
+                Node::CellMomentIndex[2].push_back(k3);
+
+            }
+
+    cout << "MomentSize " << Node::MomentSize << endl;
+    
+    
     REAL Size = Node::RootSize;
     Node::VlFldMlt = ARRAY6(REAL) (globalSystem->MaxP);
     //	Go down OCTREE and do a test run on each level

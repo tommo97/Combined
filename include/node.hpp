@@ -45,6 +45,9 @@ public:
     Node(Node *parent, int i, int j, int k);
     static Node *Root;
     static unsigned long int NumNodes, NodeCount;
+    static int MomentSize;
+    static Array <Array <int> > CellMomentIndex;
+    static Array < Array <Array <REAL> > > CellMomentDisplacementPowers;
     static Array <Node*> AllNodes, UpList, DownList;
     Node *Parent;
     int x, y, z, m;
@@ -88,7 +91,36 @@ public:
                         }
                     }
     }
+    
+    
+    void MarkWithoutLoad() {
+        HasLoad = false;
+    }
 
+    void MarkWithLoad() {
+        HasLoad = true;
+        if (Parent && !Parent->HasLoad)
+            Parent->MarkWithLoad();
+    }
+
+    void CheckLoad() {
+
+        HasLoad = false;
+
+        //        if (Omega.Mag() > VORTICITY_CUTOFF) {
+        //            MarkWithLoad();
+        //            return;
+        //        }
+
+        for (int q = 0; q < TransVars.size(); ++q)
+            if (TransVars[q].Dot(TransVars[q]) > (VORTICITY_CUTOFF*VORTICITY_CUTOFF)) {
+                MarkWithLoad();
+                return;
+            }
+
+
+
+    }
     void vPruneChild(int i, int j, int k) {
         delete Children[i][j][k];
         Children[i][j][k] = NULL;
@@ -236,6 +268,13 @@ public:
         vCheckNeighbs();
     }
 
+
+    virtual void vMakeNodeAtTrans(Array < int > &trn) = 0;
+
+    void MakeNodeAtTrans(Array < int > &trn) {
+        vMakeNodeAtTrans(trn);
+    };
+    
     virtual void vReList() = 0;
 
     void ReList() {
@@ -256,6 +295,30 @@ public:
     static const int trans_neighb[][5];
     long unsigned int NID;
     static Vect3 ZERO;
+
+    void Trans2Neighb(Array <int> &v, int M, int dirn) {
+        /* Find the neighbours of an octree cluster in a given direction
+            Binary transformations are as follows:
+            n 1   2   3   4   5   6   7   8
+            x 0   0   1   1   0   0   1   1
+            y 0   1   0   1   0   1   0   1
+            z 0   0   0   0   1   1   1   1
+            WSB WNB ESB ENB WST WNT EST ENT
+         */
+
+        int a = 0;
+
+        a += (v[M] == trans_neighb[dirn][0]);
+        a += (v[M] == trans_neighb[dirn][1]);
+        a += (v[M] == trans_neighb[dirn][2]);
+        a += (v[M] == trans_neighb[dirn][3]);
+        if (a != 0) {
+            v[M] += trans_neighb[dirn][4];
+        } else {
+            v[M] -= trans_neighb[dirn][4];
+            Trans2Neighb(v, M - 1, dirn);
+        }
+    };
 
 };
 

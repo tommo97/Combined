@@ -54,7 +54,25 @@ void Branch::vReList() {
     globalOctree->AllBranches[m][globalOctree->BranchCount[m]] = this;
     globalOctree->BranchCount[m]++;
 }
+/**************************************************************/
+void Branch::vMakeNodeAtTrans(Array < int > &trn) {
 
+    int i = Node::deREF[trn.front()][0];
+    int j = Node::deREF[trn.front()][1];
+    int k = Node::deREF[trn.front()][2];
+
+
+    if (!Children[i][j][k]) {
+        if (trn.size() == 1) {
+            Children[i][j][k] = new FVMCell(this, i, j, k);
+            return;
+        } else {
+            Children[i][j][k] = new Branch(this, i, j, k);
+        }
+    }
+    trn.pop_front();
+    Children[i][j][k]->MakeNodeAtTrans(trn);
+}
 /**************************************************************/
 void Branch::SetFieldsZero() {
     VelField = Vect3(0.);

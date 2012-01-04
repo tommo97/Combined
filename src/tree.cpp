@@ -51,7 +51,7 @@ void OCTREE::InitVelsGetLaplacian() {
 }
 /**************************************************************/
 void OCTREE::Prune() {
-    Root->ApplyRecursively(&Node::DoNothing, &Node::DoNothing, &Node::Prune);
+    Root->ApplyRecursively(&Node::Prune, &Node::DoNothing, &Node::DoNothing);
 }
 /**************************************************************/
 void OCTREE::GetSRad() {
@@ -63,7 +63,15 @@ void OCTREE::ClearNodes() {
 }
 /**************************************************************/
 void OCTREE::Reset() {
-    Prune();
+ //  Everything which changes the shape of the tree must be done recursively
+    Root->ApplyRecursively(&Node::MarkWithoutLoad, &Node::MarkWithoutLoad, &Node::DoNothing);
+    Root->ApplyRecursively(&Node::DoNothing, &Node::CheckLoad, &Node::DoNothing);
+ 
+    if (globalTimeStepper->PruneNow) {
+        Prune();
+        globalTimeStepper->PruneNow = false;
+    }
+    
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
 
 

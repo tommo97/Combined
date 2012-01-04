@@ -45,11 +45,14 @@ public:
     
     static unsigned long int NumBranches;
 
+
     void vRemoveFromNeighbs() {};
 
     void vCheckNeighbs() {};
 
     void vCollapseVField() {};
+    
+    void vMakeNodeAtTrans(Array < int > &trn) ;
     
     void vReList();
 
@@ -61,6 +64,7 @@ public:
 
     JaggedArray <Vect3> Moments;
     JaggedArray <Vect3> VelField;
+    Array <Vect3> InlineMoments;
 
     void BranchCount();
     void InheritVField();
