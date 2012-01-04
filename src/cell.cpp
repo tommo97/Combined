@@ -46,10 +46,35 @@ FVMCell::FVMCell(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Fac
 /**************************************************************/
 void FVMCell::Integrate() {
     HasLoad = false;
-//    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
 //        TransDerivs[q] += globalSystem->Nu * Laplacian[q];
 //        TransDerivs[q] += VectMultMatrixTranspose(VelTensor, TransVars[q]);
-//    }
+        
+        //      Tilting/stretching term via central differences.
+        //      Get face vorticity fields
+        Vect3 OMe = 0.5*((*Neighb_Val[q].E) + TransVars[q]);
+        Vect3 OMw = 0.5*((*Neighb_Val[q].W) + TransVars[q]);
+        Vect3 OMn = 0.5*((*Neighb_Val[q].N) + TransVars[q]);
+        Vect3 OMs = 0.5*((*Neighb_Val[q].S) + TransVars[q]);
+        Vect3 OMt = 0.5*((*Neighb_Val[q].T) + TransVars[q]);
+        Vect3 OMb = 0.5*((*Neighb_Val[q].B) + TransVars[q]);
+        
+        Vect3 Gradient(0.0,0.0,0.0);
+
+        Gradient.x = (  OMe.x * FaceVels.E.x - OMw.x * FaceVels.W.x
+                      + OMn.y * FaceVels.N.x - OMs.y * FaceVels.S.x
+                      + OMt.z * FaceVels.T.x - OMb.z * FaceVels.B.x);
+
+        Gradient.y = (  OMe.x * FaceVels.E.y - OMw.x * FaceVels.W.y
+                      + OMn.y * FaceVels.N.y - OMs.y * FaceVels.S.y
+                      + OMt.z * FaceVels.T.y - OMb.z * FaceVels.B.y);
+
+        Gradient.z = (  OMe.x * FaceVels.E.z - OMw.x * FaceVels.W.z
+                      + OMn.y * FaceVels.N.z - OMs.y * FaceVels.S.z
+                      + OMt.z * FaceVels.T.z - OMb.z * FaceVels.B.z);
+        
+        TransDerivs[q] += Gradient;
+    }
     globalTimeStepper->Integrate(this);
     Omega = Vect3(0.,0.,0.);
 
@@ -375,8 +400,16 @@ void FVMCell::vCollapseVField() {
                                             Vect3 PV = Position - Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position;
 #ifdef COLLAPSE_TO_FACES
                                             globalDirectVel(PV - Node::NeighbOffset[i], Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, FaceVels[i]);
-#else
-                                            globalDirectVel(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, Velocity);
+#else   
+                                            //Vect3 V;
+                                            //globalDirectVel(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, V);
+                                            
+                                            Vect3 V1 = Node::DirVelMultsX[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.x;
+                                            Vect3 V2 = Node::DirVelMultsY[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.y;
+                                            Vect3 V3 = Node::DirVelMultsZ[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.z;
+                                            
+                                            //cout << V << " " << V1 + V2 + V3 << endl;
+                                            Velocity += V1+V2+V3;
 #endif
                                         }
         }

@@ -34,8 +34,9 @@ unsigned long int Node::NumNodes = 0;
 unsigned long int Node::NodeCount = 0; 
 int Node::MomentSize = 0;
 Array <Array <int> > Node::CellMomentIndex(3, Array <int> ());
-
-
+Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > Node::DirVelMultsX;
+Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > Node::DirVelMultsY;
+Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > Node::DirVelMultsZ;
 Array <Node*> Node::AllNodes, Node::UpList, Node::DownList;
 
 /**************************************************************/
@@ -448,6 +449,73 @@ void Node::UpdateMomentMults() {
 
     cout << "MomentSize " << Node::MomentSize << endl;
     
+    DirVelMultsX = ARRAY9(Vect3) (2);
+    DirVelMultsY = ARRAY9(Vect3) (2);
+    DirVelMultsZ = ARRAY9(Vect3) (2);
+
+    for (int ix = 0; ix < 2; ++ix) {
+        DirVelMultsX[ix] = ARRAY8(Vect3) (2);
+        DirVelMultsY[ix] = ARRAY8(Vect3) (2);
+        DirVelMultsZ[ix] = ARRAY8(Vect3) (2);
+        for (int iy = 0; iy < 2; ++iy) {
+            DirVelMultsX[ix][iy] = ARRAY7(Vect3) (2);
+            DirVelMultsY[ix][iy] = ARRAY7(Vect3) (2);
+            DirVelMultsZ[ix][iy] = ARRAY7(Vect3) (2);
+            for (int iz = 0; iz < 2; ++iz) {
+                DirVelMultsX[ix][iy][iz] = ARRAY6(Vect3) (3);
+                DirVelMultsY[ix][iy][iz] = ARRAY6(Vect3) (3);
+                DirVelMultsZ[ix][iy][iz] = ARRAY6(Vect3) (3);
+                Vect3 R1 = Offset[ix][iy][iz]; //     PV to target from parent centroid
+                for (int i = -1, I = 0; i < 2; ++i, ++I) {
+                    DirVelMultsX[ix][iy][iz][I] = ARRAY5(Vect3) (3);
+                    DirVelMultsY[ix][iy][iz][I] = ARRAY5(Vect3) (3);
+                    DirVelMultsZ[ix][iy][iz][I] = ARRAY5(Vect3) (3);
+                    for (int j = -1, J = 0; j < 2; ++j, ++J) {
+                        DirVelMultsX[ix][iy][iz][I][J] = ARRAY4(Vect3) (3);
+                        DirVelMultsY[ix][iy][iz][I][J] = ARRAY4(Vect3) (3);
+                        DirVelMultsZ[ix][iy][iz][I][J] = ARRAY4(Vect3) (3);
+                        for (int k = -1, K = 0; k < 2; ++k, ++K) {
+                            DirVelMultsX[ix][iy][iz][I][J][K] = ARRAY3(Vect3) (2);
+                            DirVelMultsY[ix][iy][iz][I][J][K] = ARRAY3(Vect3) (2);
+                            DirVelMultsZ[ix][iy][iz][I][J][K] = ARRAY3(Vect3) (2);
+                            Vect3 R2 = Vect3(-2.0 * REAL(i), -2.0 * REAL(j), -2.0 * REAL(k)); //   PV from source parent centroid to target parent centroid     
+                            for (int jx = 0; jx < 2; ++jx) {
+                                DirVelMultsX[ix][iy][iz][I][J][K][jx] = ARRAY2(Vect3) (2);
+                                DirVelMultsY[ix][iy][iz][I][J][K][jx] = ARRAY2(Vect3) (2);
+                                DirVelMultsZ[ix][iy][iz][I][J][K][jx] = ARRAY2(Vect3) (2);
+
+                                for (int jy = 0; jy < 2; ++jy) {
+                                    DirVelMultsX[ix][iy][iz][I][J][K][jx][jy] = Array <Vect3> (2);
+                                    DirVelMultsY[ix][iy][iz][I][J][K][jx][jy] = Array <Vect3> (2);
+                                    DirVelMultsZ[ix][iy][iz][I][J][K][jx][jy] = Array <Vect3> (2);
+
+                                    for (int jz = 0; jz < 2; ++jz) {
+                                        Vect3 R3 = -1.0 * Offset[jx][jy][jz]; //      PV from source cell to source parent.
+                                        Vect3 Vx, Vy, Vz;
+                                        globalDirectVel(R1+R2+R3, Vect3(1.,0.,0.), Vx);
+                                        globalDirectVel(R1+R2+R3, Vect3(0.,1.,0.), Vy);
+                                        globalDirectVel(R1+R2+R3, Vect3(0.,0.,1.), Vz);
+                                        
+                                        
+                                        
+                                        
+                                        DirVelMultsX[ix][iy][iz][I][J][K][jx][jy][jz] = Vx;
+                                        DirVelMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = Vy;
+                                        DirVelMultsZ[ix][iy][iz][I][J][K][jx][jy][jz] = Vz;
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+                    
+                
+            
+        
     
     REAL Size = Node::RootSize;
     Node::VlFldMlt = ARRAY6(REAL) (globalSystem->MaxP);

@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
-    globalSystem->h = 4;
+    globalSystem->h = 3;
 
 
 

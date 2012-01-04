@@ -768,53 +768,53 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
                         WakePans.push_back((BODY::Bodies[I]->WakePanels[i][j][k]));
                     }
 
-
-
-        Array <Vect3> PanelEdgeMidpoints(4 * WakePans.size()), PanelEdgeVorticities(4 * WakePans.size());
-
-        int count = 0;
-        for (int i = 0; i < WakePans.size(); ++i) {
-            PanelEdgeMidpoints[count + 0] = WakePans[i]->C1;
-            PanelEdgeMidpoints[count + 1] = WakePans[i]->C2;
-            PanelEdgeMidpoints[count + 2] = WakePans[i]->C3;
-            PanelEdgeMidpoints[count + 3] = WakePans[i]->C4;
-
-            PanelEdgeVorticities[count + 0] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C2 - WakePans[i]->C4);
-            PanelEdgeVorticities[count + 1] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C3 - WakePans[i]->C1);
-            PanelEdgeVorticities[count + 2] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C4 - WakePans[i]->C2);
-            PanelEdgeVorticities[count + 3] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C1 - WakePans[i]->C3);
-            count += 4;
-        }
-
-
-        //      Find unique vortices - this is a total bodge, but I cannot be bothered writing proper code
-
-        Array <Vect3> Posns, Vorts;
-        bool test;
-
-        for (int i = 0; i < PanelEdgeMidpoints.size(); ++i) {
-            test = false;
-            for (int j = 0; j < Posns.size(); ++j) {
-                if (Posns[j] == PanelEdgeMidpoints[i]) {
-                    Vorts[j] += PanelEdgeVorticities[i];
-                    test = true;
-                    break;
-                }
-            }
-            if (test == false) {
-                Posns.push_back(PanelEdgeMidpoints[i]);
-                Vorts.push_back(PanelEdgeVorticities[i]);
-            }
-        }
-
-        PanelEdgeMidpoints = Posns;
-        PanelEdgeVorticities = Vorts;
-
-
-
-
-        Array <Vect3> V1(WakePans.size()), V2(WakePans.size()), V3(WakePans.size()), V4(WakePans.size());
-        V1 = V2 = V3 = V4 = globalSystem->unscaledVinf;
+//
+//
+//        Array <Vect3> PanelEdgeMidpoints(4 * WakePans.size()), PanelEdgeVorticities(4 * WakePans.size());
+//
+//        int count = 0;
+//        for (int i = 0; i < WakePans.size(); ++i) {
+//            PanelEdgeMidpoints[count + 0] = WakePans[i]->C1;
+//            PanelEdgeMidpoints[count + 1] = WakePans[i]->C2;
+//            PanelEdgeMidpoints[count + 2] = WakePans[i]->C3;
+//            PanelEdgeMidpoints[count + 3] = WakePans[i]->C4;
+//
+//            PanelEdgeVorticities[count + 0] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C2 - WakePans[i]->C4);
+//            PanelEdgeVorticities[count + 1] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C3 - WakePans[i]->C1);
+//            PanelEdgeVorticities[count + 2] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C4 - WakePans[i]->C2);
+//            PanelEdgeVorticities[count + 3] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C1 - WakePans[i]->C3);
+//            count += 4;
+//        }
+//
+//
+//        //      Find unique vortices - this is a total bodge, but I cannot be bothered writing proper code
+//
+//        Array <Vect3> Posns, Vorts;
+//        bool test;
+//
+//        for (int i = 0; i < PanelEdgeMidpoints.size(); ++i) {
+//            test = false;
+//            for (int j = 0; j < Posns.size(); ++j) {
+//                if (Posns[j] == PanelEdgeMidpoints[i]) {
+//                    Vorts[j] += PanelEdgeVorticities[i];
+//                    test = true;
+//                    break;
+//                }
+//            }
+//            if (test == false) {
+//                Posns.push_back(PanelEdgeMidpoints[i]);
+//                Vorts.push_back(PanelEdgeVorticities[i]);
+//            }
+//        }
+//
+//        PanelEdgeMidpoints = Posns;
+//        PanelEdgeVorticities = Vorts;
+//
+//
+//
+//
+//        Array <Vect3> V1(WakePans.size()), V2(WakePans.size()), V3(WakePans.size()), V4(WakePans.size());
+//        V1 = V2 = V3 = V4 = globalSystem->unscaledVinf;
 
         //#ifdef _OPENMP
         //#pragma omp parallel for
@@ -836,19 +836,20 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         //        }
 
 
+        Vect3 dx = dt * globalSystem->unscaledVinf;
 
 
         for (int i = 0; i < WakePans.size(); ++i) {
-            WakePans[i]->C1 += dt * V1[i];
-            WakePans[i]->C2 += dt * V2[i];
-            WakePans[i]->C3 += dt * V3[i];
-            WakePans[i]->C4 += dt * V4[i];
+            WakePans[i]->C1 += dx;
+            WakePans[i]->C2 += dx;
+            WakePans[i]->C3 += dx;
+            WakePans[i]->C4 += dx;
             WakePans[i]->GetNormal();
         }
 
 
 
-        Array <Vect3> Vels(BODY::VortexPositions.size(), Vect3(globalSystem->unscaledVinf));
+//        Array <Vect3> Vels(BODY::VortexPositions.size(), Vect3(globalSystem->unscaledVinf));
        
         
         //#ifdef _OPENMP
@@ -866,7 +867,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
 
         for (int i = 0; i < BODY::VortexPositions.size(); ++i)
-            BODY::VortexPositions[i] += dt * Vels[i];
+            BODY::VortexPositions[i] += dx;
 
 
 

@@ -49,6 +49,9 @@ public:
     static Array <Array <int> > CellMomentIndex;
     static Array < Array <Array <REAL> > > CellMomentDisplacementPowers;
     static Array <Node*> AllNodes, UpList, DownList;
+    static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsX;
+    static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsY;
+    static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsZ;
     Node *Parent;
     int x, y, z, m;
     long unsigned int ID;

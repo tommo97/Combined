@@ -237,7 +237,7 @@ void TIME_STEPPER::time_loop() {
         //      Produce Output
         if (globalTimeStepper->dump_next) {
             
-            if (TIME_STEPPER::SimTime < 5.0)
+            if (TIME_STEPPER::SimTime < 1)
             for (int i = 0; i < globalOctree->AllCells.size(); ++i)
                 if (((globalOctree->AllCells[i]->Position - BODY::Bodies[0]->CG).Mag() > (globalSystem->GambitScale * 2.0 * 5.03))) {
                     globalOctree->AllCells[i]->Omega = Vect3(0.0, 0.0, 0.0);
