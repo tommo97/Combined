@@ -1,38 +1,39 @@
 function [XI,YI,ZI,VI, VIx, VIy, VIz, x,y,z, U, V, W] = extract(fname,val, scale)
-load(fname);
-data = Domain;
-clear Domain;
-subs = data(:,1:3);
-subs(:,1) = subs(:,1) - min(data(:,1));
-subs(:,2) = subs(:,2) - min(data(:,2));
-subs(:,3) = subs(:,3) - min(data(:,3));
+load(fname,'Domain');
+subs = Domain(:,1:3);
+subs(:,1) = subs(:,1) - min(Domain(:,1));
+subs(:,2) = subs(:,2) - min(Domain(:,2));
+subs(:,3) = subs(:,3) - min(Domain(:,3));
 subs = subs+1;
 
 VI = zeros(max(subs));
-U = VI;
-V = VI;
-W = VI;
-x = VI;
-y = VI;
-z = VI;
-Vx = zeros(max(subs));
-Vy = zeros(max(subs));
-Vz = zeros(max(subs));
+U = [];%VI;
+V = [];%VI;
+W = [];%VI;
+x = [];%VI;
+y = [];%VI;
+z = [];%VI;
+Vx = [];%zeros(max(subs));
+Vy = [];%zeros(max(subs));
+Vz = [];%zeros(max(subs));
+VIx = [];
+VIy = [];
+VIz = [];
 
 disp(['Domain size: ' num2str(size(VI)) '; i.e. ' num2str(numel(VI)) ' cells' ]);
 disp(['Number of Vorticity Cells: ' num2str(length(subs(:,1)))]);
 disp(['Occupancy Ratio: ' num2str(length(subs(:,1))/numel(VI))]);
 
 
-[X Y Z] = meshgrid([min(data(:,2)):1:max(data(:,2))]/scale,...
-    [min(data(:,1)):1:max(data(:,1))]/scale,...
-    [min(data(:,3)):1:max(data(:,3))]/scale);
+[XI YI ZI] = meshgrid([min(Domain(:,2)):1:max(Domain(:,2))]/scale,...
+    [min(Domain(:,1)):1:max(Domain(:,1))]/scale,...
+    [min(Domain(:,3)):1:max(Domain(:,3))]/scale);
 
 
 
 
 
-num_vort = (size(data,2) - 6)/3;
+num_vort = (size(Domain,2) - 6)/3;
 colour{1} = [1 0 0];
 colour{2} = [0 1 0];
 colour{3} = [0 0 1];
@@ -40,7 +41,7 @@ colour{3} = [0 0 1];
 for q = 1:num_vort
     %val = val - q;
     cols = [7 + (q-1)*3:7+(q*3)-1];
-    vort = data(:,cols);
+    vort = Domain(:,cols);
     
     vals = sqrt(vort(:,1).*vort(:,1) + vort(:,2).*vort(:,2) + vort(:,3).*vort(:,3));
     
@@ -48,22 +49,22 @@ for q = 1:num_vort
     
     for i = 1:size(subs,1)
         VI(subs(i,1),subs(i,2), subs(i,3)) =  vals(i);
-        Vx(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,1);
-        Vy(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,2);
-        Vz(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,3);
+        %Vx(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,1);
+        %Vy(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,2);
+        %Vz(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,3);
     end
     %Y = Y - min(Y(:));
     %VI = VI.^3;
     %VI = smooth3(VI);%,'gaussian',[1 1 1],0.65);
     
     
-    VIx = Vx;
-    VIy = Vy;
-    VIz = Vz;
+    %VIx = Vx;
+    %VIy = Vy;
+    %VIz = Vz;
     
-    XI = X;
-    YI = Y;
-    ZI = Z;
+    %XI = X;
+    %YI = Y;
+    %ZI = Z;
     
     
     
@@ -84,21 +85,22 @@ for q = 1:num_vort
     %     isocolors(XI,YI,ZI,VIx,p);
     %     set(p,'FaceColor','interp','EdgeColor','none')
 end;
+return
 try
-    data = [CellPositions_x CellPositions_y CellPositions_z CellVelocities_x CellVelocities_y CellVelocities_z];
-    subs = data(:,1:3);
-    subs(:,1) = subs(:,1) - min(data(:,1));
-    subs(:,2) = subs(:,2) - min(data(:,2));
-    subs(:,3) = subs(:,3) - min(data(:,3));
+    Domain = [CellPositions_x CellPositions_y CellPositions_z CellVelocities_x CellVelocities_y CellVelocities_z];
+    subs = Domain(:,1:3);
+    subs(:,1) = subs(:,1) - min(Domain(:,1));
+    subs(:,2) = subs(:,2) - min(Domain(:,2));
+    subs(:,3) = subs(:,3) - min(Domain(:,3));
     subs = subs+1;
     
     for i = 1:size(subs,1)
-        x(subs(i,1),subs(i,2),subs(i,3)) =  data(i,1);
-        y(subs(i,1),subs(i,2),subs(i,3)) =  data(i,2);
-        z(subs(i,1),subs(i,2),subs(i,3)) =  data(i,3);        
-        U(subs(i,1),subs(i,2),subs(i,3)) =  data(i,4);
-        V(subs(i,1),subs(i,2),subs(i,3)) =  data(i,5);
-        W(subs(i,1),subs(i,2),subs(i,3)) =  data(i,6);
+        x(subs(i,1),subs(i,2),subs(i,3)) =  Domain(i,1);
+        y(subs(i,1),subs(i,2),subs(i,3)) =  Domain(i,2);
+        z(subs(i,1),subs(i,2),subs(i,3)) =  Domain(i,3);        
+        U(subs(i,1),subs(i,2),subs(i,3)) =  Domain(i,4);
+        V(subs(i,1),subs(i,2),subs(i,3)) =  Domain(i,5);
+        W(subs(i,1),subs(i,2),subs(i,3)) =  Domain(i,6);
     end
 catch
     

@@ -1,11 +1,14 @@
 clear all; clear mex; clc;
-files = dir('R*.mat');
-close all
+
+files = dir('RunData_00*3.mat');
+figure
 s = size(files,1);
 fname = files(s).name;
-load(fname)
+load(fname,'GambitScale','Times','BodyRates0_x','BodyPointsX','BodyPointsY','BodyPointsZ')
+load(fname,'Time','XCG')
+
 scale = GambitScale;
-val = 7.5
+val = 1;
 
 
 XCG = scale * Time * 1.0;
@@ -13,11 +16,11 @@ THETA = Time * BodyRates0_x;
 
 [XI,YI,ZI,VI, VIx, VIy, VIz, x,y,z, U, V, W] = extract(fname,val,scale);
 
-[curlx,curly,curlz,cav] = curl(y,x,z,V,U,W) ;
-OM = sqrt(curlx.^2 + curly.^2 + curlz.^2);
+%[curlx,curly,curlz,cav] = curl(y,x,z,V,U,W) ;
+%OM = sqrt(curlx.^2 + curly.^2 + curlz.^2);
 YI = YI + XCG/scale;
 p1 = patch(isosurface(XI,YI,ZI,VI,val));
-isonormals(XI,YI,ZI,OM,p1);
+isonormals(XI,YI,ZI,VI,p1);
 %isocolors(XI,YI,ZI,VIx,p1);
 set(p1,'FaceColor',[0.8 0.8 0.8],'EdgeColor','none')
 
