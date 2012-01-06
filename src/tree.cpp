@@ -39,15 +39,22 @@ OCTREE::~OCTREE()
 {
     delete Root;
 }
+
 /**************************************************************/
 void OCTREE::InitVelsGetLaplacian() {
-	Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
-//#ifdef _OPENMP
-//#pragma omp parallel for
-//#endif
-//    for (int i = 0; i < AllCells.size(); ++i){
-//        AllCells[i]->GetLaplacian();
-//    }
+    long unsigned int t4 = ticks();
+
+    Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
+    #ifdef _OPENMP
+    #pragma omp parallel for
+    #endif
+        for (int i = 0; i < AllCells.size(); ++i){
+            AllCells[i]->GetLaplacian();
+        }
+    long unsigned int t5 = ticks();
+    stringstream tmp;
+    tmp << "InitVelsGetLaplacian     : " << double(t5 - t4) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 }
 /**************************************************************/
 void OCTREE::Prune() {
@@ -55,7 +62,9 @@ void OCTREE::Prune() {
 }
 /**************************************************************/
 void OCTREE::GetSRad() {
-    Root->ApplyRecursively(&Node::DoNothing, &FVMCell::ReportSpectralRadius, &Node::DoNothing);
+    for (int i = 0; i < AllCells.size(); ++i)
+        AllCells[i]->ReportSpectralRadius();
+    //Root->ApplyRecursively(&Node::DoNothing, &FVMCell::ReportSpectralRadius, &Node::DoNothing);
 }
 /**************************************************************/
 void OCTREE::ClearNodes() {
@@ -63,71 +72,86 @@ void OCTREE::ClearNodes() {
 }
 /**************************************************************/
 void OCTREE::Reset() {
- //  Everything which changes the shape of the tree must be done recursively
+    long unsigned int t3 = ticks();
+    //  Everything which changes the shape of the tree must be done recursively
     Root->ApplyRecursively(&Node::MarkWithoutLoad, &Node::MarkWithoutLoad, &Node::DoNothing);
     Root->ApplyRecursively(&Node::DoNothing, &Node::CheckLoad, &Node::DoNothing);
- 
+
     if (globalTimeStepper->PruneNow) {
         Prune();
         globalTimeStepper->PruneNow = false;
     }
-    
+
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
 
 
     AllCells.clear();
     AllBranches.allocate(16);
-    BranchCount.assign(16,0);
+    BranchCount.assign(16, 0);
     Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
 
-    for (int i = 0; i < BranchCount.size(); ++i){
-        if (BranchCount[i]>0)
-            AllBranches[i].assign(BranchCount[i],NULL);
+    for (int i = 0; i < BranchCount.size(); ++i) {
+        if (BranchCount[i] > 0)
+            AllBranches[i].assign(BranchCount[i], NULL);
         BranchCount[i] = 0; //  Recycle for use as a pseudo iterator
     }
-    
-    CellCount = 0;  //  This is used as a pseudo iterator for assigning into AllCells
+
+    CellCount = 0; //  This is used as a pseudo iterator for assigning into AllCells
     AllCells.assign(FVMCell::NumCells, NULL);
     Node::AllNodes.allocate(Node::NumNodes);
     Node::NodeCount = 0;
     Node::UpList.clear();
     Node::DownList.clear();
     Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
+    long unsigned int t4 = ticks();
+    stringstream tmp;
+    tmp << "Calculate FMM: reset()   : " << double(t4 - t3) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 }
+
 /**************************************************************/
 void OCTREE::FVM() {
+    long unsigned int t10 = ticks();
+
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::O2UW, &Node::DoNothing);
 #else
 
-    #ifdef _OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for
 #endif
     for (int i = 0; i < AllCells.size(); ++i) {
-        
+
         AllCells[i]->GetBEV();
     }
 
-//    if (globalTimeStepper->t > 2)
-//    {
+    //    if (globalTimeStepper->t > 2)
+    //    {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
     for (int i = 0; i < AllCells.size(); ++i)
-        AllCells[i]->MUSCL();
-//    }
-//    else
-//    {
-//#ifdef _OPENMP
-//#pragma omp parallel for
-//#endif
-//    for (int i = 0; i < AllCells.size(); ++i)
-//        AllCells[i]->O1UW();
-//    }
+        AllCells[i]->O2UW();
+    //    }
+    //    else
+    //    {
+    //#ifdef _OPENMP
+    //#pragma omp parallel for
+    //#endif
+    //    for (int i = 0; i < AllCells.size(); ++i)
+    //        AllCells[i]->O1UW();
+    //    }
 #endif
+    long unsigned int t11 = ticks();
+    stringstream tmp;
+    tmp << "FVM                      : " << double(t11 - t10) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 }
+
 /**************************************************************/
 void OCTREE::Integrate() {
+    long unsigned int t12 = ticks();
+
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::GetBEV, &Node::DoNothing);
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::Integrate, &Node::DoNothing); // <- this doesn't work in parallel
@@ -145,7 +169,7 @@ void OCTREE::Integrate() {
 #endif
     for (int i = 0; i < AllCells.size(); ++i)
         AllCells[i]->CheckActive();
-    
+
     for (int mlev = 0; mlev < AllBranches.size(); ++mlev)
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -153,9 +177,15 @@ void OCTREE::Integrate() {
         for (int i = 0; i < AllBranches[mlev].size(); ++i) AllBranches[mlev][i]->SetFieldsZero();
 
 #endif
+    long unsigned int t13 = ticks();
+    stringstream tmp;
+    tmp << "Integrate                : " << double(t13 - t12) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 }
 /**************************************************************/
 void OCTREE::GetVels() {
+    long unsigned int t5 = ticks();
+
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::SetVelsZero, &Node::DoNothing);
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::PassMmnts2Prnt, &Node::PassMmnts2Prnt);
@@ -163,8 +193,8 @@ void OCTREE::GetVels() {
     Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::CollapseVField, &Node::DoNothing);
     Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::SetVelsEqual, &Node::DoNothing);
 #else
-    
-//    cout << "Passing Moments to Parents" << endl;
+
+    //    cout << "Passing Moments to Parents" << endl;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -172,20 +202,20 @@ void OCTREE::GetVels() {
         AllCells[i]->PassMmnts2Prnt();
 
     //  Sweep moments up OCTREE (from cells at L12 -> root at L0)
-//    cout << "Sweeping Moments Up Tree" << endl;
+    //    cout << "Sweeping Moments Up Tree" << endl;
     for (int mlev = AllBranches.size() - 1; mlev >= 0; --mlev) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for (int i = 0; i < AllBranches[mlev].size(); ++i){
+        for (int i = 0; i < AllBranches[mlev].size(); ++i) {
             AllBranches[mlev][i]->PassMmnts2Prnt();
         }
     }
     //  Sweep velocity fields down OCTREE
-    
+
     for (int mlev = 0; mlev < AllBranches.size(); ++mlev) {
         //  Inherit vel fields from parent
-//        cout << "Sweeping Velocity Fields Level " << mlev <<  endl;
+        //        cout << "Sweeping Velocity Fields Level " << mlev <<  endl;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -193,7 +223,7 @@ void OCTREE::GetVels() {
             AllBranches[mlev][i]->InheritVField();
 
         //  Add influence from neighbours
-//        cout << "Adding Influence of Neighbours Level " << mlev <<  endl;
+        //        cout << "Adding Influence of Neighbours Level " << mlev <<  endl;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -201,7 +231,7 @@ void OCTREE::GetVels() {
             AllBranches[mlev][i]->GetVelField(); //  This seems not to like being paralellised
     }
 
-//    cout << "Collapsing Velocity Fields Onto Cells" <<  endl;
+    //    cout << "Collapsing Velocity Fields Onto Cells" <<  endl;
     //  Collapse velocity fields onto children
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -210,8 +240,12 @@ void OCTREE::GetVels() {
         AllCells[i]->CollapseVField();
 #endif
 
-//    for (int i = 0; i < AllCells.size(); ++i)
-//        AllCells[i]->Report();
+    //    for (int i = 0; i < AllCells.size(); ++i)
+    //        AllCells[i]->Report();
+    long unsigned int t6 = ticks();
+    stringstream tmp;
+    tmp << "GetVels()                : " << double(t6 - t5) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 }
 /**************************************************************/
 Vect3 OCTREE::TreeVel(Vect3 P) {

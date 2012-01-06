@@ -54,8 +54,8 @@ SYSTEM::SYSTEM(int NT) {
     MaxP = 3;
     DS = .3;
     Temp = 288.15; //  Kelvin
-    Rho = 1.226; //1027; //  Kg/m3
-    Mu = (sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity kg/ms
+    Rho = 1027;//1.226; //1027; //  Kg/m3
+    Mu = 1e-3;//(sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity kg/ms
     GambitScale = 1;
     NumThreads = 1;
 #ifdef _OPENMP
@@ -167,10 +167,10 @@ void SYSTEM::PrintBodiesAndWakes() {
 /**************************************************************/
 void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 }
+
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
-
-    unsigned long int t0 = ticks();
+    long unsigned int t1 = ticks();
 
     int Num2Insert = 0, Num2Keep = 0;
 
@@ -208,9 +208,9 @@ void SYSTEM::PutWakesInTree() {
 
 
 
-    
 
-    
+
+
     REAL d = 1.0, u = 0;
     REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;
     int count = 0;
@@ -281,42 +281,40 @@ void SYSTEM::PutWakesInTree() {
     }
 
 
-       for (int i = 0; i < Test.size(); ++i) {
+    for (int i = 0; i < Test.size(); ++i) {
         globalOctree->Root->EvalCapsule(Test[i]);
     }
-//    Array<OctreeCapsule>::QuickSortB(Test);
-//    Vect3 min_diff = 1e16;
-//    int num_unique = 1;
-//    for (int i = 1; i < Test.size(); ++i) {
-//        if (Test[i] < Test[i - 1])
-//            cout << "Error in sort..." << endl;
-//
-//        min_diff = min(min_diff, Test[i].Position - Test[i - 1].Position);
-//
-//        if (Test[i] != Test[i - 1])
-//            num_unique++;
-//    }
-//
-//
-//    Array <OctreeCapsule> unique_data(num_unique);
-//    num_unique = 1;
-//    unique_data[num_unique - 1] = Test[0];
-//
-//    for (int i = 1; i < Test.size(); ++i) {
-//        if (Test[i] != Test[i - 1]) {
-//            num_unique++;
-//            unique_data[num_unique - 1] = Test[i];
-//        } else
-//            unique_data[num_unique - 1].Omega += Test[i].Omega;
-//    }
-//    cout << "I1 " << globalIO->ReturnMemPercent() << endl;
-//    for (int i = 0; i < unique_data.size(); ++i) {
-//        globalOctree->Root->EvalCapsule(unique_data[i]);
-//    }
-//    cout << "I2 " << globalIO->ReturnMemPercent() << endl;
+    //    Array<OctreeCapsule>::QuickSortB(Test);
+    //    Vect3 min_diff = 1e16;
+    //    int num_unique = 1;
+    //    for (int i = 1; i < Test.size(); ++i) {
+    //        if (Test[i] < Test[i - 1])
+    //            cout << "Error in sort..." << endl;
+    //
+    //        min_diff = min(min_diff, Test[i].Position - Test[i - 1].Position);
+    //
+    //        if (Test[i] != Test[i - 1])
+    //            num_unique++;
+    //    }
+    //
+    //
+    //    Array <OctreeCapsule> unique_data(num_unique);
+    //    num_unique = 1;
+    //    unique_data[num_unique - 1] = Test[0];
+    //
+    //    for (int i = 1; i < Test.size(); ++i) {
+    //        if (Test[i] != Test[i - 1]) {
+    //            num_unique++;
+    //            unique_data[num_unique - 1] = Test[i];
+    //        } else
+    //            unique_data[num_unique - 1].Omega += Test[i].Omega;
+    //    }
+    //    cout << "I1 " << globalIO->ReturnMemPercent() << endl;
+    //    for (int i = 0; i < unique_data.size(); ++i) {
+    //        globalOctree->Root->EvalCapsule(unique_data[i]);
+    //    }
+    //    cout << "I2 " << globalIO->ReturnMemPercent() << endl;
 
-    unsigned long int t1 = ticks();
-//    cout << "----- " << Num2Insert << " " << Num2Keep << " " << Test.size() << " " << num_unique << " " << t1-t0 << endl;
 
 
     BODY::VortexPositions = XtoKeep;
@@ -325,32 +323,47 @@ void SYSTEM::PutWakesInTree() {
     BODY::VortexOrigins = Origins2Keep;
 
 
+
+    long unsigned int t2 = ticks();
+
+    stringstream tmp;
+    tmp << "Bin panel wake into tree : " << double(t2 - t1) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
+
+
 }
+
 /**************************************************************/
 void SYSTEM::GetFaceVels() {
+    long unsigned int t6 = ticks();
 
-//#ifdef _OPENMP
-//#pragma omp parallel for
-//#endif
-//    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-//        globalOctree->AllCells[i]->Phi = 0.0;
-//
-//
-//        //      The following are multiplied by a half since the alogrithm used for potentials assumes potential on surface
-//        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j)
-//            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllBodyFaces[j]->BodyPanelPotential(globalOctree->AllCells[i]->Position);
-//
-//        for (int j = 0; j < BODY::AllProtoWakes.size(); ++j)
-//            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllProtoWakes[j]->WakePanelPotential(globalOctree->AllCells[i]->Position);
-//    }
+    //#ifdef _OPENMP
+    //#pragma omp parallel for
+    //#endif
+    //    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+    //        globalOctree->AllCells[i]->Phi = 0.0;
+    //
+    //
+    //        //      The following are multiplied by a half since the alogrithm used for potentials assumes potential on surface
+    //        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j)
+    //            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllBodyFaces[j]->BodyPanelPotential(globalOctree->AllCells[i]->Position);
+    //
+    //        for (int j = 0; j < BODY::AllProtoWakes.size(); ++j)
+    //            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllProtoWakes[j]->WakePanelPotential(globalOctree->AllCells[i]->Position);
+    //    }
 
     for (int i = 0; i < globalOctree->AllCells.size(); ++i)
         globalOctree->AllCells[i]->SetVelsEqual();
+    long unsigned int t7 = ticks();
+    stringstream tmp;
+    tmp << "GetFaceVels()            : " << double(t7 - t6) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 
 }
-
 /**************************************************************/
 void SYSTEM::GetPanelFMMVelocities(REAL dt) {
+    long unsigned int t9 = ticks();
+
 
     int sz = BODY::AllBodyFaces.size();
     Array <Vect3> P1(sz), P2(sz), V2(sz), V1(sz);
@@ -399,7 +412,10 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
         BODY::AllBodyFaces[i]->Vfmm = V1[i];
     }
 
-
+    long unsigned int t10 = ticks();
+    stringstream tmp;
+    tmp << "GetPanelFMMVelocities(.) : " << double(t10 - t9) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 }
 
 /**************************************************************/
@@ -442,7 +458,7 @@ void SYSTEM::WriteDomain() {
 
 /**************************************************************/
 void SYSTEM::WriteData() {
-
+    unsigned long int t1;
     MATLABOutputStruct Output;
     
     Vect3 Maxs, Mins;
@@ -651,36 +667,62 @@ void SYSTEM::WriteData() {
 //    }
 //
 
+    //  DataOut is vectors of: Position Omega [Transvars1 ... TransvarsN] CFL DerivConv DerivVisc DerivStretch DerivArt01
+    
+    
+    
+    Array < Vect3 > CellPos(globalOctree->AllCells.size(), Vect3(0.0));
+    Array < Vect3 > CellOms(globalOctree->AllCells.size(), Vect3(0.0));
+    Array < Vect3 > CellVel(globalOctree->AllCells.size(), Vect3(0.0));
+    Array < Vect3 > CellCFL(globalOctree->AllCells.size(), Vect3(0.0));
+    Array < Vect3 > CellConvDeriv(globalOctree->AllCells.size(), Vect3(0.0));
+    Array < Vect3 > CellTiltDeriv(globalOctree->AllCells.size(), Vect3(0.0));
+    Array < Vect3 > CellViscDeriv(globalOctree->AllCells.size(), Vect3(0.0));
+    Array < Vect3 > CellArtDeriv(globalOctree->AllCells.size(), Vect3(0.0));
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i){
+        CellPos[i] = globalOctree->AllCells[i]->Position + Vect3(0.5,0.5,0.5);
+        CellOms[i] = globalOctree->AllCells[i]->Omega;
+        CellVel[i] = globalOctree->AllCells[i]->Velocity;
+        CellCFL[i] = globalOctree->AllCells[i]->cfl;
+        CellConvDeriv[i] = globalOctree->AllCells[i]->ConvDeriv;
+        CellTiltDeriv[i] = globalOctree->AllCells[i]->StretchDeriv;
+        CellViscDeriv[i] = globalOctree->AllCells[i]->ViscDeriv;
+        CellArtDeriv[i] = globalOctree->AllCells[i]->ArtViscDeriv;
+    }
+    
+    Output.Vect1DArrays.push_back(CellPos);
+    Output.Vect1DArrayStrings.push_back(string("CellPos"));
 
-    Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 6 + (NumTransVars * 3));
-    int count = 0;
+    Output.Vect1DArrays.push_back(CellOms);
+    Output.Vect1DArrayStrings.push_back(string("CellOms"));
+
+    Output.Vect1DArrays.push_back(CellVel);
+    Output.Vect1DArrayStrings.push_back(string("CellVel"));
+
+    Output.Vect1DArrays.push_back(CellCFL);
+    Output.Vect1DArrayStrings.push_back(string("CellCFL"));
+
+    Output.Vect1DArrays.push_back(CellConvDeriv);
+    Output.Vect1DArrayStrings.push_back(string("CellConvDeriv"));
+
+    Output.Vect1DArrays.push_back(CellTiltDeriv);
+    Output.Vect1DArrayStrings.push_back(string("CellTiltDeriv"));
+
+    Output.Vect1DArrays.push_back(CellViscDeriv);
+    Output.Vect1DArrayStrings.push_back(string("CellViscDeriv"));
+
+    Output.Vect1DArrays.push_back(CellArtDeriv);
+    Output.Vect1DArrayStrings.push_back(string("CellArtDeriv"));
+    
+    
+    Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 21 + (NumTransVars * 3));
     Mins = Vect3(1e32, 1e32, 1e32); Maxs = Vect3(-1e32, -1e32, -1e32);
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        DataOut[count][0] = globalOctree->AllCells[i]->Position.x + 0.5;
-        DataOut[count][1] = globalOctree->AllCells[i]->Position.y + 0.5;
-        DataOut[count][2] = globalOctree->AllCells[i]->Position.z + 0.5;
-        DataOut[count][3] = globalOctree->AllCells[i]->Omega.x;
-        DataOut[count][4] = globalOctree->AllCells[i]->Omega.y;
-        DataOut[count][5] = globalOctree->AllCells[i]->Omega.z;
-        int cnt = 6;
-        for (int q = 0; q < NumTransVars; ++q) {
-            DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].x;
-            cnt++;
-            DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].y;
-            cnt++;
-            DataOut[count][cnt] = globalOctree->AllCells[i]->TransVars[q].z;
-            cnt++;
-        }
-        count++;
-
+   
         Mins = min(globalOctree->AllCells[i]->Position, Mins);
         Maxs = max(globalOctree->AllCells[i]->Position, Maxs);
 
     }
-
-
-    Output.Double2DArrays.push_back(DataOut);
-    Output.Double2DArrayStrings.push_back(string("Domain"));
 
     Output.Double2DArrays.push_back(BODY::CpHistoryAll);
     Output.Double2DArrayStrings.push_back(string("CpHistoryAll"));
@@ -694,6 +736,10 @@ void SYSTEM::WriteData() {
 
     globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
     BODY::SubTIMES.clear();
+    unsigned long int t2;
+    stringstream tmp;
+    tmp << "Writedata()              : " << double(t2 - t1) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 }
 
 /**************************************************************/

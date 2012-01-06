@@ -1,6 +1,6 @@
 clear all
 clc
-load RunData_000001.mat
+load RunData_000006.mat
 hold all
 c = 'g';
 s = 'o';

@@ -515,6 +515,8 @@ void IO::create_image(string outname) {
 
 /**************************************************************/
 void IO::stat_step() {
+    long unsigned int t8 = ticks();
+
     stringstream out_stream;
 
 #ifndef use_NCURSES
@@ -544,7 +546,7 @@ void IO::stat_step() {
     } else {
         out_stream << "\t   ";
     }
-    step_data = out_stream.str();
+    step_data += out_stream.str();
 
     if (WRITE_TO_SCREEN)
         display_stat_step();
@@ -566,8 +568,13 @@ void IO::stat_step() {
 
     }
 
-    
+
     //            if (WRITE_TO_FILE) write_stat_step();
+    long unsigned int t9 = ticks();
+
+    stringstream tmp;
+    tmp << "stat_step                : " << double(t9 - t8) / 1000.0 << endl;
+    step_data += tmp.str();
 }
 
 /**************************************************************/
@@ -597,6 +604,7 @@ void IO::display_stat_step() {
         if (WRITE_TO_SCREEN) {
             cout << step_data.c_str() << " " << latest_file << endl;
             latest_file.clear();
+            step_data.clear();
         }
 #endif
     }
@@ -688,7 +696,16 @@ void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName, bo
         UTIL::WriteMATLABMatrix1D(outdata.Double1DArrayStrings[i], fname, outdata.Double1DArrays[i]);
 
     for (int i = 0; i < outdata.Vect1DArrays.size(); ++i)
-        UTIL::WriteMATLABMatrix1DVect3(outdata.Vect1DArrayStrings[i], fname, outdata.Vect1DArrays[i]);
+    {
+        Array < Array < REAL> > data = UTIL::zeros(outdata.Vect1DArrays[i].size(), 3);
+        for (int j = 0; j < outdata.Vect1DArrays[i].size(); ++j)
+        {
+            data[j][0] = outdata.Vect1DArrays[i][j].x;
+            data[j][1] = outdata.Vect1DArrays[i][j].y;
+            data[j][2] = outdata.Vect1DArrays[i][j].z;
+        }
+        UTIL::WriteMATLABMatrix2D(outdata.Vect1DArrayStrings[i], fname, data);
+    }
 
     for (int i = 0; i < outdata.Int2DArrays.size(); ++i)
         UTIL::WriteMATLABMatrix2D(outdata.Int2DArrayStrings[i], fname, outdata.Int2DArrays[i]);
@@ -705,6 +722,8 @@ void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName, bo
     UTIL::WriteMATLABMatrix1D("h", fname, globalSystem->h);
     UTIL::WriteMATLABMatrix1D("GambitScale", fname, globalSystem->GambitScale);
     UTIL::WriteMATLABMatrix1D("MaxP", fname, globalSystem->MaxP);
+    UTIL::WriteMATLABMatrix1D("KinematicViscosity", fname, globalSystem->Nu);
+    UTIL::WriteMATLABMatrix1D("LastFVMDeltaT", fname, globalTimeStepper->dt);
     NumFiles[ID]++;
     filestr.close();
 }

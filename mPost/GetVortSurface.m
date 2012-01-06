@@ -1,6 +1,6 @@
 clear all; clear mex; clc;
-
-files = dir('RunData_00*3.mat');
+close all
+files = dir('RunData*.mat');
 figure
 s = size(files,1);
 fname = files(s).name;
@@ -8,13 +8,13 @@ load(fname,'GambitScale','Times','BodyRates0_x','BodyPointsX','BodyPointsY','Bod
 load(fname,'Time','XCG')
 
 scale = GambitScale;
-val = 1;
+val = 3.5;
 
 
 XCG = scale * Time * 1.0;
 THETA = Time * BodyRates0_x;
 
-[XI,YI,ZI,VI, VIx, VIy, VIz, x,y,z, U, V, W] = extract(fname,val,scale);
+[XI,YI,ZI,VI] = extract(fname,val,scale);
 
 %[curlx,curly,curlz,cav] = curl(y,x,z,V,U,W) ;
 %OM = sqrt(curlx.^2 + curly.^2 + curlz.^2);
@@ -119,7 +119,7 @@ VIs = V;
 figure
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 VIs(VIs>5*std(VIs(:))) = 5*std(VIs(:));
-slice(XI,YI,ZI,VIs,[0],[0.1 0.2 0.5 1 2 4 6],[])
+slice(XI,YI,ZI,VI,[0],[0.1 0.2 0.5 1 2 4 6],[])
 axis equal
 shading flat
 box on

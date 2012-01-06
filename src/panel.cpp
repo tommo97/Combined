@@ -295,8 +295,7 @@ REAL PANEL::GetCp() {
     REAL Cpress = 1 - (Veta * Veta + Vxi * Vxi + 0*2 * gradT) / Vref2;
     
     //	Check this...
-    REAL Rho = 1027;
-    dF = -Cpress * (.5 * Rho * Vref2) * Area * TRANS[2];
+    dF = -Cpress * (.5 * globalSystem->Rho * Vref2) * Area * TRANS[2];
     return Cpress;
 }
 

@@ -72,8 +72,8 @@ public:
     static const Vect3 NeighbOffset[6];
     static const int deREF[][3];
 
-    Array<Vect3> TransVars, TransDerivs;
-
+    Array<Vect3> TransVars;
+    Array <Array<Vect3> > TransDerivs;
     void UpdateMomentMults();
 
     void GetISA();

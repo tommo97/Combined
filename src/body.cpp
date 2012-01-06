@@ -697,9 +697,9 @@ void BODY::LinAlg() {
     }
 
 }
-
 /**************************************************************/
 void BODY::BodySubStep(REAL delta_t, int n_steps) {
+    long unsigned int t11 = ticks();
 
     REAL dt = delta_t / n_steps;
 
@@ -727,8 +727,8 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
         //        //      Interpolate face vels for subtimestep...
         for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-             BODY::AllBodyFaces[i]->Vfmm += dt*BODY::AllBodyFaces[i]->dVFMM_dt;
-         }
+            BODY::AllBodyFaces[i]->Vfmm += dt * BODY::AllBodyFaces[i]->dVFMM_dt;
+        }
         //  Check the order of the next few lines
         for (int i = 0; i < BODY::Bodies.size(); ++i) {
 
@@ -768,53 +768,53 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
                         WakePans.push_back((BODY::Bodies[I]->WakePanels[i][j][k]));
                     }
 
-//
-//
-//        Array <Vect3> PanelEdgeMidpoints(4 * WakePans.size()), PanelEdgeVorticities(4 * WakePans.size());
-//
-//        int count = 0;
-//        for (int i = 0; i < WakePans.size(); ++i) {
-//            PanelEdgeMidpoints[count + 0] = WakePans[i]->C1;
-//            PanelEdgeMidpoints[count + 1] = WakePans[i]->C2;
-//            PanelEdgeMidpoints[count + 2] = WakePans[i]->C3;
-//            PanelEdgeMidpoints[count + 3] = WakePans[i]->C4;
-//
-//            PanelEdgeVorticities[count + 0] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C2 - WakePans[i]->C4);
-//            PanelEdgeVorticities[count + 1] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C3 - WakePans[i]->C1);
-//            PanelEdgeVorticities[count + 2] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C4 - WakePans[i]->C2);
-//            PanelEdgeVorticities[count + 3] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C1 - WakePans[i]->C3);
-//            count += 4;
-//        }
-//
-//
-//        //      Find unique vortices - this is a total bodge, but I cannot be bothered writing proper code
-//
-//        Array <Vect3> Posns, Vorts;
-//        bool test;
-//
-//        for (int i = 0; i < PanelEdgeMidpoints.size(); ++i) {
-//            test = false;
-//            for (int j = 0; j < Posns.size(); ++j) {
-//                if (Posns[j] == PanelEdgeMidpoints[i]) {
-//                    Vorts[j] += PanelEdgeVorticities[i];
-//                    test = true;
-//                    break;
-//                }
-//            }
-//            if (test == false) {
-//                Posns.push_back(PanelEdgeMidpoints[i]);
-//                Vorts.push_back(PanelEdgeVorticities[i]);
-//            }
-//        }
-//
-//        PanelEdgeMidpoints = Posns;
-//        PanelEdgeVorticities = Vorts;
-//
-//
-//
-//
-//        Array <Vect3> V1(WakePans.size()), V2(WakePans.size()), V3(WakePans.size()), V4(WakePans.size());
-//        V1 = V2 = V3 = V4 = globalSystem->unscaledVinf;
+        //
+        //
+        //        Array <Vect3> PanelEdgeMidpoints(4 * WakePans.size()), PanelEdgeVorticities(4 * WakePans.size());
+        //
+        //        int count = 0;
+        //        for (int i = 0; i < WakePans.size(); ++i) {
+        //            PanelEdgeMidpoints[count + 0] = WakePans[i]->C1;
+        //            PanelEdgeMidpoints[count + 1] = WakePans[i]->C2;
+        //            PanelEdgeMidpoints[count + 2] = WakePans[i]->C3;
+        //            PanelEdgeMidpoints[count + 3] = WakePans[i]->C4;
+        //
+        //            PanelEdgeVorticities[count + 0] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C2 - WakePans[i]->C4);
+        //            PanelEdgeVorticities[count + 1] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C3 - WakePans[i]->C1);
+        //            PanelEdgeVorticities[count + 2] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C4 - WakePans[i]->C2);
+        //            PanelEdgeVorticities[count + 3] = 0.5 * WakePans[i]->Gamma * (WakePans[i]->C1 - WakePans[i]->C3);
+        //            count += 4;
+        //        }
+        //
+        //
+        //        //      Find unique vortices - this is a total bodge, but I cannot be bothered writing proper code
+        //
+        //        Array <Vect3> Posns, Vorts;
+        //        bool test;
+        //
+        //        for (int i = 0; i < PanelEdgeMidpoints.size(); ++i) {
+        //            test = false;
+        //            for (int j = 0; j < Posns.size(); ++j) {
+        //                if (Posns[j] == PanelEdgeMidpoints[i]) {
+        //                    Vorts[j] += PanelEdgeVorticities[i];
+        //                    test = true;
+        //                    break;
+        //                }
+        //            }
+        //            if (test == false) {
+        //                Posns.push_back(PanelEdgeMidpoints[i]);
+        //                Vorts.push_back(PanelEdgeVorticities[i]);
+        //            }
+        //        }
+        //
+        //        PanelEdgeMidpoints = Posns;
+        //        PanelEdgeVorticities = Vorts;
+        //
+        //
+        //
+        //
+        //        Array <Vect3> V1(WakePans.size()), V2(WakePans.size()), V3(WakePans.size()), V4(WakePans.size());
+        //        V1 = V2 = V3 = V4 = globalSystem->unscaledVinf;
 
         //#ifdef _OPENMP
         //#pragma omp parallel for
@@ -849,9 +849,9 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
 
 
-//        Array <Vect3> Vels(BODY::VortexPositions.size(), Vect3(globalSystem->unscaledVinf));
-       
-        
+        //        Array <Vect3> Vels(BODY::VortexPositions.size(), Vect3(globalSystem->unscaledVinf));
+
+
         //#ifdef _OPENMP
         //#pragma omp parallel for
         //#endif
@@ -882,6 +882,10 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         BODY::AllBodyFaces[i]->PhiWakePrev = 0.0; //BODY::AllBodyFaces[i]->Phi;
         //        BODY::AllBodyFaces[i]->VWakePrev = BODY::AllBodyFaces[i]->VWake;
     }
+    long unsigned int t12 = ticks();
+    stringstream tmp;
+    tmp << "BodySubStep              : " << double(t12 - t11) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 }
 
 /**************************************************************/
