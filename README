@@ -1,0 +1,19 @@
+This is a vorticity-transport solver originally for modelling tidal turbine rotorsystems. It uses a finite volume scheme with a fast-multipole method based on heirarchal domain decomposition via octrees. This facilitates vorticity tracking in an arbitrary Eulerian/Lagrangian manner. The boundary conditions are via a boundary-element mesh.
+
+The dependancies of this code are:
+Either the GNU GCC (v>4.4.x) or SunCC (v>12) compilers;
+matio: MAT File I/O Library
+libpng: PNG Reference Library
+ncurses: The Ncurses (new curses) library
+pngwriter: An easy to use C++ graphics library
+libz: A Massively Spiffy Yet Delicately Unobtrusive Compression Library
+libmath: Basic mathematics functions
+GSL: GNU Scientific Library
+some form of:
+lapack: Linear Algebra PACKage
+blas: Basic Linear Algebra Subprograms
+ATLAS: Automatically Tuned Linear Algebra Software
+
+
+
+
