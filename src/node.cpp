@@ -55,7 +55,7 @@ InList(false), Neighb(NULL), HasLoad(false) {
     Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
     Neighb_Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
     TransVars.assign(globalSystem->NumTransVars, Vect3());
-    TransDerivs.assign(globalSystem->NumTransVars, Vect3());
+    TransDerivs.assign(2, Array <Vect3> (globalSystem->NumTransVars, Vect3()));
     SetISANull();
     SetKidsNull();
     Node::NumNodes++;
@@ -70,7 +70,7 @@ Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(N
     Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
     Neighb_Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
     TransVars.assign(globalSystem->NumTransVars, Vect3());
-    TransDerivs.assign(globalSystem->NumTransVars, Vect3());
+    TransDerivs.assign(2, Array <Vect3> (globalSystem->NumTransVars, Vect3()));
     Trans = parent->Trans;
     Trans.push_back(REF[i][j][k]);
     SetISANull();

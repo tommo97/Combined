@@ -35,6 +35,7 @@ unsigned long int FVMCell::NumCells = 0;
 FVMCell::FVMCell() : Node(), FaceVels(0.) {
     if (WRITE_TO_SCREEN) cout << "Warning - uninitialised cell" << endl;
     FVMCell::NumCells++;
+
 }
 
 /**************************************************************/
@@ -42,10 +43,12 @@ FVMCell::FVMCell(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Fac
     FVMCell::NumCells++;
     Laplacian.assign(globalSystem->NumTransVars, Vect3());
     BEV.assign(globalSystem->NumTransVars, Vect3());
+
 }
 /**************************************************************/
 void FVMCell::Integrate() {
     HasLoad = false;
+    cfl = globalTimeStepper->dt * srad;
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
 //        TransDerivs[q] += globalSystem->Nu * Laplacian[q];
 //        TransDerivs[q] += VectMultMatrixTranspose(VelTensor, TransVars[q]);
@@ -59,25 +62,35 @@ void FVMCell::Integrate() {
         Vect3 OMt = 0.5*((*Neighb_Val[q].T) + TransVars[q]);
         Vect3 OMb = 0.5*((*Neighb_Val[q].B) + TransVars[q]);
         
-        Vect3 Gradient(0.0,0.0,0.0);
+        StretchDeriv = Vect3(0.0,0.0,0.0);
 
-        Gradient.x = (  OMe.x * FaceVels.E.x - OMw.x * FaceVels.W.x
-                      + OMn.y * FaceVels.N.x - OMs.y * FaceVels.S.x
-                      + OMt.z * FaceVels.T.x - OMb.z * FaceVels.B.x);
+        StretchDeriv.x = (  OMe.x * FaceVels.E.x - OMw.x * FaceVels.W.x
+                      +     OMn.y * FaceVels.N.x - OMs.y * FaceVels.S.x
+                      +     OMt.z * FaceVels.T.x - OMb.z * FaceVels.B.x);
 
-        Gradient.y = (  OMe.x * FaceVels.E.y - OMw.x * FaceVels.W.y
-                      + OMn.y * FaceVels.N.y - OMs.y * FaceVels.S.y
-                      + OMt.z * FaceVels.T.y - OMb.z * FaceVels.B.y);
+        StretchDeriv.y = (  OMe.x * FaceVels.E.y - OMw.x * FaceVels.W.y
+                      +     OMn.y * FaceVels.N.y - OMs.y * FaceVels.S.y
+                      +     OMt.z * FaceVels.T.y - OMb.z * FaceVels.B.y);
 
-        Gradient.z = (  OMe.x * FaceVels.E.z - OMw.x * FaceVels.W.z
-                      + OMn.y * FaceVels.N.z - OMs.y * FaceVels.S.z
-                      + OMt.z * FaceVels.T.z - OMb.z * FaceVels.B.z);
+        StretchDeriv.z = (  OMe.x * FaceVels.E.z - OMw.x * FaceVels.W.z
+                      +     OMn.y * FaceVels.N.z - OMs.y * FaceVels.S.z
+                      +     OMt.z * FaceVels.T.z - OMb.z * FaceVels.B.z);
         
-        TransDerivs[q] += Gradient;
+        TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
+        
+        
+        //      Viscous diffusion by central differences. Already calc'd by GetLaplacian()
+        ViscDeriv = globalSystem->Nu*Laplacian[q];
+        TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
+
+        ArtViscDeriv = 0.5*Velocity.Mag()*(1-cfl.Mag())*Laplacian[q];
     }
+    
+    
+    
     globalTimeStepper->Integrate(this);
     Omega = Vect3(0.,0.,0.);
-
+    
 
     //  Normalise/obliterate the vorticities in the cell
     for (int q1 = 0; q1 < globalSystem->NumTransVars; ++q1)
@@ -369,7 +382,7 @@ Vect3 FVMCell::ReturnSpectralRadius() {
 
 /**************************************************************/
 void FVMCell::ReportSpectralRadius() {
-    Vect3 srad = ReturnSpectralRadius();
+    srad = ReturnSpectralRadius();
     globalTimeStepper->srad.x = max(globalTimeStepper->srad.x, srad.x);
     globalTimeStepper->srad.y = max(globalTimeStepper->srad.y, srad.y);
     globalTimeStepper->srad.z = max(globalTimeStepper->srad.z, srad.z);
@@ -469,7 +482,8 @@ void FVMCell::O1UW() {
 #endif
 
         Vect3 convection = fe + fw + fn + fs + ft + fb;
-        TransDerivs[q] = - convection;
+        TransDerivs[TIME_STEPPER::RKStep][q] = - convection;
+        ConvDeriv = - convection;
     }
 }
 
@@ -553,7 +567,8 @@ void FVMCell::O2UW() {
 #endif
 
         Vect3 convection = fe + fw + fn + fs + ft + fb;
-        TransDerivs[q] = - convection;
+        TransDerivs[TIME_STEPPER::RKStep][q] = - convection;
+        ConvDeriv = - convection;
     }
 }
 
@@ -658,7 +673,8 @@ void FVMCell::MUSCL() {
 
 
         Vect3 convection = (Hx_e - Hx_w) + (Hy_n - Hy_s) + (Hz_t - Hz_b);
-        TransDerivs[q] = - convection;
+        TransDerivs[TIME_STEPPER::RKStep][q] = - convection;
+        ConvDeriv = - convection;
     }
 }
 
@@ -696,6 +712,7 @@ void FVMCell::GetLaplacian() {
         if (Neighb.S) Laplacian[q] -= Neighb.S->TransVars[q] - TransVars[q];
         if (Neighb.T) Laplacian[q] += Neighb.T->TransVars[q] - TransVars[q];
         if (Neighb.B) Laplacian[q] -= Neighb.B->TransVars[q] - TransVars[q];
+        
     }
 }
 

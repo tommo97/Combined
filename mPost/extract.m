@@ -1,9 +1,10 @@
 function [XI,YI,ZI,VI, VIx, VIy, VIz, x,y,z, U, V, W] = extract(fname,val, scale)
-load(fname,'Domain');
-subs = Domain(:,1:3);
-subs(:,1) = subs(:,1) - min(Domain(:,1));
-subs(:,2) = subs(:,2) - min(Domain(:,2));
-subs(:,3) = subs(:,3) - min(Domain(:,3));
+load(fname,'CellPos');
+
+subs = CellPos(:,1:3);
+subs(:,1) = subs(:,1) - min(CellPos(:,1));
+subs(:,2) = subs(:,2) - min(CellPos(:,2));
+subs(:,3) = subs(:,3) - min(CellPos(:,3));
 subs = subs+1;
 
 VI = zeros(max(subs));
@@ -25,22 +26,42 @@ disp(['Number of Vorticity Cells: ' num2str(length(subs(:,1)))]);
 disp(['Occupancy Ratio: ' num2str(length(subs(:,1))/numel(VI))]);
 
 
-[XI YI ZI] = meshgrid([min(Domain(:,2)):1:max(Domain(:,2))]/scale,...
-    [min(Domain(:,1)):1:max(Domain(:,1))]/scale,...
-    [min(Domain(:,3)):1:max(Domain(:,3))]/scale);
+[XI YI ZI] = meshgrid([min(CellPos(:,2)):1:max(CellPos(:,2))]/scale,...
+    [min(CellPos(:,1)):1:max(CellPos(:,1))]/scale,...
+    [min(CellPos(:,3)):1:max(CellPos(:,3))]/scale);
 
 
+sz = size(CellPos,2);
+artcols = (sz-3):sz;
+viscols = artcols-6;
+load(fname,'CellViscDeriv');
+load(fname,'CellOms');
+Data = CellOms;
 
 
+data = sqrt(Data(:,1).*Data(:,1) + Data(:,2).*Data(:,2) + Data(:,3).*Data(:,3));
 
+
+for i = 1:size(subs,1)
+    VI(subs(i,1),subs(i,2), subs(i,3)) =  data(i);
+end
+
+return
 num_vort = (size(Domain,2) - 6)/3;
 colour{1} = [1 0 0];
 colour{2} = [0 1 0];
 colour{3} = [0 0 1];
 
+
+
+
+
+
+
+
 for q = 1:num_vort
     %val = val - q;
-    cols = [7 + (q-1)*3:7+(q*3)-1];
+    cols = [18:20];%[7 + (q-1)*3:7+(q*3)-1];
     vort = Domain(:,cols);
     
     vals = sqrt(vort(:,1).*vort(:,1) + vort(:,2).*vort(:,2) + vort(:,3).*vort(:,3));

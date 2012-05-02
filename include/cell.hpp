@@ -51,6 +51,9 @@ public:
 
     Array <Vect3> Deriv, IPs, IPVels;
 
+
+    Vect3 ConvDeriv, ViscDeriv, StretchDeriv, ArtViscDeriv, srad, cfl;
+    
     int age;
     
     REAL Phi;

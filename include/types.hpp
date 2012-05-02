@@ -52,7 +52,7 @@ using namespace std;
 #define DOUBLE_PRECISION
 
 #define OCTREE_SIZE 4096
-#define LIMITER MINMOD
+#define LIMITER VANLEER
 
 //#define COLLAPSE_TO_FACES
 
@@ -143,6 +143,8 @@ class OctreeCapsule;
 #define SUPERBEE(r) max(max(min(2.0*r, 1.0), min(r, 2.0)), 0.0)
 
 #define MINMOD(r) max(0.0, min(1.0, r))
+
+#define VANLEER(r) (r+abs(r))/(1+abs(r))
 
 #define flim(r) Vect3(LIMITER(r.x), LIMITER(r.y), LIMITER(r.z))
 

@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 REAL TIME_STEPPER::MaxTime = 0;
 REAL TIME_STEPPER::SimTime = 0;
 REAL TIME_STEPPER::SubStepTime = 0;
+int TIME_STEPPER::RKStep = 0;
+bool TIME_STEPPER::RK2Mode = true;
 /**************************************************************/
 TIME_STEPPER::TIME_STEPPER() {
     dt_prev = 1e16;
@@ -153,91 +155,93 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
 
 /**************************************************************/
 
+void TIME_STEPPER::DoFMM() {
+    globalOctree->InitVelsGetLaplacian();
+    globalOctree->GetVels();
+}
+/**************************************************************/
+void TIME_STEPPER::TimeAdvance() {
+
+
+
+    TIME_STEPPER::RKStep = 0;
+    //  t0: Calc FMM and get DT
+    DoFMM();
+    //  t0: calculate face velocities due to body
+    globalSystem->GetFaceVels();
+    time_step();
+    //  t0: get panel FMM Vels
+    globalSystem->GetPanelFMMVelocities(dt);
+    //  t0: get time derivatives at t0
+    
+    //  t0: advance innter (body) timestep
+    
+    if (TIME_STEPPER::RK2Mode) 
+        BODY::BodySubStep(dt/2.0, globalSystem->NumSubSteps);
+    else
+        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
+    
+    globalSystem->GetFaceVels();
+    globalOctree->FVM(); //  dom_dt(t0)
+    //  t0: advance outer wake to t*
+    globalOctree->Integrate(); //  t = t0 -> t*
+
+    if (TIME_STEPPER::RK2Mode) {
+        TIME_STEPPER::RKStep = 1;
+        //  t*: Do the FMM again
+        DoFMM();
+        globalSystem->GetPanelFMMVelocities(dt/2);
+        BODY::BodySubStep(dt/2.0, globalSystem->NumSubSteps); //  t = t0 -> t*
+        //  t*: calculate face velocities due to body
+        globalSystem->GetFaceVels();
+        //  t*: calculate gradients at t*
+        globalOctree->FVM(); //  dom_dt(t*)
+        //  t*: advance to t1
+        globalOctree->Integrate(); //  t = t0 -> t1
+    }
+
+
+    //  Put the wake in the tree from the bodytimestep
+    globalSystem->PutWakesInTree();
+    //  Clean up
+    if (!fmod((REAL) n, 100.0))
+        PruneNow = true;
+    globalOctree->Reset();
+
+
+
+
+}
+/**************************************************************/
 void TIME_STEPPER::time_loop() {
 
     if (first_step) {
         dt = globalSystem->dtInit;
-        cout << "### " << dt << " " << globalSystem->NumSubSteps << endl;
-        long unsigned int t1 = ticks();
         BODY::BodySubStep(globalSystem->dtInit, globalSystem->NumSubSteps);
-        long unsigned int t2 = ticks();
-        //globalSystem->GetPressures(dt);
-        //globalIO->write_m();
-        //globalSystem->WriteBodies();
-        
-        Array < Vect3 > Posns, Vdir, VdirTree;
-        Posns.push_back(Vect3(10,20,30));
-        Posns.push_back(Vect3(20,-10,20));
-        Posns.push_back(Vect3(-30,30,10));
-        Posns.push_back(Vect3(40,40,0));
-        Posns.push_back(Vect3(50,-10,-10));
-        Posns.push_back(Vect3(60,20,-20));
-
-        for (int i = 0; i < Posns.size(); ++i) {
-            Vect3 Vel(0.0, 0.0, 0.0);
-            for (int j = 0; j < BODY::VortexPositions.size(); ++j)
-                Vel += globalDirectVel(Posns[i] - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
-            Vdir.push_back(Vel);
-
-        }
-        long unsigned int t3 = ticks();
         globalSystem->PutWakesInTree();
-        long unsigned int t4 = ticks();
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
         globalOctree->GetVels();
-        
-
-        for (int i = 0; i < Posns.size(); ++i) {
-            Vect3 Vel(0.0, 0.0, 0.0);
-            
-            for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-                Vel += globalDirectVel(Posns[i] - globalOctree->AllCells[j]->Position, globalOctree->AllCells[j]->Omega);
-            VdirTree.push_back(Vel);
-
-        }
-        
-
-        
-        
-
-
-        
-        for (int i = 0; i < Posns.size(); ++i)
-            cout << "VD: " << Vdir[i] << ", VDTree: " << VdirTree[i] << " VFMM: " << globalOctree->TreeVel(Posns[i]) << endl;
-        
-        
-        
-        
-        
-        
-        //        globalSystem->GetPanelFMMVelocities(0.0); //  t = t1
         first_step = false;
     } else {
         
-        
-        //      Bin panel wake into tree
         long unsigned int t1 = ticks();
-        globalSystem->PutWakesInTree();
-        long unsigned int t2 = ticks();
-        cpu_sort_t = t2-t1;
-        
-        
-        //      Calculate FMM
-        long unsigned int t3 = ticks();
-        if (!fmod((REAL) n, 100.0))
-            PruneNow = true;
-        globalOctree->Reset();
-        long unsigned int t4 = ticks();
-        globalOctree->InitVelsGetLaplacian();
-        long unsigned int t5 = ticks();
-        globalOctree->GetVels();
+//        
+//        //      Bin panel wake into tree
+//        globalSystem->PutWakesInTree();
+//        //      Calculate FMM
+//        
+//        if (!fmod((REAL) n, 100.0))
+//            PruneNow = true;
+//        globalOctree->Reset();
+//        globalOctree->InitVelsGetLaplacian();
+//        globalOctree->GetVels();
 
-
+        TimeAdvance();
         //      Produce Output
         if (globalTimeStepper->dump_next) {
             
-            if (TIME_STEPPER::SimTime < 1)
+            if (TIME_STEPPER::SimTime > 1e32)
             for (int i = 0; i < globalOctree->AllCells.size(); ++i)
                 if (((globalOctree->AllCells[i]->Position - BODY::Bodies[0]->CG).Mag() > (globalSystem->GambitScale * 2.0 * 5.03))) {
                     globalOctree->AllCells[i]->Omega = Vect3(0.0, 0.0, 0.0);
@@ -246,65 +250,37 @@ void TIME_STEPPER::time_loop() {
                 }
             globalSystem->WriteData();
         }
+//        //      Calculate Panel contribution to FVM face fluxes
+//        globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
+//        //      Get Timestep length
+//        time_step();
+//
+//        //      Get FMM Vels on Panels @ t and t+dt
+//        globalSystem->GetPanelFMMVelocities(dt); //  t = t1
+//        //      Advance FVM to t + dt
+//        globalOctree->FVM(); //  t = t0
+//        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
+//        
+//        
+//        //      Evolve dw/dt
+//        globalOctree->Integrate(); //  t = t0 -> t1
+
+        
 
 
 
-        //      Calculate Panel contribution to FVM face fluxes
-        long unsigned int t6 = ticks();
-        globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
-        
-        
-        //      Get Timestep length
-        long unsigned int t7 = ticks();
-        time_step();
-        
-        //      Display Status
-        long unsigned int t8 = ticks();
-        globalIO->stat_step();
-        
-        
-        //      Get FMM Vels on Panels @ t and t+dt
-        long unsigned int t9 = ticks();
-        globalSystem->GetPanelFMMVelocities(dt); //  t = t1
-        
-        //      Advance FVM to t + dt
-        long unsigned int t10 = ticks();
-        globalOctree->FVM(); //  t = t0
-        long unsigned int t11 = ticks();
-        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
-        long unsigned int t12 = ticks();
-        cpu_ss_t = t12-t11;
-        
-        
-        //      Evolve dw/dt
-        globalOctree->Integrate(); //  t = t0 -> t1
+
         long unsigned int t13 = ticks();
-
-        
-
-
-        cout << "# Vortons                : " << BODY::VortexPositions.size() << endl;
-        cout << "# faces                  : " << BODY::AllBodyFaces.size() << endl;
-
-        
-        cout << "Bin panel wake into tree : " << double(t2-t1)/1000.0 << endl;
-        cout << "Calculate FMM: reset()   : " << double(t4-t3)/1000.0 << endl;
-        cout << "InitVelsGetLaplacian     : " << double(t5-t4)/1000.0 << endl;
-        cout << "GetVels()                : " << double(t6-t5)/1000.0 << endl;
-        cout << "GetFaceVels()            : " << double(t7-t6)/1000.0 << endl;
-        cout << "time_step()              : " << double(t8-t7)/1000.0 << endl;
-        cout << "stat_step                : " << double(t9-t8)/1000.0 << endl;
-        cout << "GetPanelFMMVelocities(.) : " << double(t10-t9)/1000.0 << endl;
-        cout << "FVM                      : " << double(t11-t10)/1000.0 << endl;
-        cout << "BodySubStep              : " << double(t12-t11)/1000.0 << endl;
-        cout << "Integrate                : " << double(t13-t12)/1000.0 << endl;
-        cout << "Total....................: " << double(t13-t1)/1000.0 << endl;
-        
+        stringstream tmp;
+        tmp << "Total....................: " << double(t13 - t1) / 1000.0 << endl;
+        globalIO->step_data += tmp.str();
+        //      Display Status
+        globalIO->stat_step();
     }
 }
-
 /**************************************************************/
 void TIME_STEPPER::time_step() {
+    long unsigned int t7 = ticks();
 
     //  Need a sensible way to figure out how long to make the globla Eulerian time step
     //  and then the number and length of the Lagrangian time steps
@@ -321,23 +297,23 @@ void TIME_STEPPER::time_step() {
 
     //  Calculate timestep length such that no body travels further than a single cell
     REAL OmRMax = 0.0;
-    
+
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
         // 	Get point kinematic velocity - rotational part first
         Vect3 Vrot = BODY::AllBodyFaces[i]->Owner->BodyRates.Cross(Pos);
         // 	Add to translational velocity....
         Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
-    
-        OmRMax = max(Vkin.Mag(),OmRMax);
+
+        OmRMax = max(Vkin.Mag(), OmRMax);
 
     }
-    
-   
-    
-//    dt = min(dt_euler,cfl_lim/OmRMax);
-    
-   
+
+
+
+    //    dt = min(dt_euler,cfl_lim/OmRMax);
+
+
     //  Check to see if this takes us over a time when we should be writing some output
     dump_next = false;
 
@@ -351,14 +327,14 @@ void TIME_STEPPER::time_step() {
 
 
     //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = dt_euler / 10 ;//min(dt_euler / 25, cfl_lim / (OmRMax));
+    REAL dt_lagrange = dt_euler / 10; //min(dt_euler / 25, cfl_lim / (OmRMax));
 
     int nss = ceil(dt_euler / dt_lagrange);
 
     CFL = srad * dt;
 
     globalSystem->NumSubSteps = nss;
-    
+
 
     //    if (n == 0) dump_next = true;
 
@@ -383,12 +359,15 @@ void TIME_STEPPER::time_step() {
 
 
     n++;
+    long unsigned int t8 = ticks();
+    stringstream tmp;
+    tmp << "time_step()              : " << double(t8 - t7) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
 }
-
 /**************************************************************/
 void TIME_STEPPER::Integrate(FVMCell * cell) {
 
-    Euler(cell);
+    RK2(cell);
 
 }
 
@@ -396,19 +375,23 @@ void TIME_STEPPER::Integrate(FVMCell * cell) {
 void TIME_STEPPER::Euler(FVMCell * cell) {
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        cell->TransVars[q] += dt * cell->TransDerivs[q];
-        cell->TransDerivs[q] = 0.;
+        cell->TransVars[q] += dt * cell->TransDerivs[TIME_STEPPER::RKStep][q];
+        cell->TransDerivs[TIME_STEPPER::RKStep][q] = Vect3(0.);
     }
 }
-
 /**************************************************************/
 void TIME_STEPPER::RK2(FVMCell * cell) {
     //  Heun's Method for RK2
     if (RKStep == 0) { //  Predictor - an Euler step
-        cell->Omega += dt * cell->Deriv[0];
+        for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+            cell->TransVars[q] += dt * cell->TransDerivs[TIME_STEPPER::RKStep][q];
+        }
     } else { //  Corrector - trapezoidal step
-        cell->Omega += .5 * dt * (cell->Deriv[1] - cell->Deriv[0]);
-        cell->Deriv.clear();
+        for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+            cell->TransVars[q] += 0.5 * dt * (cell->TransDerivs[1][q] - cell->TransDerivs[0][q]);
+            cell->TransDerivs[0][q] = Vect3(0.);
+            cell->TransDerivs[1][q] = Vect3(0.);
+        }
     }
 }
 

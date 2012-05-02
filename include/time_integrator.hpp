@@ -50,7 +50,9 @@ class TIME_STEPPER
         REAL lambda, mu, nu;
         bool dump_next, first_step, ChangeOver, PruneNow, last_step;
         Vect3 centre;
-        int num_images, RKStep;
+        int num_images;
+        static int RKStep;
+        static bool RK2Mode;
         long int cpu_t, cpu_ss_t, cpu_sort_t;
         Vect3 srad, CFL;
         bool show_rundata;
@@ -77,7 +79,8 @@ class TIME_STEPPER
         void RK4(FVMCell *);
         void ABM4(FVMCell *);
         void Integrate(FVMCell *);
-
+        void DoFMM();
+        void TimeAdvance();
 	//~TIME_STEPPER();
 };
 
