@@ -33,9 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 #define STRINGIZE(X) #X
-#define SVNVERS(X) (STRINGIZE(X))
-
-
+#define StringFromMakefile(X) (STRINGIZE(X))
 
 #define WRITE_TO_SCREEN true
 #define WRITE_TO_FILE true

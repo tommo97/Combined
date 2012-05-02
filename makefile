@@ -43,9 +43,9 @@ endif
 ifneq ($(CC),sunCC)
 #	Set up some c++ compiler flags for gcc
 ifeq ($(platform), Linux)
-	OPT_FLAGS = -g -O3 -march=native -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
+	OPT_FLAGS = -O3 -march=native -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
 else
-	OPT_FLAGS = -g -O3 -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
+	OPT_FLAGS = -O3 -funroll-loops -ftree-vectorize -fprefetch-loop-arrays -funroll-all-loops  -fomit-frame-pointer -ffast-math
 endif
 	DEBUG_FLAGS = -O0 -g -Wall -Wextra -Wunused -Wuninitialized -Winit-self -Wshadow -W  -Wshadow -fno-common -g -ansi -pedantic -Wconversion -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums
 	OMP_DEBUG_FLAG = $(OMP_FLAG)
@@ -60,8 +60,9 @@ else
 	endif
 endif
 
-SVNDEF := -D'SVN_REV=$(shell svnversion -n .)'
-
+VERDEF := -D'REV=$(shell git describe)'
+DATETIME := -D'DATE_TIME=$(shell date)'
+YEAR := -D'DATE_YEAR=$(shell date +"20%y")'
 
 #	Common flags
 CC_PNG_FLAGS = -DNO_FREETYPE
@@ -70,8 +71,8 @@ CC_FLAGS = -m64 -g -I/usr/local/include -I include
 LD_COMMON_FLAGS = -m64 $(OMP_FLAG) -lmatio -lncurses -lm -lz
 LD_DEBUG_COMMON_FLAGS = -m64 $(OMP_DEBUG_FLAG) -lncurses -lm
 
-CC_DEBUG_FLAGS =  -c $(SVNDEF) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_DEBUG_FLAG) $(DEBUG_FLAGS)
-CC_COMMON_FLAGS = -c $(SVNDEF) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_FLAG) $(OPT_FLAGS)
+CC_DEBUG_FLAGS =  -c $(VERDEF) $(DATETIME) $(YEAR) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_DEBUG_FLAG) $(DEBUG_FLAGS)
+CC_COMMON_FLAGS = -c $(VERDEF) $(DATETIME) $(YEAR) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_FLAG) $(OPT_FLAGS)
 
 
 ifeq ($(platform), MacOS)
@@ -87,16 +88,6 @@ else
 	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS)  $(OPT_FLAGS) -llapack -lgsl -lgslcblas
     endif
 endif
-
-
-
-
-
-
-
-CFLAGS = $(CC_COMMON_FLAGS)
-
-
 
 
 CFLAGS = $(CC_COMMON_FLAGS)

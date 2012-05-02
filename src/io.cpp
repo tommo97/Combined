@@ -71,8 +71,9 @@ IO::IO() {
     refresh();
 #else
     if (WRITE_TO_SCREEN)
-        cout << out.c_str() << endl;
+        cout << out.c_str();
     if (WRITE_TO_SCREEN)
+        cout << "Version " << StringFromMakefile(REV) << endl << "Compiled on " << StringFromMakefile(DATE_TIME) << endl;
         cout << "Platform identified itself as: " << OS;
     if (WRITE_TO_SCREEN)
         cout << " " << VERS << "; Number of threads: "
@@ -110,7 +111,7 @@ void IO::print_header() {
     if (WRITE_TO_SCREEN)
         cout << setfill('*') << setw(80) << "*" << endl;
     if (WRITE_TO_SCREEN)
-        cout << "*\t" << VERS << "\tω-V Code v." << SVNVERS(SVN_REV)  << " Copyright© Tom McCombes 2011\t\t\t       *" << endl;
+        cout << "*" << VERS << " ω-V Code " << StringFromMakefile(REV)  << " Copyright© Tom McCombes " << StringFromMakefile(DATE_YEAR) << "\t\t       *" << endl;
 
     if (WRITE_TO_SCREEN)
         cout << setfill('*') << setw(80) << "*" << endl;
@@ -130,12 +131,12 @@ void IO::print_header(ostream& out_stream) {
                 "Check LANG, LC_CTYPE, LC_ALL.\n");
     }
     if (WRITE_TO_FILE)
-        out_stream << setfill('*') << setw(81) << "*" << endl << "*          ";
+        out_stream << setfill('*') << setw(81) << "*" << endl << "*";
 #ifndef use_NCURSES      
     if (WRITE_TO_FILE)
-        out_stream << "\t" << VERS << "  ω-V Code v." << SVNVERS(SVN_REV)   << " Copyright© Tom McCombes 2011";
+        out_stream << "\t\t" <<  VERS << "  ω-V Code \t Copyright© Tom McCombes " << StringFromMakefile(DATE_YEAR);
 #else 
-    if (WRITE_TO_FILE) out_stream << VERS << "  Wake Code v." << SVN_REV << " Copyright© Tom McCombes 2011";
+    if (WRITE_TO_FILE) out_stream << VERS << "  Wake Code v." << REV << " Copyright© Tom McCombes 2011";
 #endif
     if (WRITE_TO_FILE)
         out_stream << "\t\t*" << endl << setfill('*') << setw(81) << "*" << endl;
