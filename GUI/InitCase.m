@@ -6,3 +6,4 @@ set(handles.output_runfile,'Value',true);
 set(handles.commit_to_head,'enable','off');
 set(handles.output_svn,'enable','off');
 set(handles.timestamp,'Value',true);
+% test line for GIT
