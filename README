@@ -1,7 +1,8 @@
-V3D ω-V Code 
+# V3D ω-V Code 
 Copyright© Tom McCombes 2012
 
-= Introduction =
+# Introduction
+
 
 This is a vorticity-transport solver originally for modelling tidal turbine
 rotorsystems. It uses a finite volume scheme with a fast-multipole method based
@@ -9,105 +10,104 @@ on heirarchal domain decomposition via octrees. This facilitates vorticity
 tracking in an arbitrary Eulerian/Lagrangian manner. The boundary conditions are
 via a boundary-element mesh.
 
-= Dependancies =
+![Wake Prediction for NREL Phase IV Rotor](http://upload.wikimedia.org/wikipedia/commons/f/f4/NREL_10secs.jpg)
+
+# Dependancies
 
 The dependancies of this code are:
-GNU Make
-Either the GNU GCC g++ (v>4.4.x) or SunCC (v>12) compilers;
-A linker e.g. the GCC linker works for both g++ and sunCC.
+* GNU Make
+* Either the GNU GCC g++ (v>4.4.x) or SunCC (v>12) compilers;
+* A linker e.g. the GCC linker works for both g++ and sunCC.
 
 The following libraries:
-matio: MAT File I/O Library
-libpng: PNG Reference Library
-ncurses: The Ncurses (new curses) library
-pngwriter: An easy to use C++ graphics library
-libz: A Massively Spiffy Yet Delicately Unobtrusive Compression Library
-libmath: Basic mathematics functions
-GSL: GNU Scientific Library
+* matio: MAT File I/O Library
+* libpng: PNG Reference Library
+* ncurses: The Ncurses (new curses) library
+* pngwriter: An easy to use C++ graphics library
+* libz: A Massively Spiffy Yet Delicately Unobtrusive Compression Library
+* libmath: Basic mathematics functions
+* GSL: GNU Scientific Library
 some form of:
-lapack: Linear Algebra PACKage
-blas: Basic Linear Algebra Subprograms
-ATLAS: Automatically Tuned Linear Algebra Software
+* lapack: Linear Algebra PACKage
+* blas: Basic Linear Algebra Subprograms
+* ATLAS: Automatically Tuned Linear Algebra Software
+* gfortran libraries if Fortran varients of blas are used.
 
-gfortran libraries if Fortran varients of blas are used.
-
-= Obtaining the latest version of the code =
+# Obtaining the latest version of the code
 The GIT repository can be accessed by issuing the following command:
 
-$git clone git@github.com:tommo97/Combined.git
+`git clone git@github.com:tommo97/Combined.git`
 
 This will clone the latest version into the directory ./Combined
 
 
 
-= Building =
+# Building
 Optional flags in parenthesis.
 
-== Quick build ==
+## Quick build
 Useing the included makefile and default (GCC) compiler. The -j option uses
 multithreaded building:
 
-$make (-j)
+`make (-j)`
 
 It may be necissary to specify the OSTYPE environmental variable if the output of
 
-echo $OSTYPE
+`echo $OSTYPE`
 
 is blank
 On Mac OSX Lion issue the following command after logging into a shell:
 
-export OSTYPE=darwin10.0
+`export OSTYPE=darwin10.0`
 
 Previous OSX versions issue:
 
-export OSTYPE=darwin9.0
+`export OSTYPE=darwin9.0`
 
 Linux variants issue:
 
-export OSTYPE=linux
+`export OSTYPE=linux`
 
-== Cleaning ==
+## Cleaning
 
-$make clean
+`make clean`
 
-== Option flags ==
+## Option flags
 To use Oracle compilers:
 
-$make CC=sunCC
+`make CC=sunCC`
 
 To build to run in non-multithreaded (non-openMP) mode:
 
-$make OMP_FLAG=
+`make OMP_FLAG=`
 
 this works with both GCC and sunCC.
 
 To build in debug mode (not optimised). Still multithreaded unless OMP_FLAG=
 used:
 
-$make debug (OMP_FLAG=) (-j)
+`make debug (OMP_FLAG=) (-j)`
 
-= Running =
+# Running
 
 Build output is executable binary "main." Run using the following command
 
-$./main
+`./main`
 
 A Text User Interface (TUI) will guide you through the problem specification.
 Alternatively to the TUI, a case file might be used. Examples are included in
 the ./case_files folder. Run
 
-./main < case_files/nrel.cas
+`./main < case_files/nrel.cas`
 
 for example.
 
-= GUI =
+#GUI
 A MATLAB based Graphical User Interface GUI is available in the ./GUI directory.
 Use this to generate boundary element meshes for use with this code. The GUI can
 be used by changing to the ./GUI directory in MATLAB (or adding to the path) and
 issueing the command:
 
-preproctab
+`preproctab`
 
 from the MATLAB command line.
-
-
