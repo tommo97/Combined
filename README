@@ -1,4 +1,11 @@
-This is a vorticity-transport solver originally for modelling tidal turbine rotorsystems. It uses a finite volume scheme with a fast-multipole method based on heirarchal domain decomposition via octrees. This facilitates vorticity tracking in an arbitrary Eulerian/Lagrangian manner. The boundary conditions are via a boundary-element mesh.
+V3D ω-V Code 
+Copyright© Tom McCombes 2012
+
+This is a vorticity-transport solver originally for modelling tidal turbine
+rotorsystems. It uses a finite volume scheme with a fast-multipole method based
+on heirarchal domain decomposition via octrees. This facilitates vorticity
+tracking in an arbitrary Eulerian/Lagrangian manner. The boundary conditions are
+via a boundary-element mesh.
 
 The dependancies of this code are:
 Either the GNU GCC (v>4.4.x) or SunCC (v>12) compilers;
