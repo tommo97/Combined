@@ -276,7 +276,7 @@ void SYSTEM::PutWakesInTree() {
     Array <OctreeCapsule> Test(Xs.size());
 
     for (int i = 0; i < Test.size(); ++i) {
-        Test[i] = OctreeCapsule(Xs[i], Oms[i], true);
+        Test[i] = OctreeCapsule(Xs[i], -1.0*Oms[i], true);
         Test[i].AssociatedBody = Owners[i];
     }
 

@@ -66,6 +66,7 @@ public:
     bool to_report;
     Node *Children[2][2][2];
     Node *ISA[3][3][3];
+    Node *ISB[6][6][6];
     Array<int> Trans;
     static int RootSize;
     static const Vect3 Offset[2][2][2];
@@ -135,6 +136,11 @@ public:
             for (int j = 0; j < 3; ++j)
                 for (int k = 0; k < 3; ++k)
                     ISA[i][j][k] = NULL;
+
+        for (int i = 0; i < 6; ++i)
+            for (int j = 0; j < 6; ++j)
+                for (int k = 0; k < 6; ++k)
+                    ISB[i][k][j] = NULL;
     }
 
     void SetKidsNull() {

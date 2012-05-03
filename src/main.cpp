@@ -103,9 +103,9 @@ int main(int argc, char *argv[]) {
     system("clear");
 
     
-    TestFMM(argc, argv);
+//    TestFMM(argc, argv);
     
-    return 0;
+//    return 0;
 
 
 //    WeeAmble();
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 10;
+    globalSystem->GambitScale = 5;
     globalSystem->MaxP = 3;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;

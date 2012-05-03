@@ -223,6 +223,7 @@ void Branch::vEvalCapsule(OctreeCapsule &C) {
         } else {
             Children[i][j][k] = new FVMCell(this, i, j, k);
         }
+        Children[i][j][k]->GetISA();
     }
 
     Children[i][j][k]->EvalCapsule(C);

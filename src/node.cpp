@@ -75,7 +75,7 @@ Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(N
     Trans.push_back(REF[i][j][k]);
     SetISANull();
     SetKidsNull();
-    GetISA();
+//    GetISA();
     Node::NumNodes++;
     NID = Node::NumNodes;
     skip_here.assign(globalSystem->NumThreads, false);
@@ -343,8 +343,7 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 /**************************************************************/
 void Node::GetISA() {
     ISA[1][1][1] = this;
-    if (m > 0)
-
+    if (m > 0) {
         for (int i = 0, I = 2; i < 3; ++i, --I)
             for (int j = 0, J = 2; j < 3; ++j, --J)
                 for (int k = 0, K = 2; k < 3; ++k, --K)
@@ -354,6 +353,30 @@ void Node::GetISA() {
                             ISA[i][j][k]->ISA[I][J][K] = this;
                     }
 
+
+        Array < Array < Array <Node*> > > tISB(6, Array < Array < Node* > > (6, Array < Node*> (6, NULL)));
+        cout << "---------------" << ISA[1][1][1]->ID << " " << Parent->ID << endl;
+//        tISB[2+x][2+y][2+z] = this;
+        for (int ix = 0; ix < 3; ++ix)
+            for (int iy = 0; iy < 3; ++iy)
+                for (int iz = 0; iz < 3; ++iz)
+                    if (Parent->ISA[ix][iy][iz])
+                        for (int ay = 0; ay < 2; ++ay)
+                            for (int be = 0; be < 2; ++be)
+                                for (int ce = 0; ce < 2; ++ce)
+                                    if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]) {
+                                        int i = ix * 2 + ay;
+                                        int j = iy * 2 + be;
+                                        int k = iz * 2 + ce;
+                                        tISB[i][j][k] = Parent->ISA[ix][iy][iz]->Children[ay][be][ce];
+                                        if (tISB[i][j][k]==this)
+                                            cout << this << " " << tISB[i][j][k] << " " << i << " " << j << " " << k << " " << 2+x << " " << 2+y << " " << 2+z << endl;
+                                        
+                                        
+                                        // Now need to find reciprocal of this at ISB
+                                        tISB[i][j][k]
+                                    }
+    }
     Neighb.E = ISA[2][1][1];
     Neighb.W = ISA[0][1][1];
     Neighb.N = ISA[1][2][1];
