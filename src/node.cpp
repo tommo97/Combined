@@ -50,7 +50,7 @@ Node::~Node() {
 }
 
 /**************************************************************/
-Node::Node() : Parent(NULL), x(-1), y(-1), z(-1), m(0), ID(00), size(OCTREE_SIZE),
+Node::Node() : Parent(NULL), x(-1), y(-1), z(-1), m(0), indx(-1), ID(00), size(OCTREE_SIZE),
 InList(false), Neighb(NULL), HasLoad(false) {
     Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
     Neighb_Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
@@ -64,7 +64,7 @@ InList(false), Neighb(NULL), HasLoad(false) {
 }
 
 /**************************************************************/
-Node::Node(Node *parent, int i, int j, int k) : Parent(parent), x(i), y(j), z(k), m(parent->m + 1),
+Node::Node(Node *parent, int i, int j, int k) : Parent(parent), x(i), y(j), z(k), m(parent->m + 1),indx(Indxs[i][j][k]),
 ID(((((((parent->ID << 1) + i) << 1) + j) << 1) + k)), size(.5 * parent->size), InList(false),
 Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(NULL), HasLoad(false) {
     Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
@@ -91,6 +91,17 @@ const Vect3 Node::Offset[][2][2] = {
     {
         {Vect3(.5, -.5, -.5), Vect3(.5, -.5, .5)},
         {Vect3(.5, .5, -.5), Vect3(.5, .5, .5)}
+    }
+};
+
+const int Node::Indxs[][2][2] = {
+    {
+        {0, 1},
+        {2, 3}
+    },
+    {
+        {4, 5},
+        {6, 7}
     }
 };
 

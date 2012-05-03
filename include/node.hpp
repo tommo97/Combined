@@ -53,7 +53,7 @@ public:
     static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsY;
     static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsZ;
     Node *Parent;
-    int x, y, z, m;
+    int x, y, z, m, indx;
     long unsigned int ID;
     REAL size;
     Array<bool> skip_here;
@@ -69,6 +69,7 @@ public:
     Array<int> Trans;
     static int RootSize;
     static const Vect3 Offset[2][2][2];
+    static const int Indxs[2][2][2];
     static const Vect3 NeighbOffset[6];
     static const int deREF[][3];
 

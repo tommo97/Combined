@@ -45,6 +45,10 @@ public:
 
     FVMCell(Node *parent, int i, int j, int k);
     
+    static Array < Array <int> > MomentInds;
+    
+    static Array < Array <REAL> > OffsetPows;
+    
     static unsigned long int NumCells;
 
     NeighbSet <Vect3> FaceVels;
@@ -61,6 +65,8 @@ public:
     Vect3 VelTensor[3];
 
     Array <Vect3> Laplacian;
+
+    static void InitMomsInds(int MaxP);
 
     void CheckActive();
     

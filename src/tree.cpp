@@ -33,6 +33,7 @@ OCTREE::OCTREE() {
     Root = new Branch();
     Node::Root = Root;
     Root->UpdateMomentMults();
+    FVMCell::InitMomsInds(globalSystem->MaxP);
 }
 /**************************************************************/
 OCTREE::~OCTREE()

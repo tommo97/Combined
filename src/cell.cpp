@@ -31,6 +31,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "types.hpp"
 #include "cell.hpp"
 unsigned long int FVMCell::NumCells = 0;
+Array < Array <int> > FVMCell::MomentInds;
+Array < Array <REAL> > FVMCell::OffsetPows;
 /**************************************************************/
 FVMCell::FVMCell() : Node(), FaceVels(0.) {
     if (WRITE_TO_SCREEN) cout << "Warning - uninitialised cell" << endl;
@@ -45,6 +47,27 @@ FVMCell::FVMCell(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Fac
     BEV.assign(globalSystem->NumTransVars, Vect3());
 
 }
+/**************************************************************/
+void FVMCell::InitMomsInds(int MaxP) {
+        FVMCell::MomentInds.clear();
+        FVMCell::OffsetPows.allocate(8);
+        for (int i = 0; i < 2; ++i)
+            for (int j = 0; j < 2; ++j)
+                for (int k = 0; k < 2; ++k) {
+                    Vect3 Dx = Node::Offset[i][j][k];
+                    for (int k1 = 0; k1 < MaxP; ++k1)
+                        for (int k2 = 0; k2 + k1 < MaxP; ++k2)
+                            for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
+                            {
+                                Array <int> inds;
+                                inds.push_back(k1);
+                                inds.push_back(k2);
+                                inds.push_back(k3);
+                                FVMCell::MomentInds.push_back(inds);
+                                FVMCell::OffsetPows[Node::Indxs[i][j][k]].push_back(pow(Dx, k1, k2, k3));
+                            }
+                }
+    };
 /**************************************************************/
 void FVMCell::Integrate() {
     HasLoad = false;
@@ -446,6 +469,7 @@ void FVMCell::vPassMmnts2Prnt() {
         Parent->HasLoad = true;
     }
 }
+
 
 /**************************************************************/
 void FVMCell::O1UW() {
