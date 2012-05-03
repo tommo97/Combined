@@ -50,6 +50,7 @@ using namespace std;
 #define DOUBLE_PRECISION
 
 #define OCTREE_SIZE 4096
+#define OCTREE_LEVS 13
 #define LIMITER VANLEER
 
 //#define COLLAPSE_TO_FACES
@@ -89,6 +90,7 @@ class OctreeCapsule;
 #define ARRAY13(type) ARRAY12(Array < type >)
 /**************************************************************/
 
+#define USE_MATRIX_INVERSE
 
 #ifdef DOUBLE_PRECISION
 #define REAL double
@@ -138,9 +140,9 @@ class OctreeCapsule;
 #define four_pi 12.566370614359172953850573533118
 
 
-#define SUPERBEE(r) max(max(min(2.0*r, 1.0), min(r, 2.0)), 0.0)
+#define SUPERBEE(r) max(max(min(REAL(2.0)*r, REAL(1.0)), min(r, REAL(1.0))), REAL(0.0))
 
-#define MINMOD(r) max(0.0, min(1.0, r))
+#define MINMOD(r) max(REAL(0.0), min(REAL(1.0), r))
 
 #define VANLEER(r) (r+abs(r))/(1+abs(r))
 
@@ -254,12 +256,13 @@ extern TIME_STEPPER *globalTimeStepper;
 extern OCTREE *globalOctree;
 
 extern long int globalTimer;
+
 /*
 *  Global Functions
 */
 long int ticks();
 
-Array <double> globalLinspace(REAL start, REAL end, int n);
+Array <REAL> globalLinspace(REAL start, REAL end, int n);
 
 Array <Vect3> globalLinspace(Vect3 start, Vect3 end, int n);
 

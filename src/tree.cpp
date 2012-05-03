@@ -87,8 +87,8 @@ void OCTREE::Reset() {
 
 
     AllCells.clear();
-    AllBranches.allocate(16);
-    BranchCount.assign(16, 0);
+    AllBranches.allocate(OCTREE_LEVS);
+    BranchCount.assign(OCTREE_LEVS-1,0);
     Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
 
     for (int i = 0; i < BranchCount.size(); ++i) {

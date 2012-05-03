@@ -81,7 +81,7 @@ void SYSTEM::Initialise() {
     Nu = GambitScale * GambitScale * Mu / Rho;
     globalTimeStepper = new TIME_STEPPER();
 
-    NumTransVars = BODY::Bodies.size();
+    NumTransVars = max(1,BODY::Bodies.size());
 
     globalOctree = new OCTREE();
 

@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "cell.hpp"
 unsigned long int FVMCell::NumCells = 0;
 Array < Array <int> > FVMCell::MomentInds;
+int FVMCell::MomentIndsSize;
 Array < Array <REAL> > FVMCell::OffsetPows;
 /**************************************************************/
 FVMCell::FVMCell() : Node(), FaceVels(0.) {
@@ -49,24 +50,28 @@ FVMCell::FVMCell(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Fac
 }
 /**************************************************************/
 void FVMCell::InitMomsInds(int MaxP) {
-        FVMCell::MomentInds.clear();
-        FVMCell::OffsetPows.allocate(8);
-        for (int i = 0; i < 2; ++i)
-            for (int j = 0; j < 2; ++j)
-                for (int k = 0; k < 2; ++k) {
-                    Vect3 Dx = Node::Offset[i][j][k];
-                    for (int k1 = 0; k1 < MaxP; ++k1)
-                        for (int k2 = 0; k2 + k1 < MaxP; ++k2)
-                            for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
-                            {
-                                Array <int> inds;
-                                inds.push_back(k1);
-                                inds.push_back(k2);
-                                inds.push_back(k3);
-                                FVMCell::MomentInds.push_back(inds);
-                                FVMCell::OffsetPows[Node::Indxs[i][j][k]].push_back(pow(Dx, k1, k2, k3));
-                            }
-                }
+    FVMCell::MomentInds.clear();
+    for (int k1 = 0; k1 < MaxP; ++k1)
+        for (int k2 = 0; k2 + k1 < MaxP; ++k2)
+            for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3) {
+                Array <int> inds;
+                inds.push_back(k1);
+                inds.push_back(k2);
+                inds.push_back(k3);
+                FVMCell::MomentInds.push_back(inds);
+            }
+    FVMCell::MomentIndsSize = FVMCell::MomentInds.size();
+    FVMCell::OffsetPows.allocate(8);
+    bool isdone = false;
+    for (int i = 0; i < 2; ++i)
+        for (int j = 0; j < 2; ++j)
+            for (int k = 0; k < 2; ++k) {
+                Vect3 Dx = Node::Offset[i][j][k];
+                for (int k1 = 0; k1 < MaxP; ++k1)
+                    for (int k2 = 0; k2 + k1 < MaxP; ++k2)
+                        for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
+                            FVMCell::OffsetPows[Node::Indxs[i][j][k]].push_back(pow(Dx, k1, k2, k3));
+            }
     };
 /**************************************************************/
 void FVMCell::Integrate() {
@@ -253,11 +258,11 @@ void FVMCell::Report() {
                         for (int be = 0; be < 2; ++be)
                             for (int ce = 0; ce < 2; ++ce)
                                 if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
-                                    Vect3 PV = Position - Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position;
+                                    Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
                                     globalDirectVel(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, Vfmm);
                                 }
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        Vect3 PV = Position - globalOctree->AllCells[i]->Position;
+        Vect3 PV = globalOctree->AllCells[i]->Position - Position;
         globalDirectVel(PV, globalOctree->AllCells[i]->Omega, Vel);
         globalDirectVel(PV - Vect3(.0, .5, .0), globalOctree->AllCells[i]->Omega, VelN);
         globalDirectVel(PV + Vect3(.0, .5, .0), globalOctree->AllCells[i]->Omega, VelS);
@@ -321,46 +326,45 @@ void FVMCell::vCheckNeighbs() {
         //  Should make some neighbours here for the FVM
         //  Quickest and easiest way is to drop some more capsules in to octree
         if (!Neighb.N) {
-            Array <int> t = this->Trans;
-            Trans2Neighb(t, m, 0);
-            t.pop_front();
-            globalOctree->Root->MakeNodeAtTrans(t);
+            OctreeCapsule C;
+            C.has_load = false;
+            C.Position = C.tPosition = Position + Vect3(.0, 1.0, .0);
+            Root->EvalCapsule(C);
         }
 
         if (!Neighb.S) {
-            Array <int> t = this->Trans;
-            Trans2Neighb(t, m, 1);
-            t.pop_front();
-            globalOctree->Root->MakeNodeAtTrans(t);
+            OctreeCapsule C;
+            C.has_load = false;
+            C.Position = C.tPosition = Position - Vect3(.0, 1.0, .0);
+            Root->EvalCapsule(C);
         }
 
         if (!Neighb.E) {
-
-            Array <int> t = this->Trans;
-            Trans2Neighb(t, m, 2);
-            t.pop_front();
-            globalOctree->Root->MakeNodeAtTrans(t);
+            OctreeCapsule C;
+            C.has_load = false;
+            C.Position = C.tPosition = Position + Vect3(1.0, .0, .0);
+            Root->EvalCapsule(C);
         }
 
         if (!Neighb.W) {
-            Array <int> t = this->Trans;
-            Trans2Neighb(t, m, 3);
-            t.pop_front();
-            globalOctree->Root->MakeNodeAtTrans(t);
+            OctreeCapsule C;
+            C.has_load = false;
+            C.Position = C.tPosition = Position - Vect3(1.0, .0, .0);
+            Root->EvalCapsule(C);
         }
 #ifdef MODE_3D
         if (!Neighb.T) {
-            Array <int> t = this->Trans;
-            Trans2Neighb(t, m, 4);
-            t.pop_front();
-            globalOctree->Root->MakeNodeAtTrans(t);
+            OctreeCapsule C;
+            C.has_load = false;
+            C.Position = C.tPosition = Position + Vect3(.0, .0, 1.0);
+            Root->EvalCapsule(C);
         }
 
         if (!Neighb.B) {
-            Array <int> t = this->Trans;
-            Trans2Neighb(t, m, 5);
-            t.pop_front();
-            globalOctree->Root->MakeNodeAtTrans(t);
+            OctreeCapsule C;
+            C.has_load = false;
+            C.Position = C.tPosition = Position - Vect3(.0, .0, 1.0);
+            Root->EvalCapsule(C);
         }
 #endif
     }
@@ -433,19 +437,18 @@ void FVMCell::vCollapseVField() {
                                 for (int be = 0; be < 2; ++be)
                                     for (int ce = 0; ce < 2; ++ce)
                                         if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
-                                            Vect3 PV = Position - Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position;
+                                            Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
+
+
 #ifdef COLLAPSE_TO_FACES
                                             globalDirectVel(PV - Node::NeighbOffset[i], Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, FaceVels[i]);
 #else   
-                                            //Vect3 V;
-                                            //globalDirectVel(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, V);
-                                            
-                                            Vect3 V1 = Node::DirVelMultsX[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.x;
-                                            Vect3 V2 = Node::DirVelMultsY[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.y;
-                                            Vect3 V3 = Node::DirVelMultsZ[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.z;
-                                            
-                                            //cout << V << " " << V1 + V2 + V3 << endl;
-                                            Velocity += V1+V2+V3;
+//                                            Vect3 V;
+//                                            globalDirectVel(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, V);
+//                                            
+                                            Velocity += Node::DirVelMultsX[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.x;
+                                            Velocity += Node::DirVelMultsY[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.y;
+                                            Velocity += Node::DirVelMultsZ[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.z;
 #endif
                                         }
         }
@@ -457,6 +460,7 @@ void FVMCell::vCollapseVField() {
 
 /**************************************************************/
 void FVMCell::vPassMmnts2Prnt() {
+#ifdef USE_ROLLED_LOOPS
     Vect3 Dx = Node::Offset[x][y][z];
     if (HasLoad) {
         for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
@@ -468,6 +472,14 @@ void FVMCell::vPassMmnts2Prnt() {
 //                (static_cast<Branch*> (Parent))->Moments[Node::CellMomentIndex[0][i]][Node::CellMomentIndex[1][i]][Node::CellMomentIndex[2][i]] += Omega * pow(Dx,Node::CellMomentIndex[0][i],Node::CellMomentIndex[1][i],Node::CellMomentIndex[2][i]);
         Parent->HasLoad = true;
     }
+#else
+    if (HasLoad) {
+        for (int i = 0; i < FVMCell::MomentIndsSize; ++i)
+            (static_cast<Branch*> (Parent))->Moments[FVMCell::MomentInds[i][0]][FVMCell::MomentInds[i][1]][FVMCell::MomentInds[i][2]]
+                    += Omega * FVMCell::OffsetPows[indx][i];
+    }
+    Parent->HasLoad = true;
+#endif
 }
 
 
@@ -708,7 +720,7 @@ void FVMCell::CollapseToIP(OctreeCapsule &IP) {
     for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
         for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
             for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
-                IP.Velocity += (pow(IP.tPosition - Parent->Position, k1, k2, k3) /
+                IP.Velocity -= (pow(IP.tPosition - Parent->Position, k1, k2, k3) /
                     (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3])) *
                 (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
 
@@ -720,7 +732,7 @@ void FVMCell::CollapseToIP(OctreeCapsule &IP) {
                         for (int be = 0; be < 2; ++be)
                             for (int ce = 0; ce < 2; ++ce)
                                 if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad)
-                                    globalDirectVel(IP.tPosition - Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position,
+                                    globalDirectVel(Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - IP.tPosition,
                                         static_cast<FVMCell*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce])->Omega,
                                         IP.Velocity);
 }

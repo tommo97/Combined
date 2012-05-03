@@ -45,41 +45,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 
 
-
-#define EPS 1e-16
-#define USE_MATRIX_INVERSE
-#define TEST_MODE
-#define USE_ARRAY
-#define ARRAY_NO_CHECK
-#define USE_FULL_BLADE_LOOPS
-#define RETURN_WAKES_AT_END
-#define REAL double
-#define TOL 1e-6
-//#define SURFW(X1,X2,X4,X3,C,W) W << "surf([" << X1.x << ", " << X2.x << "; " << X3.x << ", " << X4.x << "],[" << X1.y << ", " << X2.y << "; " << X3.y << ", " << X4.y << "],[" << X1.z << ", " << X2.z << ";" << X3.z << ", " << X4.z << "]," << C << ");\n";
-//#define SURF(X1,Y1,Z1,X2,Y2,Z2,X4,Y4,Z4,X3,Y3,Z3,C,W) W << "surf([" << X1 << ", " << X2 << "; " << X3 << ", " << X4 << "],[" << Y1 << ", " << Y2 << "; " << Y3 << ", " << Y4 << "],[" << Z1 << ", " << Z2 << ";" << Z3 << ", " << Z4 << "]," << C << ");\n";
-//#define pi 3.141592653589793
-#define piover2 1.570796326794897
-//#define two_pi 6.283185307179586
-//#define four_pi 12.56637061435917
-
 #include "array.hpp"
 #include "vect34.hpp"
 #include "includes.hpp"
 
-/**************************************************************/
-// Some multi-dimensional array macros
-#define ARRAY2(type) Array < Array < type > >
-#define ARRAY3(type) ARRAY2(Array < type >)
-#define ARRAY4(type) ARRAY3(Array < type >)
-#define ARRAY5(type) ARRAY4(Array < type >)
-#define ARRAY6(type) ARRAY5(Array < type >)
-#define ARRAY7(type) ARRAY6(Array < type >)
-#define ARRAY8(type) ARRAY7(Array < type >)
-#define ARRAY9(type) ARRAY8(Array < type >)
-#define ARRAY10(type) ARRAY9(Array < type >)
-#define ARRAY11(type) ARRAY10(Array < type >)
-#define ARRAY12(type) ARRAY11(Array < type >)
-#define ARRAY13(type) ARRAY12(Array < type >)
 /**************************************************************/
 class BODY;
 class PANEL;

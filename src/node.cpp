@@ -15,7 +15,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 
-This program is distributed in the 40hope that it will be useful,
+This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
@@ -124,12 +124,12 @@ int Node::REF[][2][2] = {
     }
 };
 /**************************************************************/
-ARRAY13(Vect3) Node::TlrCffts(12);
+ARRAY13(Vect3) Node::TlrCffts(OCTREE_LEVS);
 ARRAY6(REAL) Node::VlFldMlt; //  This is modified (once) later
-ARRAY10(Vect3) Node::TlrCfftsdx(12);
+ARRAY10(Vect3) Node::TlrCfftsdx(OCTREE_LEVS);
 ARRAY6(NeighbSet <REAL>) Node::FaceCllpsMlt(2);
-ARRAY10(REAL) Node::BinomMlt(12);
-ARRAY10(REAL) Node::InhrtMlt(12);
+ARRAY10(REAL) Node::BinomMlt(OCTREE_LEVS);
+ARRAY10(REAL) Node::InhrtMlt(OCTREE_LEVS);
 ARRAY6(REAL) Node::CllpsMlt(2);
 const int Node::trans_neighb[][5] = {
     {0, 2, 4, 6, 1},
@@ -476,7 +476,7 @@ void Node::UpdateMomentMults() {
                 DirVelMultsX[ix][iy][iz] = ARRAY6(Vect3) (3);
                 DirVelMultsY[ix][iy][iz] = ARRAY6(Vect3) (3);
                 DirVelMultsZ[ix][iy][iz] = ARRAY6(Vect3) (3);
-                Vect3 R1 = Offset[ix][iy][iz]; //     PV to target from parent centroid
+                Vect3 R1 = -1.0*Offset[ix][iy][iz]; //     PV to target from parent centroid
                 for (int i = -1, I = 0; i < 2; ++i, ++I) {
                     DirVelMultsX[ix][iy][iz][I] = ARRAY5(Vect3) (3);
                     DirVelMultsY[ix][iy][iz][I] = ARRAY5(Vect3) (3);
@@ -489,7 +489,7 @@ void Node::UpdateMomentMults() {
                             DirVelMultsX[ix][iy][iz][I][J][K] = ARRAY3(Vect3) (2);
                             DirVelMultsY[ix][iy][iz][I][J][K] = ARRAY3(Vect3) (2);
                             DirVelMultsZ[ix][iy][iz][I][J][K] = ARRAY3(Vect3) (2);
-                            Vect3 R2 = Vect3(-2.0 * REAL(i), -2.0 * REAL(j), -2.0 * REAL(k)); //   PV from source parent centroid to target parent centroid     
+                            Vect3 R2 = Vect3(2.0 * REAL(i), 2.0 * REAL(j), 2.0 * REAL(k)); //   PV from source parent centroid to target parent centroid     
                             for (int jx = 0; jx < 2; ++jx) {
                                 DirVelMultsX[ix][iy][iz][I][J][K][jx] = ARRAY2(Vect3) (2);
                                 DirVelMultsY[ix][iy][iz][I][J][K][jx] = ARRAY2(Vect3) (2);
@@ -501,7 +501,7 @@ void Node::UpdateMomentMults() {
                                     DirVelMultsZ[ix][iy][iz][I][J][K][jx][jy] = Array <Vect3> (2);
 
                                     for (int jz = 0; jz < 2; ++jz) {
-                                        Vect3 R3 = -1.0 * Offset[jx][jy][jz]; //      PV from source cell to source parent.
+                                        Vect3 R3 = 1.0 * Offset[jx][jy][jz]; //      PV from source cell to source parent.
                                         Vect3 Vx, Vy, Vz;
                                         globalDirectVel(R1+R2+R3, Vect3(1.,0.,0.), Vx);
                                         globalDirectVel(R1+R2+R3, Vect3(0.,1.,0.), Vy);
@@ -532,7 +532,7 @@ void Node::UpdateMomentMults() {
     Node::VlFldMlt = ARRAY6(REAL) (globalSystem->MaxP);
     //	Go down OCTREE and do a test run on each level
 
-    for (int mlev = 1; mlev < 12; ++mlev) {
+    for (int mlev = 1; mlev < OCTREE_LEVS; ++mlev) {
         TlrCffts[mlev] = ARRAY12(Vect3) (2);
         TlrCfftsdx[mlev] = ARRAY9(Vect3) (2);
         BinomMlt[mlev] = InhrtMlt[mlev] = ARRAY9(REAL) (2);
@@ -671,13 +671,13 @@ void Node::UpdateMomentMults() {
                         FaceCllpsMlt[ix][iy][iz][k1][k2] = Array < NeighbSet <REAL> > (globalSystem->MaxP);
 
                         for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
-                            CllpsMlt[ix][iy][iz][k1][k2][k3] = pow(Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].N = pow(Vect3(0., 0.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].S = pow(Vect3(0., -.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].E = pow(Vect3(0.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].W = pow(Vect3(-.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].T = pow(Vect3(0., .0, 0.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].B = pow(Vect3(0., .0, -.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            CllpsMlt[ix][iy][iz][k1][k2][k3] = -pow(Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].N = -pow(Vect3(0., 0.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].S = -pow(Vect3(0., -.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].E = -pow(Vect3(0.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].W = -pow(Vect3(-.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].T = -pow(Vect3(0., .0, 0.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].B = -pow(Vect3(0., .0, -.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
                             //  The minus sign here is to fix a bizarre bug - velocities were coming out negative.
                         }
                     }

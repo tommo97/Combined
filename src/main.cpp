@@ -35,13 +35,77 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 /**************************************************************/
-void TestFMM(int);
+void TestFMM(int argc, char *argv[]);
 void WeeAmble();
+/**************************************************************/
+class OutOfMemory {
+};
 
+class RunningStat {
+public:
+
+    RunningStat() : m_n(0), mmax(-1e1000), mmin(1e1000) {
+    }
+
+    void Clear() {
+        m_n = 0;
+    }
+
+    void Push(REAL x) {
+        m_n++;
+
+        if (x>mmax) mmax = x;
+        if (x<mmin) mmin = x;
+        // See Knuth TAOCP vol 2, 3rd edition, page 232
+        if (m_n == 1) {
+            m_oldM = m_newM = x;
+            m_oldS = 0.0;
+        } else {
+            m_newM = m_oldM + (x - m_oldM) / m_n;
+            m_newS = m_oldS + (x - m_oldM)*(x - m_newM);
+
+            // set up for next iteration
+            m_oldM = m_newM;
+            m_oldS = m_newS;
+        }
+    }
+
+    int NumDataValues() const {
+        return m_n;
+    }
+
+    REAL Mean() const {
+        return (m_n > 0) ? m_newM : 0.0;
+    }
+
+    REAL Variance() const {
+        return ( (m_n > 1) ? m_newS / (m_n - 1) : 0.0);
+    }
+
+    REAL StandardDeviation() const {
+        return sqrt(Variance());
+    }
+
+    REAL Max() const{
+        return mmax;
+    }
+    
+    REAL Min() const{
+        return mmin;
+    }
+private:
+    int m_n;
+    REAL mmax, mmin;
+    REAL m_oldM, m_newM, m_oldS, m_newS;
+};
 /**************************************************************/
 int main(int argc, char *argv[]) {
     system("clear");
 
+    
+    TestFMM(argc, argv);
+    
+    return 0;
 
 
 //    WeeAmble();
@@ -69,41 +133,6 @@ int main(int argc, char *argv[]) {
     globalSystem->VortonsXs.clear();
     globalSystem->VortonOmegas.clear();
 
-    //    Array <Vect3> X, OM;
-    //
-    //    UTIL::ReadBinaryVect3(X, string("X.bin"));
-    //    UTIL::ReadBinaryVect3(OM, string("OM.bin"));
-    //    
-    //    cout << X.size() << " " << OM.size() << endl;
-    //    globalSystem->NumTransVars = 1;
-    //
-    //    for (int i = 0; i < X.size(); ++i)
-    //        if (OM[i].Mag() > 1e-6) {
-    //            OctreeCapsule C(X[i], OM[i], true);
-    //            C.AssociatedBody = 0;
-    //            globalOctree->Root->EvalCapsule(C);
-    //        }
-    //
-    //    cout << "Waiting for key strike...";
-    //    
-    //    
-    //    
-    //    return 0;
-
-
-
-
-
-
-
-
-
-
-
-
-//        BODY::BodySubStep(TIME_STEPPER::MaxTime, globalSystem->NumSubSteps);
-
-        
 
 #ifndef use_NCURSES
     if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
@@ -140,11 +169,6 @@ Vect3 globalDirectVel(Vect3 diff, Vect3 omega) {
 
 /**************************************************************/
 void UTIL::PostAmble(string fname) {
-    //    WriteMATLABMatrix2D("A", fname, BODY::A);
-
-
-
-
 
     WriteMATLABMatrix1DVect3("PointsAsRead", fname, BODY::PointsAsRead);
     WriteMATLABMatrix1D("AlphaHistory", fname, BODY::AlphaHistory);
@@ -626,8 +650,44 @@ Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega, REAL del2) {
     mult = -1 / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
+/**************************************************************/
+void TestFMM(int argc, char *argv[]) {
 
-void TestFMM(int n) {
+ system("clear");
+
+    if (argc < 5) {
+        cout << "FMM Test Mode. Expects argument: Nvortices maxP numThreads sparse/dense cube/sphere" << endl;
+        //cout << "Returns velocities at these points as calculated via FMM and directly." << endl;
+        return;
+    }
+
+    string sparsity = argv[4];
+    string sparse("sparse"), dense("dense");
+
+    string geometry = argv[5];
+    string cube("cube"), sphere("sphere");
+#ifdef _OPENMP
+    omp_set_num_threads(atoi(argv[3]));
+#endif
+    
+    SYSTEM System(0);
+
+    //  Some default values
+    globalSystem->GambitScale = 1;
+    globalSystem->MaxP = atoi(argv[2]);
+    globalSystem->Del2 = .5;
+
+    
+    //    globalIO->read_input(dir2 + argv[1]);
+    //
+    //    globalIO->PrepOutputDir();
+    //    globalIO->WriteBinary();
+#ifndef use_NCURSES
+    if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
+#endif
+
+    globalSystem->Initialise();
+
 
 
     Array <Vect3> Posns, Omegas;
@@ -638,69 +698,325 @@ void TestFMM(int n) {
     srand((unsigned) time(NULL));
 
 
+    int n = atoi(argv[1]);
+
     Posns.allocate(n);
     Omegas.allocate(n);
-    cout << "Generating " << n << " points..." << endl;
+    cout << "Generating " << n << " points... Preparing ";
+
+    if (geometry.compare(cube) == 0) {
+        REAL rho = 4095 * 2;
+        cout << "cube with a ";
+        if (sparsity.compare(dense) == 0) {
+            cout << "dense " << endl;
+            while (FVMCell::NumCells < n) {
+                REAL x = rho * (0.5 - REAL(rand()) / RAND_MAX);
+                REAL y = rho * (0.5 - REAL(rand()) / RAND_MAX);
+                REAL z = rho * (0.5 - REAL(rand()) / RAND_MAX);
+                Vect3 OM = Vect3((0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX));
+                Vect3 PX = Vect3(x, y, z);
+                OctreeCapsule C(PX, 10000 * OM, true);
+                C.AssociatedBody = 0;
+                globalOctree->Root->EvalCapsule(C);
 
 
-    int count = 0;
-    while (FVMCell::NumCells < n) {
-        REAL rho = 1000 * (REAL(rand()) / RAND_MAX);
-        REAL phi = asin(2 * REAL(rand()) / RAND_MAX - 1);
-        REAL theta = 2 * pi * REAL(rand()) / RAND_MAX;
+                if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
+                    
+                    string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
+                    REAL MEM_PERCENT, temp;
+                    stringstream psdata;
+                    psdata << top_data;
+                    psdata >> temp >> MEM_PERCENT;
+                    cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
+                    if (MEM_PERCENT > 50) {
+                        cout << setfill('!') << setw(80) << "!" << endl;
 
+                        cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
+                        cout << "Memory used: " << MEM_PERCENT << "%" << endl;
 
-        REAL x = rho * cos(phi) * cos(theta);
-        REAL y = rho * cos(phi) * sin(theta);
-        REAL z = rho * sin(phi);
+                        cout << setfill('!') << setw(80) << "!" << endl;
+                        throw OutOfMemory();
+                    }
+                }
+            }
+        }
+        if (sparsity.compare(sparse) == 0) {
+            cout << "sparse ";
+            int S = 1;
+            while (FVMCell::NumCells < n) {
+                REAL phi = asin(2 * REAL(rand()) / RAND_MAX - 1);
+                REAL theta = 2 * pi * REAL(rand()) / RAND_MAX;
+                REAL x = rho * (0.5 - REAL(rand()) / RAND_MAX);
+                REAL y = rho * (0.5 - REAL(rand()) / RAND_MAX);
+                REAL z = rho * (0.5 - REAL(rand()) / RAND_MAX);
+                if (S == 3) {
+                    x = rho * (0.5 - round(REAL(rand()) / RAND_MAX));
+                    S = 2;
+                } else
+                    if (S == 2) {
+                    y = rho * (0.5 - round(REAL(rand()) / RAND_MAX));
+                    S = 3;
+                } else
+                    if (S == 3) {
+                    y = rho * (0.5 - round(REAL(rand()) / RAND_MAX));
+                    S = 1;
+                }
+                Vect3 OM = Vect3((0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX));
+                Vect3 PX = Vect3(x, y, z);
+                OctreeCapsule C(PX, 10000 * OM, true);
+                C.AssociatedBody = 0;
+                globalOctree->Root->EvalCapsule(C);
+                if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
+                    
+                    string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
+                    REAL MEM_PERCENT, temp;
+                    stringstream psdata;
+                    psdata << top_data;
+                    psdata >> temp >> MEM_PERCENT;
+                    cout << FVMCell::NumCells << " " << FVMCell::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
+                    if (MEM_PERCENT > 50) {
+                        cout << setfill('!') << setw(80) << "!" << endl;
 
-        Vect3 P = Vect3(x, y, z);
-        Vect3 O = Vect3(10 * (0.5 - REAL(rand()) / RAND_MAX), 10 * (0.5 - REAL(rand()) / RAND_MAX), 10 * (0.5 - REAL(rand()) / RAND_MAX));
+                        cout << "Out of memory. Terminating to avoid swapping to disk." << endl;
+                        cout << "Memory used: " << MEM_PERCENT << "%" << endl;
 
-        OctreeCapsule C(P, 1000 * O, true);
-        C.AssociatedBody = 0;
-        globalOctree->Root->EvalCapsule(C);
-        count++;
+                        cout << setfill('!') << setw(80) << "!" << endl;
+                        throw OutOfMemory();
+                    }
+                }
+            }
+        }
     }
-    globalOctree->Reset();
 
-    n = FVMCell::NumCells;
+    if (geometry.compare(sphere) == 0) {
+        cout << "sphere with a ";
+        if (sparsity.compare(dense) == 0) {
+            cout << "dense ";
+            while (FVMCell::NumCells < n) {
+                REAL phi = asin(2 * REAL(rand()) / RAND_MAX - 1);
+                REAL theta = 2 * pi * REAL(rand()) / RAND_MAX;
+                REAL rho = REAL(rand()) / RAND_MAX;
+                rho *= 4095;
+                REAL x = rho * cos(phi) * cos(theta);
+                REAL y = rho * cos(phi) * sin(theta);
+                REAL z = rho * sin(phi);
+                Vect3 OM = Vect3((0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX));
+                Vect3 PX = Vect3(x, y, z);
+
+                OctreeCapsule C(PX, 10000 * OM, true);
+                C.AssociatedBody = 0;
+                globalOctree->Root->EvalCapsule(C);
+                if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
+                    
+                    string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
+                    REAL MEM_PERCENT, temp;
+                    stringstream psdata;
+                    psdata << top_data;
+                    psdata >> temp >> MEM_PERCENT;
+                    cout << FVMCell::NumCells << " " << FVMCell::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
+                    if (MEM_PERCENT > 50) {
+                        cout << setfill('!') << setw(80) << "!" << endl;
+
+                        cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
+                        cout << "Memory used: " << MEM_PERCENT << "%" << endl;
+
+                        cout << setfill('!') << setw(80) << "!" << endl;
+                        throw OutOfMemory();
+                    }
+                }
+            }
+        }
+        if (sparsity.compare(sparse) == 0) {
+            cout << "sparse ";
+            while (FVMCell::NumCells < n) {
+                REAL phi = asin(2 * REAL(rand()) / RAND_MAX - 1);
+                REAL theta = 2 * pi * REAL(rand()) / RAND_MAX;
+                REAL rho = 4095;
+                REAL x = rho * cos(phi) * cos(theta);
+                REAL y = rho * cos(phi) * sin(theta);
+                REAL z = rho * sin(phi);
+                Vect3 OM = Vect3((0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX));
+                Vect3 PX = Vect3(x, y, z);
+                OctreeCapsule C(PX, 10000 * OM, true);
+                C.AssociatedBody = 0;
+                globalOctree->Root->EvalCapsule(C);
+                if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
+                    
+                    string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
+                    REAL MEM_PERCENT, temp;
+                    stringstream psdata;
+                    psdata << top_data;
+                    psdata >> temp >> MEM_PERCENT;
+                    cout << FVMCell::NumCells << " " << FVMCell::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
+                    if (MEM_PERCENT > 50) {
+                        cout << setfill('!') << setw(80) << "!" << endl;
+
+                        cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
+                        cout << "Memory used: " << MEM_PERCENT << "%" << endl;
+
+                        cout << setfill('!') << setw(80) << "!" << endl;
+                        throw OutOfMemory();
+                    }
+                }
+            }
+        }
+    }
+    
+    cout << "points arrangement" << endl;
+    
+    
+    
+
+    //    
+    //    string line;
+    //    ifstream myfile("infile.dat");
+    //    cout << "Reading file..." << endl;
+    //    if (myfile.is_open()) {
+    //        while (myfile.good()) {
+    //            getline(myfile, line);
+    //            
+    //            Vect3 X, O;
+    //            istringstream strm(line);
+    //            strm >> X.x >> X.y >> X.z >> O.x >> O.y >> O.z;
+    //            
+    //           // cout << line << endl;
+    //           // cout << X << " " << O << endl;
+    //            Posns.push_back(X);
+    //            Omegas.push_back(O);
+    //            
+    //        }
+    //        myfile.close();
+    //    }
+    //    
+    //    cout << "Done." << endl << "Putting Cells In Tree..." << endl;
+
+    //    for (int i = 0; i < Posns.size(); ++i) {
+    //           
+    //    }
+    cout << "Done." << endl;
+
+
+    REAL t0 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+    globalOctree->Reset();
+    globalOctree->InitVelsGetLaplacian();
+    globalOctree->GetVels();
+    REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation..." << endl;
+    Posns.clear();
+    Omegas.clear();
+    n = globalOctree->AllCells.size();
     Posns.allocate(n);
     Omegas.allocate(n);
-    Array <Vect3> DirectVels(n);
+    Array <Vect3> FMMVels(n);
+
+
+
+
+
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
         Posns[i] = (globalOctree->AllCells[i]->Position);
         Omegas[i] = (globalOctree->AllCells[i]->Omega);
+        FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
+    }
+
+    
+    
+    Array <int> Indices;
+    REAL Mult = 1.0;
+    if (Posns.size() > 10000) {
+        Mult = Posns.size()/10000.0;
+        Indices = Array <int> (10000, 0);
+        int count = 0;
+        //while (RandIndices.size() < 10000)
+        while (count < 10000) {
+            int randint = int (Posns.size()*(REAL(rand()) / RAND_MAX));
+            bool isin = false;
+            for (int i = 0; i < 10000; ++i)
+                if (Indices[i] == randint)
+                    isin = true;
+
+            if (!isin) {
+                Indices[count] = randint;
+                count++;
+            }
+        }
+
+    } else {
+        Indices = Array <int> (Posns.size(), 0);
+        for (int i = 0; i < Posns.size(); ++i)
+            Indices[i] = i;
     }
 
 
-    cout << "Done. It took " << count << " attempts to make " << FVMCell::NumCells << " unique cells." << endl;
-    REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-    cout << "Performing Direct Calculation for first " << min(Posns.size(), 10000) << " cells..." << endl;
+    Array <Vect3> DirectVels(Indices.size());
+
+    REAL t2 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
 #pragma omp parallel for
-    for (int i = 0; i < Posns.size(); ++i) {
+    for (int i = 0; i < Indices.size(); ++i) {
         Vect3 V(0, 0, 0);
         for (int j = 0; j < Posns.size(); ++j) {
-            Vect3 D = Posns[j] - Posns[i];
+            Vect3 D = Posns[j] - Posns[Indices[i]];
             V += globalDirectVel(D, Omegas[j]);
 
         }
         DirectVels[i] = (V);
     }
-    REAL t2 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-    REAL td = t2 - t1;
+    REAL t3 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+    cout << "Done. Time elapsed: " << t3 - t2 << endl << "Calculating error L2 norm...";
+    REAL l2 = 0, Vmean = 0;
 
-    globalOctree->Reset();
-    globalOctree->InitVelsGetLaplacian();
-    globalOctree->GetVels();
-    t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-    Array <Vect3> FMMVels(n);
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
-        cout << FMMVels[i] << " " << DirectVels[i] << endl;
+
+    Array <REAL> AbsErrs(Indices.size()), RelErrs(Indices.size());
+
+    REAL AbsErrsSum2 = 0., RelErrsSum2 = 0., AbsErrsSum = 0., RelErrsSum = 0., AbsErrsMax = 0., RelErrsMax = 0.;
+
+    RunningStat AbsErrsStats, RelErrsStats;
+
+
+    for (int i = 0; i < Indices.size(); ++i) {
+        cout << "Cell " << i << "\tError L2 Norm " << (DirectVels[i] - FMMVels[Indices[i]]).Mag() << " \t " << DirectVels[i] << endl << "\t\t\t\t\t\t " << FMMVels[Indices[i]] << endl;
+        l2 += (DirectVels[i] - FMMVels[Indices[i]]).Mag()*(DirectVels[i] - FMMVels[Indices[i]]).Mag();
+        Vmean += DirectVels[i].Mag();
+
+        AbsErrs[i] = (DirectVels[i] - FMMVels[Indices[i]]).Mag();
+        RelErrs[i] = AbsErrs[i] / DirectVels[i].Mag();
+
+        AbsErrsStats.Push(AbsErrs[i]);
+        RelErrsStats.Push(RelErrs[i]);
+
+        AbsErrsSum += AbsErrs[i];
+        RelErrsSum += RelErrs[i];
+        AbsErrsSum2 += AbsErrs[i] * AbsErrs[i];
+        RelErrsSum2 += RelErrs[i] * RelErrs[i];
+
+        AbsErrsMax = max(AbsErrsMax, AbsErrs[i]);
+        RelErrsMax = max(RelErrsMax, RelErrs[i]);
+
+
     }
 
 
+    REAL AbsErrsStd = sqrt(AbsErrsSum2 / (Posns.size() - 1));
+    REAL RelErrsStd = sqrt(RelErrsSum2 / (Posns.size() - 1));
+    REAL AbsErrsMean = AbsErrsSum / Posns.size();
+    REAL RelErrsMean = RelErrsSum / Posns.size();
+
+    int TreeSize = OCTREE_SIZE;
+    int TreeLevs = OCTREE_LEVS;
+    Vmean = Vmean / n;
+    cout << "Done." << endl << "Standard deviation: " << sqrt(l2 / Posns.size()) << endl;
+
+    ofstream myfile;
+    myfile.open("output.dat", ios::out | ios::app);
+    myfile << globalSystem->MaxP << " " << FVMCell::NumCells << " " << FVMCell::NumNodes << " " << globalSystem->NumThreads << " " << (t1 - t0)*1000 << " " << Mult*(t3 - t2)*1000 << " " << TreeLevs << " " << TreeSize << " " << AbsErrsStats.Max() << " " << AbsErrsStats.Mean() << " " << AbsErrsStats.StandardDeviation() << " " << RelErrsStats.Max() << " " << RelErrsStats.Mean() << " " << RelErrsStats.StandardDeviation() << " " << sparsity << " " << geometry << endl;
+    //    myfile << n << " " << globalSystem->MaxP << " " << Vmean << " " << sqrt(l2 / Posns.size()) << " " << sqrt(l2 / Posns.size())/Vmean << " " << (t1 - t0)*1000 << " " << (t3 - t2)*1000 << endl;
+    myfile.close();
+
+#ifndef use_NCURSES
+    if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
+    cout << "Output written to output.dat:" << endl;
+    cout << "p_max FVMCell::NumCells FVMCell::NumNodes nthreads t_fmm (ms)  t_dir (ms) TreeLevs TreeSize AbsErrsMax AbsErrsMean AbsErrsStd RelErrsMax RelErrsMean RelErrsStd sparse/dense sphere/cube;" << endl;
+#endif
 
 
 }

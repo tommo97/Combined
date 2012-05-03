@@ -47,6 +47,8 @@ public:
     
     static Array < Array <int> > MomentInds;
     
+    static int MomentIndsSize;
+    
     static Array < Array <REAL> > OffsetPows;
     
     static unsigned long int NumCells;

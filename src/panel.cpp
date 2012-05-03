@@ -482,7 +482,7 @@ void PANEL::GetEdgeInfo() {
             Xcb[3].y - Xcb[2].y,
             Xcb[0].y - Xcb[3].y);
 
-    M = DY / (DX + EPS);
+    M = DY / (DX + _EPS);
 
     D = sqrt(DX * DX + DY * DY);
 }
