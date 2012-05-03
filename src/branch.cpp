@@ -28,6 +28,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "branch.hpp"
 unsigned long int Branch::NumBranches = 0;
+Array < Array <int> > Branch::srcMomentInds, Branch::trgMomentInds;
+Array < Array < Array <REAL> > > Branch::BinomMults(OCTREE_LEVS);
+Array < Array <int> > Branch::srcInheritInds, Branch::trgInheritInds;
+Array < Array < Array <REAL> > > Branch::InheritMults(OCTREE_LEVS);
+int Branch::MomentIndsSize = 0, Branch::InheritIndsSize = 0;
 
 /**************************************************************/
 Branch::~Branch() {
@@ -45,6 +50,88 @@ Branch::Branch(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Momen
 }
 
 /**************************************************************/
+void Branch::InitMomsInds(int MaxP) {
+
+    Branch::BinomMults.allocate(OCTREE_LEVS);
+    Branch::srcMomentInds.clear();
+    Branch::trgMomentInds.clear();
+
+    Branch::InheritMults.allocate(OCTREE_LEVS);
+    Branch::srcInheritInds.clear();
+    Branch::trgInheritInds.clear();
+
+    for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
+        for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
+            for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
+                for (int n1 = k1; n1 < globalSystem->MaxP; n1++)
+                    for (int n2 = k2; n1 + n2 < globalSystem->MaxP; n2++)
+                        for (int n3 = k3; n1 + n2 + n3 < globalSystem->MaxP; n3++) {
+                            Array <int> inds(3);
+                            inds[0] = k1;
+                            inds[1] = k2;
+                            inds[2] = k3;
+                            Branch::trgInheritInds.push_back(inds);
+                            inds[0] = n1;
+                            inds[1] = n2;
+                            inds[2] = n3;
+                            Branch::srcInheritInds.push_back(inds);
+                        }
+
+    Branch::InheritIndsSize = Branch::srcInheritInds.size();
+
+    for (int mlev = 1; mlev < OCTREE_LEVS; ++mlev) {
+        Branch::InheritMults[mlev].allocate(8);
+        for (int i = 0; i < 2; ++i)
+            for (int j = 0; j < 2; ++j)
+                for (int k = 0; k < 2; ++k)
+                    for (int k1 = 0; k1 < MaxP; ++k1)
+                        for (int k2 = 0; k2 + k1 < MaxP; ++k2)
+                            for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
+                                for (int n1 = k1; n1 < globalSystem->MaxP; n1++)
+                                    for (int n2 = k2; n1 + n2 < globalSystem->MaxP; n2++)
+                                        for (int n3 = k3; n1 + n2 + n3 < globalSystem->MaxP; n3++) {
+                                            Branch::InheritMults[mlev][Node::Indxs[i][j][k]].push_back(Node::InhrtMlt[mlev][i][j][k][k1][k2][k3][n1][n2][n3]);
+                                        }
+    }
+
+    for (int k1 = 0; k1 < MaxP; ++k1)
+        for (int k2 = 0; k2 + k1 < MaxP; ++k2)
+            for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
+                for (int n1 = 0; n1 <= k1; n1++)
+                    for (int n2 = 0; n2 <= k2; n2++)
+                        for (int n3 = 0; n3 <= k3; n3++) {
+                            Array <int> inds(3);
+                            inds[0] = k1;
+                            inds[1] = k2;
+                            inds[2] = k3;
+                            Branch::trgMomentInds.push_back(inds);
+                            inds[0] = k1 - n1;
+                            inds[1] = k2 - n2;
+                            inds[2] = k3 - n3;
+                            Branch::srcMomentInds.push_back(inds);
+
+                        }
+
+    Branch::MomentIndsSize = Branch::srcMomentInds.size();
+
+    for (int mlev = 1; mlev < OCTREE_LEVS; ++mlev) {
+        Branch::BinomMults[mlev].allocate(8);
+        for (int i = 0; i < 2; ++i)
+            for (int j = 0; j < 2; ++j)
+                for (int k = 0; k < 2; ++k)
+                    for (int k1 = 0; k1 < MaxP; ++k1)
+                        for (int k2 = 0; k2 + k1 < MaxP; ++k2)
+                            for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
+                                for (int n1 = 0; n1 <= k1; n1++)
+                                    for (int n2 = 0; n2 <= k2; n2++)
+                                        for (int n3 = 0; n3 <= k3; n3++) {
+                                            Branch::BinomMults[mlev][Node::Indxs[i][j][k]].push_back(Node::BinomMlt[mlev][i][j][k][k1][k2][k3][n1][n2][n3]);
+                                        }
+    }
+
+};
+
+/**************************************************************/
 void Branch::BranchCount() {
     globalOctree->BranchCount[m]++;
 }
@@ -54,6 +141,7 @@ void Branch::vReList() {
     globalOctree->AllBranches[m][globalOctree->BranchCount[m]] = this;
     globalOctree->BranchCount[m]++;
 }
+
 /**************************************************************/
 void Branch::vMakeNodeAtTrans(Array < int > &trn) {
 
@@ -73,6 +161,7 @@ void Branch::vMakeNodeAtTrans(Array < int > &trn) {
     trn.pop_front();
     Children[i][j][k]->MakeNodeAtTrans(trn);
 }
+
 /**************************************************************/
 void Branch::SetFieldsZero() {
     VelField = Vect3(0.);
@@ -81,6 +170,8 @@ void Branch::SetFieldsZero() {
 
 /**************************************************************/
 void Branch::vPassMmnts2Prnt() {
+
+#ifdef USE_ROLLED_LOOPS
     if ((m >= 1) && (HasLoad)) {
         for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
             for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
@@ -93,6 +184,16 @@ void Branch::vPassMmnts2Prnt() {
 
         Parent->HasLoad = true;
     }
+#else
+    if ((m >= 1) && (HasLoad)) {
+        for (int i = 0; i < Branch::MomentIndsSize; ++i)
+            (static_cast<Branch*> (Parent))->Moments[Branch::trgMomentInds[i][0]][Branch::trgMomentInds[i][1]][Branch::trgMomentInds[i][2]]
+                += Branch::BinomMults[m][indx][i] * Moments[Branch::srcMomentInds[i][0]][Branch::srcMomentInds[i][1]][Branch::srcMomentInds[i][2]];
+
+        Parent->HasLoad = true;
+    }
+#endif
+
 
 }
 
@@ -119,8 +220,7 @@ void Branch::vEvalCapsule(OctreeCapsule &C) {
                 child->InheritVField();
                 child->GetVelField();
             }
-        }
-        else {
+        } else {
             Children[i][j][k] = new FVMCell(this, i, j, k);
         }
     }
@@ -167,6 +267,7 @@ void Branch::GetVelField() {
 
 /**************************************************************/
 void Branch::InheritVField() {
+#ifdef USE_ROLLED_LOOPS
     if (m > 0) {
         //        Vect3 Dx = Parent->Position - Position;
         for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
@@ -178,8 +279,13 @@ void Branch::InheritVField() {
                                 VelField[k1][k2][k3] += Node::InhrtMlt[m][x][y][z][k1][k2][k3][n1][n2][n3] * (static_cast<Branch*> (Parent))->VelField[n1][n2][n3];
 
     }
+#else
+    if (m > 0)
+        for (int i = 0; i < Branch::InheritIndsSize; ++i)
+            VelField[Branch::trgInheritInds[i][0]][Branch::trgInheritInds[i][1]][Branch::trgInheritInds[i][2]] +=
+                Branch::InheritMults[m][indx][i]* (static_cast<Branch*> (Parent))->VelField[Branch::srcInheritInds[i][0]][Branch::srcInheritInds[i][1]][Branch::srcInheritInds[i][2]];
+#endif
 }
-//#define MODE_1
 
 /**************************************************************/
 void Branch::vApplyRecursively(BranchFuncPtr down, FVMCellFuncPtr bottom, BranchFuncPtr up) {

@@ -45,7 +45,14 @@ public:
     
     static unsigned long int NumBranches;
 
-
+    static Array < Array <int> > srcMomentInds, trgMomentInds, srcInheritInds, trgInheritInds;
+    
+    static int MomentIndsSize, InheritIndsSize;
+    
+    static Array < Array < Array <REAL> > > BinomMults, InheritMults;
+    
+    static void InitMomsInds(int MaxP);
+    
     void vRemoveFromNeighbs() {};
 
     void vCheckNeighbs() {};
