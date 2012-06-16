@@ -59,7 +59,6 @@ InList(false), Neighb(NULL), HasLoad(false) {
     SetISANull();
     SetKidsNull();
     Node::NumNodes++;
-    NID = Node::NumNodes;
     Trans.push_back(-1);
 }
 
@@ -77,7 +76,6 @@ Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(N
     SetKidsNull();
 //    GetISA();
     Node::NumNodes++;
-    NID = Node::NumNodes;
     skip_here.assign(globalSystem->NumThreads, false);
 
 

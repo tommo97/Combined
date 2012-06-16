@@ -23,11 +23,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 
 
 
 #include "tree.hpp"
+
 /**************************************************************/
 OCTREE::OCTREE() {
     Root = new Branch();
@@ -36,45 +37,54 @@ OCTREE::OCTREE() {
     FVMCell::InitMomsInds(globalSystem->MaxP);
     Branch::InitMomsInds(globalSystem->MaxP);
 }
+
 /**************************************************************/
-OCTREE::~OCTREE()
-{
+OCTREE::~OCTREE() {
     delete Root;
 }
 
 /**************************************************************/
 void OCTREE::InitVelsGetLaplacian() {
+#ifdef TIME_STEPS
     long unsigned int t4 = ticks();
-
+#endif
     Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
-    #ifdef _OPENMP
-    #pragma omp parallel for
-    #endif
-        for (int i = 0; i < AllCells.size(); ++i){
-            AllCells[i]->GetLaplacian();
-        }
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < AllCells.size(); ++i) {
+        AllCells[i]->GetLaplacian();
+    }
+#ifdef TIME_STEPS
     long unsigned int t5 = ticks();
     stringstream tmp;
     tmp << "InitVelsGetLaplacian     : " << double(t5 - t4) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
+#endif
 }
+
 /**************************************************************/
 void OCTREE::Prune() {
     Root->ApplyRecursively(&Node::Prune, &Node::DoNothing, &Node::DoNothing);
 }
+
 /**************************************************************/
 void OCTREE::GetSRad() {
     for (int i = 0; i < AllCells.size(); ++i)
         AllCells[i]->ReportSpectralRadius();
     //Root->ApplyRecursively(&Node::DoNothing, &FVMCell::ReportSpectralRadius, &Node::DoNothing);
 }
+
 /**************************************************************/
 void OCTREE::ClearNodes() {
     Root->ClearChildren();
 }
+
 /**************************************************************/
 void OCTREE::Reset() {
+#ifdef TIME_STEPS
     long unsigned int t3 = ticks();
+#endif
     //  Everything which changes the shape of the tree must be done recursively
     Root->ApplyRecursively(&Node::MarkWithoutLoad, &Node::MarkWithoutLoad, &Node::DoNothing);
     Root->ApplyRecursively(&Node::DoNothing, &Node::CheckLoad, &Node::DoNothing);
@@ -89,7 +99,7 @@ void OCTREE::Reset() {
 
     AllCells.clear();
     AllBranches.allocate(OCTREE_LEVS);
-    BranchCount.assign(OCTREE_LEVS-1,0);
+    BranchCount.assign(OCTREE_LEVS - 1, 0);
     Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
 
     for (int i = 0; i < BranchCount.size(); ++i) {
@@ -105,16 +115,19 @@ void OCTREE::Reset() {
     Node::UpList.clear();
     Node::DownList.clear();
     Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
+#ifdef TIME_STEPS
     long unsigned int t4 = ticks();
     stringstream tmp;
     tmp << "Calculate FMM: reset()   : " << double(t4 - t3) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
+#endif
 }
 
 /**************************************************************/
 void OCTREE::FVM() {
+#ifdef TIME_STEPS
     long unsigned int t10 = ticks();
-
+#endif
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::O2UW, &Node::DoNothing);
 #else
@@ -144,15 +157,19 @@ void OCTREE::FVM() {
     //        AllCells[i]->O1UW();
     //    }
 #endif
+#ifdef TIME_STEPS
     long unsigned int t11 = ticks();
     stringstream tmp;
     tmp << "FVM                      : " << double(t11 - t10) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
+#endif
 }
 
 /**************************************************************/
 void OCTREE::Integrate() {
+#ifdef TIME_STEPS
     long unsigned int t12 = ticks();
+#endif
 
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::GetBEV, &Node::DoNothing);
@@ -163,7 +180,7 @@ void OCTREE::Integrate() {
 #pragma omp parallel for
 #endif
     for (int i = 0; i < AllCells.size(); ++i) {
-        AllCells[i]->GetVelTensor();
+//        AllCells[i]->GetVelTensor();
         AllCells[i]->Integrate();
     }
 #ifdef _OPENMP
@@ -179,15 +196,19 @@ void OCTREE::Integrate() {
         for (int i = 0; i < AllBranches[mlev].size(); ++i) AllBranches[mlev][i]->SetFieldsZero();
 
 #endif
+#ifdef TIME_STEPS
     long unsigned int t13 = ticks();
     stringstream tmp;
     tmp << "Integrate                : " << double(t13 - t12) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
+#endif
 }
+
 /**************************************************************/
 void OCTREE::GetVels() {
+#ifdef TIME_STEPS
     long unsigned int t5 = ticks();
-
+#endif
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::SetVelsZero, &Node::DoNothing);
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::PassMmnts2Prnt, &Node::PassMmnts2Prnt);
@@ -244,14 +265,17 @@ void OCTREE::GetVels() {
 
     //    for (int i = 0; i < AllCells.size(); ++i)
     //        AllCells[i]->Report();
+#ifdef TIME_STEPS
     long unsigned int t6 = ticks();
     stringstream tmp;
     tmp << "GetVels()                : " << double(t6 - t5) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
+#endif
 }
+
 /**************************************************************/
 Vect3 OCTREE::TreeVel(Vect3 P) {
-    OctreeCapsule C(P, Vect3(0,0,0), false);
+    OctreeCapsule C(P, Vect3(0, 0, 0), false);
     C.IP = true;
     Root->EvalCapsule(C);
     return Vect3(C.Velocity);

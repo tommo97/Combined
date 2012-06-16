@@ -1,6 +1,6 @@
 clear all; clear mex; clc;
-close all
-files = dir('RunData*.mat');
+
+files = dir('RunData*1.mat');
 figure
 s = size(files,1);
 fname = files(s).name;
@@ -8,7 +8,7 @@ load(fname,'GambitScale','Times','BodyRates0_x','BodyPointsX','BodyPointsY','Bod
 load(fname,'Time','XCG')
 
 scale = GambitScale;
-val = 3.5;
+val = 7.5;
 
 
 XCG = scale * Time * 1.0;

@@ -561,9 +561,10 @@ end
 
 function DispMsg(handles)
 str = handles.neumsg;
-n = size(handles.casemsg,2);
+str = strvcat(str,' ');
+n = size(handles.casemsg{1},1);
 for i = 1:n
-    str =  strvcat(str,handles.casemsg{i});
+    str =  strvcat(str,handles.casemsg{1}{i});
 end
 set(handles.terminal_output,'String',str);
 

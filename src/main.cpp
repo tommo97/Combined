@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 7.5;
+    globalSystem->GambitScale = 5;
     globalSystem->MaxP = 3;
     globalSystem->Del2 = 0.25;
     globalSystem->DS = .3;
@@ -1363,3 +1363,4 @@ void WeeAmble() {
 
 
 }
+

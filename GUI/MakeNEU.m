@@ -281,4 +281,13 @@ fprintf(fid,'/%%% \n');
 
 fclose(fid);
 
+%   Read first 24 lines of neu file
+
+fid = fopen(fname, 'r');
+handles.casemsg=textscan(fid,'%s',21,'delimiter','\n');
+handles.casemsg{1}{22} = '...';
+fclose(fid);
+
+
+
 handles.Bodies = Bodies;

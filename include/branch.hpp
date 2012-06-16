@@ -71,7 +71,7 @@ public:
 
     JaggedArray <Vect3> Moments;
     JaggedArray <Vect3> VelField;
-    Array <Vect3> InlineMoments;
+//    Array <Vect3> InlineMoments;
 
     void BranchCount();
     void InheritVField();

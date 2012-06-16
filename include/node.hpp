@@ -52,30 +52,52 @@ public:
     static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsX;
     static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsY;
     static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsZ;
-    Node *Parent;
-    int x, y, z, m, indx;
-    long unsigned int ID;
-    REAL size;
-    Array<bool> skip_here;
-    bool InList;
-    Vect3 Position, Omega, Velocity, PanelVel;
-    NeighbSet<Node*> Neighb;
-    Array<NeighbSet<Vect3> > BEV;
-    Array<NeighbSet<Vect3*> > Neighb_Val, Neighb_Neighb_Val;
-    bool HasLoad;
-    bool to_report;
-    Node *Children[2][2][2];
-    Node *ISA[3][3][3];
-    Node *ISB[6][6][6];
-    Array<int> Trans;
-    static int RootSize;
     static const Vect3 Offset[2][2][2];
     static const int Indxs[2][2][2];
     static const Vect3 NeighbOffset[6];
     static const int deREF[][3];
+    static ARRAY13(Vect3) TlrCffts;
+    static ARRAY6(REAL) VlFldMlt;
+    static ARRAY10(Vect3) TlrCfftsdx;
+    static ARRAY6(NeighbSet <REAL>) FaceCllpsMlt;
+    static ARRAY10(REAL) BinomMlt;
+    static ARRAY10(REAL) InhrtMlt;
+    static ARRAY6(REAL) CllpsMlt;
+    static int REF[][2][2];
+    static int Op[6];
+    static const int trans_neighb[][5];
+    static Vect3 ZERO;
+    static int RootSize;
 
+    
+    //  Node class definately needs
+    Node *Parent;
+    int m, indx;
+    long unsigned int ID;
+    REAL size;
+    Array<bool> skip_here;
+    bool InList;
+
+    bool HasLoad;
+    bool to_report;
+    Node *Children[2][2][2];
+    Node *ISA[3][3][3]; // this should replace Neighb?
+//    Node *ISB[6][6][6];
+    Array<int> Trans;
+    
+    //  Not really needed any more
+    int x, y, z;
+    
+    
+    //   possibly devolve the following members solely to cells
+    Vect3 Position, Omega, Velocity, PanelVel;
+    NeighbSet<Node*> Neighb;
+    Array<NeighbSet<Vect3> > BEV;
+    Array<NeighbSet<Vect3*> > Neighb_Val, Neighb_Neighb_Val;
     Array<Vect3> TransVars;
     Array <Array<Vect3> > TransDerivs;
+    
+    
     void UpdateMomentMults();
 
     void GetISA();
@@ -137,10 +159,10 @@ public:
                 for (int k = 0; k < 3; ++k)
                     ISA[i][j][k] = NULL;
 
-        for (int i = 0; i < 6; ++i)
-            for (int j = 0; j < 6; ++j)
-                for (int k = 0; k < 6; ++k)
-                    ISB[i][k][j] = NULL;
+//        for (int i = 0; i < 6; ++i)
+//            for (int j = 0; j < 6; ++j)
+//                for (int k = 0; k < 6; ++k)
+//                    ISB[i][k][j] = NULL;
     }
 
     void SetKidsNull() {
@@ -166,7 +188,7 @@ public:
     Node* MoveDownTree(Array<int> &Directions);
 
     void MoveUpTree() {
-        if (Parent->ID > 0)
+        if (Parent->m > 0)
             Parent->MoveUpTree();
     }
 
@@ -293,18 +315,7 @@ public:
         vReList();
     }
 
-    static ARRAY13(Vect3) TlrCffts;
-    static ARRAY6(REAL) VlFldMlt;
-    static ARRAY10(Vect3) TlrCfftsdx;
-    static ARRAY6(NeighbSet <REAL>) FaceCllpsMlt;
-    static ARRAY10(REAL) BinomMlt;
-    static ARRAY10(REAL) InhrtMlt;
-    static ARRAY6(REAL) CllpsMlt;
-    static int REF[][2][2];
-    static int Op[6];
-    static const int trans_neighb[][5];
-    long unsigned int NID;
-    static Vect3 ZERO;
+    
 
     void Trans2Neighb(Array <int> &v, int M, int dirn) {
         /* Find the neighbours of an octree cluster in a given direction

@@ -46,7 +46,7 @@ SYSTEM::~SYSTEM() {
 
 /**************************************************************/
 SYSTEM::SYSTEM(int NT) {
-    LiftingLineMode =  false;
+    LiftingLineMode = false;
     num_out = 0;
     SysDumpInterval = 0; //  Used to dump the result of system calls
     scaledVinf.x = scaledVinf.y = scaledVinf.z = 0;
@@ -54,8 +54,8 @@ SYSTEM::SYSTEM(int NT) {
     MaxP = 3;
     DS = .3;
     Temp = 288.15; //  Kelvin
-    Rho = 1027;//1.226; //1027; //  Kg/m3
-    Mu = 1e-3;//(sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity kg/ms
+    Rho = 1027; //1.226; //1027; //  Kg/m3
+    Mu = 1e-3; //(sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity kg/ms
     GambitScale = 1;
     NumThreads = 1;
 #ifdef _OPENMP
@@ -81,7 +81,7 @@ void SYSTEM::Initialise() {
     Nu = GambitScale * GambitScale * Mu / Rho;
     globalTimeStepper = new TIME_STEPPER();
 
-    NumTransVars = max(1,BODY::Bodies.size());
+    NumTransVars = max(1, BODY::Bodies.size());
 
     globalOctree = new OCTREE();
 
@@ -106,7 +106,7 @@ void SYSTEM::TimeStep() {
 
     //  Final loop since last_step will exit the previous loop
     globalTimeStepper->time_loop();
-    
+
     if (WRITE_TO_SCREEN) cout << "Finished at sim time: " << TIME_STEPPER::SimTime << endl;
 }
 
@@ -170,13 +170,14 @@ void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
+#ifdef TIME_STEPS
     long unsigned int t1 = ticks();
-
+#endif
     int Num2Insert = 0, Num2Keep = 0;
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
     for (int i = 0; i < BODY::VortexPositions.size(); ++i)
-        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (GambitScale * .05)) {
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (1.0*GambitScale)) {
             Num2Insert++;
             toInsert[i] = true;
         } else
@@ -276,7 +277,7 @@ void SYSTEM::PutWakesInTree() {
     Array <OctreeCapsule> Test(Xs.size());
 
     for (int i = 0; i < Test.size(); ++i) {
-        Test[i] = OctreeCapsule(Xs[i], -1.0*Oms[i], true);
+        Test[i] = OctreeCapsule(Xs[i], -1.0 * Oms[i], true);
         Test[i].AssociatedBody = Owners[i];
     }
 
@@ -322,21 +323,21 @@ void SYSTEM::PutWakesInTree() {
     BODY::VortexOwnerID = IDtoKeep;
     BODY::VortexOrigins = Origins2Keep;
 
-
-
+#ifdef TIME_STEPS
     long unsigned int t2 = ticks();
 
     stringstream tmp;
     tmp << "Bin panel wake into tree : " << double(t2 - t1) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
-
+#endif
 
 }
 
 /**************************************************************/
 void SYSTEM::GetFaceVels() {
+#ifdef TIME_STEPS
     long unsigned int t6 = ticks();
-
+#endif
     //#ifdef _OPENMP
     //#pragma omp parallel for
     //#endif
@@ -354,16 +355,19 @@ void SYSTEM::GetFaceVels() {
 
     for (int i = 0; i < globalOctree->AllCells.size(); ++i)
         globalOctree->AllCells[i]->SetVelsEqual();
+#ifdef TIME_STEPS
     long unsigned int t7 = ticks();
     stringstream tmp;
     tmp << "GetFaceVels()            : " << double(t7 - t6) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
-
+#endif
 }
+
 /**************************************************************/
 void SYSTEM::GetPanelFMMVelocities(REAL dt) {
+#ifdef TIME_STEPS
     long unsigned int t9 = ticks();
-
+#endif
 
     int sz = BODY::AllBodyFaces.size();
     Array <Vect3> P1(sz), P2(sz), V2(sz), V1(sz);
@@ -389,15 +393,15 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
     V1 = Vect3(0.0);
     V2 = V1;
-    //#pragma omp parallel for
-    //    for (int i = 0; i < sz; ++i) {
-    //        for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
-    //            V1[i] += globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
-    //                    globalOctree->AllCells[j]->Omega);
-    //            V2[i] += globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
-    //                    globalOctree->AllCells[j]->Omega);
-    //        }
-    //    }
+//    #pragma omp parallel for
+//        for (int i = 0; i < sz; ++i) {
+//            for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
+//                V1[i] += globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
+//                        globalOctree->AllCells[j]->Omega);
+//                V2[i] += globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
+//                        globalOctree->AllCells[j]->Omega);
+//            }
+//        }
 
     for (int i = 0; i < sz; ++i)
         V1[i] = globalOctree->TreeVel(P1[i]);
@@ -411,20 +415,21 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
         BODY::AllBodyFaces[i]->dVFMM_dt = (1.0 / dt) * (V2[i] - V1[i]);
         BODY::AllBodyFaces[i]->Vfmm = V1[i];
     }
-
+#ifdef TIME_STEPS
     long unsigned int t10 = ticks();
     stringstream tmp;
     tmp << "GetPanelFMMVelocities(.) : " << double(t10 - t9) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
+#endif
 }
 
 /**************************************************************/
 void SYSTEM::MoveBodies(REAL dt, bool update) {
-//    for (int j = 0; j < NumBodies; ++j)
-//        Bodies[j]->MoveBody(dt);
-//
-//    if (update && NumBodies > 1)
-//        UpdateGlobalInfluenceMatrices();
+    //    for (int j = 0; j < NumBodies; ++j)
+    //        Bodies[j]->MoveBody(dt);
+    //
+    //    if (update && NumBodies > 1)
+    //        UpdateGlobalInfluenceMatrices();
 }
 
 /**************************************************************/
@@ -460,217 +465,216 @@ void SYSTEM::WriteDomain() {
 void SYSTEM::WriteData() {
     unsigned long int t1;
     MATLABOutputStruct Output;
-    
+
     Vect3 Maxs, Mins;
     Maxs = -1e32;
     Mins = 1e32;
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-    {
-        Maxs.x = max(globalOctree->AllCells[i]->Position.x,Maxs.x);
-        Maxs.y = max(globalOctree->AllCells[i]->Position.y,Maxs.y);
-        Maxs.z = max(globalOctree->AllCells[i]->Position.z,Maxs.z);
-        
-        Mins.x = min(globalOctree->AllCells[i]->Position.x,Mins.x);
-        Mins.y = min(globalOctree->AllCells[i]->Position.y,Mins.y);
-        Mins.z = min(globalOctree->AllCells[i]->Position.z,Mins.z);
-        
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        Maxs.x = max(globalOctree->AllCells[i]->Position.x, Maxs.x);
+        Maxs.y = max(globalOctree->AllCells[i]->Position.y, Maxs.y);
+        Maxs.z = max(globalOctree->AllCells[i]->Position.z, Maxs.z);
+
+        Mins.x = min(globalOctree->AllCells[i]->Position.x, Mins.x);
+        Mins.y = min(globalOctree->AllCells[i]->Position.y, Mins.y);
+        Mins.z = min(globalOctree->AllCells[i]->Position.z, Mins.z);
+
     }
-    
+
     int sx = (Maxs.x - Mins.x) + 1;
     int sy = (Maxs.y - Mins.y) + 1;
     int sz = (Maxs.z - Mins.z) + 1;
-    
-    
-//    cout << sx << " " << sy << " " << sz << " " << Maxs << " " << Mins << endl;
-//    
-//    int cnt = 0;
-//    REAL tmpx = Mins.x;
-//    while (tmpx <= Maxs.x) {
-//        REAL tmpy = Mins.y;
-//        while (tmpy <= Maxs.y) {
-//            REAL tmpz = Mins.z;
-//            while (tmpz <= Maxs.z) {
-//                tmpz += 1;
-//                cnt++;
-//            }
-//            tmpy += 1;
-//        }
-//        tmpx += 1;
-//    }
-//    cout << cnt << endl;
-//    Array <Vect3> Positions(cnt), Velocities(cnt);
-//    cnt = 0;
-//    tmpx = Mins.x;
-//    while (tmpx <= Maxs.x) {
-//        REAL tmpy = Mins.y;
-//        while (tmpy <= Maxs.y) {
-//            REAL tmpz = Mins.z;
-//            while (tmpz <= Maxs.z) {
-//                Positions[cnt] = Vect3(tmpx,tmpy,tmpz);
-//                tmpz += 1;
-//                cnt++;
-//            }
-//            tmpy += 1;
-//        }
-//        tmpx += 1;
-//    }
-//    
-//    
-//    for (int i = 0; i < Positions.size(); ++i)
-//        Velocities[i] = globalOctree->TreeVel(Positions[i]);
-//    
-//    
-//
-//    Output.Vect1DArrays.push_back(Positions);
-//    Output.Vect1DArrayStrings.push_back(string("CellPositions"));
-//
-//    Output.Vect1DArrays.push_back(Velocities);
-//    Output.Vect1DArrayStrings.push_back(string("CellVelocities"));   
-    
-    
 
-//    REAL DistTravelled = (BODY::Bodies[0]->CG - BODY::Bodies[0]->CGo).Mag();
-//    REAL tmpX = BODY::Bodies[0]->CG.x - (2.0 * GambitScale * 0.4);
-//    int nSlices = 2 + floor(DistTravelled / (GambitScale * 0.4));
-//    int I = 0;
-//    Array <REAL> SlicePlanesX(7);
-//
-//    SlicePlanesX[0] = 0.1 * GambitScale;
-//    SlicePlanesX[1] = 0.2 * GambitScale;
-//    SlicePlanesX[2] = 0.5 * GambitScale;
-//    SlicePlanesX[3] = 1.0 * GambitScale;
-//    SlicePlanesX[4] = 2.0 * GambitScale;
-//    SlicePlanesX[5] = 4.0 * GambitScale;
-//    SlicePlanesX[6] = 6.0 * GambitScale;
-//
-//    Array <string> Names(7);
-//    Names[0] = "0pt1";
-//    Names[1] = "0pt2";
-//    Names[2] = "0pt5";
-//    Names[3] = "1pt0";
-//    Names[4] = "2pt0";
-//    Names[5] = "4pt0";
-//    Names[6] = "6pt0";
-//
-//    int NC = 0;
-//
-//    int JKmin = floor(-5 * GambitScale), JKmax = ceil(5 * GambitScale);
-//    Array <REAL> PS;
-//    for (int J = JKmin; J < JKmax; ++J) {
-//        NC++;
-//        PS.push_back(J * 1.0);
-//    }
-//
-//    for (int I = 0; I < SlicePlanesX.size(); ++I) {
-//        cout << I << endl;
-//        Array < Array < Vect3 > > SliceWakeVel = UTIL::zerosv(NC, NC);
-//        Array < Array < Vect3 > > SliceVortonWakeVel = UTIL::zerosv(NC, NC);
-//        Array < Array < Vect3 > > SliceBodyVel = UTIL::zerosv(NC, NC);
-//        Array < Array < Vect3 > > SliceProtoWakeVel = UTIL::zerosv(NC, NC);
-//
-//        Array < Array < Vect3 > > SlicePosn = UTIL::zerosv(NC, NC);
-//        Array < Array < Vect3 > > SlicePosnPlus = UTIL::zerosv(NC, NC);
-//        Array < Array < Vect3 > > SlicePosnMinus = UTIL::zerosv(NC, NC);
-//
-//        Array < Array < REAL > > SliceBodyPhi = UTIL::zeros(NC, NC);
-//        Array < Array < REAL > > SliceBodyPhiPlus = UTIL::zeros(NC, NC);
-//        Array < Array < REAL > > SliceBodyPhiMinus = UTIL::zeros(NC, NC);
-//
-//        Array < Array < REAL > > SliceProtoWakePhi = UTIL::zeros(NC, NC);
-//        Array < Array < REAL > > SliceProtoWakePhiPlus = UTIL::zeros(NC, NC);
-//        Array < Array < REAL > > SliceProtoWakePhiMinus = UTIL::zeros(NC, NC);
-//
-//        for (int J = 0; J < PS.size(); ++J)
-//            for (int K = 0; K < PS.size(); ++K) {
-//                Vect3 Pos(BODY::Bodies[0]->CG.x + SlicePlanesX[I], PS[J], PS[K]);
-//
-//                SlicePosn[J][K] = Pos;
-//                SlicePosnPlus[J][K] = Pos + Vect3(1, 0, 0);
-//                SlicePosnMinus[J][K] = Pos - Vect3(1, 0, 0);
-//
-//                SliceWakeVel[J][K] = globalOctree->TreeVel(Pos);
-//
-//            }
-//
-//#pragma omp parallel for
-//        for (int J = 0; J < PS.size(); ++J)
-//            for (int K = 0; K < PS.size(); ++K) {
-//                Vect3 Pos = SlicePosn[J][K];
-//                for (int k = 0; k < BODY::VortexPositions.size(); ++k)
-//                    SliceVortonWakeVel[J][K] += globalDirectVel(Pos - BODY::VortexPositions[k], BODY::VortexOmegas[k]);
-//
-//                for (int k = 0; k < BODY::AllProtoWakes.size(); ++k)
-//                    SliceProtoWakeVel[J][K] += BODY::AllProtoWakes[k]->VortexPanelVelocity(Pos);
-//                for (int k = 0; k < BODY::AllBodyFaces.size(); ++k)
-//                    SliceBodyVel[J][K] += BODY::AllBodyFaces[k]->BodyPanelVelocity(Pos);
-//
-//
-//
-//                for (int k = 0; k < BODY::AllProtoWakes.size(); ++k) {
-//                    Pos = SlicePosn[J][K];
-//                    SliceProtoWakePhi[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
-//                    Pos = SlicePosnPlus[J][K];
-//                    SliceProtoWakePhiPlus[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
-//                    Pos = SlicePosnMinus[J][K];
-//                    SliceProtoWakePhiMinus[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
-//                }
-//
-//                for (int k = 0; k < BODY::AllBodyFaces.size(); ++k) {
-//                    Pos = SlicePosn[J][K];
-//                    SliceBodyPhi[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
-//                    Pos = SlicePosnPlus[J][K];
-//                    SliceBodyPhiPlus[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
-//                    Pos = SlicePosnMinus[J][K];
-//                    SliceBodyPhiMinus[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
-//                }
-//            }
-//
-//        string SliceName = Names[I];
-//        Output.Vect2DArrays.push_back(SliceWakeVel);
-//        Output.Vect2DArrayStrings.push_back(string("SliceWakeVel" + SliceName));
-//
-//        Output.Vect2DArrays.push_back(SliceVortonWakeVel);
-//        Output.Vect2DArrayStrings.push_back(string("SliceVortonWakeVel" + SliceName));
-//
-//        Output.Vect2DArrays.push_back(SliceBodyVel);
-//        Output.Vect2DArrayStrings.push_back(string("SliceBodyVel" + SliceName));
-//
-//        Output.Vect2DArrays.push_back(SliceProtoWakeVel);
-//        Output.Vect2DArrayStrings.push_back(string("SliceProtoWakeVel" + SliceName));
-//
-//        Output.Vect2DArrays.push_back(SlicePosn);
-//        Output.Vect2DArrayStrings.push_back(string("SlicePosn" + SliceName));
-//
-//        Output.Double2DArrays.push_back(SliceProtoWakePhi);
-//        Output.Double2DArrayStrings.push_back(string("SliceProtoWakePhi" + SliceName));
-//
-//        Output.Double2DArrays.push_back(SliceProtoWakePhiPlus);
-//        Output.Double2DArrayStrings.push_back(string("SliceProtoWakePhiPlus" + SliceName));
-//
-//        Output.Double2DArrays.push_back(SliceProtoWakePhiMinus);
-//        Output.Double2DArrayStrings.push_back(string("SliceProtoWakePhiMinus" + SliceName));
-//
-//        Output.Double2DArrays.push_back(SliceBodyPhi);
-//        Output.Double2DArrayStrings.push_back(string("SliceBodyPhi" + SliceName));
-//
-//        Output.Double2DArrays.push_back(SliceBodyPhiPlus);
-//        Output.Double2DArrayStrings.push_back(string("SliceBodyPhiPlus" + SliceName));
-//
-//        Output.Double2DArrays.push_back(SliceBodyPhiMinus);
-//        Output.Double2DArrayStrings.push_back(string("SliceBodyPhiMinus" + SliceName));
-//
-//        Output.Vect2DArrays.push_back(SlicePosnMinus);
-//        Output.Vect2DArrayStrings.push_back(string("SlicePosnMinus" + SliceName));
-//
-//        Output.Vect2DArrays.push_back(SlicePosnPlus);
-//        Output.Vect2DArrayStrings.push_back(string("SlicePosnPlus" + SliceName));
-//    }
-//
+
+    //    cout << sx << " " << sy << " " << sz << " " << Maxs << " " << Mins << endl;
+    //    
+    //    int cnt = 0;
+    //    REAL tmpx = Mins.x;
+    //    while (tmpx <= Maxs.x) {
+    //        REAL tmpy = Mins.y;
+    //        while (tmpy <= Maxs.y) {
+    //            REAL tmpz = Mins.z;
+    //            while (tmpz <= Maxs.z) {
+    //                tmpz += 1;
+    //                cnt++;
+    //            }
+    //            tmpy += 1;
+    //        }
+    //        tmpx += 1;
+    //    }
+    //    cout << cnt << endl;
+    //    Array <Vect3> Positions(cnt), Velocities(cnt);
+    //    cnt = 0;
+    //    tmpx = Mins.x;
+    //    while (tmpx <= Maxs.x) {
+    //        REAL tmpy = Mins.y;
+    //        while (tmpy <= Maxs.y) {
+    //            REAL tmpz = Mins.z;
+    //            while (tmpz <= Maxs.z) {
+    //                Positions[cnt] = Vect3(tmpx,tmpy,tmpz);
+    //                tmpz += 1;
+    //                cnt++;
+    //            }
+    //            tmpy += 1;
+    //        }
+    //        tmpx += 1;
+    //    }
+    //    
+    //    
+    //    for (int i = 0; i < Positions.size(); ++i)
+    //        Velocities[i] = globalOctree->TreeVel(Positions[i]);
+    //    
+    //    
+    //
+    //    Output.Vect1DArrays.push_back(Positions);
+    //    Output.Vect1DArrayStrings.push_back(string("CellPositions"));
+    //
+    //    Output.Vect1DArrays.push_back(Velocities);
+    //    Output.Vect1DArrayStrings.push_back(string("CellVelocities"));   
+
+
+
+    //    REAL DistTravelled = (BODY::Bodies[0]->CG - BODY::Bodies[0]->CGo).Mag();
+    //    REAL tmpX = BODY::Bodies[0]->CG.x - (2.0 * GambitScale * 0.4);
+    //    int nSlices = 2 + floor(DistTravelled / (GambitScale * 0.4));
+    //    int I = 0;
+    //    Array <REAL> SlicePlanesX(7);
+    //
+    //    SlicePlanesX[0] = 0.1 * GambitScale;
+    //    SlicePlanesX[1] = 0.2 * GambitScale;
+    //    SlicePlanesX[2] = 0.5 * GambitScale;
+    //    SlicePlanesX[3] = 1.0 * GambitScale;
+    //    SlicePlanesX[4] = 2.0 * GambitScale;
+    //    SlicePlanesX[5] = 4.0 * GambitScale;
+    //    SlicePlanesX[6] = 6.0 * GambitScale;
+    //
+    //    Array <string> Names(7);
+    //    Names[0] = "0pt1";
+    //    Names[1] = "0pt2";
+    //    Names[2] = "0pt5";
+    //    Names[3] = "1pt0";
+    //    Names[4] = "2pt0";
+    //    Names[5] = "4pt0";
+    //    Names[6] = "6pt0";
+    //
+    //    int NC = 0;
+    //
+    //    int JKmin = floor(-5 * GambitScale), JKmax = ceil(5 * GambitScale);
+    //    Array <REAL> PS;
+    //    for (int J = JKmin; J < JKmax; ++J) {
+    //        NC++;
+    //        PS.push_back(J * 1.0);
+    //    }
+    //
+    //    for (int I = 0; I < SlicePlanesX.size(); ++I) {
+    //        cout << I << endl;
+    //        Array < Array < Vect3 > > SliceWakeVel = UTIL::zerosv(NC, NC);
+    //        Array < Array < Vect3 > > SliceVortonWakeVel = UTIL::zerosv(NC, NC);
+    //        Array < Array < Vect3 > > SliceBodyVel = UTIL::zerosv(NC, NC);
+    //        Array < Array < Vect3 > > SliceProtoWakeVel = UTIL::zerosv(NC, NC);
+    //
+    //        Array < Array < Vect3 > > SlicePosn = UTIL::zerosv(NC, NC);
+    //        Array < Array < Vect3 > > SlicePosnPlus = UTIL::zerosv(NC, NC);
+    //        Array < Array < Vect3 > > SlicePosnMinus = UTIL::zerosv(NC, NC);
+    //
+    //        Array < Array < REAL > > SliceBodyPhi = UTIL::zeros(NC, NC);
+    //        Array < Array < REAL > > SliceBodyPhiPlus = UTIL::zeros(NC, NC);
+    //        Array < Array < REAL > > SliceBodyPhiMinus = UTIL::zeros(NC, NC);
+    //
+    //        Array < Array < REAL > > SliceProtoWakePhi = UTIL::zeros(NC, NC);
+    //        Array < Array < REAL > > SliceProtoWakePhiPlus = UTIL::zeros(NC, NC);
+    //        Array < Array < REAL > > SliceProtoWakePhiMinus = UTIL::zeros(NC, NC);
+    //
+    //        for (int J = 0; J < PS.size(); ++J)
+    //            for (int K = 0; K < PS.size(); ++K) {
+    //                Vect3 Pos(BODY::Bodies[0]->CG.x + SlicePlanesX[I], PS[J], PS[K]);
+    //
+    //                SlicePosn[J][K] = Pos;
+    //                SlicePosnPlus[J][K] = Pos + Vect3(1, 0, 0);
+    //                SlicePosnMinus[J][K] = Pos - Vect3(1, 0, 0);
+    //
+    //                SliceWakeVel[J][K] = globalOctree->TreeVel(Pos);
+    //
+    //            }
+    //
+    //#pragma omp parallel for
+    //        for (int J = 0; J < PS.size(); ++J)
+    //            for (int K = 0; K < PS.size(); ++K) {
+    //                Vect3 Pos = SlicePosn[J][K];
+    //                for (int k = 0; k < BODY::VortexPositions.size(); ++k)
+    //                    SliceVortonWakeVel[J][K] += globalDirectVel(Pos - BODY::VortexPositions[k], BODY::VortexOmegas[k]);
+    //
+    //                for (int k = 0; k < BODY::AllProtoWakes.size(); ++k)
+    //                    SliceProtoWakeVel[J][K] += BODY::AllProtoWakes[k]->VortexPanelVelocity(Pos);
+    //                for (int k = 0; k < BODY::AllBodyFaces.size(); ++k)
+    //                    SliceBodyVel[J][K] += BODY::AllBodyFaces[k]->BodyPanelVelocity(Pos);
+    //
+    //
+    //
+    //                for (int k = 0; k < BODY::AllProtoWakes.size(); ++k) {
+    //                    Pos = SlicePosn[J][K];
+    //                    SliceProtoWakePhi[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
+    //                    Pos = SlicePosnPlus[J][K];
+    //                    SliceProtoWakePhiPlus[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
+    //                    Pos = SlicePosnMinus[J][K];
+    //                    SliceProtoWakePhiMinus[J][K] += BODY::AllProtoWakes[k]->WakePanelPotential(Pos);
+    //                }
+    //
+    //                for (int k = 0; k < BODY::AllBodyFaces.size(); ++k) {
+    //                    Pos = SlicePosn[J][K];
+    //                    SliceBodyPhi[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
+    //                    Pos = SlicePosnPlus[J][K];
+    //                    SliceBodyPhiPlus[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
+    //                    Pos = SlicePosnMinus[J][K];
+    //                    SliceBodyPhiMinus[J][K] += BODY::AllBodyFaces[k]->BodyPanelPotential(Pos);
+    //                }
+    //            }
+    //
+    //        string SliceName = Names[I];
+    //        Output.Vect2DArrays.push_back(SliceWakeVel);
+    //        Output.Vect2DArrayStrings.push_back(string("SliceWakeVel" + SliceName));
+    //
+    //        Output.Vect2DArrays.push_back(SliceVortonWakeVel);
+    //        Output.Vect2DArrayStrings.push_back(string("SliceVortonWakeVel" + SliceName));
+    //
+    //        Output.Vect2DArrays.push_back(SliceBodyVel);
+    //        Output.Vect2DArrayStrings.push_back(string("SliceBodyVel" + SliceName));
+    //
+    //        Output.Vect2DArrays.push_back(SliceProtoWakeVel);
+    //        Output.Vect2DArrayStrings.push_back(string("SliceProtoWakeVel" + SliceName));
+    //
+    //        Output.Vect2DArrays.push_back(SlicePosn);
+    //        Output.Vect2DArrayStrings.push_back(string("SlicePosn" + SliceName));
+    //
+    //        Output.Double2DArrays.push_back(SliceProtoWakePhi);
+    //        Output.Double2DArrayStrings.push_back(string("SliceProtoWakePhi" + SliceName));
+    //
+    //        Output.Double2DArrays.push_back(SliceProtoWakePhiPlus);
+    //        Output.Double2DArrayStrings.push_back(string("SliceProtoWakePhiPlus" + SliceName));
+    //
+    //        Output.Double2DArrays.push_back(SliceProtoWakePhiMinus);
+    //        Output.Double2DArrayStrings.push_back(string("SliceProtoWakePhiMinus" + SliceName));
+    //
+    //        Output.Double2DArrays.push_back(SliceBodyPhi);
+    //        Output.Double2DArrayStrings.push_back(string("SliceBodyPhi" + SliceName));
+    //
+    //        Output.Double2DArrays.push_back(SliceBodyPhiPlus);
+    //        Output.Double2DArrayStrings.push_back(string("SliceBodyPhiPlus" + SliceName));
+    //
+    //        Output.Double2DArrays.push_back(SliceBodyPhiMinus);
+    //        Output.Double2DArrayStrings.push_back(string("SliceBodyPhiMinus" + SliceName));
+    //
+    //        Output.Vect2DArrays.push_back(SlicePosnMinus);
+    //        Output.Vect2DArrayStrings.push_back(string("SlicePosnMinus" + SliceName));
+    //
+    //        Output.Vect2DArrays.push_back(SlicePosnPlus);
+    //        Output.Vect2DArrayStrings.push_back(string("SlicePosnPlus" + SliceName));
+    //    }
+    //
 
     //  DataOut is vectors of: Position Omega [Transvars1 ... TransvarsN] CFL DerivConv DerivVisc DerivStretch DerivArt01
-    
-    
-    
+
+
+
     Array < Vect3 > CellPos(globalOctree->AllCells.size(), Vect3(0.0));
     Array < Vect3 > CellOms(globalOctree->AllCells.size(), Vect3(0.0));
     Array < Vect3 > CellVel(globalOctree->AllCells.size(), Vect3(0.0));
@@ -679,8 +683,8 @@ void SYSTEM::WriteData() {
     Array < Vect3 > CellTiltDeriv(globalOctree->AllCells.size(), Vect3(0.0));
     Array < Vect3 > CellViscDeriv(globalOctree->AllCells.size(), Vect3(0.0));
     Array < Vect3 > CellArtDeriv(globalOctree->AllCells.size(), Vect3(0.0));
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i){
-        CellPos[i] = globalOctree->AllCells[i]->Position + Vect3(0.5,0.5,0.5);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        CellPos[i] = globalOctree->AllCells[i]->Position + Vect3(0.5, 0.5, 0.5);
         CellOms[i] = globalOctree->AllCells[i]->Omega;
         CellVel[i] = globalOctree->AllCells[i]->Velocity;
         CellCFL[i] = globalOctree->AllCells[i]->cfl;
@@ -689,7 +693,7 @@ void SYSTEM::WriteData() {
         CellViscDeriv[i] = globalOctree->AllCells[i]->ViscDeriv;
         CellArtDeriv[i] = globalOctree->AllCells[i]->ArtViscDeriv;
     }
-    
+
     Output.Vect1DArrays.push_back(CellPos);
     Output.Vect1DArrayStrings.push_back(string("CellPos"));
 
@@ -713,12 +717,13 @@ void SYSTEM::WriteData() {
 
     Output.Vect1DArrays.push_back(CellArtDeriv);
     Output.Vect1DArrayStrings.push_back(string("CellArtDeriv"));
-    
-    
+
+
     Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 21 + (NumTransVars * 3));
-    Mins = Vect3(1e32, 1e32, 1e32); Maxs = Vect3(-1e32, -1e32, -1e32);
+    Mins = Vect3(1e32, 1e32, 1e32);
+    Maxs = Vect3(-1e32, -1e32, -1e32);
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-   
+
         Mins = min(globalOctree->AllCells[i]->Position, Mins);
         Maxs = max(globalOctree->AllCells[i]->Position, Maxs);
 
@@ -736,18 +741,20 @@ void SYSTEM::WriteData() {
 
     globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
     BODY::SubTIMES.clear();
+#ifdef TIME_STEPS
     unsigned long int t2;
     stringstream tmp;
     tmp << "Writedata()              : " << double(t2 - t1) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
+#endif
 }
 
 /**************************************************************/
 void SYSTEM::WriteBodies() {
-//   
+    //   
 }
 
 /**************************************************************/
 void SYSTEM::WritePanelVels() {
-//  
+    //  
 }

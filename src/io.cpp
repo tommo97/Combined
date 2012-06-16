@@ -516,8 +516,9 @@ void IO::create_image(string outname) {
 
 /**************************************************************/
 void IO::stat_step() {
+    #ifdef TIME_STEPS
     long unsigned int t8 = ticks();
-
+#endif
     stringstream out_stream;
 
 #ifndef use_NCURSES
@@ -571,11 +572,13 @@ void IO::stat_step() {
 
 
     //            if (WRITE_TO_FILE) write_stat_step();
+    #ifdef TIME_STEPS
     long unsigned int t9 = ticks();
 
     stringstream tmp;
     tmp << "stat_step                : " << double(t9 - t8) / 1000.0 << endl;
     step_data += tmp.str();
+#endif
 }
 
 /**************************************************************/

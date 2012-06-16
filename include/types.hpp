@@ -43,8 +43,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#define RECURSE
 using namespace std;
 #define MODE_3D
-// Order of the expansion - retains globalSystem->MaxP+1 terms (counting starts at 0)
-//#define globalSystem->MaxP 6
 //#define _PNGWRITER
 //  Precision
 #define DOUBLE_PRECISION
@@ -63,6 +61,7 @@ using namespace std;
 
 //  Some simulation parameters
 #define USE_ARRAY
+#define TIME_STEPS
 
 
 /**************************************************************/

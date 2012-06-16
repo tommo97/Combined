@@ -107,7 +107,7 @@ void FVMCell::Integrate() {
                 + OMn.y * FaceVels.N.z - OMs.y * FaceVels.S.z
                 + OMt.z * FaceVels.T.z - OMb.z * FaceVels.B.z);
 
-        TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
+        //TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
 
 
         //      Viscous diffusion by central differences. Already calc'd by GetLaplacian()
@@ -755,8 +755,8 @@ void FVMCell::GetLaplacian() {
     }
 }
 
-void FVMCell::GetVelTensor() {
-    VelTensor[0] = FaceVels.E - FaceVels.W; //  dVeldx
-    VelTensor[1] = FaceVels.N - FaceVels.S; //  dVeldy
-    VelTensor[2] = FaceVels.T - FaceVels.B; //  dVeldz
-}
+//void FVMCell::GetVelTensor() {
+//    VelTensor[0] = FaceVels.E - FaceVels.W; //  dVeldx
+//    VelTensor[1] = FaceVels.N - FaceVels.S; //  dVeldy
+//    VelTensor[2] = FaceVels.T - FaceVels.B; //  dVeldz
+//}

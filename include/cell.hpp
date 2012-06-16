@@ -57,14 +57,13 @@ public:
 
     Array <Vect3> Deriv, IPs, IPVels;
 
-
     Vect3 ConvDeriv, ViscDeriv, StretchDeriv, ArtViscDeriv, srad, cfl;
     
     int age;
     
-    REAL Phi;
+//    REAL Phi;                         // unused?
 
-    Vect3 VelTensor[3];
+//    Vect3 VelTensor[3];               // unused?
 
     Array <Vect3> Laplacian;
 
@@ -105,7 +104,7 @@ public:
 
     void GetLaplacian();
 
-    void GetVelTensor();
+//    void GetVelTensor();
 
     void ReportSpectralRadius();
     

@@ -125,7 +125,7 @@ void BODY::MakeWake() {
 
     }
 
-    int n = 3;
+    int n = 2;
     Array <Vect3> Pts, tPts;
     Array <Vect3> Oms, tOms;
     Array <Vect3*> Origins, tOrigins;
@@ -327,13 +327,13 @@ void BODY::GetNonLinearRHS() {
 
 /**************************************************************/
 void BODY::GetPanelVels() {
-//    for (int i = 0; i < Faces.size(); ++i) {
-//        Faces[i].Vd = Vect3(0.0);
-//        for (int j = 0; j < Faces.size(); ++j) {
-//            Faces[i].Vd += -Faces[j].Mu * localVD[i][j];
-//            Faces[i].Vd += Faces[j].Sigma * localVS[i][j];
-//        }
-//    }
+    //    for (int i = 0; i < Faces.size(); ++i) {
+    //        Faces[i].Vd = Vect3(0.0);
+    //        for (int j = 0; j < Faces.size(); ++j) {
+    //            Faces[i].Vd += -Faces[j].Mu * localVD[i][j];
+    //            Faces[i].Vd += Faces[j].Sigma * localVS[i][j];
+    //        }
+    //    }
 };
 
 /**************************************************************/
@@ -383,13 +383,13 @@ void BODY::SplitUpLinearAlgebra() {
         REAL PhiWake = 0.0;
 
         for (int j = 0; j < BODY::VortexPositions.size(); ++j)
-            VWake += 1.0*globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
+            VWake += 1.0 * globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
 
         /*        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
                     VWake += 2.0*globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
                         globalOctree->AllCells[j]->Omega);
          */
-        VWake += 1.0*trg->Vfmm;
+        VWake += 1.0 * trg->Vfmm;
 
         for (int j = 0; j < srcs.size(); ++j)
             PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
@@ -697,10 +697,12 @@ void BODY::LinAlg() {
     }
 
 }
+
 /**************************************************************/
 void BODY::BodySubStep(REAL delta_t, int n_steps) {
+#ifdef TIME_STEPS
     long unsigned int t11 = ticks();
-
+#endif
     REAL dt = delta_t / n_steps;
 
     BODY::CpHistoryAll.push_back(BODY::CpHistory);
@@ -882,10 +884,12 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         BODY::AllBodyFaces[i]->PhiWakePrev = 0.0; //BODY::AllBodyFaces[i]->Phi;
         //        BODY::AllBodyFaces[i]->VWakePrev = BODY::AllBodyFaces[i]->VWake;
     }
+#ifdef TIME_STEPS
     long unsigned int t12 = ticks();
     stringstream tmp;
     tmp << "BodySubStep              : " << double(t12 - t11) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
+#endif
 }
 
 /**************************************************************/
