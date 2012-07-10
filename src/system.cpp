@@ -177,7 +177,7 @@ void SYSTEM::PutWakesInTree() {
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
     for (int i = 0; i < BODY::VortexPositions.size(); ++i)
-        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (1.0*GambitScale)) {
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (0.05*GambitScale)) { // try 1*GambitScale
             Num2Insert++;
             toInsert[i] = true;
         } else
@@ -421,6 +421,45 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     tmp << "GetPanelFMMVelocities(.) : " << double(t10 - t9) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
 #endif
+    
+    
+//      //  Calculate timestep length such that no body travels further than a single cell
+//    REAL MaxX, MaxY, MaxZ; MaxX = MaxY = MaxZ = -1e32;
+//    REAL MinX, MinY, MinZ; MinX = MinY = MinZ = 1e32;
+//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+//        MaxX = max(MaxX, BODY::AllBodyFaces[i]->CollocationPoint.x);
+//        MinX = min(MinX, BODY::AllBodyFaces[i]->CollocationPoint.x);
+//        MaxY = max(MaxY, BODY::AllBodyFaces[i]->CollocationPoint.y);
+//        MinY = min(MinY, BODY::AllBodyFaces[i]->CollocationPoint.y);
+//        MaxZ = max(MaxZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+//        MinZ = min(MinZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+//    }
+//    
+//    
+//    int DX = ceil(MaxX) - floor(MinX);
+//    int DY = ceil(MaxY) - floor(MinY);
+//    int DZ = ceil(MaxZ) - floor(MinZ);
+//    cout << "--------------- Calcing Inerp Vels --------------" << endl;
+//    cout << globalOctree->AllCells.size()*BODY::AllBodyFaces.size() << " Interactions " << endl;
+//    Array < Array < Array < Vect3 > > > Posns, Vels;
+//            
+//    Posns = Array < Array < Array <Vect3> > > (DX, Array < Array < Vect3 > > (DY, Array < Vect3 > (DZ, Vect3(0.0))));
+//    Vels = Posns;
+//    for (int i = 0; i < DX; ++i)
+//        for (int j = 0; j < DY; ++j)
+//            for (int k = 0; k < DZ; ++k) {
+//                Vect3 XP(MinX + i, MinY + j, MinZ + k);
+//                Posns[i][j][k] = XP;
+//                        #pragma omp parallel for
+//                                for (int l = 0; l < globalOctree->AllCells.size(); ++l)
+//                                    Vels[i][j][k] += UTIL::globalDirectVel(globalOctree->AllCells[l]->Position - XP, globalOctree->AllCells[l]->Omega, globalSystem->Del2);
+////                Vels[i][j][k] = globalOctree->TreeVel(XP);
+//            }
+//
+//    long unsigned int t11 = ticks();
+//
+//    cout << "GetPanelFMMVelocities(.) : " << double(t10 - t9) / 1000.0 << " Direct/Interp : " << double(t11 - t10) / 1000.0 << endl;
+    
 }
 
 /**************************************************************/

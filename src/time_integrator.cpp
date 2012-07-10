@@ -206,8 +206,8 @@ void TIME_STEPPER::TimeAdvance() {
     //  Put the wake in the tree from the bodytimestep
     globalSystem->PutWakesInTree();
     //  Clean up
-    //if (!fmod((REAL) n, 100.0))
-    //    PruneNow = true;
+    if (!fmod((REAL) n, 10.0))
+        PruneNow = true;
     globalOctree->Reset();
 
 
@@ -296,8 +296,8 @@ void TIME_STEPPER::time_step() {
 
     //  Calculate timestep length such that no body travels further than a single cell
     REAL OmRMax = 0.0, MaxRadius = 0.0;
-    REAL MaxX, MaxY, MaxZ; MaxX = MaxY = MaxZ = -1e-32;
-    REAL MinX, MinY, MinZ; MinX = MinY = MinZ = 1e-32;
+//    REAL MaxX, MaxY, MaxZ; MaxX = MaxY = MaxZ = -1e32;
+//    REAL MinX, MinY, MinZ; MinX = MinY = MinZ = 1e32;
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
         // 	Get point kinematic velocity - rotational part first
@@ -310,22 +310,41 @@ void TIME_STEPPER::time_step() {
         
         MaxRadius = max(MaxRadius, Pos.Mag());
         
-
-        MaxX = max(MaxX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-        MinX = min(MinX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-        MaxY = max(MaxY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-        MinY = min(MinY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-        MaxZ = max(MaxZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
-        MinZ = min(MinZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+//
+//        MaxX = max(MaxX, BODY::AllBodyFaces[i]->CollocationPoint.x);
+//        MinX = min(MinX, BODY::AllBodyFaces[i]->CollocationPoint.x);
+//        MaxY = max(MaxY, BODY::AllBodyFaces[i]->CollocationPoint.y);
+//        MinY = min(MinY, BODY::AllBodyFaces[i]->CollocationPoint.y);
+//        MaxZ = max(MaxZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+//        MinZ = min(MinZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
 
                 
 
     }
     
     
-    cout << "Maximum Radius " << MaxRadius << " Grid size: " << ceil(MaxX) - floor(MinX);
-    cout << " " << ceil(MaxY) - floor(MinY) << " " << ceil(MaxZ) - floor(MinZ) << endl;
-    
+//    int DX = ceil(MaxX) - floor(MinX);
+//    int DY = ceil(MaxY) - floor(MinY);
+//    int DZ = ceil(MaxZ) - floor(MinZ);
+//    cout << "Maximum Radius " << MaxRadius << " Enclosing Box size: " << DX;
+//    cout << " " << DY << " " << DZ << " " << DX*DY*DZ << endl;
+//    cout << "--------------- Calcing Inerp Vels --------------" << endl;
+//    cout << globalOctree->AllCells.size()*BODY::AllBodyFaces.size() << " Interactions " << endl;
+//    Array < Array < Array < Vect3 > > > Posns, Vels;
+//            
+//    Posns = Array < Array < Array <Vect3> > > (DX, Array < Array < Vect3 > > (DY, Array < Vect3 > (DZ, Vect3(0.0))));
+//    Vels = Posns;
+//    
+//    for (int i = 0; i < DX; ++i)
+//        for (int j = 0; j < DY; ++j)
+//            for (int k = 0; k < DZ; ++k)
+//            {
+//                Vect3 XP(MinX + i, MinY + j, MinZ + k);
+//                Posns[i][j][k] = XP;
+//                for (int l = 0; l < globalOctree->AllCells.size(); ++l)
+//                    Vels[i][j][k] += UTIL::globalDirectVel(globalOctree->AllCells[l]->Position - XP, globalOctree->AllCells[l]->Omega, globalSystem->Del2);
+//                    
+//            }
 
 
     //    dt = min(dt_euler,cfl_lim/OmRMax);

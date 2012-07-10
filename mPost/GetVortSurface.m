@@ -1,6 +1,5 @@
 clear all; clear mex; clc;
-
-files = dir('RunData*1.mat');
+files = dir('RunData*10.mat');
 figure
 s = size(files,1);
 fname = files(s).name;
@@ -8,8 +7,7 @@ load(fname,'GambitScale','Times','BodyRates0_x','BodyPointsX','BodyPointsY','Bod
 load(fname,'Time','XCG')
 
 scale = GambitScale;
-val = 7.5;
-
+val = 5;
 
 XCG = scale * Time * 1.0;
 THETA = Time * BodyRates0_x;
@@ -50,7 +48,7 @@ PtIDS = reshape(PtIDS,length(C1),4);
 
 p2 = patch('Vertices',BodyPanPts,...
     'Faces',PtIDS,'FaceVertexCData',-Cp(:),...
-    'FaceColor','flat','EdgeColor','none');
+    'FaceColor','flat','EdgeColor','k');
 
 box on
 grid on

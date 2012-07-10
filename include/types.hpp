@@ -49,7 +49,7 @@ using namespace std;
 
 #define OCTREE_SIZE 4096
 #define OCTREE_LEVS 13
-#define LIMITER VANLEER
+#define LIMITER SUPERBEE
 
 //#define COLLAPSE_TO_FACES
 
@@ -61,7 +61,7 @@ using namespace std;
 
 //  Some simulation parameters
 #define USE_ARRAY
-#define TIME_STEPS
+//#define TIME_STEPS
 
 
 /**************************************************************/
@@ -96,13 +96,13 @@ class OctreeCapsule;
 #define _EPS 1e-3
 #define _EPS2 1e-6
 #define _TOL 1e-12
-#define VORTICITY_CUTOFF 1e-4
+#define VORTICITY_CUTOFF 1e-3
 #else
 #define REAL float
 #define _EPS 1e-3
 #define _EPS2 1e-6
 #define _TOL 1e-6
-#define VORTICITY_CUTOFF 1e-3
+#define VORTICITY_CUTOFF 1e-2
 #endif
 
 #include "includes.hpp"
@@ -128,7 +128,7 @@ class OctreeCapsule;
 //#define use_NCURSES
 
 //  how many output lines are printed before a header is printed to screen                
-#define HEADER_OUTPUT 10
+#define HEADER_OUTPUT 25
 
 //  display CPU/memory information during run
 #define TOP                        

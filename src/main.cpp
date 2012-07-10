@@ -114,10 +114,10 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
-    globalSystem->GambitScale = 5;
-    globalSystem->MaxP = 3;
+    globalSystem->GambitScale = 5.0;    // 5 minimum for nrel...
+    globalSystem->MaxP = 5;     // try 5 as a minimum...
     globalSystem->Del2 = 0.25;
-    globalSystem->DS = .3;
+    globalSystem->DS = 1.0;
     globalSystem->dtInit = 0.05;
     globalSystem->h = 3;
 

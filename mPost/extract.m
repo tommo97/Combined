@@ -36,11 +36,13 @@ artcols = (sz-3):sz;
 viscols = artcols-6;
 load(fname,'CellViscDeriv');
 load(fname,'CellOms');
+load(fname,'CellVel');
 Data = CellOms;
 
 
 data = sqrt(Data(:,1).*Data(:,1) + Data(:,2).*Data(:,2) + Data(:,3).*Data(:,3));
 
+%data = CellVel(:,1);
 
 for i = 1:size(subs,1)
     VI(subs(i,1),subs(i,2), subs(i,3)) =  data(i);
