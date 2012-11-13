@@ -1,16 +1,28 @@
-function [XI,YI,ZI,VI, Vx, Vy, Vz, x,y,z, U, V, W] = extract(fname,val, scale)
-load(fname,'CellPos'); 
+function [XI,YI,ZI,VI, VIx, VIy, VIz, x,y,z, U, V, W] = extract(fname,val, scale)
+load(fname,'CellPos','TransVars_x','TransVars_y','TransVars_z'); 
 
 if ~exist('CellPos')
 
     load(fname,'Domain');
     CellPos = Domain(:,1:3);
 end
+
+
 subs = CellPos(:,1:3);
 subs(:,1) = subs(:,1) - min(CellPos(:,1));
 subs(:,2) = subs(:,2) - min(CellPos(:,2));
 subs(:,3) = subs(:,3) - min(CellPos(:,3));
 subs = subs+1;
+
+do_multiple_vorts = false;
+if exist('TransVars_x');
+    do_multiple_vorts = true;
+    for i = 1:size(TransVars_x,2)
+        VIx{i} = zeros(max(subs));
+        VIy{i} = zeros(max(subs));
+        VIz{i} = zeros(max(subs));
+    end
+end
 
 VI = zeros(max(subs));
 U = [];%VI;
@@ -56,8 +68,20 @@ for i = 1:size(subs,1)
     Vx(subs(i,1),subs(i,2),subs(i,3)) =  Data(i,1);
     Vy(subs(i,1),subs(i,2),subs(i,3)) =  Data(i,2);
     Vz(subs(i,1),subs(i,2),subs(i,3)) =  Data(i,3);
+    
 end
 
+if do_multiple_vorts
+    for j = 1:size(TransVars_x,2)
+        for i = 1:size(subs,1)
+            
+            VIx{j}(subs(i,1),subs(i,2),subs(i,3)) =  TransVars_x(i,j);
+            VIy{j}(subs(i,1),subs(i,2),subs(i,3)) =  TransVars_y(i,j);
+            VIz{j}(subs(i,1),subs(i,2),subs(i,3)) =  TransVars_z(i,j);
+            
+        end
+    end
+end
 return
 num_vort = (size(Domain,2) - 6)/3;
 colour{1} = [1 0 0];

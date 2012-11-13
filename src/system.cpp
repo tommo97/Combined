@@ -802,7 +802,7 @@ void SYSTEM::WriteData() {
     //  DataOut is vectors of: Position Omega [Transvars1 ... TransvarsN] CFL DerivConv DerivVisc DerivStretch DerivArt01
 
 
-
+    Array < Array < Vect3 > > TransVars(globalOctree->AllCells.size(), Array <Vect3> (globalSystem->NumTransVars, Vect3(0.0)));
     Array < Vect3 > CellPos(globalOctree->AllCells.size(), Vect3(0.0));
     Array < Vect3 > CellOms(globalOctree->AllCells.size(), Vect3(0.0));
     Array < Vect3 > CellVel(globalOctree->AllCells.size(), Vect3(0.0));
@@ -820,6 +820,8 @@ void SYSTEM::WriteData() {
         CellTiltDeriv[i] = globalOctree->AllCells[i]->StretchDeriv;
         CellViscDeriv[i] = globalOctree->AllCells[i]->ViscDeriv;
         CellArtDeriv[i] = globalOctree->AllCells[i]->ArtViscDeriv;
+        for (int j = 0; j < globalSystem->NumTransVars; ++j)
+            TransVars[i][j] = globalOctree->AllCells[i]->TransVars[j];
     }
 
     Output.Vect1DArrays.push_back(CellPos);
@@ -845,6 +847,9 @@ void SYSTEM::WriteData() {
 
     Output.Vect1DArrays.push_back(CellArtDeriv);
     Output.Vect1DArrayStrings.push_back(string("CellArtDeriv"));
+    
+    Output.Vect2DArrays.push_back(TransVars);
+    Output.Vect2DArrayStrings.push_back(string("TransVars"));
 
 
     Array < Array < REAL > > DataOut = UTIL::zeros(globalOctree->AllCells.size(), 21 + (NumTransVars * 3));
