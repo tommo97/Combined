@@ -47,6 +47,7 @@ SYSTEM::~SYSTEM() {
 /**************************************************************/
 SYSTEM::SYSTEM(int NT) {
     LiftingLineMode = false;
+    useBodies = true;
     num_out = 0;
     SysDumpInterval = 0; //  Used to dump the result of system calls
     scaledVinf.x = scaledVinf.y = scaledVinf.z = 0;
@@ -76,12 +77,14 @@ SYSTEM::SYSTEM(int NT) {
 
 /**************************************************************/
 void SYSTEM::Initialise() {
-
+    
     scaledVinf = unscaledVinf*GambitScale;
     Nu = GambitScale * GambitScale * Mu / Rho;
     globalTimeStepper = new TIME_STEPPER();
 
-    NumTransVars = max(1, BODY::Bodies.size());
+    if (globalSystem->useBodies)
+        NumTransVars = max(1, BODY::Bodies.size());
+    
 
     globalOctree = new OCTREE();
 
@@ -95,15 +98,17 @@ void SYSTEM::Initialise() {
     globalSystem->NumSubSteps = nss;
 
 
-
+    cout << "nss" <<  nss << endl;
 }
 
 /**************************************************************/
 void SYSTEM::TimeStep() {
 
     while ((TIME_STEPPER::SimTime < (TIME_STEPPER::MaxTime)) && (!globalTimeStepper->last_step))
-        globalTimeStepper->time_loop();
-
+    {    
+    globalTimeStepper->time_loop();
+    }
+    cout << "here" << endl;
     //  Final loop since last_step will exit the previous loop
     globalTimeStepper->time_loop();
 
@@ -168,6 +173,89 @@ void SYSTEM::PrintBodiesAndWakes() {
 void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
 }
 
+/**************************************************************/
+void SYSTEM::AddVortonsToTree(Array <Vect3> &XtoInsert, Array <Vect3> &OMtoInsert, Array <int> &IDtoInsert) {
+    
+    int Num2Insert = XtoInsert.size();
+    REAL d = 1.0, u = 0;
+    REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;
+    int count = 0;
+    
+    for (REAL a = -h; a <= h; a += 1.0)
+        count++;
+
+
+    Array <Vect3> Xs(Num2Insert * (count * count * count)), Oms(Num2Insert * (count * count * count));
+    Array <int> Owners(Num2Insert * (count * count * count));
+
+    count = 0;
+
+    for (int j = 0; j < XtoInsert.size(); ++j) {
+        Vect3 X = XtoInsert[j];
+        Vect3 OM = OMtoInsert[j];
+        int ID = IDtoInsert[j];
+        //        OctreeCapsule C(X, OM, true);
+        //        C.AssociatedBody = BODY::VortexOwnerID[j] - 1;
+        //        globalOctree->Root->EvalCapsule(C);
+
+        //
+        for (REAL a = -h; a <= h; a += 1.0) {
+            M4x = 0.0;
+            u = abs(a / (h * d));
+            if (u <= 2)
+                M4x = .5 * (1 - u * (2 - u)*(2 - u));
+            if (u <= 1)
+                M4x = 1 - 2.5 * u * u + 1.5 * u * u * u;
+            M4x = M4x / h;
+            for (REAL b = -h; b <= h; b += 1.0) {
+                M4y = 0.0;
+                u = abs(b / (h * d));
+                if (u <= 2)
+                    M4y = .5 * (1 - u * (2 - u)*(2 - u));
+                if (u <= 1)
+                    M4y = 1 - 2.5 * u * u + 1.5 * u * u * u;
+                M4y = M4y / h;
+                for (REAL c = -h; c <= h; c += 1.0) {
+
+                    u = abs(c / (h * d));
+                    if (u <= 2)
+                        M4z = .5 * (1 - u * (2 - u)*(2 - u));
+                    if (u <= 1)
+                        M4z = 1 - 2.5 * u * u + 1.5 * u * u * u;
+
+                    M4z = M4z / h;
+                    M4 = M4x * M4y*M4z;
+
+                    Vect3 G = M4*OM;
+                    Xs[count] = Vect3(round(X.x + a), round(X.y + b), round(X.z + c));
+                    Oms[count] = (G);
+                    Owners[count] = (ID);
+                    count++;
+                }
+            }
+        }
+    }
+
+
+
+
+
+    Array <OctreeCapsule> Test(Xs.size());
+
+    for (int i = 0; i < Test.size(); ++i) {
+        Test[i] = OctreeCapsule(Xs[i], -1.0 * Oms[i], true);
+        Test[i].AssociatedBody = Owners[i];
+    }
+
+
+    for (int i = 0; i < Test.size(); ++i) {
+        globalOctree->Root->EvalCapsule(Test[i]);
+    }
+
+
+
+
+}
 /**************************************************************/
 void SYSTEM::PutWakesInTree() {
 #ifdef TIME_STEPS
@@ -338,6 +426,7 @@ void SYSTEM::GetFaceVels() {
 #ifdef TIME_STEPS
     long unsigned int t6 = ticks();
 #endif
+    if (globalSystem->useBodies) {
     //#ifdef _OPENMP
     //#pragma omp parallel for
     //#endif
@@ -352,7 +441,7 @@ void SYSTEM::GetFaceVels() {
     //        for (int j = 0; j < BODY::AllProtoWakes.size(); ++j)
     //            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllProtoWakes[j]->WakePanelPotential(globalOctree->AllCells[i]->Position);
     //    }
-
+    }
     for (int i = 0; i < globalOctree->AllCells.size(); ++i)
         globalOctree->AllCells[i]->SetVelsEqual();
 #ifdef TIME_STEPS
@@ -767,7 +856,7 @@ void SYSTEM::WriteData() {
         Maxs = max(globalOctree->AllCells[i]->Position, Maxs);
 
     }
-
+    if (globalSystem->useBodies) {
     Output.Double2DArrays.push_back(BODY::CpHistoryAll);
     Output.Double2DArrayStrings.push_back(string("CpHistoryAll"));
 
@@ -776,10 +865,12 @@ void SYSTEM::WriteData() {
 
     Output.Double1DArrays.push_back(BODY::SubTIMES);
     Output.Double1DArrayStrings.push_back(string("SubTimes"));
-
+    
+    BODY::SubTIMES.clear();
+    };
 
     globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
-    BODY::SubTIMES.clear();
+    
 #ifdef TIME_STEPS
     unsigned long int t2;
     stringstream tmp;

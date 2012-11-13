@@ -71,6 +71,10 @@ public:
     static inline Array < Array <Vect3> > zerosv(int a, int b) {
         return Array < Array <Vect3> > (a, Array <Vect3 > (b, 0.0));
     }
+    
+    static inline Array < Array < Array <Vect3> > > zerosv(int a, int b, int c) {
+        return Array < Array <Array <Vect3> > > (a, Array <Array <Vect3> > (b, Array <Vect3> (c, Vect3(0.0))));
+    }
 
     template<class T>
     inline static string toString(const T& t) {
@@ -106,6 +110,7 @@ public:
             int n);
     static void write1D(string varname, string fname, Array<double> &input, int m);
     static void write1D(string varname, string fname, Array<int> &input, int m);
+    static int readmat(string fname, string varname, Array <REAL> &data, Array <int> &dims, bool verbose);
     static void WriteMATLABMatrix2D(string vname, string fname,
             Array<Array<int> > &data);
     static void WriteMATLABMatrix2D(string vname, string fname,

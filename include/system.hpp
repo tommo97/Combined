@@ -40,7 +40,7 @@ class SYSTEM
 {
 public:
   int MaxP, NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval, NumTransVars;
-  bool LiftingLineMode, ZeroBodyRelativeMotion;
+  bool LiftingLineMode, ZeroBodyRelativeMotion, useBodies;
   REAL dtInit, GambitScale, Del2, DS, h;
   REAL Mu,Nu,Rho,Temp;
   string NeuFile, CaseName, WorkingDir;
@@ -97,6 +97,7 @@ public:
   void GetCellsCalcCurlV();
   void GetPressures(REAL);
   void PutWakesInTree();
+  void AddVortonsToTree(Array <Vect3> &, Array <Vect3> &, Array <int> &);
   void GetFaceVels();
   void GetPanelFMMVelocities(REAL);
   void MoveBodies(REAL, bool);

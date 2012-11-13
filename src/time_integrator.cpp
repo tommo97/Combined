@@ -46,12 +46,12 @@ TIME_STEPPER::TIME_STEPPER() {
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
     cfl_lim = 0.45;
-    dt_out = 1;
+    dt_out = 0.1;
     t_out = dt_out;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();
     dump_next = show_rundata = false;
-    first_step = true;
+    first_step = dump_next = true;
 }
 /**************************************************************/
 void trig_cone(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL magnitude, REAL radius);
@@ -116,43 +116,6 @@ void lamb_dipole(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL ampl
         }
     }
 }
-/**************************************************************/
-void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude, REAL radius, REAL k);
-
-void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude, REAL radius, REAL k) {
-    int nr = 1000, nt = 360;
-    amplitude += k;
-    REAL r = 0;
-    for (int i = 0; i < nr; ++i) {
-        REAL gamma = 2 * radius * sqrt(1 - ((r / radius) * (r / radius)));
-        REAL theta = 0;
-        for (int j = 0; j < nt; ++j) {
-            X.push_back(centre + Vect3(r * cos(theta), r * sin(theta), 0.0));
-            Omega.push_back(Vect3(-gamma * sin(theta), gamma * cos(theta), 0.0));
-            theta += two_pi / nt;
-        }
-        r += radius / nr;
-    }
-
-    Array <Vect3> Xn, Omn;
-    Xn.push_back(X[0]);
-    Omn.push_back(Omega[0]);
-    for (int i = 1; i < X.size(); ++i) {
-        X[i] = floor(X[i]) + .5;
-        bool put_in = true;
-        for (int j = 0; j < Xn.size(); ++j)
-            if (X[i].x == Xn[j].x && X[i].y == Xn[j].y && X[i].z == Xn[j].z) put_in = false;
-
-        if (put_in) {
-            Xn.push_back(floor(X[i]) + .5);
-            Omn.push_back(Omega[i]);
-        }
-
-    }
-
-    X = Xn;
-    Omega = Omn;
-}
 
 /**************************************************************/
 
@@ -160,7 +123,6 @@ void TIME_STEPPER::DoFMM() {
     globalOctree->InitVelsGetLaplacian();
     globalOctree->GetVels();
 }
-
 /**************************************************************/
 void TIME_STEPPER::TimeAdvance() {
 
@@ -173,16 +135,19 @@ void TIME_STEPPER::TimeAdvance() {
     globalSystem->GetFaceVels();
     time_step();
     //  t0: get panel FMM Vels
-    globalSystem->GetPanelFMMVelocities(dt);
-    //  t0: get time derivatives at t0
+    if (globalSystem->useBodies) {
+        globalSystem->GetPanelFMMVelocities(dt);
 
-    //  t0: advance innter (body) timestep
+        //  t0: get time derivatives at t0
 
-    if (TIME_STEPPER::RK2Mode)
-        BODY::BodySubStep(dt / 2.0, globalSystem->NumSubSteps);
-    else
-        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
+        //  t0: advance innter (body) timestep
 
+        if (TIME_STEPPER::RK2Mode)
+            BODY::BodySubStep(dt / 2.0, globalSystem->NumSubSteps);
+        else
+            BODY::BodySubStep(dt, globalSystem->NumSubSteps);
+
+    }
     globalSystem->GetFaceVels();
     globalOctree->FVM(); //  dom_dt(t0)
     //  t0: advance outer wake to t*
@@ -192,9 +157,11 @@ void TIME_STEPPER::TimeAdvance() {
         TIME_STEPPER::RKStep = 1;
         //  t*: Do the FMM again
         DoFMM();
-        globalSystem->GetPanelFMMVelocities(dt / 2);
-        BODY::BodySubStep(dt / 2.0, globalSystem->NumSubSteps); //  t = t0 -> t*
-        //  t*: calculate face velocities due to body
+        if (globalSystem->useBodies) {
+            globalSystem->GetPanelFMMVelocities(dt / 2);
+            BODY::BodySubStep(dt / 2.0, globalSystem->NumSubSteps); //  t = t0 -> t*
+            //  t*: calculate face velocities due to body
+        }
         globalSystem->GetFaceVels();
         //  t*: calculate gradients at t*
         globalOctree->FVM(); //  dom_dt(t*)
@@ -204,7 +171,11 @@ void TIME_STEPPER::TimeAdvance() {
 
 
     //  Put the wake in the tree from the bodytimestep
-    globalSystem->PutWakesInTree();
+    if (globalSystem->useBodies) {
+        globalSystem->PutWakesInTree();
+    }
+    else
+        TIME_STEPPER::SimTime += dt;
     //  Clean up
     if (!fmod((REAL) n, 10.0))
         PruneNow = true;
@@ -218,13 +189,21 @@ void TIME_STEPPER::TimeAdvance() {
 /**************************************************************/
 void TIME_STEPPER::time_loop() {
 
+    
     if (first_step) {
+        
         dt = globalSystem->dtInit;
-        BODY::BodySubStep(globalSystem->dtInit, globalSystem->NumSubSteps);
-        globalSystem->PutWakesInTree();
+        if (globalSystem->useBodies) {
+            BODY::BodySubStep(globalSystem->dtInit, globalSystem->NumSubSteps);
+            globalSystem->PutWakesInTree();
+        }
         globalOctree->Reset();
+        cout << "AAAA" << endl;
         globalOctree->InitVelsGetLaplacian();
+        cout << "BBBB" << endl;
         globalOctree->GetVels();
+        cout << "CCCC" << endl;
+        globalSystem->WriteData();
         first_step = false;
     } else {
 #ifdef TIME_STEPS
@@ -298,28 +277,30 @@ void TIME_STEPPER::time_step() {
     REAL OmRMax = 0.0, MaxRadius = 0.0;
 //    REAL MaxX, MaxY, MaxZ; MaxX = MaxY = MaxZ = -1e32;
 //    REAL MinX, MinY, MinZ; MinX = MinY = MinZ = 1e32;
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
-        // 	Get point kinematic velocity - rotational part first
-        Vect3 Vrot = BODY::AllBodyFaces[i]->Owner->BodyRates.Cross(Pos);
-        // 	Add to translational velocity....
-        Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
+    if (globalSystem->useBodies) {
+        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+            Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
+            // 	Get point kinematic velocity - rotational part first
+            Vect3 Vrot = BODY::AllBodyFaces[i]->Owner->BodyRates.Cross(Pos);
+            // 	Add to translational velocity....
+            Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
 
-        OmRMax = max(Vkin.Mag(), OmRMax);
-        
-        
-        MaxRadius = max(MaxRadius, Pos.Mag());
-        
-//
-//        MaxX = max(MaxX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-//        MinX = min(MinX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-//        MaxY = max(MaxY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-//        MinY = min(MinY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-//        MaxZ = max(MaxZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
-//        MinZ = min(MinZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+            OmRMax = max(Vkin.Mag(), OmRMax);
 
-                
 
+            MaxRadius = max(MaxRadius, Pos.Mag());
+
+            //
+            //        MaxX = max(MaxX, BODY::AllBodyFaces[i]->CollocationPoint.x);
+            //        MinX = min(MinX, BODY::AllBodyFaces[i]->CollocationPoint.x);
+            //        MaxY = max(MaxY, BODY::AllBodyFaces[i]->CollocationPoint.y);
+            //        MinY = min(MinY, BODY::AllBodyFaces[i]->CollocationPoint.y);
+            //        MaxZ = max(MaxZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+            //        MinZ = min(MinZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+
+
+
+        }
     }
     
     
@@ -361,16 +342,16 @@ void TIME_STEPPER::time_step() {
         t_out += dt_out;
     }
 
+    if (globalSystem->useBodies) {
+        //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
+        REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (OmRMax)); //
 
-    //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-    REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (OmRMax)); //
+        int nss = ceil(dt_euler / dt_lagrange);
 
-    int nss = ceil(dt_euler / dt_lagrange);
 
+        globalSystem->NumSubSteps = nss;
+    }
     CFL = srad * dt;
-
-    globalSystem->NumSubSteps = nss;
-
 
     //    if (n == 0) dump_next = true;
 

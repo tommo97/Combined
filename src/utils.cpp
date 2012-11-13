@@ -568,6 +568,7 @@ void UTIL::write1D(string varname, string fname, Array<double> &input, int m) {
     delete[] d;
 }
 
+
 void UTIL::write1D(string varname, string fname, Array<int> &input, int m) {
     int dims[2] = {m, 1};
     //double d[m];
@@ -589,6 +590,52 @@ void UTIL::write1D(string varname, string fname, Array<int> &input, int m) {
     }
     delete[] d;
 }
+
+int UTIL::readmat(string fname, string varname, Array <REAL> &data, Array <int> &dims, bool verbose) {
+    data.clear();
+    dims.clear();
+    int err = 0;
+    mat_t *mat;
+    matvar_t *matvar;
+    char *varname_cstr = new char [varname.size() + 1];
+    strcpy(varname_cstr, varname.c_str());
+    mat = Mat_Open(fname.c_str(), MAT_ACC_RDONLY);
+    if (mat) {
+        matvar = Mat_VarRead(mat, varname_cstr);
+        if (matvar == NULL) {
+            err = 1;
+        } else {
+            int numel = matvar->dims[0];
+            for (int i = 0; i < matvar->rank; ++i) {
+                if (i > 0)
+                    numel *= matvar->dims[i];
+                dims.push_back(matvar->dims[i]);
+            }
+            
+            data.allocate(numel);
+            for (int i = 0; i < numel; ++i)
+                data[i] = ((double*)matvar->data)[i];
+            
+            if (verbose) {
+                Mat_VarPrint(matvar, 1);
+                cout << "Name of data: " << matvar->name << endl;
+                cout << "Rank of input: " << matvar->rank << endl;
+                cout << "Dimensions [";
+                for (int i = 0; i < matvar->rank; ++i)
+                    cout << matvar->dims[i] << " ";
+                cout << "]" << endl;
+                cout << "Number of elements: " << numel << endl;
+            }
+        }
+        Mat_VarFree(matvar);
+        Mat_Close(mat);
+    } else {
+        err = 1;
+    }
+    return err;
+}
+
+
 
 void UTIL::WriteMATLABMatrix1DVect3(string vname, string fname,
         Array<Vect3> &data) {

@@ -719,9 +719,10 @@ void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName, bo
 
     for (int i = 0; i < outdata.Vect2DArrays.size(); ++i)
         UTIL::WriteMATLABMatrix2DVect3(outdata.Vect2DArrayStrings[i], fname, outdata.Vect2DArrays[i]);
-    
-    
-    UTIL::PostAmble(fname);
+
+    if (globalSystem->useBodies) {
+        UTIL::PostAmble(fname);
+    }
     UTIL::WriteMATLABMatrix1D("Del2", fname, globalSystem->Del2);
     UTIL::WriteMATLABMatrix1D("h", fname, globalSystem->h);
     UTIL::WriteMATLABMatrix1D("GambitScale", fname, globalSystem->GambitScale);

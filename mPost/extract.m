@@ -1,6 +1,11 @@
-function [XI,YI,ZI,VI, VIx, VIy, VIz, x,y,z, U, V, W] = extract(fname,val, scale)
-load(fname,'CellPos');
+function [XI,YI,ZI,VI, Vx, Vy, Vz, x,y,z, U, V, W] = extract(fname,val, scale)
+load(fname,'CellPos'); 
 
+if ~exist('CellPos')
+
+    load(fname,'Domain');
+    CellPos = Domain(:,1:3);
+end
 subs = CellPos(:,1:3);
 subs(:,1) = subs(:,1) - min(CellPos(:,1));
 subs(:,2) = subs(:,2) - min(CellPos(:,2));
@@ -14,12 +19,9 @@ W = [];%VI;
 x = [];%VI;
 y = [];%VI;
 z = [];%VI;
-Vx = [];%zeros(max(subs));
-Vy = [];%zeros(max(subs));
-Vz = [];%zeros(max(subs));
-VIx = [];
-VIy = [];
-VIz = [];
+Vx = zeros(max(subs));
+Vy = zeros(max(subs));
+Vz = zeros(max(subs));
 
 disp(['Domain size: ' num2str(size(VI)) '; i.e. ' num2str(numel(VI)) ' cells' ]);
 disp(['Number of Vorticity Cells: ' num2str(length(subs(:,1)))]);
@@ -34,11 +36,16 @@ disp(['Occupancy Ratio: ' num2str(length(subs(:,1))/numel(VI))]);
 sz = size(CellPos,2);
 artcols = (sz-3):sz;
 viscols = artcols-6;
-load(fname,'CellViscDeriv');
-load(fname,'CellOms');
-load(fname,'CellVel');
-Data = CellOms;
 
+    load(fname,'CellViscDeriv');
+    load(fname,'CellOms');
+    load(fname,'CellVel');
+    
+if ~exist('CellOms')
+    Data = Domain(:,4:6);
+else
+    Data = CellOms;
+end
 
 data = sqrt(Data(:,1).*Data(:,1) + Data(:,2).*Data(:,2) + Data(:,3).*Data(:,3));
 
@@ -46,6 +53,9 @@ data = sqrt(Data(:,1).*Data(:,1) + Data(:,2).*Data(:,2) + Data(:,3).*Data(:,3));
 
 for i = 1:size(subs,1)
     VI(subs(i,1),subs(i,2), subs(i,3)) =  data(i);
+    Vx(subs(i,1),subs(i,2),subs(i,3)) =  Data(i,1);
+    Vy(subs(i,1),subs(i,2),subs(i,3)) =  Data(i,2);
+    Vz(subs(i,1),subs(i,2),subs(i,3)) =  Data(i,3);
 end
 
 return
@@ -71,10 +81,10 @@ for q = 1:num_vort
     max(vals(:))
     
     for i = 1:size(subs,1)
-        VI(subs(i,1),subs(i,2), subs(i,3)) =  vals(i);
-        %Vx(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,1);
-        %Vy(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,2);
-        %Vz(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,3);
+        VI(subs(i,1),subs(i,2),subs(i,3)) =  vals(i);
+        Vx(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,1);
+        Vy(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,2);
+        Vz(subs(i,1),subs(i,2),subs(i,3)) =  vort(i,3);
     end
     %Y = Y - min(Y(:));
     %VI = VI.^3;
