@@ -5,7 +5,7 @@ col(1) = 'r';
 col(2) = 'b';
 
 
-IDs = [0:4:20];
+IDs = [0:2:13]
 RANGE = 1:length(IDs);
 %matlabpool close force local
 %matlabpool(7)
@@ -36,7 +36,8 @@ for i = RANGE
     Data(i).VI.mag(Data(i).inds) = sqrt(Data(i).CellOms(:,1).^2 + Data(i).CellOms(:,2).^2 + Data(i).CellOms(:,3).^2);
     
     Data(i).VI.max = max(Data(i).VI.mag(:));
-    
+    Data(i).VI.mean = mean(Data(i).VI.mag(:));
+    Data(i).VI.total = sum(Data(i).VI.mag(:));
     Data(i).NumTransVars = size(Data(i).TransVars_x,2);
     
     for j = 1:Data(i).NumTransVars
@@ -60,27 +61,23 @@ end
 
 for i = RANGE
     
-    
-    for j = 1:Data(i).NumTransVars
-        Data(i).p(j).iso = isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.2*Data(i).VI.max);
-        %isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).p(j));
-        %set(Data(i).p(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',1)
-        
-%         Data(i).q(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.125*Data(i).VI.max));
-%         isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).q(j));
-%         set(Data(i).q(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.4)
-%         
-%         Data(i).r(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.0625*Data(i).VI.max));
-%         isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).r(j));
-%         set(Data(i).r(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.2)
-    end
-
     figure
     for j = 1:Data(i).NumTransVars
-        iso = patch(Data(i).p(j).iso);
-        isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,iso);
-        set(iso,'FaceColor',col(j),'EdgeColor','none','faceAlpha',1)
+        Data(i).p(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.2*Data(i).VI.max));
+        isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).p(j));
+        set(Data(i).p(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',1)
+        
+        Data(i).q(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.125*Data(i).VI.mean));
+        isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).q(j));
+        set(Data(i).q(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.1)
+        
+        Data(i).r(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.0625*Data(i).VI.mean));
+        isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).r(j));
+        set(Data(i).r(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.05)
     end
+    
+    
+    
     
     axis equal tight;
     lighting phong
@@ -88,7 +85,7 @@ for i = RANGE
     grid on
     view(3)
     axis([-4 4 -2 2 -5 -0]);
-    %axis([-4 4 -2 2 -4 4]); 
+    axis([-4 4 -2 2 -4 4]);
     camlight('infinite');
     
     set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
