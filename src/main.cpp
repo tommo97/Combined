@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     
     //  Some default values
     globalSystem->GambitScale = 25.0;    // 5 minimum for nrel...
-    globalSystem->MaxP = 5;     // try 5 as a minimum...
+    globalSystem->MaxP = 3;     // try 5 as a minimum...
     globalSystem->Del2 = 0.25;
     globalSystem->DS = 1.0;
     globalSystem->dtInit = 0.05;
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
     globalSystem->unscaledVinf = Vect3(0.0);
     globalSystem->NumSubSteps = 0;
     globalSystem->NumTransVars = 2;
-    TIME_STEPPER::MaxTime = 1.0;
+    TIME_STEPPER::MaxTime = 10.0;
     UTIL::cpu_t = ticks();
 
 
@@ -147,10 +147,10 @@ int main(int argc, char *argv[]) {
     
     
     REAL radius = 1.0, amplitude = 1.0;
-    Vect3 centre(1.,0,0);
+    Vect3 centre(2.,0,0);
     Array <Vect3> X, Omega;
     
-    REAL THETA = 0.523598775598299;
+    REAL THETA = 1.570796326794897;//0.523598775598299;
     sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, THETA);
     
     cout << X.size() << " " << Omega.size() << endl;
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
     
     globalSystem->AddVortonsToTree(X,Omega, IDs);
 
-    centre = Vect3(-1.,0,0);
+    centre = Vect3(-2.,0,0);
  
     sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, -THETA);
     IDs = 1;
@@ -1724,12 +1724,12 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
     X.allocate(nr*nt);
     Omega.allocate(nr*nt);
     for (int i = 0; i < nr; ++i) {
-        REAL gamma = amplitude*r*sqrt(1 - ((r / radius) * (r / radius)));
+        REAL gamma = amplitude*sqrt(1 - ((r / radius) * (r / radius)));
         REAL theta = 0;
         for (int j = 0; j < nt; ++j) {
-            Vect3 x = scale*centre + scale*Vect3(r * cos(theta), r * sin(theta), 0.0);
+            Vect3 x = scale*Vect3(r * cos(theta), r * sin(theta), 0.0);
             
-            Vect3 xt = Vect3(x.x*R[0][0] + x.z*R[2][0],x.y,x.x*R[0][2] + x.z*R[2][2]);
+            Vect3 xt = scale*centre + Vect3(x.x*R[0][0] + x.z*R[2][0],x.y,x.x*R[0][2] + x.z*R[2][2]);
             X[count] = xt;
             
             Vect3 om = scale*scale*Vect3(-gamma * sin(theta), gamma * cos(theta), 0.0);
