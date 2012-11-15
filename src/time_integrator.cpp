@@ -46,7 +46,7 @@ TIME_STEPPER::TIME_STEPPER() {
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
     cfl_lim = 0.45;
-    dt_out = 0.1;
+    dt_out = 0.05;
     t_out = dt_out;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();

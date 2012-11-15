@@ -122,8 +122,13 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     
     //  Some default values
+<<<<<<< HEAD
     globalSystem->GambitScale = 25.0;    // 5 minimum for nrel...
     globalSystem->MaxP = 3;     // try 5 as a minimum...
+=======
+    globalSystem->GambitScale = 50.0;    // 5 minimum for nrel...
+    globalSystem->MaxP = 5;     // try 5 as a minimum...
+>>>>>>> 459d0651369354b0b791fa227da8db474638bb8a
     globalSystem->Del2 = 0.25;
     globalSystem->DS = 1.0;
     globalSystem->dtInit = 0.05;
@@ -131,11 +136,15 @@ int main(int argc, char *argv[]) {
     globalSystem->useBodies = false;
     globalSystem->unscaledVinf = Vect3(0.0);
     globalSystem->NumSubSteps = 0;
+<<<<<<< HEAD
     globalSystem->NumTransVars = 2;
+=======
+    
+>>>>>>> 459d0651369354b0b791fa227da8db474638bb8a
     TIME_STEPPER::MaxTime = 10.0;
     UTIL::cpu_t = ticks();
 
-
+    globalSystem->NumTransVars = 2;
 
     //UTIL::PreAmble();
 
@@ -143,14 +152,16 @@ int main(int argc, char *argv[]) {
     globalSystem->VortonsXs.clear();
     globalSystem->VortonOmegas.clear();
     
-    globalSystem->NumTransVars = 2;
-    
-    
+       
     REAL radius = 1.0, amplitude = 1.0;
     Vect3 centre(2.,0,0);
     Array <Vect3> X, Omega;
     
+<<<<<<< HEAD
     REAL THETA = 1.570796326794897;//0.523598775598299;
+=======
+    REAL THETA = 3*0.523598775598299;
+>>>>>>> 459d0651369354b0b791fa227da8db474638bb8a
     sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, THETA);
     
     cout << X.size() << " " << Omega.size() << endl;

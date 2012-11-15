@@ -1,62 +1,103 @@
-clear all; clear mex; clc;
-files = dir('RunData*00.mat');
-close all
-s = size(files,1);
-fname = files(s).name;
-load(fname,'GambitScale')
+clear all; clear mex; clc; close all
+
+val = 50;
+col(1) = 'r';
+col(2) = 'b';
 
 
-scale = GambitScale;
-val = 100;
+IDs = [0:4:20];
+RANGE = 1:length(IDs);
+%matlabpool close force local
+%matlabpool(7)
 
-col{1} = 'r';
-col{2} = 'b';
-
-[XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val,scale);
-
-% hold all
-set(gcf,'renderer','opengl')
-% p1 = patch(isosurface(XI,YI,ZI,VI,val/3));
-% isonormals(XI,YI,ZI,VI,p1);
-% set(p1,'FaceColor',[1 0.8 1],'EdgeColor','none','faceAlpha',.2)
-% % 
-% p2 = patch(isosurface(XI,YI,ZI,VI,2*val/3));
-% isonormals(XI,YI,ZI,VI,p2);
-% set(p2,'FaceColor',[1 0.8 1],'EdgeColor','none','faceAlpha',.2)
-hold all
-for i = 1:size(VIx,2)
-    vi = sqrt(VIx{i}.^2 + VIy{i}.^2 + VIz{i}.^2);
-    p{i} = patch(isosurface(XI,YI,ZI,vi,val));
-    isonormals(XI,YI,ZI,vi,p{i});
-    set(p{i},'FaceColor',col{i},'EdgeColor','none');%,'faceAlpha',.2)
+for i = RANGE
+    
+    
+    ID = IDs(i);
+    files = dir(['RunData*0' num2str(ID) '.mat']);
+    
+    s = size(files,1);
+    fname = files(s).name;
+    Data(i) = load(fname,'CellOms','GambitScale','CellPos','TransVars_x','TransVars_y','TransVars_z');
 end
-set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 
+for i = RANGE
+    
+    
+    Data(i).subs = Data(i).CellPos(:,1:3);
+    Data(i).subs(:,1) = Data(i).subs(:,1) - min(Data(i).CellPos(:,1));
+    Data(i).subs(:,2) = Data(i).subs(:,2) - min(Data(i).CellPos(:,2));
+    Data(i).subs(:,3) = Data(i).subs(:,3) - min(Data(i).CellPos(:,3));
+    Data(i).subs = Data(i).subs+1;
+    Data(i).inds = sub2ind(max(Data(i).subs),Data(i).subs(:,1),Data(i).subs(:,2),Data(i).subs(:,3));
+    Data(i).do_multiple_vorts = false;
+    
+    Data(i).VI.mag = zeros(max(Data(i).subs));
+    Data(i).VI.mag(Data(i).inds) = sqrt(Data(i).CellOms(:,1).^2 + Data(i).CellOms(:,2).^2 + Data(i).CellOms(:,3).^2);
+    
+    Data(i).VI.max = max(Data(i).VI.mag(:));
+    
+    Data(i).NumTransVars = size(Data(i).TransVars_x,2);
+    
+    for j = 1:Data(i).NumTransVars
+        Data(i).V(j).mag = zeros(max(Data(i).subs));
+        Data(i).V(j).mag(Data(i).inds) = sqrt(Data(i).TransVars_x(:,j) + Data(i).TransVars_y(:,j).^2 + Data(i).TransVars_z(:,j).^2);
+        
+    end
+    disp(['Domain size: ' num2str(size(Data(i).VI.mag)) '; i.e. ' num2str(numel(Data(i).VI.mag)) ' cells' ]);
+    disp(['Number of Vorticity Cells: ' num2str(length(Data(i).subs(:,1)))]);
+    disp(['Occupancy Ratio: ' num2str(length(Data(i).subs(:,1))/numel(Data(i).VI.mag))]);
+    
+    
+    [Data(i).XI Data(i).YI Data(i).ZI] = meshgrid([min(Data(i).CellPos(:,2)):1:max(Data(i).CellPos(:,2))]/Data(i).GambitScale,...
+        [min(Data(i).CellPos(:,1)):1:max(Data(i).CellPos(:,1))]/Data(i).GambitScale,...
+        [min(Data(i).CellPos(:,3)):1:max(Data(i).CellPos(:,3))]/Data(i).GambitScale);
+    
+    
+    %Data(i).fig = [];
+    %Data(i).p = []; Data(i).q = []; Data(i).r = [];
+end
 
+for i = RANGE
+    
+    
+    for j = 1:Data(i).NumTransVars
+        Data(i).p(j).iso = isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.2*Data(i).VI.max);
+        %isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).p(j));
+        %set(Data(i).p(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',1)
+        
+%         Data(i).q(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.125*Data(i).VI.max));
+%         isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).q(j));
+%         set(Data(i).q(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.4)
+%         
+%         Data(i).r(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.0625*Data(i).VI.max));
+%         isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).r(j));
+%         set(Data(i).r(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.2)
+    end
 
+    figure
+    for j = 1:Data(i).NumTransVars
+        iso = patch(Data(i).p(j).iso);
+        isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,iso);
+        set(iso,'FaceColor',col(j),'EdgeColor','none','faceAlpha',1)
+    end
+    
+    axis equal tight;
+    lighting phong
+    box on
+    grid on
+    view(3)
+    axis([-4 4 -2 2 -5 -0]);
+    %axis([-4 4 -2 2 -4 4]); 
+    camlight('infinite');
+    
+    set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
+    set(gca,'Projection','perspective')
+    axis off
+    zoom(2)
+    drawnow
+    
+    print(gcf,['oblique-ring-' num2str(i) '.jpg'],'-r300','-djpeg')
+end
 
-
-ViewParams = GetViewParams;
-
-
-box on
-grid on
-view(3)
-
-axis equal tight; lighting phong; camlight right;
-axis([-1.5 1.5 -1.5 1.5 -2.5 0.5])
-set(gca,'Projection','perspective')
-set(gca,'fontsize',14)
-return
-figure
-
-slice(XI,YI,ZI,VI,[0],[0],[0])
-axis equal
-shading flat
-box off
-axis off
-grid off
-view(3)
-
-axis equal tight
-set(gca,'Projection','perspective')
+%matlabpool close
