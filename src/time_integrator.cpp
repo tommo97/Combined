@@ -35,7 +35,7 @@ REAL TIME_STEPPER::MaxTime = 0;
 REAL TIME_STEPPER::SimTime = 0;
 REAL TIME_STEPPER::SubStepTime = 0;
 int TIME_STEPPER::RKStep = 0;
-bool TIME_STEPPER::RK2Mode = false;
+bool TIME_STEPPER::RK2Mode = true;
 
 /**************************************************************/
 TIME_STEPPER::TIME_STEPPER() {
