@@ -5,7 +5,7 @@ col(1) = 'r';
 col(2) = 'b';
 
 
-IDs = [0:2:13]
+IDs = [8];
 RANGE = 1:length(IDs);
 %matlabpool close force local
 %matlabpool(7)
@@ -63,18 +63,18 @@ for i = RANGE
     
     figure
     for j = 1:Data(i).NumTransVars
-        Data(i).p(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.2*Data(i).VI.max));
+        Data(i).p(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.1));
         isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).p(j));
-        set(Data(i).p(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',1)
+        set(Data(i).p(j),'FaceColor',col(j),'EdgeColor','none');%,'faceAlpha',1)
         
-        Data(i).q(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.125*Data(i).VI.mean));
-        isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).q(j));
-        set(Data(i).q(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.1)
-        
-        Data(i).r(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.0625*Data(i).VI.mean));
-        isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).r(j));
-        set(Data(i).r(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.05)
-    end
+%         Data(i).q(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.125*Data(i).VI.mean));
+%         isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).q(j));
+%         set(Data(i).q(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.1)
+%         
+%         Data(i).r(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.0625*Data(i).VI.mean));
+%         isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).r(j));
+%         set(Data(i).r(j),'FaceColor',col(j),'EdgeColor','none','faceAlpha',.05)
+     end
     
     
     
@@ -91,10 +91,13 @@ for i = RANGE
     set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
     set(gca,'Projection','perspective')
     axis off
-    zoom(2)
+    zoom(1.75)
     drawnow
     
-    print(gcf,['oblique-ring-' num2str(i) '.jpg'],'-r300','-djpeg')
+    print(gcf,['normal-ring-' num2str(i) '.jpg'],'-r300','-djpeg')
 end
+
+
+
 
 %matlabpool close

@@ -49,7 +49,7 @@ using namespace std;
 
 #define OCTREE_SIZE 4096
 #define OCTREE_LEVS 13
-#define LIMITER SUPERBEE
+#define LIMITER VANLEER
 
 //#define COLLAPSE_TO_FACES
 
@@ -57,7 +57,7 @@ using namespace std;
 #define NY 300
 //  Disables bounds checking in Array class... use with caution. Make sure code runs, and doesn't change...
 #define ARRAY_NO_CHECK
-
+#define USE_ROLLED_LOOPS
 
 //  Some simulation parameters
 #define USE_ARRAY
@@ -96,13 +96,13 @@ class OctreeCapsule;
 #define _EPS 1e-3
 #define _EPS2 1e-6
 #define _TOL 1e-12
-#define VORTICITY_CUTOFF 1e-3
+#define VORTICITY_CUTOFF 1e-4
 #else
 #define REAL float
 #define _EPS 1e-3
 #define _EPS2 1e-6
 #define _TOL 1e-6
-#define VORTICITY_CUTOFF 1e-2
+#define VORTICITY_CUTOFF 1e-3
 #endif
 
 #include "includes.hpp"

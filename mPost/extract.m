@@ -34,7 +34,9 @@ z = [];%VI;
 Vx = zeros(max(subs));
 Vy = zeros(max(subs));
 Vz = zeros(max(subs));
-
+VIx = [];
+VIy = [];
+VIz = [];
 disp(['Domain size: ' num2str(size(VI)) '; i.e. ' num2str(numel(VI)) ' cells' ]);
 disp(['Number of Vorticity Cells: ' num2str(length(subs(:,1)))]);
 disp(['Occupancy Ratio: ' num2str(length(subs(:,1))/numel(VI))]);

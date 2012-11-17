@@ -39,6 +39,7 @@ void TestFMM(int argc, char *argv[]);
 void WeeAmble();
 void SolveMatfileVels(string fname, int pmax, REAL del2);
 void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude, REAL radius, REAL scale, REAL THETA);
+
 /**************************************************************/
 class OutOfMemory {
 };
@@ -56,8 +57,8 @@ public:
     void Push(REAL x) {
         m_n++;
 
-        if (x>mmax) mmax = x;
-        if (x<mmin) mmin = x;
+        if (x > mmax) mmax = x;
+        if (x < mmin) mmin = x;
         // See Knuth TAOCP vol 2, 3rd edition, page 232
         if (m_n == 1) {
             m_oldM = m_newM = x;
@@ -88,11 +89,11 @@ public:
         return sqrt(Variance());
     }
 
-    REAL Max() const{
+    REAL Max() const {
         return mmax;
     }
-    
-    REAL Min() const{
+
+    REAL Min() const {
         return mmin;
     }
 private:
@@ -100,80 +101,110 @@ private:
     REAL mmax, mmin;
     REAL m_oldM, m_newM, m_oldS, m_newS;
 };
+
 /**************************************************************/
 int main(int argc, char *argv[]) {
     system("clear");
-    
+
     /*
+     *  This code has several "modes:"
+     *  1) It can be used as a BEM simulator with or without a BEM wake. If a BEM 
+     *     wake is included, it can take one of 2 forms:
+     *     a) Panel representation using constant vortex panels;
+     *     b) Vortex blob representation using point vortices.
+     *     Either way, a direct NxN calculation must be done for the wake rollup,
+     *     and this is not accelerated.
+     *  2) It can be used with a BEM source for a FVM vortex code. This is
+     *     accelerated using a FMM method for the Biot-Savart calculation.
+     *  3) It can be used to model vortex flows in the absence of a body, e.g.
+     *     a) The normal or 
+     *     b) oblique collision of two vortex rings.
+     *  4) It can be used to calculate the velocity due to a vorticity field, as
+     *     provided at runtime.
+     */
+
+
+
+
+
+
+
+
+
+
+
+
+
     cout << "Enter filename:" << endl;
     string fname;
 
 
     SolveMatfileVels(fname, 8, 0.25);
-    
-    
-    
-    return 0;
- */
 
-//    WeeAmble();
-//    return 1;
+
+
+    return 0;
+
+
+    //    WeeAmble();
+    //    return 1;
 
     SYSTEM System(0);
-    
-    //  Some default values
 
-    globalSystem->GambitScale = 50.0;    // 5 minimum for nrel...
-    globalSystem->MaxP = 3;     // try 5 as a minimum...
+    //  Some default values
+    globalSystem->GambitScale = 5;
+    globalSystem->MaxP = 3;
     globalSystem->Del2 = 0.25;
-    globalSystem->DS = 1.0;
+    globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
     globalSystem->h = 3;
-    globalSystem->useBodies = false;
     globalSystem->unscaledVinf = Vect3(0.0);
     globalSystem->NumSubSteps = 0;
-    globalSystem->NumTransVars = 2;
 
-    
-    TIME_STEPPER::MaxTime = 10.0;
+
     UTIL::cpu_t = ticks();
 
-    globalSystem->NumTransVars = 2;
+    UTIL::PreAmble();
 
-    //UTIL::PreAmble();
+
+    //    TIME_STEPPER::MaxTime = 10.0;
+    //    globalSystem->useBodies = false;
+
+    //    globalSystem->NumTransVars = 2;
+
 
     globalSystem->Initialise();
     globalSystem->VortonsXs.clear();
     globalSystem->VortonOmegas.clear();
-    
-       
-    REAL radius = 1.0, amplitude = 1.0;
-    Vect3 centre(2.,0,0);
-    Array <Vect3> X, Omega;
-    
-
-    REAL THETA = 3*0.523598775598299;
-
-    sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, THETA);
-    
-    cout << X.size() << " " << Omega.size() << endl;
-    
-    Array <int> IDs(X.size(),0);
-    
-    globalSystem->AddVortonsToTree(X,Omega, IDs);
-
-    centre = Vect3(-2.,0,0);
- 
-    sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, -THETA);
-    IDs = 1;
-    cout << X.size() << " " << Omega.size() << endl;    
-    globalSystem->AddVortonsToTree(X,Omega, IDs);
-
-#ifndef use_NCURSES
-    if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
-#endif
-
-    cout << "Number of cells:... " << FVMCell::NumCells << endl;
+    //    
+    //       
+    //    REAL radius = 1.0, amplitude = 1.0;
+    //    Vect3 centre(2.,0,0);
+    //    Array <Vect3> X, Omega;
+    //    
+    //
+    //    REAL THETA = 3*0.523598775598299;
+    //
+    //    sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, THETA);
+    //    
+    //    cout << X.size() << " " << Omega.size() << endl;
+    //    
+    //    Array <int> IDs(X.size(),0);
+    //    
+    //    globalSystem->AddVortonsToTree(X,Omega, IDs);
+    //
+    //    centre = Vect3(-2.,0,0);
+    // 
+    //    sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, -THETA);
+    //    IDs = 1;
+    //    cout << X.size() << " " << Omega.size() << endl;    
+    //    globalSystem->AddVortonsToTree(X,Omega, IDs);
+    //
+    //#ifndef use_NCURSES
+    //    if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
+    //#endif
+    //
+    //    cout << "Number of cells:... " << FVMCell::NumCells << endl;
     globalSystem->TimeStep();
 
 
@@ -318,7 +349,7 @@ void UTIL::PostAmble(string fname) {
                     GMA.push_back(BODY::Bodies[I]->WakePanels[i][j][k]->Gamma);
                 }
 
-    
+
     for (int i = 0; i < BODY::AllProtoWakes.size(); ++i) {
         C1.push_back(BODY::AllProtoWakes[i]->C1);
         C2.push_back(BODY::AllProtoWakes[i]->C2);
@@ -686,10 +717,11 @@ Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega, REAL del2) {
     mult = -1 / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
+
 /**************************************************************/
 void SolveMatfileVels(string fname, int pmax, REAL del2) {
 
- system("clear");
+    system("clear");
 
     cout << "TUI driven file based specification of vortex points and target points." << endl;
     Array <Vect3> Posns, Omegas;
@@ -697,7 +729,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 
 
     Array <REAL> data;
-    
+
     Array <int> dims;
     cout << "Enter name of .mat file containing [Nx3] list of vortex locations..." << endl;
     getline(cin, fname);
@@ -710,11 +742,11 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
         Posns[i].x = data[dims[0] * 0 + i] - 0.5;
         Posns[i].y = data[dims[0] * 1 + i] - 0.5;
         Posns[i].z = data[dims[0] * 2 + i] - 0.5;
-        Mins = min(Mins,Posns[i]);
-        Maxs = max(Maxs,Posns[i]);
+        Mins = min(Mins, Posns[i]);
+        Maxs = max(Maxs, Posns[i]);
         //cout << Posns[i] << endl;
     }
-    cout << "Domain bounds: [" << Mins.x << " " << Maxs.x << "][" << Mins.y << " " << Maxs.y << "][" << Mins.z << " " << Maxs.z << "]" << endl; 
+    cout << "Domain bounds: [" << Mins.x << " " << Maxs.x << "][" << Mins.y << " " << Maxs.y << "][" << Mins.z << " " << Maxs.z << "]" << endl;
     cout << "Enter name of .mat file containing [" << dims[0] << "x3] list of vortex strengths..." << endl;
     getline(cin, fname);
     varname = "Omegas";
@@ -730,31 +762,80 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
         Omegas[i].z = data[dims[0] * 2 + i];
         //cout << Omegas[i] << endl;
     }
-       
+
     data.clear();
-    
+
     cout << "done reading. Finding active cells...";
-    
+
     Array <bool> isActive(Omegas.size(), 'false');
     unsigned long int activeCount = 0;
-#pragma omp parallel for
-    for (int i = 0; i < Posns.size(); ++i)
-        if (Omegas[i].Mag() > 1e-6){
+
+    for (int i = 0; i < Posns.size(); ++i) {
+        if (Omegas[i].Mag() > 1e-6) {
             isActive[i] = true;
             activeCount++;
+        } else {
+            isActive[i] = false;
         }
-//        else
-//        {
-//            Vect3 Pos = globalSystem->GambitScale*Posns[i];
-//            Vect3 ParentPos = floor(Pos) + 1.0;
-//        }
-    
-//    for (int i = 0; i < Posns.size(); ++i)
-    
-    cout << " done. " << activeCount << " active cells."  << endl << "Beginning insertion into tree..." << endl;
-    
-    SYSTEM System(0);
-    
+    }
+
+
+
+    Array <Vect3> ActiveP(activeCount), ActiveO(activeCount);
+    count = 0;
+    for (int i = 0; i < Posns.size(); ++i)
+        if (isActive[i]) {
+            ActiveP[count] = Posns[i];
+            ActiveO[count] = Omegas[i];
+            count++;
+        }
+    //        else
+    //        {
+    //            Vect3 Pos = globalSystem->GambitScale*Posns[i];
+    //            Vect3 ParentPos = floor(Pos) + 1.0;
+    //        }
+
+    //    for (int i = 0; i < Posns.size(); ++i)
+
+    cout << " done. " << activeCount << " active cells." << endl << "Beginning insertion into tree..." << endl;
+
+
+
+
+//        cout << "Not using tree... Doing direct calc. This might take some time....." << endl;
+//        
+//        
+//        
+//        Array < Array < Vect3 > > PosI, VelI;
+//
+//    PosI = UTIL::zerosv(200, 50);
+//    VelI = PosI;
+//
+//    Vect3 Pos(-10, -100, -50);
+//    for (int i = 0; i < 200; ++i)
+//        for (int j = 0; j < 50; ++j)
+//            PosI[i][j] = (Pos + Vect3(0.0, REAL(i), REAL(j)))/7.5;
+//
+//
+//    count = 0;
+//    Array <Vect3> Vels(numel);
+//#pragma omp parallel for
+//    for (int i = 0; i < PosI.size(); ++i)
+//        for (int j = 0; j < PosI[i].size(); ++j) 
+//            for (int k = 0; k < activeCount; ++k) 
+//                VelI[i][j] += UTIL::globalDirectVel(ActiveP[k] - PosI[i][j], ActiveO[k], 0.01);
+//
+//
+//
+//        UTIL::WriteMATLABMatrix2DVect3(string("Posns"), string("OutArrayA.mat"), PosI);
+//        UTIL::WriteMATLABMatrix2DVect3(string("Vels"), string("OutArrayA.mat"), VelI);
+//
+//        return;
+//    
+//
+
+        SYSTEM System(0);
+
     cout << "Enter GambitScale..." << endl;
     cin >> globalSystem->GambitScale;
     cout << "Enter MaxP..." << endl;
@@ -764,11 +845,11 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 
 
     globalSystem->Initialise();
-    
+
     REAL t0 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
 
     for (int i = 0; i < Posns.size(); ++i) {
-        if (isActive[i]) {
+//        if (isActive[i]) {
             OctreeCapsule C(globalSystem->GambitScale * Posns[i], globalSystem->GambitScale * globalSystem->GambitScale * Omegas[i], true);
             C.AssociatedBody = 0;
             globalOctree->Root->EvalCapsule(C);
@@ -794,27 +875,25 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
                     throw OutOfMemory();
                 }
             }
-        }
+//        }
     }
-    
-    
-    return;
-    
+
+    globalTimeStepper->PruneNow = false;
     globalOctree->Reset();
     Mins = 1e32;
     Maxs = -1e32;
-    
+
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        Mins = min(globalOctree->AllCells[i]->Position,Mins);
-        Maxs = max(globalOctree->AllCells[i]->Position,Maxs);
+        Mins = min(globalOctree->AllCells[i]->Position, Mins);
+        Maxs = max(globalOctree->AllCells[i]->Position, Maxs);
     }
-    cout << "Scaled domain bounds: [" << Mins.x << " " << Maxs.x << "][" << Mins.y << " " << Maxs.y << "][" << Mins.z << " " << Maxs.z << "]" << endl; 
+    cout << "Scaled domain bounds: [" << Mins.x << " " << Maxs.x << "][" << Mins.y << " " << Maxs.y << "][" << Mins.z << " " << Maxs.z << "]" << endl;
     cout << "Calculating velocities..." << endl;
     globalOctree->InitVelsGetLaplacian();
     globalOctree->GetVels();
     REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     cout << "Done. Time elapsed: " << t1 - t0 << endl;
-
+//
     int n = globalOctree->AllCells.size();
     Posns.allocate(n);
     Omegas.allocate(n);
@@ -829,177 +908,168 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
         Omegas[i] = (globalOctree->AllCells[i]->Omega);
         FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
     }
+
     cout << "Clearing tree... ";
     globalOctree->ClearNodes();
     cout << "done." << endl;
-string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
-            REAL MEM_PERCENT, temp;
-	                stringstream psdata;
-			            psdata << top_data;
-				                psdata >> temp >> MEM_PERCENT;
-						            cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
+    string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
+    REAL MEM_PERCENT, temp;
+    stringstream psdata;
+    psdata << top_data;
+    psdata >> temp >> MEM_PERCENT;
+    cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
     cin.ignore();
-    cout << "Enter name of .mat file to write list of [" << n << "x9] vortex positions, strengths and velocities..." << endl;
+    cout << "Enter name of .mat file to write list of [" << numel << "x9] vortex positions, strengths and velocities..." << endl;
     getline(cin, fname);
     string vname = "DomainData";
-    
-    Array < Array < REAL > > out_data(n,Array < REAL > (9,0.0));
-    for (int i = 0; i < n; ++i)
-{
-        out_data[i][0] = Posns[i].x;
-        out_data[i][1] = Posns[i].y;
-        out_data[i][2] = Posns[i].z;
-        out_data[i][3] = Omegas[i].x;
-        out_data[i][4] = Omegas[i].y;
-        out_data[i][5] = Omegas[i].z;
-        out_data[i][6] = FMMVels[i].x;
-        out_data[i][7] = FMMVels[i].y;
-        out_data[i][8] = FMMVels[i].z;
-    }
-    
-    UTIL::WriteMATLABMatrix2D(vname, fname, out_data);
-    
+
+    UTIL::WriteMATLABMatrix1DVect3(string("Posns"), fname, Posns);
+    UTIL::WriteMATLABMatrix1DVect3(string("Omegas"), fname, Omegas);
+    UTIL::WriteMATLABMatrix1DVect3(string("Vels"), fname, FMMVels);
+
     return;
-    
-
-  
-
-
-
-
-//    Array <REAL> L2;
-//
-//
-//    REAL t0 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-//    globalOctree->Reset();
-//    globalOctree->InitVelsGetLaplacian();
-//    globalOctree->GetVels();
-//    REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-//    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation..." << endl;
-//    Posns.clear();
-//    Omegas.clear();
-//    int n = globalOctree->AllCells.size();
-//    Posns.allocate(n);
-//    Omegas.allocate(n);
-//    Array <Vect3> FMMVels(n);
-//
-//
-//
-//
-//
-//    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-//        Posns[i] = (globalOctree->AllCells[i]->Position);
-//        Omegas[i] = (globalOctree->AllCells[i]->Omega);
-//        FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
-//    }
-
-
-//
-//    Array <int> Indices;
-//    REAL Mult = 1.0;
-//    if (Posns.size() > 10000) {
-//        Mult = Posns.size() / 10000.0;
-//        Indices = Array <int> (10000, 0);
-//        int count = 0;
-//        //while (RandIndices.size() < 10000)
-//        while (count < 10000) {
-//            int randint = int (Posns.size()*(REAL(rand()) / RAND_MAX));
-//            bool isin = false;
-//            for (int i = 0; i < 10000; ++i)
-//                if (Indices[i] == randint)
-//                    isin = true;
-//
-//            if (!isin) {
-//                Indices[count] = randint;
-//                count++;
-//            }
-//        }
-//
-//    } else {
-//        Indices = Array <int> (Posns.size(), 0);
-//        for (int i = 0; i < Posns.size(); ++i)
-//            Indices[i] = i;
-//    }
-//
-//
-//    Array <Vect3> DirectVels(Indices.size());
-//
-//    REAL t2 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-//#pragma omp parallel for
-//    for (int i = 0; i < Indices.size(); ++i) {
-//        Vect3 V(0, 0, 0);
-//        for (int j = 0; j < Posns.size(); ++j) {
-//            Vect3 D = Posns[j] - Posns[Indices[i]];
-//            V += globalDirectVel(D, Omegas[j]);
-//
-//        }
-//        DirectVels[i] = (V);
-//    }
-//    REAL t3 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-//    cout << "Done. Time elapsed: " << t3 - t2 << endl << "Calculating error L2 norm...";
-//    REAL l2 = 0, Vmean = 0;
-//
-//
-//    Array <REAL> AbsErrs(Indices.size()), RelErrs(Indices.size());
-//
-//    REAL AbsErrsSum2 = 0., RelErrsSum2 = 0., AbsErrsSum = 0., RelErrsSum = 0., AbsErrsMax = 0., RelErrsMax = 0.;
-//
-//    RunningStat AbsErrsStats, RelErrsStats;
-//
-//
-//    for (int i = 0; i < Indices.size(); ++i) {
-//        cout << "Cell " << i << "\tError L2 Norm " << (DirectVels[i] - FMMVels[Indices[i]]).Mag() << " \t " << DirectVels[i] << endl << "\t\t\t\t\t\t " << FMMVels[Indices[i]] << endl;
-//        l2 += (DirectVels[i] - FMMVels[Indices[i]]).Mag()*(DirectVels[i] - FMMVels[Indices[i]]).Mag();
-//        Vmean += DirectVels[i].Mag();
-//
-//        AbsErrs[i] = (DirectVels[i] - FMMVels[Indices[i]]).Mag();
-//        RelErrs[i] = AbsErrs[i] / DirectVels[i].Mag();
-//
-//        AbsErrsStats.Push(AbsErrs[i]);
-//        RelErrsStats.Push(RelErrs[i]);
-//
-//        AbsErrsSum += AbsErrs[i];
-//        RelErrsSum += RelErrs[i];
-//        AbsErrsSum2 += AbsErrs[i] * AbsErrs[i];
-//        RelErrsSum2 += RelErrs[i] * RelErrs[i];
-//
-//        AbsErrsMax = max(AbsErrsMax, AbsErrs[i]);
-//        RelErrsMax = max(RelErrsMax, RelErrs[i]);
-//
-//
-//    }
-//
-//
-//    REAL AbsErrsStd = sqrt(AbsErrsSum2 / (Posns.size() - 1));
-//    REAL RelErrsStd = sqrt(RelErrsSum2 / (Posns.size() - 1));
-//    REAL AbsErrsMean = AbsErrsSum / Posns.size();
-//    REAL RelErrsMean = RelErrsSum / Posns.size();
-//
-//    int TreeSize = OCTREE_SIZE;
-//    int TreeLevs = OCTREE_LEVS;
-//    Vmean = Vmean / n;
-//    cout << "Done." << endl << "Standard deviation: " << sqrt(l2 / Posns.size()) << endl;
-//
-//    ofstream myfile;
-//    myfile.open("output.dat", ios::out | ios::app);
-//    myfile << globalSystem->MaxP << " " << FVMCell::NumCells << " " << FVMCell::NumNodes << " " << globalSystem->NumThreads << " " << (t1 - t0)*1000 << " " << Mult * (t3 - t2)*1000 << " " << TreeLevs << " " << TreeSize << " " << AbsErrsStats.Max() << " " << AbsErrsStats.Mean() << " " << AbsErrsStats.StandardDeviation() << " " << RelErrsStats.Max() << " " << RelErrsStats.Mean() << " " << RelErrsStats.StandardDeviation() << endl;
-//    //    myfile << n << " " << globalSystem->MaxP << " " << Vmean << " " << sqrt(l2 / Posns.size()) << " " << sqrt(l2 / Posns.size())/Vmean << " " << (t1 - t0)*1000 << " " << (t3 - t2)*1000 << endl;
-//    myfile.close();
-//
-//#ifndef use_NCURSES
-//    if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
-//    cout << "Output written to output.dat:" << endl;
-//    cout << "p_max FVMCell::NumCells FVMCell::NumNodes nthreads t_fmm (ms)  t_dir (ms) TreeLevs TreeSize AbsErrsMax AbsErrsMean AbsErrsStd RelErrsMax RelErrsMean RelErrsStd sparse/dense sphere/cube;" << endl;
-//#endif
-
-
 }
+//
+//
+//    
+//
+//
+//
+//
+////    Array <REAL> L2;
+////
+////
+////    REAL t0 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+////    globalOctree->Reset();
+////    globalOctree->InitVelsGetLaplacian();
+////    globalOctree->GetVels();
+////    REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+////    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation..." << endl;
+////    Posns.clear();
+////    Omegas.clear();
+////    int n = globalOctree->AllCells.size();
+////    Posns.allocate(n);
+////    Omegas.allocate(n);
+////    Array <Vect3> FMMVels(n);
+////
+////
+////
+////
+////
+////    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+////        Posns[i] = (globalOctree->AllCells[i]->Position);
+////        Omegas[i] = (globalOctree->AllCells[i]->Omega);
+////        FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
+////    }
+//
+//
+////
+////    Array <int> Indices;
+////    REAL Mult = 1.0;
+////    if (Posns.size() > 10000) {
+////        Mult = Posns.size() / 10000.0;
+////        Indices = Array <int> (10000, 0);
+////        int count = 0;
+////        //while (RandIndices.size() < 10000)
+////        while (count < 10000) {
+////            int randint = int (Posns.size()*(REAL(rand()) / RAND_MAX));
+////            bool isin = false;
+////            for (int i = 0; i < 10000; ++i)
+////                if (Indices[i] == randint)
+////                    isin = true;
+////
+////            if (!isin) {
+////                Indices[count] = randint;
+////                count++;
+////            }
+////        }
+////
+////    } else {
+////        Indices = Array <int> (Posns.size(), 0);
+////        for (int i = 0; i < Posns.size(); ++i)
+////            Indices[i] = i;
+////    }
+////
+////
+////    Array <Vect3> DirectVels(Indices.size());
+////
+////    REAL t2 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+////#pragma omp parallel for
+////    for (int i = 0; i < Indices.size(); ++i) {
+////        Vect3 V(0, 0, 0);
+////        for (int j = 0; j < Posns.size(); ++j) {
+////            Vect3 D = Posns[j] - Posns[Indices[i]];
+////            V += globalDirectVel(D, Omegas[j]);
+////
+////        }
+////        DirectVels[i] = (V);
+////    }
+////    REAL t3 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+////    cout << "Done. Time elapsed: " << t3 - t2 << endl << "Calculating error L2 norm...";
+////    REAL l2 = 0, Vmean = 0;
+////
+////
+////    Array <REAL> AbsErrs(Indices.size()), RelErrs(Indices.size());
+////
+////    REAL AbsErrsSum2 = 0., RelErrsSum2 = 0., AbsErrsSum = 0., RelErrsSum = 0., AbsErrsMax = 0., RelErrsMax = 0.;
+////
+////    RunningStat AbsErrsStats, RelErrsStats;
+////
+////
+////    for (int i = 0; i < Indices.size(); ++i) {
+////        cout << "Cell " << i << "\tError L2 Norm " << (DirectVels[i] - FMMVels[Indices[i]]).Mag() << " \t " << DirectVels[i] << endl << "\t\t\t\t\t\t " << FMMVels[Indices[i]] << endl;
+////        l2 += (DirectVels[i] - FMMVels[Indices[i]]).Mag()*(DirectVels[i] - FMMVels[Indices[i]]).Mag();
+////        Vmean += DirectVels[i].Mag();
+////
+////        AbsErrs[i] = (DirectVels[i] - FMMVels[Indices[i]]).Mag();
+////        RelErrs[i] = AbsErrs[i] / DirectVels[i].Mag();
+////
+////        AbsErrsStats.Push(AbsErrs[i]);
+////        RelErrsStats.Push(RelErrs[i]);
+////
+////        AbsErrsSum += AbsErrs[i];
+////        RelErrsSum += RelErrs[i];
+////        AbsErrsSum2 += AbsErrs[i] * AbsErrs[i];
+////        RelErrsSum2 += RelErrs[i] * RelErrs[i];
+////
+////        AbsErrsMax = max(AbsErrsMax, AbsErrs[i]);
+////        RelErrsMax = max(RelErrsMax, RelErrs[i]);
+////
+////
+////    }
+////
+////
+////    REAL AbsErrsStd = sqrt(AbsErrsSum2 / (Posns.size() - 1));
+////    REAL RelErrsStd = sqrt(RelErrsSum2 / (Posns.size() - 1));
+////    REAL AbsErrsMean = AbsErrsSum / Posns.size();
+////    REAL RelErrsMean = RelErrsSum / Posns.size();
+////
+////    int TreeSize = OCTREE_SIZE;
+////    int TreeLevs = OCTREE_LEVS;
+////    Vmean = Vmean / n;
+////    cout << "Done." << endl << "Standard deviation: " << sqrt(l2 / Posns.size()) << endl;
+////
+////    ofstream myfile;
+////    myfile.open("output.dat", ios::out | ios::app);
+////    myfile << globalSystem->MaxP << " " << FVMCell::NumCells << " " << FVMCell::NumNodes << " " << globalSystem->NumThreads << " " << (t1 - t0)*1000 << " " << Mult * (t3 - t2)*1000 << " " << TreeLevs << " " << TreeSize << " " << AbsErrsStats.Max() << " " << AbsErrsStats.Mean() << " " << AbsErrsStats.StandardDeviation() << " " << RelErrsStats.Max() << " " << RelErrsStats.Mean() << " " << RelErrsStats.StandardDeviation() << endl;
+////    //    myfile << n << " " << globalSystem->MaxP << " " << Vmean << " " << sqrt(l2 / Posns.size()) << " " << sqrt(l2 / Posns.size())/Vmean << " " << (t1 - t0)*1000 << " " << (t3 - t2)*1000 << endl;
+////    myfile.close();
+////
+////#ifndef use_NCURSES
+////    if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
+////    cout << "Output written to output.dat:" << endl;
+////    cout << "p_max FVMCell::NumCells FVMCell::NumNodes nthreads t_fmm (ms)  t_dir (ms) TreeLevs TreeSize AbsErrsMax AbsErrsMean AbsErrsStd RelErrsMax RelErrsMean RelErrsStd sparse/dense sphere/cube;" << endl;
+////#endif
+//
+//
+//}
+
 /**************************************************************/
 
 
 void TestFMM(int argc, char *argv[]) {
 
- system("clear");
+    system("clear");
 
     if (argc < 5) {
         cout << "FMM Test Mode. Expects argument: Nvortices maxP numThreads sparse/dense cube/sphere" << endl;
@@ -1015,7 +1085,7 @@ void TestFMM(int argc, char *argv[]) {
 #ifdef _OPENMP
     omp_set_num_threads(atoi(argv[3]));
 #endif
-    
+
     SYSTEM System(0);
 
     //  Some default values
@@ -1023,7 +1093,7 @@ void TestFMM(int argc, char *argv[]) {
     globalSystem->MaxP = atoi(argv[2]);
     globalSystem->Del2 = .5;
 
-    
+
     //    globalIO->read_input(dir2 + argv[1]);
     //
     //    globalIO->PrepOutputDir();
@@ -1067,7 +1137,7 @@ void TestFMM(int argc, char *argv[]) {
 
 
                 if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
-                    
+
                     string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
                     REAL MEM_PERCENT, temp;
                     stringstream psdata;
@@ -1113,7 +1183,7 @@ void TestFMM(int argc, char *argv[]) {
                 C.AssociatedBody = 0;
                 globalOctree->Root->EvalCapsule(C);
                 if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
-                    
+
                     string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
                     REAL MEM_PERCENT, temp;
                     stringstream psdata;
@@ -1153,7 +1223,7 @@ void TestFMM(int argc, char *argv[]) {
                 C.AssociatedBody = 0;
                 globalOctree->Root->EvalCapsule(C);
                 if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
-                    
+
                     string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
                     REAL MEM_PERCENT, temp;
                     stringstream psdata;
@@ -1187,7 +1257,7 @@ void TestFMM(int argc, char *argv[]) {
                 C.AssociatedBody = 0;
                 globalOctree->Root->EvalCapsule(C);
                 if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
-                    
+
                     string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
                     REAL MEM_PERCENT, temp;
                     stringstream psdata;
@@ -1207,11 +1277,11 @@ void TestFMM(int argc, char *argv[]) {
             }
         }
     }
-    
+
     cout << "points arrangement" << endl;
-    
-    
-    
+
+
+
 
     //    
     //    string line;
@@ -1265,12 +1335,12 @@ void TestFMM(int argc, char *argv[]) {
         FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
     }
 
-    
-    
+
+
     Array <int> Indices;
     REAL Mult = 1.0;
     if (Posns.size() > 10000) {
-        Mult = Posns.size()/10000.0;
+        Mult = Posns.size() / 10000.0;
         Indices = Array <int> (10000, 0);
         int count = 0;
         //while (RandIndices.size() < 10000)
@@ -1354,7 +1424,7 @@ void TestFMM(int argc, char *argv[]) {
 
     ofstream myfile;
     myfile.open("output.dat", ios::out | ios::app);
-    myfile << globalSystem->MaxP << " " << FVMCell::NumCells << " " << FVMCell::NumNodes << " " << globalSystem->NumThreads << " " << (t1 - t0)*1000 << " " << Mult*(t3 - t2)*1000 << " " << TreeLevs << " " << TreeSize << " " << AbsErrsStats.Max() << " " << AbsErrsStats.Mean() << " " << AbsErrsStats.StandardDeviation() << " " << RelErrsStats.Max() << " " << RelErrsStats.Mean() << " " << RelErrsStats.StandardDeviation() << " " << sparsity << " " << geometry << endl;
+    myfile << globalSystem->MaxP << " " << FVMCell::NumCells << " " << FVMCell::NumNodes << " " << globalSystem->NumThreads << " " << (t1 - t0)*1000 << " " << Mult * (t3 - t2)*1000 << " " << TreeLevs << " " << TreeSize << " " << AbsErrsStats.Max() << " " << AbsErrsStats.Mean() << " " << AbsErrsStats.StandardDeviation() << " " << RelErrsStats.Max() << " " << RelErrsStats.Mean() << " " << RelErrsStats.StandardDeviation() << " " << sparsity << " " << geometry << endl;
     //    myfile << n << " " << globalSystem->MaxP << " " << Vmean << " " << sqrt(l2 / Posns.size()) << " " << sqrt(l2 / Posns.size())/Vmean << " " << (t1 - t0)*1000 << " " << (t3 - t2)*1000 << endl;
     myfile.close();
 
@@ -1431,7 +1501,7 @@ void WeeAmble() {
     cout << "Vels -------" << endl;
 
 
-//        PANEL P(Vect3(-0.91, -1.32, 0.15), Vect3(1.4, -2.1, -0.3), Vect3(1.8, 1.6, 1.25), Vect3(-1.2, 1.8, 0.189));
+    //        PANEL P(Vect3(-0.91, -1.32, 0.15), Vect3(1.4, -2.1, -0.3), Vect3(1.8, 1.6, 1.25), Vect3(-1.2, 1.8, 0.189));
 
     PANEL P(Vect3(-1, -1, 0), Vect3(1, -1, 0), Vect3(1, 1, 0), Vect3(-1, 1, 0));
     PANEL *src = &P;
@@ -1502,37 +1572,36 @@ void WeeAmble() {
     //  Test multipole for panels
 
 
-     srand((unsigned) time(NULL));
+    srand((unsigned) time(NULL));
 
-     
-     P.Sigma = P.Gamma = P.Mu = 1.0;
-     
-     int n = 1000000;
-     Array <Vect3> Targets(n);
-     for (int i = 0; i < n; ++i)
-     {
+
+    P.Sigma = P.Gamma = P.Mu = 1.0;
+
+    int n = 1000000;
+    Array <Vect3> Targets(n);
+    for (int i = 0; i < n; ++i) {
         REAL x = 100.0 * (0.5 - REAL(rand()) / REAL(RAND_MAX));
         REAL y = 100.0 * (0.5 - REAL(rand()) / REAL(RAND_MAX));
         REAL z = 100.0 * (0.5 - REAL(rand()) / REAL(RAND_MAX));
-        Targets[i] = Vect3(x,y,z);
-     }
-         
-     REAL tmp;
-     
-     
-     
-     
-     // Test to see if it is quicker to calculate velocities or potentials at what would be cell centroids...
+        Targets[i] = Vect3(x, y, z);
+    }
+
+    REAL tmp;
+
+
+
+
+    // Test to see if it is quicker to calculate velocities or potentials at what would be cell centroids...
 
     // First calc velocities with no farfield
     PANEL::FarField = 1e32;
     unsigned long int t1 = ticks();
     P.Sigma = 1.0;
     P.Mu = 1.0;
-    
-    
-     Array <Vect3> VelsFull(n);
-     Array <REAL> PhiDFull(n),PhiSFull(n);
+
+
+    Array <Vect3> VelsFull(n);
+    Array <REAL> PhiDFull(n), PhiSFull(n);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -1551,9 +1620,9 @@ void WeeAmble() {
         PhiDFull[i] = 0.0;
         PhiSFull[i] = 0.0;
         PANEL::SourceDoubletPotential(&P, Targets[i], PhiDFull[i], PhiSFull[i], 1, 2);
-    }  
-     
-     unsigned long int t3 = ticks();
+    }
+
+    unsigned long int t3 = ticks();
 
     PANEL::FarField = 5.0;
     Array <Vect3> VelsFF(n);
@@ -1617,126 +1686,130 @@ void WeeAmble() {
             EVelMag = VErr;
         }
     }
-    
+
     cout << "t for full velocity calc: " << t2 - t1 << "\t ms" << endl;
     cout << "t for fast velocity calc: " << t4 - t3 << "\t ms" << endl;
     cout << "t for full potental calc: " << t3 - t2 << "\t ms" << endl;
     cout << "t for fast potental calc: " << t5 - t4 << "\t ms" << endl;
-//        
-//    for (int i = 0; i < 1000; ++i) {
-//
-//        
-//        REAL x = 30.0 *(0.5 - REAL(rand()) / REAL(RAND_MAX));
-//        REAL y = 30.0 *(0.5 - REAL(rand()) / REAL(RAND_MAX));
-//        REAL z = 30.0 *(0.5 - REAL(rand()) / REAL(RAND_MAX));
-//        
-//        Target = Vect3(x,y,z);
-//        Vect3 R = Target - P.CollocationPoint;
-//
-//        Vect3 VS = P.SourceVel(Target);
-//        Vect3 VD = P.BodyPanelVelocity(Target);
-//
-//        REAL mult = P.Area / (2.0 * pi * R.Mag() * R.Mag() * R.Mag());
-//        Vect3 VSp = -mult*R;
-//
-//
-//        
-//        
-//      
-//
-//
-//
-//        REAL dlta = 1e-6;
-//        Vect3 dx(dlta, 0, 0), dy(0, dlta, 0), dz(0, 0, dlta);
-//
-//        REAL PhiDE = 0, PhiDW = 0, PhiDEd = 0, PhiDWd = 0;
-//        REAL PhiSE = 0, PhiSW = 0, PhiSEd = 0, PhiSWd = 0;
-//
-//        P.SubPan(100, Target + dx, 1.0, 1.0, PhiDE, PhiSE, VT);
-//        P.SubPan(100, Target - dx, 1.0, 1.0, PhiDW, PhiSW, VT);
-//        PANEL::SourceDoubletPotential(src, Target + dx, PhiDEd, PhiSEd, 1, 2);
-//        PANEL::SourceDoubletPotential(src, Target - dx, PhiDWd, PhiSWd, 1, 2);
-//
-//        REAL PhiDN = 0, PhiDS = 0, PhiDNd = 0, PhiDSd = 0;
-//        REAL PhiSN = 0, PhiSS = 0, PhiSNd = 0, PhiSSd = 0;
-//
-//        P.SubPan(100, Target + dy, 1.0, 1.0, PhiDN, PhiSN, VT);
-//        P.SubPan(100, Target - dy, 1.0, 1.0, PhiDS, PhiSS, VT);
-//        PANEL::SourceDoubletPotential(src, Target + dy, PhiDNd, PhiSNd, 1, 2);
-//        PANEL::SourceDoubletPotential(src, Target - dy, PhiDSd, PhiSSd, 1, 2);
-//
-//
-//        REAL PhiDT = 0, PhiDB = 0, PhiDTd = 0, PhiDBd = 0;
-//        REAL PhiST = 0, PhiSB = 0, PhiSTd = 0, PhiSBd = 0;
-//
-//        P.SubPan(100, Target + dz, 1.0, 1.0, PhiDT, PhiST, VT);
-//        P.SubPan(100, Target - dz, 1.0, 1.0, PhiDB, PhiSB, VT);
-//        PANEL::SourceDoubletPotential(src, Target + dz, PhiDTd, PhiSTd, 1, 2);
-//        PANEL::SourceDoubletPotential(src, Target - dz, PhiDBd, PhiSBd, 1, 2);
-//
-//
-//        Vect3 GraD100 = Vect3((PhiDE - PhiDW), (PhiDN - PhiDS), (PhiDT - PhiDB));
-//        GraD100 = GraD100 / (2 * dlta);
-//        Vect3 GraD = Vect3((PhiDEd - PhiDWd), (PhiDNd - PhiDSd), (PhiDTd - PhiDBd));
-//        GraD = GraD / (2 * dlta);
-//        Vect3 GraS = Vect3((PhiSEd - PhiSWd), (PhiSNd - PhiSSd), (PhiSTd - PhiSBd));
-//        GraS = GraS / (2 * dlta);
-//        REAL Rmag = R.Mag();
-//        REAL R5 = Rmag*Rmag*Rmag*Rmag*Rmag;
-//        REAL denom = R5;
-//
-//        REAL U = R.x*R.z/denom;
-//        REAL V = R.y*R.z/denom;
-//        REAL W = (R.x*R.x + R.y*R.y - 2*R.z*R.z)/denom;
-//        Vect3 VDp(3 * U * P.Area / two_pi, 3 * V * P.Area / two_pi, -W * P.Area / two_pi);
-//        P.Gamma = 1.0;
-//        cout << "LinD: \t" << P.VortexPanelVelocity(Target) << "\t <-- VortexPanelVelocity()" << endl;
-//        cout << " VDp: \t" << VDp << "\t <-- From PointDbl()" << endl;
-//        P.Sigma = 0.0;
-//        P.Mu = 1.0;
-//        cout << " VDp: \t" << P.BodyPanelVelocity(Target) << "\t <-- From BodyPanelVelocity()" << endl;
-//
-//        cout << "GraD: \t" << GraD << "\t <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
-//        P.Sigma = 1.0;
-//        P.Mu = 0.0;
-//
-//        cout << "LinO: \t" << P.SourceVel(Target) << "\t <-- From SourceVel()" << endl;
-//        cout << " VSp: \t" << P.BodyPanelVelocity(Target) << "\t <-- From BodyPanelVelocity()" << endl;
-//        cout << " VSp: \t" << VSp << "\t <-- From PointSrc()" << endl;
-//        cout << "GraS: \t" << GraS << "\t <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
-//        cout << R.Mag()/P.MaxDiagonal << endl;
-//    }
+    //        
+    //    for (int i = 0; i < 1000; ++i) {
+    //
+    //        
+    //        REAL x = 30.0 *(0.5 - REAL(rand()) / REAL(RAND_MAX));
+    //        REAL y = 30.0 *(0.5 - REAL(rand()) / REAL(RAND_MAX));
+    //        REAL z = 30.0 *(0.5 - REAL(rand()) / REAL(RAND_MAX));
+    //        
+    //        Target = Vect3(x,y,z);
+    //        Vect3 R = Target - P.CollocationPoint;
+    //
+    //        Vect3 VS = P.SourceVel(Target);
+    //        Vect3 VD = P.BodyPanelVelocity(Target);
+    //
+    //        REAL mult = P.Area / (2.0 * pi * R.Mag() * R.Mag() * R.Mag());
+    //        Vect3 VSp = -mult*R;
+    //
+    //
+    //        
+    //        
+    //      
+    //
+    //
+    //
+    //        REAL dlta = 1e-6;
+    //        Vect3 dx(dlta, 0, 0), dy(0, dlta, 0), dz(0, 0, dlta);
+    //
+    //        REAL PhiDE = 0, PhiDW = 0, PhiDEd = 0, PhiDWd = 0;
+    //        REAL PhiSE = 0, PhiSW = 0, PhiSEd = 0, PhiSWd = 0;
+    //
+    //        P.SubPan(100, Target + dx, 1.0, 1.0, PhiDE, PhiSE, VT);
+    //        P.SubPan(100, Target - dx, 1.0, 1.0, PhiDW, PhiSW, VT);
+    //        PANEL::SourceDoubletPotential(src, Target + dx, PhiDEd, PhiSEd, 1, 2);
+    //        PANEL::SourceDoubletPotential(src, Target - dx, PhiDWd, PhiSWd, 1, 2);
+    //
+    //        REAL PhiDN = 0, PhiDS = 0, PhiDNd = 0, PhiDSd = 0;
+    //        REAL PhiSN = 0, PhiSS = 0, PhiSNd = 0, PhiSSd = 0;
+    //
+    //        P.SubPan(100, Target + dy, 1.0, 1.0, PhiDN, PhiSN, VT);
+    //        P.SubPan(100, Target - dy, 1.0, 1.0, PhiDS, PhiSS, VT);
+    //        PANEL::SourceDoubletPotential(src, Target + dy, PhiDNd, PhiSNd, 1, 2);
+    //        PANEL::SourceDoubletPotential(src, Target - dy, PhiDSd, PhiSSd, 1, 2);
+    //
+    //
+    //        REAL PhiDT = 0, PhiDB = 0, PhiDTd = 0, PhiDBd = 0;
+    //        REAL PhiST = 0, PhiSB = 0, PhiSTd = 0, PhiSBd = 0;
+    //
+    //        P.SubPan(100, Target + dz, 1.0, 1.0, PhiDT, PhiST, VT);
+    //        P.SubPan(100, Target - dz, 1.0, 1.0, PhiDB, PhiSB, VT);
+    //        PANEL::SourceDoubletPotential(src, Target + dz, PhiDTd, PhiSTd, 1, 2);
+    //        PANEL::SourceDoubletPotential(src, Target - dz, PhiDBd, PhiSBd, 1, 2);
+    //
+    //
+    //        Vect3 GraD100 = Vect3((PhiDE - PhiDW), (PhiDN - PhiDS), (PhiDT - PhiDB));
+    //        GraD100 = GraD100 / (2 * dlta);
+    //        Vect3 GraD = Vect3((PhiDEd - PhiDWd), (PhiDNd - PhiDSd), (PhiDTd - PhiDBd));
+    //        GraD = GraD / (2 * dlta);
+    //        Vect3 GraS = Vect3((PhiSEd - PhiSWd), (PhiSNd - PhiSSd), (PhiSTd - PhiSBd));
+    //        GraS = GraS / (2 * dlta);
+    //        REAL Rmag = R.Mag();
+    //        REAL R5 = Rmag*Rmag*Rmag*Rmag*Rmag;
+    //        REAL denom = R5;
+    //
+    //        REAL U = R.x*R.z/denom;
+    //        REAL V = R.y*R.z/denom;
+    //        REAL W = (R.x*R.x + R.y*R.y - 2*R.z*R.z)/denom;
+    //        Vect3 VDp(3 * U * P.Area / two_pi, 3 * V * P.Area / two_pi, -W * P.Area / two_pi);
+    //        P.Gamma = 1.0;
+    //        cout << "LinD: \t" << P.VortexPanelVelocity(Target) << "\t <-- VortexPanelVelocity()" << endl;
+    //        cout << " VDp: \t" << VDp << "\t <-- From PointDbl()" << endl;
+    //        P.Sigma = 0.0;
+    //        P.Mu = 1.0;
+    //        cout << " VDp: \t" << P.BodyPanelVelocity(Target) << "\t <-- From BodyPanelVelocity()" << endl;
+    //
+    //        cout << "GraD: \t" << GraD << "\t <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
+    //        P.Sigma = 1.0;
+    //        P.Mu = 0.0;
+    //
+    //        cout << "LinO: \t" << P.SourceVel(Target) << "\t <-- From SourceVel()" << endl;
+    //        cout << " VSp: \t" << P.BodyPanelVelocity(Target) << "\t <-- From BodyPanelVelocity()" << endl;
+    //        cout << " VSp: \t" << VSp << "\t <-- From PointSrc()" << endl;
+    //        cout << "GraS: \t" << GraS << "\t <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
+    //        cout << R.Mag()/P.MaxDiagonal << endl;
+    //    }
 
 
 }
 
-
-
 /**************************************************************/
 void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude, REAL radius, REAL scale, REAL THETA) {
     int count = 0, nr = 1000, nt = 360;
-    
-    Array <Array <REAL> > R(3, Array <REAL> (3,0.0));
-    
-    R[0][0] = cos(THETA);       R[1][0] = 0.;            R[2][0] = sin(THETA);
-    R[0][1] = 0.;               R[1][1] = 1.;            R[2][1] = 0.; 
-    R[0][2] = -sin(THETA);      R[1][2] = (THETA);       R[2][2] = cos(THETA);
-    
-    
+
+    Array <Array <REAL> > R(3, Array <REAL > (3, 0.0));
+
+    R[0][0] = cos(THETA);
+    R[1][0] = 0.;
+    R[2][0] = sin(THETA);
+    R[0][1] = 0.;
+    R[1][1] = 1.;
+    R[2][1] = 0.;
+    R[0][2] = -sin(THETA);
+    R[1][2] = (THETA);
+    R[2][2] = cos(THETA);
+
+
     REAL r = 0;
-    X.allocate(nr*nt);
-    Omega.allocate(nr*nt);
+    X.allocate(nr * nt);
+    Omega.allocate(nr * nt);
     for (int i = 0; i < nr; ++i) {
-        REAL gamma = amplitude*sqrt(1 - ((r / radius) * (r / radius)));
+        REAL gamma = amplitude * sqrt(1 - ((r / radius) * (r / radius)));
         REAL theta = 0;
         for (int j = 0; j < nt; ++j) {
-            Vect3 x = scale*Vect3(r * cos(theta), r * sin(theta), 0.0);
-            
-            Vect3 xt = scale*centre + Vect3(x.x*R[0][0] + x.z*R[2][0],x.y,x.x*R[0][2] + x.z*R[2][2]);
+            Vect3 x = scale * Vect3(r * cos(theta), r * sin(theta), 0.0);
+
+            Vect3 xt = scale * centre + Vect3(x.x * R[0][0] + x.z * R[2][0], x.y, x.x * R[0][2] + x.z * R[2][2]);
             X[count] = xt;
-            
-            Vect3 om = scale*scale*Vect3(-gamma * sin(theta), gamma * cos(theta), 0.0);
-            Vect3 omt = Vect3(om.x*R[0][0] + om.z*R[2][0],om.y,om.x*R[0][2] + om.z*R[2][2]);
+
+            Vect3 om = scale * scale * Vect3(-gamma * sin(theta), gamma * cos(theta), 0.0);
+            Vect3 omt = Vect3(om.x * R[0][0] + om.z * R[2][0], om.y, om.x * R[0][2] + om.z * R[2][2]);
             Omega[count] = omt;
             theta += two_pi / nt;
             count++;
@@ -1748,7 +1821,7 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
     Xn.push_back(X[0]);
     Omn.push_back(Omega[0]);
     for (int i = 1; i < X.size(); ++i) {
-        X[i] = Vect3(round(X[i].x),round(X[i].y),round(X[i].z));
+        X[i] = Vect3(round(X[i].x), round(X[i].y), round(X[i].z));
         bool put_in = true;
         for (int j = 0; j < Xn.size(); ++j)
             if (X[i].x == Xn[j].x && X[i].y == Xn[j].y && X[i].z == Xn[j].z) put_in = false;

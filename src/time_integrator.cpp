@@ -35,7 +35,7 @@ REAL TIME_STEPPER::MaxTime = 0;
 REAL TIME_STEPPER::SimTime = 0;
 REAL TIME_STEPPER::SubStepTime = 0;
 int TIME_STEPPER::RKStep = 0;
-bool TIME_STEPPER::RK2Mode = true;
+bool TIME_STEPPER::RK2Mode = false;
 
 /**************************************************************/
 TIME_STEPPER::TIME_STEPPER() {
@@ -46,7 +46,7 @@ TIME_STEPPER::TIME_STEPPER() {
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
     cfl_lim = 0.45;
-    dt_out = 0.05;
+    dt_out = 1.0;
     t_out = dt_out;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();
@@ -123,6 +123,7 @@ void TIME_STEPPER::DoFMM() {
     globalOctree->InitVelsGetLaplacian();
     globalOctree->GetVels();
 }
+
 /**************************************************************/
 void TIME_STEPPER::TimeAdvance() {
 
@@ -173,12 +174,11 @@ void TIME_STEPPER::TimeAdvance() {
     //  Put the wake in the tree from the bodytimestep
     if (globalSystem->useBodies) {
         globalSystem->PutWakesInTree();
-    }
-    else
+    } else
         TIME_STEPPER::SimTime += dt;
     //  Clean up
-    if (!fmod((REAL) n, 10.0))
-        PruneNow = true;
+    //if (!fmod((REAL) n, 100.0))
+    //    PruneNow = true;
     globalOctree->Reset();
 
 
@@ -189,21 +189,15 @@ void TIME_STEPPER::TimeAdvance() {
 /**************************************************************/
 void TIME_STEPPER::time_loop() {
 
-    
     if (first_step) {
-        
         dt = globalSystem->dtInit;
         if (globalSystem->useBodies) {
             BODY::BodySubStep(globalSystem->dtInit, globalSystem->NumSubSteps);
             globalSystem->PutWakesInTree();
         }
         globalOctree->Reset();
-        cout << "AAAA" << endl;
         globalOctree->InitVelsGetLaplacian();
-        cout << "BBBB" << endl;
         globalOctree->GetVels();
-        cout << "CCCC" << endl;
-        globalSystem->WriteData();
         first_step = false;
     } else {
 #ifdef TIME_STEPS
@@ -275,8 +269,8 @@ void TIME_STEPPER::time_step() {
 
     //  Calculate timestep length such that no body travels further than a single cell
     REAL OmRMax = 0.0, MaxRadius = 0.0;
-//    REAL MaxX, MaxY, MaxZ; MaxX = MaxY = MaxZ = -1e32;
-//    REAL MinX, MinY, MinZ; MinX = MinY = MinZ = 1e32;
+    //    REAL MaxX, MaxY, MaxZ; MaxX = MaxY = MaxZ = -1e32;
+    //    REAL MinX, MinY, MinZ; MinX = MinY = MinZ = 1e32;
     if (globalSystem->useBodies) {
         for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
             Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
@@ -302,30 +296,30 @@ void TIME_STEPPER::time_step() {
 
         }
     }
-    
-    
-//    int DX = ceil(MaxX) - floor(MinX);
-//    int DY = ceil(MaxY) - floor(MinY);
-//    int DZ = ceil(MaxZ) - floor(MinZ);
-//    cout << "Maximum Radius " << MaxRadius << " Enclosing Box size: " << DX;
-//    cout << " " << DY << " " << DZ << " " << DX*DY*DZ << endl;
-//    cout << "--------------- Calcing Inerp Vels --------------" << endl;
-//    cout << globalOctree->AllCells.size()*BODY::AllBodyFaces.size() << " Interactions " << endl;
-//    Array < Array < Array < Vect3 > > > Posns, Vels;
-//            
-//    Posns = Array < Array < Array <Vect3> > > (DX, Array < Array < Vect3 > > (DY, Array < Vect3 > (DZ, Vect3(0.0))));
-//    Vels = Posns;
-//    
-//    for (int i = 0; i < DX; ++i)
-//        for (int j = 0; j < DY; ++j)
-//            for (int k = 0; k < DZ; ++k)
-//            {
-//                Vect3 XP(MinX + i, MinY + j, MinZ + k);
-//                Posns[i][j][k] = XP;
-//                for (int l = 0; l < globalOctree->AllCells.size(); ++l)
-//                    Vels[i][j][k] += UTIL::globalDirectVel(globalOctree->AllCells[l]->Position - XP, globalOctree->AllCells[l]->Omega, globalSystem->Del2);
-//                    
-//            }
+
+
+    //    int DX = ceil(MaxX) - floor(MinX);
+    //    int DY = ceil(MaxY) - floor(MinY);
+    //    int DZ = ceil(MaxZ) - floor(MinZ);
+    //    cout << "Maximum Radius " << MaxRadius << " Enclosing Box size: " << DX;
+    //    cout << " " << DY << " " << DZ << " " << DX*DY*DZ << endl;
+    //    cout << "--------------- Calcing Inerp Vels --------------" << endl;
+    //    cout << globalOctree->AllCells.size()*BODY::AllBodyFaces.size() << " Interactions " << endl;
+    //    Array < Array < Array < Vect3 > > > Posns, Vels;
+    //            
+    //    Posns = Array < Array < Array <Vect3> > > (DX, Array < Array < Vect3 > > (DY, Array < Vect3 > (DZ, Vect3(0.0))));
+    //    Vels = Posns;
+    //    
+    //    for (int i = 0; i < DX; ++i)
+    //        for (int j = 0; j < DY; ++j)
+    //            for (int k = 0; k < DZ; ++k)
+    //            {
+    //                Vect3 XP(MinX + i, MinY + j, MinZ + k);
+    //                Posns[i][j][k] = XP;
+    //                for (int l = 0; l < globalOctree->AllCells.size(); ++l)
+    //                    Vels[i][j][k] += UTIL::globalDirectVel(globalOctree->AllCells[l]->Position - XP, globalOctree->AllCells[l]->Omega, globalSystem->Del2);
+    //                    
+    //            }
 
 
     //    dt = min(dt_euler,cfl_lim/OmRMax);
@@ -388,7 +382,7 @@ void TIME_STEPPER::time_step() {
 void TIME_STEPPER::Integrate(FVMCell * cell) {
 
     Euler(cell);
-//    RK2(cell);
+    //    RK2(cell);
 
 }
 
