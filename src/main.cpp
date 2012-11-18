@@ -47,7 +47,7 @@ class OutOfMemory {
 class RunningStat {
 public:
 
-    RunningStat() : m_n(0), mmax(-1e1000), mmin(1e1000) {
+    RunningStat() : m_n(0), mmax(-1e32), mmin(1e32) {
     }
 
     void Clear() {
@@ -767,7 +767,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 
     cout << "done reading. Finding active cells...";
 
-    Array <bool> isActive(Omegas.size(), 'false');
+    Array <bool> isActive(Omegas.size(), false);
     unsigned long int activeCount = 0;
 
     for (int i = 0; i < Posns.size(); ++i) {
@@ -797,7 +797,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 
     //    for (int i = 0; i < Posns.size(); ++i)
 
-    cout << " done. " << activeCount << " active cells." << endl << "Beginning insertion into tree..." << endl;
+    cout << " done. " << activeCount << " active cells." << endl;
 
 
 
@@ -843,6 +843,8 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
     cout << "Enter Del2..." << endl;
     cin >> globalSystem->Del2;
 
+
+    cout << "Beginning insertion into tree..." << endl;
 
     globalSystem->Initialise();
 
@@ -898,6 +900,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
     Posns.allocate(n);
     Omegas.allocate(n);
     Array <Vect3> FMMVels(n);
+    Array <Vect3> DirVels(n,Vect3(0.0,0.0,0.0));
 
 
 
@@ -908,6 +911,18 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
         Omegas[i] = (globalOctree->AllCells[i]->Omega);
         FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
     }
+    
+    
+//    
+#pragma omp parallel for
+    for (int i = 0; i < 100; ++i){
+        for (int j = 0; j < n; ++j)
+            DirVels[i] += UTIL::globalDirectVel(Posns[j] - Posns[i], Omegas[j], 0.25) ;
+        
+        cout << DirVels[i] << " " << FMMVels[i] << endl;
+    }
+    
+    
 
     cout << "Clearing tree... ";
     globalOctree->ClearNodes();
@@ -926,6 +941,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
     UTIL::WriteMATLABMatrix1DVect3(string("Posns"), fname, Posns);
     UTIL::WriteMATLABMatrix1DVect3(string("Omegas"), fname, Omegas);
     UTIL::WriteMATLABMatrix1DVect3(string("Vels"), fname, FMMVels);
+    UTIL::WriteMATLABMatrix1DVect3(string("DVels"), fname, DirVels);
 
     return;
 }
