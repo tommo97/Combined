@@ -66,7 +66,7 @@ YEAR := -D'DATE_YEAR=$(shell date +"20%y")'
 
 #	Common flags
 CC_PNG_FLAGS = -DNO_FREETYPE
-LD_PNG_FLAGS = -DNO_FREETYPE  -lpng -lpngwriter -lz
+LD_PNG_FLAGS = -DNO_FREETYPE -lz
 CC_FLAGS = -m64 -g -I/usr/local/include -I include
 LD_COMMON_FLAGS = -m64 $(OMP_FLAG) -lmatio -lncurses -lm -lz
 LD_DEBUG_COMMON_FLAGS = -m64 $(OMP_DEBUG_FLAG) -lncurses -lm
