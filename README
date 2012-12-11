@@ -20,10 +20,10 @@ The dependancies of this code are:
 * A linker e.g. the GCC linker works for both g++ and sunCC.
 
 The following libraries:
-* matio: MAT File I/O Library
-* libpng: PNG Reference Library
+* matio: MAT File I/O Library - v1.5.0+
+* libpng: PNG Reference Library  deprecated
 * ncurses: The Ncurses (new curses) library
-* pngwriter: An easy to use C++ graphics library
+* pngwriter: An easy to use C++ graphics library - deprecated
 * libz: A Massively Spiffy Yet Delicately Unobtrusive Compression Library
 * libmath: Basic mathematics functions
 * GSL: GNU Scientific Library
