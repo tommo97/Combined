@@ -867,7 +867,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
                 psdata << top_data;
                 psdata >> temp >> MEM_PERCENT;
                 cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
-                if (MEM_PERCENT > 75) {
+                if (MEM_PERCENT > 85) {
                     cout << setfill('!') << setw(80) << "!" << endl;
 
                     cout << "Out of memory. Quitting to avoid swapping to disk." << endl;

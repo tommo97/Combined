@@ -871,11 +871,13 @@ void SYSTEM::WriteData() {
         Output.Double1DArrays.push_back(BODY::SubTIMES);
         Output.Double1DArrayStrings.push_back(string("SubTimes"));
 
-        BODY::SubTIMES.clear();
+        
     };
-
     globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
 
+    if (globalSystem->useBodies)
+        BODY::SubTIMES.clear();
+    
 #ifdef TIME_STEPS
     unsigned long int t2;
     stringstream tmp;

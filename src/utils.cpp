@@ -454,7 +454,7 @@ int UTIL::read_neu(string infname,
 /**************************************************************/
 void UTIL::write2D(string varname, string fname, Array<Array<double> > &input, int m,
         int n) {
-    int dims[2] = {m, n};
+    size_t dims[2] = {m, n};
     //double d[m * n];
 
     double *d = new double[m * n];
@@ -472,7 +472,7 @@ void UTIL::write2D(string varname, string fname, Array<Array<double> > &input, i
     mat = Mat_Open(fname.c_str(), MAT_ACC_RDWR);
     if (mat) {
         matvar = Mat_VarCreate(varname.c_str(), MAT_C_DOUBLE, MAT_T_DOUBLE, 2,
-                (size_t*) dims, d, 0);
+                 dims, d, 0);
         Mat_VarWrite(mat, matvar, (matio_compression) 0);
         Mat_VarFree(matvar);
         Mat_Close(mat);
@@ -484,7 +484,7 @@ void UTIL::write2D(string varname, string fname, Array<Array<double> > &input, i
 /**************************************************************/
 void UTIL::write2D(string varname, string fname, Array<Array<int> > &input, int m,
         int n) {
-    int dims[2] = {m, n};
+    size_t dims[2] = {m, n};
     //double d[m * n];
 
     int *d = new int[m * n];
@@ -502,7 +502,7 @@ void UTIL::write2D(string varname, string fname, Array<Array<int> > &input, int 
     mat = Mat_Open(fname.c_str(), MAT_ACC_RDWR);
     if (mat) {
         matvar = Mat_VarCreate(varname.c_str(), MAT_C_INT32, MAT_T_INT32, 2,
-                (size_t*) dims, d, 0);
+                dims, d, 0);
         Mat_VarWrite(mat, matvar, (matio_compression) 0);
         Mat_VarFree(matvar);
         Mat_Close(mat);
@@ -524,7 +524,7 @@ void UTIL::write1D(string varname, string fname, string &input, int m) {
     
     m+=1;
     
-    int dims[2];
+    size_t  dims[2];
     
     char *str = new char[strlen(input.c_str())+1];
 
@@ -538,7 +538,7 @@ void UTIL::write1D(string varname, string fname, string &input, int m) {
 
     mat = Mat_Open(fname.c_str(), MAT_ACC_RDWR);
     if (mat) {
-        matvar = Mat_VarCreate(varname.c_str(), MAT_C_CHAR, MAT_T_INT8, 2, (size_t*) dims, str, 0);
+        matvar = Mat_VarCreate(varname.c_str(), MAT_C_CHAR, MAT_T_INT8, 2, dims, str, 0);
         Mat_VarWrite(mat, matvar, (matio_compression) 0);
         Mat_VarFree(matvar);
         Mat_Close(mat);
@@ -547,7 +547,7 @@ void UTIL::write1D(string varname, string fname, string &input, int m) {
 }
 
 void UTIL::write1D(string varname, string fname, Array<double> &input, int m) {
-    int dims[2] = {m, 1};
+    size_t dims[2] = {m, 1};
     //double d[m];
     double *d = new double[m];
 
@@ -560,7 +560,7 @@ void UTIL::write1D(string varname, string fname, Array<double> &input, int m) {
     mat = Mat_Open(fname.c_str(), MAT_ACC_RDWR);
     if (mat) {
         matvar = Mat_VarCreate(varname.c_str(), MAT_C_DOUBLE, MAT_T_DOUBLE, 2,
-                (size_t*) dims, d, 0);
+                dims, d, 0);
         Mat_VarWrite(mat, matvar, (matio_compression) 0);
         Mat_VarFree(matvar);
         Mat_Close(mat);
@@ -570,7 +570,7 @@ void UTIL::write1D(string varname, string fname, Array<double> &input, int m) {
 
 
 void UTIL::write1D(string varname, string fname, Array<int> &input, int m) {
-    int dims[2] = {m, 1};
+    size_t dims[2] = {m, 1};
     //double d[m];
     int *d = new int[m];
 
@@ -583,7 +583,7 @@ void UTIL::write1D(string varname, string fname, Array<int> &input, int m) {
     mat = Mat_Open(fname.c_str(), MAT_ACC_RDWR);
     if (mat) {
         matvar = Mat_VarCreate(varname.c_str(), MAT_C_INT32, MAT_T_INT32, 2,
-                (size_t*) dims, d, 0);
+                dims, d, 0);
         Mat_VarWrite(mat, matvar, (matio_compression) 0);
         Mat_VarFree(matvar);
         Mat_Close(mat);
