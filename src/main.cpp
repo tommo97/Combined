@@ -134,30 +134,30 @@ int main(int argc, char *argv[]) {
 
 
 
-
+/*
     cout << "Enter filename:" << endl;
     string fname;
 
 
-    SolveMatfileVels(fname, 8, 0.25);
+     SolveMatfileVels(fname, 8, 0.25);
+ 
+ 
+ 
+     return 0;
 
-
-
-    return 0;
-
-
+*/
     //    WeeAmble();
     //    return 1;
 
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 5;
-    globalSystem->MaxP = 3;
-    globalSystem->Del2 = 0.25;
+    globalSystem->GambitScale = 30;
+    globalSystem->MaxP = 5;
+    globalSystem->Del2 = 0.00125;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
-    globalSystem->h = 3;
+    globalSystem->h = 2;
     globalSystem->unscaledVinf = Vect3(0.0);
     globalSystem->NumSubSteps = 0;
 
@@ -867,7 +867,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
                 psdata << top_data;
                 psdata >> temp >> MEM_PERCENT;
                 cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
-                if (MEM_PERCENT > 85) {
+                if (MEM_PERCENT > 90) {
                     cout << setfill('!') << setw(80) << "!" << endl;
 
                     cout << "Out of memory. Quitting to avoid swapping to disk." << endl;

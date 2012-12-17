@@ -1,15 +1,17 @@
 clear all; clear mex; clc;
-files = dir('RunData*5.mat');
+files = dir('RunData*0.mat');
 close all
+figure
+set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 s = size(files,1);
 fname = files(s).name;
 load(fname,'GambitScale','Times','BodyRates0_x','BodyPointsX','BodyPointsY','BodyPointsZ')
 load(fname,'Time','XCG')
 
 scale = GambitScale;
-val = 1;
+val = 5;
 
-XCG = scale * Time * 1.0;
+XCG = 0.0;%scale * Time * 10.0;
 THETA = Time * BodyRates0_x;
 
 [XI,YI,ZI,VI, VIx, VIy, VIz] = extract(fname,val,scale);
@@ -18,7 +20,7 @@ THETA = Time * BodyRates0_x;
 %OM = sqrt(curlx.^2 + curly.^2 + curlz.^2);
 YIMoved = YI + XCG/scale;
 p1 = patch(isosurface(XI,YIMoved ,ZI,VI,val));
-isonormals(XI,YI,ZI,VI,p1);
+isonormals(XI,YIMoved ,ZI,VI,p1);
 %isocolors(XI,YI,ZI,VIx,p1);
 set(p1,'FaceColor',[0.8 0.8 0.8],'EdgeColor','none')
 
@@ -26,7 +28,6 @@ set(p1,'FaceColor',[0.8 0.8 0.8],'EdgeColor','none')
 %isocolors(XI,YI,ZI,VIx,p1);
 
 
-set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
 hold all
 
 
@@ -59,7 +60,7 @@ axis equal tight; lighting phong; camlight right;
 set(gca,'Projection','perspective')
 
 
-material dull
+
 
 
 
