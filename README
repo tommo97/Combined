@@ -20,7 +20,7 @@ The dependancies of this code are:
 * A linker e.g. the GCC linker works for both g++ and sunCC.
 
 The following libraries:
-* matio: MAT File I/O Library - v1.5.0+
+* matio: MAT File I/O Library - v1.5.0 (tested on linux and OSX Mountain Lion -- configure with "--without-hdf5" flag)
 * libpng: PNG Reference Library  deprecated
 * ncurses: The Ncurses (new curses) library
 * pngwriter: An easy to use C++ graphics library - deprecated
