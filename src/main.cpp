@@ -1423,7 +1423,7 @@ void TestFMM(int argc, char *argv[]) {
         Vmean += DirectVels[i].Mag();
 
         AbsErrs[i] = (DirectVels[i] - FMMVels[Indices[i]]).Mag();
-        RelErrs[i] = AbsErrs[i] / FMMVels[Indices[i]]).Mag();
+        RelErrs[i] = AbsErrs[i] / FMMVels[Indices[i]].Mag();
 
         AbsErrsStats.Push(AbsErrs[i]);
         RelErrsStats.Push(RelErrs[i]);
