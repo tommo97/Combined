@@ -1333,7 +1333,36 @@ void TestFMM(int argc, char *argv[]) {
     REAL t0 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     
     cout << "Resetting..." << endl;
-    globalOctree->Reset();
+    
+    
+    //  This is a version of the RESET() function, without the neighbour checking
+       //  Everything which changes the shape of the tree must be done recursively
+    globalOctree->Root->ApplyRecursively(&Node::MarkWithoutLoad, &Node::MarkWithoutLoad, &Node::DoNothing);
+    globalOctree->Root->ApplyRecursively(&Node::DoNothing, &Node::CheckLoad, &Node::DoNothing);
+
+    
+
+
+    globalOctree->AllCells.clear();
+    globalOctree->AllBranches.allocate(OCTREE_LEVS);
+    globalOctree->BranchCount.assign(OCTREE_LEVS - 1, 0);
+    globalOctree->Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
+
+    for (int i = 0; i < globalOctree->BranchCount.size(); ++i) {
+        if (globalOctree->BranchCount[i] > 0)
+            globalOctree->AllBranches[i].assign(globalOctree->BranchCount[i], NULL);
+        globalOctree->BranchCount[i] = 0; //  Recycle for use as a pseudo iterator
+    }
+
+    globalOctree->CellCount = 0; //  This is used as a pseudo iterator for assigning into AllCells
+    globalOctree->AllCells.assign(FVMCell::NumCells, NULL);
+    Node::AllNodes.allocate(Node::NumNodes);
+    Node::NodeCount = 0;
+    Node::UpList.clear();
+    Node::DownList.clear();
+    globalOctree->Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
+    
+    
     
     cout << "done" << endl << "Setting Vels to 0" << endl;
     globalOctree->Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);

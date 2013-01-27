@@ -90,7 +90,7 @@ void OCTREE::Reset() {
     Root->ApplyRecursively(&Node::DoNothing, &Node::CheckLoad, &Node::DoNothing);
 
     if (globalTimeStepper->PruneNow) {
-        //Prune();
+        Prune();
         globalTimeStepper->PruneNow = false;
     }
 
