@@ -107,7 +107,6 @@ void SYSTEM::TimeStep() {
     while ((TIME_STEPPER::SimTime < (TIME_STEPPER::MaxTime)) && (!globalTimeStepper->last_step)) {
         globalTimeStepper->time_loop();
     }
-    cout << "here" << endl;
     //  Final loop since last_step will exit the previous loop
     globalTimeStepper->time_loop();
 
@@ -442,8 +441,21 @@ void SYSTEM::GetFaceVels() {
         //            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllProtoWakes[j]->WakePanelPotential(globalOctree->AllCells[i]->Position);
         //    }
     }
+    
+    
     for (int i = 0; i < globalOctree->AllCells.size(); ++i)
         globalOctree->AllCells[i]->SetVelsEqual();
+
+
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        Vect3 Vel(0.,0.,0.);
+
+        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+            globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega, Vel);
+
+        cout << Vel << " " << globalOctree->AllCells[i]->Velocity << endl;
+
+    }
 #ifdef TIME_STEPS
     long unsigned int t7 = ticks();
     stringstream tmp;
@@ -482,21 +494,26 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
     V1 = Vect3(0.0);
     V2 = V1;
-//        #pragma omp parallel for
-//            for (int i = 0; i < sz; ++i) {
-//                for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
-//                    V1[i] += globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
-//                            globalOctree->AllCells[j]->Omega);
-//                    V2[i] += globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
-//                            globalOctree->AllCells[j]->Omega);
-//                }
-//            }
+        #pragma omp parallel for
+            for (int i = 0; i < sz; ++i) {
+                for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
+                    V1[i] += globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
+                            globalOctree->AllCells[j]->Omega);
+                    
+                    
+                    V2[i] += globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
+                            globalOctree->AllCells[j]->Omega);
+                    
+                }
+//                cout << "V1: " << V1[i] << " " << globalOctree->TreeVel(P1[i]) << " " << P1[i] << endl;
+//                cout << "V2: " << V2[i] << " " << globalOctree->TreeVel(P2[i]) << " " << P2[i] << endl;
+            }
 
-    for (int i = 0; i < sz; ++i)
-        V1[i] = globalOctree->TreeVel(P1[i]);
-
-    for (int i = 0; i < sz; ++i)
-        V2[i] = globalOctree->TreeVel(P2[i]);
+//    for (int i = 0; i < sz; ++i)
+//        V1[i] = globalOctree->TreeVel(P1[i]);
+//
+//    for (int i = 0; i < sz; ++i)
+//        V2[i] = globalOctree->TreeVel(P2[i]);
 
 
 

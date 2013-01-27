@@ -425,13 +425,15 @@ void FVMCell::vCollapseVField() {
         if ((i == 0) || (i == 2) || (i == 4) || !Neighb[i])
 #endif
         {
+            JaggedArray <Vect3> *Ptr2VField = &(static_cast<Branch*> (Parent))->VelField;
+            JaggedArray <Vect3> &ParentField = *Ptr2VField;
             for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
                 for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
                     for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
 #ifdef COLLAPSE_TO_FACES
                         FaceVels[i] += Node::FaceCllpsMlt[x][y][z][k1][k2][k3][i] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
 #else
-                        Velocity += Node::CllpsMlt[x][y][z][k1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
+                        Velocity += Node::CllpsMlt[x][y][z][k1][k2][k3] * ParentField[k1][k2][k3];
 #endif
             for (int ix = 0; ix < 3; ++ix)
                 for (int iy = 0; iy < 3; ++iy)
@@ -464,26 +466,29 @@ void FVMCell::vCollapseVField() {
 
 /**************************************************************/
 void FVMCell::vPassMmnts2Prnt() {
-#ifdef USE_ROLLED_LOOPS
-    Vect3 Dx = Node::Offset[x][y][z];
+    
+
+    JaggedArray <Vect3> *Ptr2Moms = &(static_cast<Branch*> (Parent))->Moments;
+    JaggedArray <Vect3> &ParentMoments = *Ptr2Moms;
     if (HasLoad) {
+#ifdef USE_ROLLED_LOOPS 
+
+        Vect3 Dx = Node::Offset[x][y][z];
+
         for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
             for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
                 for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
-                    (static_cast<Branch*> (Parent))->Moments[k1][k2][k3] += Omega * pow(Dx, k1, k2, k3);
+                    ParentMoments[k1][k2][k3] += Omega * pow(Dx, k1, k2, k3);
 
-        //            for (int i = 0; i < Node::MomentSize; ++i)
-        //                (static_cast<Branch*> (Parent))->Moments[Node::CellMomentIndex[0][i]][Node::CellMomentIndex[1][i]][Node::CellMomentIndex[2][i]] += Omega * pow(Dx,Node::CellMomentIndex[0][i],Node::CellMomentIndex[1][i],Node::CellMomentIndex[2][i]);
-        Parent->HasLoad = true;
-    }
 #else
-    if (HasLoad) {
+
         for (int i = 0; i < FVMCell::MomentIndsSize; ++i)
-            (static_cast<Branch*> (Parent))->Moments[FVMCell::MomentInds[i][0]][FVMCell::MomentInds[i][1]][FVMCell::MomentInds[i][2]]
+            ParentMoments[FVMCell::MomentInds[i][0]][FVMCell::MomentInds[i][1]][FVMCell::MomentInds[i][2]]
                 += Omega * FVMCell::OffsetPows[indx][i];
+
+#endif
     }
     Parent->HasLoad = true;
-#endif
 }
 
 /**************************************************************/

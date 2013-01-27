@@ -192,7 +192,7 @@ void Node::Recurrance(JaggedArray <REAL> &coeffts, int k1, int k2, int k3, Vect3
 
 /**************************************************************/
 void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
-#define VERSION_2
+//#define VERSION_2
 #ifdef VERSION_2
     REAL R2 = diff.Dot(diff) +  globalSystem->Del2;
 
@@ -260,81 +260,87 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 
 
 #else
-    REAL cff1[globalSystem->MaxP + 1], cff2[globalSystem->MaxP + 1], x12, x22, x32, mult;
-    int i, j, k;
+    // use this instead
+			Vect3 Diff = -1.0*diff;
+    REAL del2 = globalSystem->Del2;
+    int MAX_P = globalSystem->MaxP;
+    int p = MAX_P;
+  REAL cff1[MAX_P + 1], cff2[MAX_P + 1], x12, x22, x32, mult;
+   int i, j, k;
 
-    for (i = 1; i <= globalSystem->MaxP; i++) {
-        cff1[i] = 1 - (REAL) 1 / (2 * i);
-        cff2[i] = 1 - (REAL) 1 / i;
-    }
-    x12 = diff.x * 2;
-    x22 = diff.y * 2;
-    x32 = diff.z * 2;
-    mult = -1 / (globalSystem->Del2 + diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
+   for (i = 1; i <= p; i++) {
+      cff1[i] = 1 - (REAL) 1 / (2 * i);
+      cff2[i] = 1 - (REAL) 1 / i;
+   }
+   x12 = Diff.x * 2;
+   x22 = Diff.y * 2;
+   x32 = Diff.z * 2;
+   mult = -1 / (del2 + Diff.x * Diff.x + Diff.y * Diff.y + Diff.z * Diff.z);
 
-    /* base case */
-    coeffts[0][0][0] = sqrt(-mult);
+   /* base case */
+   coeffts[0][0][0] = sqrt (-mult)/four_pi;
 
-    /* two of the indices are zero */
-    coeffts[0][0][1] = diff.z * (coeffts[0][0][0] * mult);
-    coeffts[0][1][0] = diff.y * (coeffts[0][0][0] * mult);
-    coeffts[1][0][0] = diff.x * (coeffts[0][0][0] * mult);
-    for (i = 2; i <= globalSystem->MaxP; i++) {
-        coeffts[0][0][i] = (x32 * cff1[i] * coeffts[0][0][i - 1] + cff2[i] * coeffts[0][0][i - 2]) * mult;
-        coeffts[0][i][0] = (x22 * cff1[i] * coeffts[0][i - 1][0] + cff2[i] * coeffts[0][i - 2][0]) * mult;
-        coeffts[i][0][0] = (x12 * cff1[i] * coeffts[i - 1][0][0] + cff2[i] * coeffts[i - 2][0][0]) * mult;
-    }
+   /* two of the indices are zero */
+   coeffts[0][0][1] = Diff.z * (coeffts[0][0][0] * mult);
+   coeffts[0][1][0] = Diff.y * (coeffts[0][0][0] * mult);
+   coeffts[1][0][0] = Diff.x * (coeffts[0][0][0] * mult);
+   for (i = 2; i <= p; i++) {
+      coeffts[0][0][i] = (x32 * cff1[i] * coeffts[0][0][i - 1] + cff2[i] * coeffts[0][0][i - 2]) * mult;
+      coeffts[0][i][0] = (x22 * cff1[i] * coeffts[0][i - 1][0] + cff2[i] * coeffts[0][i - 2][0]) * mult;
+      coeffts[i][0][0] = (x12 * cff1[i] * coeffts[i - 1][0][0] + cff2[i] * coeffts[i - 2][0][0]) * mult;
+   }
 
-    /* one index = 0, one index = 1, other index >= 1 */
-    coeffts[0][1][1] = 3 * diff.z * (coeffts[0][1][0] * mult);
-    coeffts[1][0][1] = 3 * diff.z * (coeffts[1][0][0] * mult);
-    coeffts[1][1][0] = 3 * diff.y * (coeffts[1][0][0] * mult);
-    for (i = 2; i < globalSystem->MaxP; i++) {
-        coeffts[0][1][i] = (diff.y * coeffts[0][0][i] + x32 * coeffts[0][1][i - 1] + coeffts[0][1][i - 2]) * mult;
-        coeffts[1][0][i] = (diff.x * coeffts[0][0][i] + x32 * coeffts[1][0][i - 1] + coeffts[1][0][i - 2]) * mult;
-        coeffts[0][i][1] = (x22 * coeffts[0][i - 1][1] + coeffts[0][i - 2][1] + diff.z * coeffts[0][i][0]) * mult;
-        coeffts[1][i][0] = (diff.x * coeffts[0][i][0] + x22 * coeffts[1][i - 1][0] + coeffts[1][i - 2][0]) * mult;
-        coeffts[i][1][0] = (x12 * coeffts[i - 1][1][0] + coeffts[i - 2][1][0] + diff.y * coeffts[i][0][0]) * mult;
-        coeffts[i][0][1] = (x12 * coeffts[i - 1][0][1] + coeffts[i - 2][0][1] + diff.z * coeffts[i][0][0]) * mult;
-    }
+   /* one index = 0, one index = 1, other index >= 1 */
+   coeffts[0][1][1] = 3 * Diff.z * (coeffts[0][1][0] * mult);
+   coeffts[1][0][1] = 3 * Diff.z * (coeffts[1][0][0] * mult);
+   coeffts[1][1][0] = 3 * Diff.y * (coeffts[1][0][0] * mult);
+   for (i = 2; i < p; i++) {
+      coeffts[0][1][i] = (Diff.y * coeffts[0][0][i] + x32 * coeffts[0][1][i - 1] + coeffts[0][1][i - 2]) * mult;
+      coeffts[1][0][i] = (Diff.x * coeffts[0][0][i] + x32 * coeffts[1][0][i - 1] + coeffts[1][0][i - 2]) * mult;
+      coeffts[0][i][1] = (x22 * coeffts[0][i - 1][1] + coeffts[0][i - 2][1] + Diff.z * coeffts[0][i][0]) * mult;
+      coeffts[1][i][0] = (Diff.x * coeffts[0][i][0] + x22 * coeffts[1][i - 1][0] + coeffts[1][i - 2][0]) * mult;
+      coeffts[i][1][0] = (x12 * coeffts[i - 1][1][0] + coeffts[i - 2][1][0] + Diff.y * coeffts[i][0][0]) * mult;
+      coeffts[i][0][1] = (x12 * coeffts[i - 1][0][1] + coeffts[i - 2][0][1] + Diff.z * coeffts[i][0][0]) * mult;
+   }
 
-    /* one index = 0, other indices >= 2 */
-    for (i = 2; i <= globalSystem->MaxP - 2; i++)
-        for (j = 2; i + j <= globalSystem->MaxP; j++) {
-            coeffts[0][i][j] =
-                    (x22 * cff1[i] * coeffts[0][i - 1][j] + cff2[i] * coeffts[0][i - 2][j] + x32 * coeffts[0][i][j - 1] + coeffts[0][i][j - 2]) * mult;
-            coeffts[i][0][j] =
-                    (x12 * cff1[i] * coeffts[i - 1][0][j] + cff2[i] * coeffts[i - 2][0][j] + x32 * coeffts[i][0][j - 1] + coeffts[i][0][j - 2]) * mult;
-            coeffts[i][j][0] =
-                    (x12 * cff1[i] * coeffts[i - 1][j][0] + cff2[i] * coeffts[i - 2][j][0] + x22 * coeffts[i][j - 1][0] + coeffts[i][j - 2][0]) * mult;
-        }
+   /* one index = 0, other indices >= 2 */
+   for (i = 2; i <= p - 2; i++)
+      for (j = 2; i + j <= p; j++) {
+	 coeffts[0][i][j] =
+	    (x22 * cff1[i] * coeffts[0][i - 1][j] + cff2[i] * coeffts[0][i - 2][j] + x32 * coeffts[0][i][j - 1] + coeffts[0][i][j - 2]) * mult;
+	 coeffts[i][0][j] =
+	    (x12 * cff1[i] * coeffts[i - 1][0][j] + cff2[i] * coeffts[i - 2][0][j] + x32 * coeffts[i][0][j - 1] + coeffts[i][0][j - 2]) * mult;
+	 coeffts[i][j][0] =
+	    (x12 * cff1[i] * coeffts[i - 1][j][0] + cff2[i] * coeffts[i - 2][j][0] + x22 * coeffts[i][j - 1][0] + coeffts[i][j - 2][0]) * mult;
+      }
 
-    /* two indices = 1, other index >= 1 */
-    coeffts[1][1][1] = 5 * diff.z * mult * coeffts[1][1][0];
-    for (i = 2; i <= globalSystem->MaxP - 2; i++) {
-        coeffts[1][1][i] = (diff.x * coeffts[0][1][i] + x22 * coeffts[1][0][i] + x32 * coeffts[1][1][i - 1] + coeffts[1][1][i - 2]) * mult;
-        coeffts[1][i][1] = (diff.x * coeffts[0][i][1] + x22 * coeffts[1][i - 1][1] + coeffts[1][i - 2][1] + x32 * coeffts[1][i][0]) * mult;
-        coeffts[i][1][1] = (x12 * coeffts[i - 1][1][1] + coeffts[i - 2][1][1] + diff.y * coeffts[i][0][1] + x32 * coeffts[i][1][0]) * mult;
-    }
+   /* two indices = 1, other index >= 1 */
+   coeffts[1][1][1] = 5 * Diff.z * mult * coeffts[1][1][0];
+   for (i = 2; i <= p - 2; i++) {
+      coeffts[1][1][i] = (Diff.x * coeffts[0][1][i] + x22 * coeffts[1][0][i] + x32 * coeffts[1][1][i - 1] + coeffts[1][1][i - 2]) * mult;
+      coeffts[1][i][1] = (Diff.x * coeffts[0][i][1] + x22 * coeffts[1][i - 1][1] + coeffts[1][i - 2][1] + x32 * coeffts[1][i][0]) * mult;
+      coeffts[i][1][1] = (x12 * coeffts[i - 1][1][1] + coeffts[i - 2][1][1] + Diff.y * coeffts[i][0][1] + x32 * coeffts[i][1][0]) * mult;
+   }
 
-    /* one index = 1, other indices >= 2 */
-    for (i = 2; i <= globalSystem->MaxP - 3; i++)
-        for (j = 2; i + j < globalSystem->MaxP; j++) {
-            coeffts[1][i][j] =
-                    (diff.x * coeffts[0][i][j] + x22 * coeffts[1][i - 1][j] + coeffts[1][i - 2][j] + x32 * coeffts[1][i][j - 1] + coeffts[1][i][j - 2]) * mult;
-            coeffts[i][1][j] =
-                    (x12 * coeffts[i - 1][1][j] + coeffts[i - 2][1][j] + diff.y * coeffts[i][0][j] + x32 * coeffts[i][1][j - 1] + coeffts[i][1][j - 2]) * mult;
-            coeffts[i][j][1] =
-                    (x12 * coeffts[i - 1][j][1] + coeffts[i - 2][j][1] + x22 * coeffts[i][j - 1][1] + coeffts[i][j - 2][1] + diff.z * coeffts[i][j][0]) * mult;
-        }
+   /* one index = 1, other indices >= 2 */
+   for (i = 2; i <= p - 3; i++)
+      for (j = 2; i + j < p; j++) {
+	 coeffts[1][i][j] =
+	    (Diff.x * coeffts[0][i][j] + x22 * coeffts[1][i - 1][j] + coeffts[1][i - 2][j] + x32 * coeffts[1][i][j - 1] + coeffts[1][i][j - 2]) * mult;
+	 coeffts[i][1][j] =
+	    (x12 * coeffts[i - 1][1][j] + coeffts[i - 2][1][j] + Diff.y * coeffts[i][0][j] + x32 * coeffts[i][1][j - 1] + coeffts[i][1][j - 2]) * mult;
+	 coeffts[i][j][1] =
+	    (x12 * coeffts[i - 1][j][1] + coeffts[i - 2][j][1] + x22 * coeffts[i][j - 1][1] + coeffts[i][j - 2][1] + Diff.z * coeffts[i][j][0]) * mult;
+      }
 
-    /* all indices >= 2 */
-    for (i = 2; i <= globalSystem->MaxP - 4; i++)
-        for (j = 2; i + j <= globalSystem->MaxP - 2; j++)
-            for (k = 2; i + j + k <= globalSystem->MaxP; k++)
-                coeffts[i][j][k] =
-                    (x12 * cff1[i] * coeffts[i - 1][j][k] + cff2[i] * coeffts[i - 2][j][k] + x22 * coeffts[i][j - 1][k] + coeffts[i][j - 2][k] +
-                    x32 * coeffts[i][j][k - 1] + coeffts[i][j][k - 2]) * mult;
+   /* all indices >= 2 */
+   for (i = 2; i <= p - 4; i++)
+      for (j = 2; i + j <= p - 2; j++)
+	 for (k = 2; i + j + k <= p; k++)
+	    coeffts[i][j][k] =
+	       (x12 * cff1[i] * coeffts[i - 1][j][k] + cff2[i] * coeffts[i - 2][j][k] + x22 * coeffts[i][j - 1][k] + coeffts[i][j - 2][k] +
+		x32 * coeffts[i][j][k - 1] + coeffts[i][j][k - 2]) * mult;
+ 
 #endif
 }
 
@@ -639,6 +645,7 @@ void Node::UpdateMomentMults() {
 
                                         for (int jz = 0; jz < 2; ++jz) {
                                             Vect3 diff = Dx - Size * Vect3(REAL(i), REAL(j), REAL(k)) - 0.5 * Offset[jx][jy][jz] * Size; // check signs here
+                                            diff = -1.0*diff;
                                             JaggedArray <REAL> coeffts(globalSystem->MaxP + 1);
                                             coeffts = 0.0;
                                             CompCoeffts(diff, coeffts);
@@ -652,9 +659,9 @@ void Node::UpdateMomentMults() {
                                                     TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2] = Array <Vect3 > (globalSystem->MaxP);
 
                                                     for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
-                                                        TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].x = -(k1 + 1) * coeffts[k1 + 1][k2][k3];
-                                                        TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].y = -(k2 + 1) * coeffts[k1][k2 + 1][k3];
-                                                        TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].z = -(k3 + 1) * coeffts[k1][k2][k3 + 1];
+                                                        TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].x = pow(-1,k1+k2+k3) * (k1 + 1) * coeffts[k1 + 1][k2][k3];
+                                                        TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].y = pow(-1,k1+k2+k3) * (k2 + 1) * coeffts[k1][k2 + 1][k3];
+                                                        TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].z = pow(-1,k1+k2+k3) * (k3 + 1) * coeffts[k1][k2][k3 + 1];
                                                     }
                                                 }
                                             }

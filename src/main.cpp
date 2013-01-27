@@ -106,6 +106,7 @@ private:
 int main(int argc, char *argv[]) {
     system("clear");
 
+    
     /*
      *  This code has several "modes:"
      *  1) It can be used as a BEM simulator with or without a BEM wake. If a BEM 
@@ -128,24 +129,24 @@ int main(int argc, char *argv[]) {
 
 
 
+    TestFMM(argc, argv);
+
+    return 0;
 
 
 
+//
+//    cout << "Enter filename:" << endl;
+//    string fname;
+//
+//
+//     SolveMatfileVels(fname, 8, 0.25);
+// 
+// 
+// 
+//     return 0;
 
 
-
-/*
-    cout << "Enter filename:" << endl;
-    string fname;
-
-
-     SolveMatfileVels(fname, 8, 0.25);
- 
- 
- 
-     return 0;
-
-*/
     //    WeeAmble();
     //    return 1;
 
@@ -153,8 +154,8 @@ int main(int argc, char *argv[]) {
 
     //  Some default values
     globalSystem->GambitScale = 62.5;
-    globalSystem->MaxP = 5;
-    globalSystem->Del2 = 0.00125;
+    globalSystem->MaxP = 3;
+    globalSystem->Del2 = 0.25;// * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
     globalSystem->h = 2;
@@ -915,11 +916,11 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
     
 //    
 #pragma omp parallel for
-    for (int i = 0; i < 100; ++i){
+    for (int i = 0; i < n; ++i){
         for (int j = 0; j < n; ++j)
             DirVels[i] += UTIL::globalDirectVel(Posns[j] - Posns[i], Omegas[j], 0.25) ;
         
-        cout << DirVels[i] << " " << FMMVels[i] << endl;
+        //cout << DirVels[i] << " " << FMMVels[i] << (DirVels[i] - FMMVels[i]).Mag() << endl;
     }
     
     
@@ -1107,7 +1108,7 @@ void TestFMM(int argc, char *argv[]) {
     //  Some default values
     globalSystem->GambitScale = 1;
     globalSystem->MaxP = atoi(argv[2]);
-    globalSystem->Del2 = .5;
+    globalSystem->Del2 = .25;
 
 
     //    globalIO->read_input(dir2 + argv[1]);
@@ -1325,13 +1326,22 @@ void TestFMM(int argc, char *argv[]) {
     //    for (int i = 0; i < Posns.size(); ++i) {
     //           
     //    }
-    cout << "Done." << endl;
+	cout << "Done." << endl << "Calculating FMM..." << endl;
 
 
     REAL t0 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+    
     globalOctree->Reset();
+    
     globalOctree->InitVelsGetLaplacian();
+    
     globalOctree->GetVels();
+//    globalOctree->Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::SetVelsZero, &Node::DoNothing);
+//    globalOctree->Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::PassMmnts2Prnt, &Node::DoNothing);
+//    globalOctree->Root->ApplyRecursivelyP(&Branch::GetVelField, &Node::DoNothing, &Node::DoNothing);
+//    globalOctree->Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::CollapseVField, &Node::DoNothing);
+//    //globalOctree->Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::SetVelsEqual, &Node::DoNothing);
+    
     REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation..." << endl;
     Posns.clear();
@@ -1404,9 +1414,10 @@ void TestFMM(int argc, char *argv[]) {
 
     RunningStat AbsErrsStats, RelErrsStats;
 
-
+	REAL ErrorPercent = 0.0, MaxErr = 0.0;
     for (int i = 0; i < Indices.size(); ++i) {
-        cout << "Cell " << i << "\tError L2 Norm " << (DirectVels[i] - FMMVels[Indices[i]]).Mag() << " \t " << DirectVels[i] << endl << "\t\t\t\t\t\t " << FMMVels[Indices[i]] << endl;
+        cout << "error percent: " << 100*(DirectVels[i] - FMMVels[Indices[i]]).Mag()/FMMVels[Indices[i]].Mag() << "%. " <<DirectVels[i] << " " << FMMVels[Indices[i]] << endl;
+        //cout << "Cell " << i << "\tError L2 Norm " << (DirectVels[i] - FMMVels[Indices[i]]).Mag() << " \t " << DirectVels[i] << endl << "\t\t\t\t\t\t " << FMMVels[Indices[i]] << endl;
         l2 += (DirectVels[i] - FMMVels[Indices[i]]).Mag()*(DirectVels[i] - FMMVels[Indices[i]]).Mag();
         Vmean += DirectVels[i].Mag();
 
@@ -1424,6 +1435,10 @@ void TestFMM(int argc, char *argv[]) {
         AbsErrsMax = max(AbsErrsMax, AbsErrs[i]);
         RelErrsMax = max(RelErrsMax, RelErrs[i]);
 
+		ErrorPercent += 100*(DirectVels[i] - FMMVels[Indices[i]]).Mag()/FMMVels[Indices[i]].Mag();
+		
+		MaxErr = max(MaxErr,100*(DirectVels[i] - FMMVels[Indices[i]]).Mag()/FMMVels[Indices[i]].Mag());
+
 
     }
 
@@ -1436,7 +1451,7 @@ void TestFMM(int argc, char *argv[]) {
     int TreeSize = OCTREE_SIZE;
     int TreeLevs = OCTREE_LEVS;
     Vmean = Vmean / n;
-    cout << "Done." << endl << "Standard deviation: " << sqrt(l2 / Posns.size()) << endl;
+    cout << "Done." << endl << "Mean Error: " << ErrorPercent/Indices.size() << "%" << endl << "Max Error: " << MaxErr << "%" << endl <<  "Standard deviation: " << sqrt(l2 / Posns.size()) << endl;
 
     ofstream myfile;
     myfile.open("output.dat", ios::out | ios::app);

@@ -250,15 +250,55 @@ void Branch::GetVelField() {
                                 for (int ce = 0; ce < 2; ++ce)
                                     if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]) {
                                         if (!Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->skip_here[tid] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
-                                            for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
-                                                for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
-                                                    for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
-                                                        for (int n1 = k1; n1 < globalSystem->MaxP; n1++)
-                                                            for (int n2 = k2; n1 + n2 < globalSystem->MaxP; n2++)
-                                                                for (int n3 = k3; n1 + n2 + n3 < globalSystem->MaxP; n3++) {
-                                                                    VelField[k1][k2][k3] += VlFldMlt[k1][k2][k3][n1][n2][n3] *
-                                                                            TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce][n1][n2][n3].Cross((static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments[n1 - k1][n2 - k2][n3 - k3]);
+                                            int MaxP = globalSystem->MaxP;
+                                            Array < Array < Array < Vect3 > > > *Ptr2Coeffts = &TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce];
+                                            JaggedArray <Vect3> *Ptr2Moms = &(static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments;
+                                            Array < Array < Array <Vect3> > > &a = *Ptr2Coeffts;
+                                            JaggedArray <Vect3> &m = *Ptr2Moms;
+                                            for (int n1 = 0; n1 < MaxP; ++n1)
+                                                for (int n2 = 0; n1 + n2 < MaxP; ++n2)
+                                                    for (int n3 = 0; n1 + n2 + n3 < MaxP; ++n3)
+                                                        for (int k1 = n1; k1 < MaxP; ++k1)
+                                                            for (int k2 = n2; k1 + k2 < MaxP; ++k2)
+                                                                for (int k3 = n3; k1 + k2 + k3 < MaxP; ++k3) {
+                                                                    VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * a[k1][k2][k3].Cross(m[k1-n1][k2-n2][k3-n3]);
+                                                                    //REAL mult = (pow(-1, n1) * pow(-1, n2) * pow(-1, n3)) * (REAL(globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3])) / (REAL(globalFactorial[k1 - n1] * globalFactorial[k2 - n2] * globalFactorial[k3 - n3]));
+                                                                    //VelField[n1][n2][n3].x = VelField[n1][n2][n3].x + mult * (a[k1][k2][k3].y * m[k1-n1][k2-n2][k3-n3].z - a[k1][k2][k3].z * m[k1-n1][k2-n2][k3-n3].y);
+                                                                    //VelField[n1][n2][n3].y = VelField[n1][n2][n3].y + mult * (a[k1][k2][k3].z * m[k1-n1][k2-n2][k3-n3].x - a[k1][k2][k3].x * m[k1-n1][k2-n2][k3-n3].z);
+                                                                    //VelField[n1][n2][n3].z = VelField[n1][n2][n3].z + mult * (a[k1][k2][k3].x * m[k1-n1][k2-n2][k3-n3].y - a[k1][k2][k3].y * m[k1-n1][k2-n2][k3-n3].x);
                                                                 }
+                                            
+                                            
+                                            
+                                            
+                                            
+//                                            
+//                                            
+//                                            for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
+//                                                for (int n2 = 0; n2 + n1 < globalSystem->MaxP; ++n2)
+//                                                    for (int n3 = 0; n3 + n2 + n1 < globalSystem->MaxP; ++n3)
+//                                                        for (int k1 = n1; k1 < globalSystem->MaxP; k1++)
+//                                                            for (int k2 = n2; k1 + k2 < globalSystem->MaxP; k2++)
+//                                                                for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; k3++) {
+////                                                                    REAL mult = (pow(-1,n1)*pow(-1,n2)*pow(-1,n3)) * (REAL(globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3] ))/(REAL (globalFactorial[k1 - n1] * globalFactorial[k2 - n2] * globalFactorial[k3 - n3]));
+//                                                                    VelField[n1][n2][n3] += (VlFldMlt[n1][n2][n3][k1][k2][k3] *
+//                                                                            TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce][k1][k2][k3].Cross((static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments[k1 - n1][k2 - n2][k3 - n3]));
+//                                                                }
+//                                        
+//                                        
+//                                        
+//                                        
+//                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
                                         } else {
                                             Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->skip_here[tid] = false;
                                         }
@@ -268,24 +308,30 @@ void Branch::GetVelField() {
 
 /**************************************************************/
 void Branch::InheritVField() {
-#ifdef USE_ROLLED_LOOPS
     if (m > 0) {
-        //        Vect3 Dx = Parent->Position - Position;
-        for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
-            for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
-                for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
-                    for (int n1 = k1; n1 < globalSystem->MaxP; n1++)
-                        for (int n2 = k2; n1 + n2 < globalSystem->MaxP; n2++)
-                            for (int n3 = k3; n1 + n2 + n3 < globalSystem->MaxP; n3++)
-                                VelField[k1][k2][k3] += Node::InhrtMlt[m][x][y][z][k1][k2][k3][n1][n2][n3] * (static_cast<Branch*> (Parent))->VelField[n1][n2][n3];
+        JaggedArray <Vect3> *Ptr2VField = &(static_cast<Branch*> (Parent))->VelField;
+        JaggedArray <Vect3> &ParentField = *Ptr2VField;
 
-    }
+#ifdef USE_ROLLED_LOOPS
+
+        for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
+            for (int n2 = 0; n2 + n1 < globalSystem->MaxP; ++n2)
+                for (int n3 = 0; n3 + n2 + n1 < globalSystem->MaxP; ++n3)
+                    for (int k1 = n1; k1 < globalSystem->MaxP; k1++)
+                        for (int k2 = n2; k1 + k2 < globalSystem->MaxP; k2++) 
+                            for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; k3++) 
+                                VelField[n1][n2][n3] += Node::InhrtMlt[m][x][y][z][n1][n2][n3][k1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
+
+
 #else
-    if (m > 0)
-        for (int i = 0; i < Branch::InheritIndsSize; ++i)
-            VelField[Branch::trgInheritInds[i][0]][Branch::trgInheritInds[i][1]][Branch::trgInheritInds[i][2]] +=
-                Branch::InheritMults[m][indx][i]* (static_cast<Branch*> (Parent))->VelField[Branch::srcInheritInds[i][0]][Branch::srcInheritInds[i][1]][Branch::srcInheritInds[i][2]];
+
+        if (m > 0) {
+            for (int i = 0; i < Branch::InheritIndsSize; ++i)
+                VelField[Branch::trgInheritInds[i][0]][Branch::trgInheritInds[i][1]][Branch::trgInheritInds[i][2]] +=
+                    Branch::InheritMults[m][indx][i] * ParentField[Branch::srcInheritInds[i][0]][Branch::srcInheritInds[i][1]][Branch::srcInheritInds[i][2]];
+        }
 #endif
+    }
 }
 
 /**************************************************************/

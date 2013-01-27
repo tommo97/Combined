@@ -49,7 +49,7 @@ using namespace std;
 
 #define OCTREE_SIZE 4096
 #define OCTREE_LEVS 13
-#define LIMITER VANLEER
+#define LIMITER Koren
 
 //#define COLLAPSE_TO_FACES
 
@@ -57,7 +57,7 @@ using namespace std;
 #define NY 300
 //  Disables bounds checking in Array class... use with caution. Make sure code runs, and doesn't change...
 #define ARRAY_NO_CHECK
-#define USE_ROLLED_LOOPS
+//#define USE_ROLLED_LOOPS
 
 //  Some simulation parameters
 #define USE_ARRAY
@@ -144,6 +144,8 @@ class OctreeCapsule;
 #define MINMOD(r) max(REAL(0.0), min(REAL(1.0), r))
 
 #define VANLEER(r) (r+abs(r))/(1+abs(r))
+
+#define Koren(r) max(0.0,min(min(2.0*r,(2.0+r)/3.0),2.0))
 
 #define flim(r) Vect3(LIMITER(r.x), LIMITER(r.y), LIMITER(r.z))
 
