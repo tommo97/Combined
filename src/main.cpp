@@ -1142,38 +1142,91 @@ void TestFMM(int argc, char *argv[]) {
         REAL rho = 4095 * 2;
         cout << "cube with a ";
         if (sparsity.compare(dense) == 0) {
-            cout << "dense " << endl;
-            while (FVMCell::NumCells < n) {
-                REAL x = rho * (0.5 - REAL(rand()) / RAND_MAX);
-                REAL y = rho * (0.5 - REAL(rand()) / RAND_MAX);
-                REAL z = rho * (0.5 - REAL(rand()) / RAND_MAX);
-                Vect3 OM = Vect3((0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX));
-                Vect3 PX = Vect3(x, y, z);
-                OctreeCapsule C(PX, 10000 * OM, true);
-                C.AssociatedBody = 0;
-                globalOctree->Root->EvalCapsule(C);
-
-
-                if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
-
-                    string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
-                    REAL MEM_PERCENT, temp;
-                    stringstream psdata;
-                    psdata << top_data;
-                    psdata >> temp >> MEM_PERCENT;
-                    cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
-                    if (MEM_PERCENT > MAXMEM) {
-                        cout << setfill('!') << setw(80) << "!" << endl;
-
-                        cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
-                        cout << "Memory used: " << MEM_PERCENT << "%" << endl;
-
-                        cout << setfill('!') << setw(80) << "!" << endl;
-                        throw OutOfMemory();
-                    }
-                }
+            cout << "dense cell arrangement" << endl;
+            
+            //  Get the side length of the cube
+            REAL l = pow(REAL(n),1./3.);
+            int nl = ceil(l);
+            cout << "Number of cells in cube " << nl << "^3 = " << nl*nl*nl << endl;
+            
+            if (round((REAL)nl/2.0)!=(REAL)nl/2.0){
+                cout << "Odd number - increasing by 1" << endl;
+                nl+=1;
             }
+            else
+                cout << "Even number" << endl;
+            
+            REAL mins = -(REAL)nl/2;
+            
+            for (REAL x = mins; x < -mins; x+=1.)
+                for (REAL y = mins; y < -mins; y+=1.)
+                    for (REAL z = mins; z < -mins; z+=1.) {
+
+                        //                        cout << x << " " << y << " " << z << endl;
+                        Vect3 OM = Vect3((0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX));
+                        Vect3 PX = Vect3(x, y, z);
+                        OctreeCapsule C(PX, 1 * OM, true);
+                        C.AssociatedBody = 0;
+                        globalOctree->Root->EvalCapsule(C);
+
+
+                        if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
+
+                            string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
+                            REAL MEM_PERCENT, temp;
+                            stringstream psdata;
+                            psdata << top_data;
+                            psdata >> temp >> MEM_PERCENT;
+                            cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
+                            if (MEM_PERCENT > MAXMEM) {
+                                cout << setfill('!') << setw(80) << "!" << endl;
+
+                                cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
+                                cout << "Memory used: " << MEM_PERCENT << "%" << endl;
+
+                                cout << setfill('!') << setw(80) << "!" << endl;
+                                throw OutOfMemory();
+                            }
+                        }
+
+
+
+
+                    }
         }
+        
+            
+//            
+//            while (FVMCell::NumCells < n) {
+//                REAL x = rho * (0.5 - REAL(rand()) / RAND_MAX);
+//                REAL y = rho * (0.5 - REAL(rand()) / RAND_MAX);
+//                REAL z = rho * (0.5 - REAL(rand()) / RAND_MAX);
+//                Vect3 OM = Vect3((0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX));
+//                Vect3 PX = Vect3(x, y, z);
+//                OctreeCapsule C(PX, 10000 * OM, true);
+//                C.AssociatedBody = 0;
+//                globalOctree->Root->EvalCapsule(C);
+//
+//
+//                if (!fmod((REAL) FVMCell::NumCells, 50000.0)) {
+//
+//                    string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
+//                    REAL MEM_PERCENT, temp;
+//                    stringstream psdata;
+//                    psdata << top_data;
+//                    psdata >> temp >> MEM_PERCENT;
+//                    cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
+//                    if (MEM_PERCENT > MAXMEM) {
+//                        cout << setfill('!') << setw(80) << "!" << endl;
+//
+//                        cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
+//                        cout << "Memory used: " << MEM_PERCENT << "%" << endl;
+//
+//                        cout << setfill('!') << setw(80) << "!" << endl;
+//                        throw OutOfMemory();
+//                    }
+//                }
+            
         if (sparsity.compare(sparse) == 0) {
             cout << "sparse ";
             int S = 1;
@@ -1340,7 +1393,7 @@ void TestFMM(int argc, char *argv[]) {
     globalOctree->Root->ApplyRecursively(&Node::MarkWithoutLoad, &Node::MarkWithoutLoad, &Node::DoNothing);
     globalOctree->Root->ApplyRecursively(&Node::DoNothing, &Node::CheckLoad, &Node::DoNothing);
 
-    
+     
 
 
     globalOctree->AllCells.clear();
