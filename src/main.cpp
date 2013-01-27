@@ -31,7 +31,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "tree.hpp"
 #include "node.hpp"
 #include "system.hpp"
-
+#define MAXMEM 90
+//      maximum memory use before bombing out
 
 using namespace std;
 /**************************************************************/
@@ -1161,7 +1162,7 @@ void TestFMM(int argc, char *argv[]) {
                     psdata << top_data;
                     psdata >> temp >> MEM_PERCENT;
                     cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
-                    if (MEM_PERCENT > 50) {
+                    if (MEM_PERCENT > MAXMEM) {
                         cout << setfill('!') << setw(80) << "!" << endl;
 
                         cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
@@ -1207,7 +1208,7 @@ void TestFMM(int argc, char *argv[]) {
                     psdata << top_data;
                     psdata >> temp >> MEM_PERCENT;
                     cout << FVMCell::NumCells << " " << FVMCell::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
-                    if (MEM_PERCENT > 50) {
+                    if (MEM_PERCENT > MAXMEM) {
                         cout << setfill('!') << setw(80) << "!" << endl;
 
                         cout << "Out of memory. Terminating to avoid swapping to disk." << endl;
@@ -1247,7 +1248,7 @@ void TestFMM(int argc, char *argv[]) {
                     psdata << top_data;
                     psdata >> temp >> MEM_PERCENT;
                     cout << FVMCell::NumCells << " " << FVMCell::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
-                    if (MEM_PERCENT > 50) {
+                    if (MEM_PERCENT > MAXMEM) {
                         cout << setfill('!') << setw(80) << "!" << endl;
 
                         cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
@@ -1281,7 +1282,7 @@ void TestFMM(int argc, char *argv[]) {
                     psdata << top_data;
                     psdata >> temp >> MEM_PERCENT;
                     cout << FVMCell::NumCells << " " << FVMCell::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
-                    if (MEM_PERCENT > 50) {
+                    if (MEM_PERCENT > MAXMEM) {
                         cout << setfill('!') << setw(80) << "!" << endl;
 
                         cout << "Out of memory. Quitting to avoid swapping to disk." << endl;
@@ -1422,7 +1423,7 @@ void TestFMM(int argc, char *argv[]) {
         Vmean += DirectVels[i].Mag();
 
         AbsErrs[i] = (DirectVels[i] - FMMVels[Indices[i]]).Mag();
-        RelErrs[i] = AbsErrs[i] / DirectVels[i].Mag();
+        RelErrs[i] = AbsErrs[i] / FMMVels[Indices[i]]).Mag();
 
         AbsErrsStats.Push(AbsErrs[i]);
         RelErrsStats.Push(RelErrs[i]);
