@@ -1332,10 +1332,12 @@ void TestFMM(int argc, char *argv[]) {
 
     REAL t0 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     
+    cout << "Resetting..." << endl;
     globalOctree->Reset();
     
-    globalOctree->InitVelsGetLaplacian();
-    
+    cout << "done" << endl << "Setting Vels to 0" << endl;
+    globalOctree->Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
+    cout << "done" << endl << "Getting Vels..." << endl;
     globalOctree->GetVels();
 //    globalOctree->Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::SetVelsZero, &Node::DoNothing);
 //    globalOctree->Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::PassMmnts2Prnt, &Node::DoNothing);
