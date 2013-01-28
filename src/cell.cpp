@@ -150,11 +150,11 @@ void FVMCell::Integrate() {
 
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        if (fabs(TransVars[q].x) < VORTICITY_CUTOFF)
+        if (TransVars[q].x*TransVars[q].x) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF)
             TransVars[q].x = 0.0;
-        if (fabs(TransVars[q].y) < VORTICITY_CUTOFF)
+        if (TransVars[q].y*TransVars[q].y) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF)
             TransVars[q].y = 0.0;
-        if (fabs(TransVars[q].z) < VORTICITY_CUTOFF)
+        if (TransVars[q].z*TransVars[q].z) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF)
             TransVars[q].z = 0.0;
         Omega += TransVars[q];
     }

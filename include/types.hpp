@@ -96,7 +96,7 @@ class OctreeCapsule;
 #define _EPS 1e-3
 #define _EPS2 1e-6
 #define _TOL 1e-12
-#define VORTICITY_CUTOFF 1e-4
+#define VORTICITY_CUTOFF 1e-9
 #else
 #define REAL float
 #define _EPS 1e-3
