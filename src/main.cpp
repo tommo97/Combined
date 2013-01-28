@@ -130,9 +130,9 @@ int main(int argc, char *argv[]) {
 
 
 
-    TestFMM(argc, argv);
-
-    return 0;
+//    TestFMM(argc, argv);
+//
+//    return 0;
 
 
 
@@ -154,8 +154,8 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 62.5;
-    globalSystem->MaxP = 3;
+    globalSystem->GambitScale = 1.0;
+    globalSystem->MaxP = 8;
     globalSystem->Del2 = 0.25;// * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
@@ -166,47 +166,109 @@ int main(int argc, char *argv[]) {
 
     UTIL::cpu_t = ticks();
 
-    UTIL::PreAmble();
+    //UTIL::PreAmble();
 
 
-    //    TIME_STEPPER::MaxTime = 10.0;
-    //    globalSystem->useBodies = false;
+        TIME_STEPPER::MaxTime = 10.0;
+        globalSystem->useBodies = false;
 
-    //    globalSystem->NumTransVars = 2;
+        globalSystem->NumTransVars = 2;
 
 
     globalSystem->Initialise();
     globalSystem->VortonsXs.clear();
     globalSystem->VortonOmegas.clear();
-    //    
-    //       
-    //    REAL radius = 1.0, amplitude = 1.0;
-    //    Vect3 centre(2.,0,0);
-    //    Array <Vect3> X, Omega;
-    //    
-    //
-    //    REAL THETA = 3*0.523598775598299;
-    //
-    //    sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, THETA);
-    //    
-    //    cout << X.size() << " " << Omega.size() << endl;
-    //    
-    //    Array <int> IDs(X.size(),0);
-    //    
-    //    globalSystem->AddVortonsToTree(X,Omega, IDs);
-    //
-    //    centre = Vect3(-2.,0,0);
-    // 
-    //    sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, -THETA);
-    //    IDs = 1;
-    //    cout << X.size() << " " << Omega.size() << endl;    
-    //    globalSystem->AddVortonsToTree(X,Omega, IDs);
-    //
-    //#ifndef use_NCURSES
-    //    if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
-    //#endif
-    //
-    //    cout << "Number of cells:... " << FVMCell::NumCells << endl;
+        
+    
+    
+    {
+        
+        
+        REAL Radius = 25.0;
+        REAL gamma = 1.0;
+        int n = 10000;
+        Array <REAL> thetas = globalLinspace(0.0,2*pi,n);
+        
+        Vect3 Centre(0.0,0.0,5);
+        
+        REAL arc_length = Radius * (thetas[1]-thetas[0]);
+        
+        Array <Vect3> Xs(n), Oms(n);
+        Array <int> IDs(n,0);
+        for (int i = 0; i < n; ++i)
+        {
+            Xs[i] = Centre + Radius * Vect3(cos(thetas[i]), sin(thetas[i]),0.0);
+            Oms[i] = gamma * arc_length * Radius * Vect3(-sin(thetas[i]), cos(thetas[i]), 0.0);
+        }
+        
+        
+        
+        globalSystem->AddVortonsToTree(Xs,Oms, IDs);
+        
+         for (int i = 0; i < n; ++i)
+        {
+            Xs[i].z *= -1;
+            Oms[i] = -Oms[i];
+            IDs[i] = 1;
+        }
+        
+        
+        globalSystem->AddVortonsToTree(Xs,Oms, IDs);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    }
+    
+    
+    
+    
+    
+           
+//        REAL radius = 1.0, amplitude = 1.0;
+//        Vect3 centre(1.,0,0);
+//        Array <Vect3> X, Omega;
+//        
+//    
+//        REAL THETA = 3*0.523598775598299;
+//    
+//        sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, THETA);
+//        
+//        cout << X.size() << " " << Omega.size() << endl;
+//        
+//        Array <int> IDs(X.size(),0);
+//        
+//        globalSystem->AddVortonsToTree(X,Omega, IDs);
+//    
+//        centre = Vect3(-1.,0,0);
+//     
+//        sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, -THETA);
+//        IDs = 1;
+//        cout << X.size() << " " << Omega.size() << endl;    
+//        globalSystem->AddVortonsToTree(X,Omega, IDs);
+//    
+    #ifndef use_NCURSES
+        if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
+    #endif
+    
+        cout << "Number of cells:... " << FVMCell::NumCells << endl;
     globalSystem->TimeStep();
 
 

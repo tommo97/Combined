@@ -447,15 +447,15 @@ void SYSTEM::GetFaceVels() {
         globalOctree->AllCells[i]->SetVelsEqual();
 
 
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        Vect3 Vel(0.,0.,0.);
-
-        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-            globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega, Vel);
-
-        cout << Vel << " " << globalOctree->AllCells[i]->Velocity << endl;
-
-    }
+//    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+//        Vect3 Vel(0.,0.,0.);
+//
+//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+//            globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega, Vel);
+//
+//        cout << Vel << " " << globalOctree->AllCells[i]->Velocity << endl;
+//
+//    }
 #ifdef TIME_STEPS
     long unsigned int t7 = ticks();
     stringstream tmp;

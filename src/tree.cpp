@@ -206,9 +206,20 @@ void OCTREE::Integrate() {
 
 /**************************************************************/
 void OCTREE::GetVels() {
+    
+    
 #ifdef TIME_STEPS
     long unsigned int t5 = ticks();
 #endif
+#define USE_DIRECT
+#ifdef USE_DIRECT
+    for (int i = 0; i < AllCells.size(); ++i)
+        AllCells[i]->Velocity = Vect3(0.0);
+#pragma omp parallel for
+        for (int i = 0; i < AllCells.size(); ++i)
+            for (int j = 0; j < AllCells.size(); ++j)
+                AllCells[i]->Velocity += globalDirectVel(AllCells[i]->Position - AllCells[j]->Position, AllCells[j]->Omega);
+#else
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::SetVelsZero, &Node::DoNothing);
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::PassMmnts2Prnt, &Node::PassMmnts2Prnt);
@@ -270,6 +281,7 @@ void OCTREE::GetVels() {
     stringstream tmp;
     tmp << "GetVels()                : " << double(t6 - t5) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
+#endif
 #endif
 }
 
