@@ -198,7 +198,7 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < n; ++i)
         {
             Xs[i] = Centre + Radius * Vect3(cos(thetas[i]), sin(thetas[i]),0.0);
-            Oms[i] = gamma * arc_length * Radius * Vect3(-sin(thetas[i]), cos(thetas[i]), 0.0);
+            Oms[i] = -gamma * arc_length * Radius * Vect3(-sin(thetas[i]), cos(thetas[i]), 0.0);
         }
         
         
