@@ -1598,7 +1598,7 @@ void TestFMM(int argc, char *argv[]) {
     int TreeSize = OCTREE_SIZE;
     int TreeLevs = OCTREE_LEVS;
     Vmean = Vmean / n;
-    cout << "Done." << endl << "Mean Error: " << ErrorPercent/Indices.size() << "%" << endl << "Max Error: " << MaxErr << "%" << endl <<  "Standard deviation: " << sqrt(l2 / Posns.size()) << endl;
+    cout << "Done." << endl << "Mean Error: " << ErrorPercent/Indices.size() << "%" << endl << "Max Error: " << MaxErr << "%" << endl <<  "Standard deviation: " << 100*RelErrsStats.StandardDeviation() << "%" << endl;
 
     ofstream myfile;
     myfile.open("output.dat", ios::out | ios::app);
