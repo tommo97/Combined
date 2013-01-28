@@ -211,7 +211,6 @@ void OCTREE::GetVels() {
 #ifdef TIME_STEPS
     long unsigned int t5 = ticks();
 #endif
-#define USE_DIRECT
 #ifdef USE_DIRECT
     for (int i = 0; i < AllCells.size(); ++i)
         AllCells[i]->Velocity = Vect3(0.0);

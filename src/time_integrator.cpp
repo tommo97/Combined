@@ -197,7 +197,13 @@ void TIME_STEPPER::time_loop() {
         }
         globalOctree->Reset();
         globalOctree->InitVelsGetLaplacian();
-        globalOctree->GetVels();
+//        globalOctree->GetVels();
+          for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->Velocity = Vect3(0.0);
+#pragma omp parallel for
+        for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+            for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+                globalOctree->AllCells[i]->Velocity += globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega);
         first_step = false;
     } else {
 #ifdef TIME_STEPS
