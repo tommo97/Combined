@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
     //UTIL::PreAmble();
 
 
-        TIME_STEPPER::MaxTime = 10.0;
+        TIME_STEPPER::MaxTime = 100.0;
         globalSystem->useBodies = false;
 
         globalSystem->NumTransVars = 2;
