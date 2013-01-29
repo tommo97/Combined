@@ -45,7 +45,6 @@ FVMCell::FVMCell() : Node(), FaceVels(0.) {
 /**************************************************************/
 FVMCell::FVMCell(Node *parent, int i, int j, int k) : Node(parent, i, j, k), FaceVels(0.), age(0) {
     FVMCell::NumCells++;
-    Laplacian.assign(globalSystem->NumTransVars, Vect3());
     VelGrads.assign(3, Vect3(0.0,0.0,0.0));
     BEV.assign(globalSystem->NumTransVars, Vect3());
 
@@ -371,9 +370,7 @@ void FVMCell::vCheckNeighbs() {
 
 void FVMCell::SetVelsEqual() {
 
-    if (Neighb.S) FaceVels.S = static_cast<FVMCell*> (Neighb.S)->FaceVels.N;
-    if (Neighb.W) FaceVels.W = static_cast<FVMCell*> (Neighb.W)->FaceVels.E;
-    if (Neighb.B) FaceVels.B = static_cast<FVMCell*> (Neighb.B)->FaceVels.T;
+    
 #ifndef COLLAPSE_TO_FACES
     FaceVels = Velocity;
     if (Neighb.S) FaceVels.S = .5 * (Velocity + static_cast<FVMCell*> (Neighb.S)->Velocity);
@@ -413,6 +410,46 @@ void FVMCell::ReportSpectralRadius() {
 }
 
 /**************************************************************/
+void FVMCell::UpdateGradsFromDeltaOmega() {
+    //  Updates the velocity gradients due to the changes in the nearby vorticity field
+    
+    VelGrads = VelGradsHold;
+    for (int ix = 0; ix < 3; ++ix)
+        for (int iy = 0; iy < 3; ++iy)
+            for (int iz = 0; iz < 3; ++iz)
+                if (Parent->ISA[ix][iy][iz])
+                    for (int ay = 0; ay < 2; ++ay)
+                        for (int be = 0; be < 2; ++be)
+                            for (int ce = 0; ce < 2; ++ce)
+                                if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
+                                    Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
+
+                                    UTIL::globalDirectVelGrads(PV, (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega - OmegaHold), globalSystem->Del2, VelGrads);
+                                }
+}
+
+/**************************************************************/
+void FVMCell::UpdateVelsFromDeltaOmega() {
+    //  Updates the velocity due to the changes in the nearby vorticity field
+    Velocity = VelHold;
+    for (int ix = 0; ix < 3; ++ix)
+        for (int iy = 0; iy < 3; ++iy)
+            for (int iz = 0; iz < 3; ++iz)
+                if (Parent->ISA[ix][iy][iz])
+                    for (int ay = 0; ay < 2; ++ay)
+                        for (int be = 0; be < 2; ++be)
+                            for (int ce = 0; ce < 2; ++ce)
+                                if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
+                                    Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
+
+                                    Velocity += Node::DirVelMultsX[x][y][z][ix][iy][iz][ay][be][ce] * (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega - OmegaHold).x;
+                                    Velocity += Node::DirVelMultsY[x][y][z][ix][iy][iz][ay][be][ce] * (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega - OmegaHold).y;
+                                    Velocity += Node::DirVelMultsZ[x][y][z][ix][iy][iz][ay][be][ce] * (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega - OmegaHold).z;
+                                }
+    FaceVels = Velocity;
+}
+/**************************************************************/
+
 void FVMCell::vCollapseVField() {
 #ifdef COLLAPSE_TO_FACES
     for (int i = 0; i < 6; ++i)
@@ -508,6 +545,8 @@ void FVMCell::vCollapseVField() {
 #ifndef COLLAPSE_TO_FACES
     FaceVels = Velocity;
 #endif
+    VelHold = Velocity;
+    VelGradsHold = VelGrads;
 }
 
 /**************************************************************/
@@ -542,32 +581,31 @@ void FVMCell::vPassMmnts2Prnt() {
 void FVMCell::O1UW() {
     //
 
-    NeighbSet <REAL> FP, FM;
 
-    FP.E = max(FaceVels.E.x, (REAL) .0);
-    FP.W = max(-FaceVels.W.x, (REAL) .0);
-    FP.N = max(FaceVels.N.y, (REAL) .0);
-    FP.S = max(-FaceVels.S.y, (REAL) .0);
+    REAL FPE = max(FaceVels.E.x, (REAL) .0);
+    REAL FPW = max(-FaceVels.W.x, (REAL) .0);
+    REAL FPN = max(FaceVels.N.y, (REAL) .0);
+    REAL FPS = max(-FaceVels.S.y, (REAL) .0);
 #ifdef MODE_3D
-    FP.T = max(FaceVels.T.z, (REAL) .0);
-    FP.B = max(-FaceVels.B.z, (REAL) .0);
+    REAL FPT = max(FaceVels.T.z, (REAL) .0);
+    REAL FPB = max(-FaceVels.B.z, (REAL) .0);
 #endif
-    FM.E = max(-FaceVels.E.x, (REAL) .0);
-    FM.W = max(FaceVels.W.x, (REAL) .0);
-    FM.N = max(-FaceVels.N.y, (REAL) .0);
-    FM.S = max(FaceVels.S.y, (REAL) .0);
+    REAL FME = max(-FaceVels.E.x, (REAL) .0);
+    REAL FMW = max(FaceVels.W.x, (REAL) .0);
+    REAL FMN = max(-FaceVels.N.y, (REAL) .0);
+    REAL FMS = max(FaceVels.S.y, (REAL) .0);
 #ifdef MODE_3D
-    FM.T = max(-FaceVels.T.z, (REAL) .0);
-    FM.B = max(FaceVels.B.z, (REAL) .0);
+    REAL FMT = max(-FaceVels.T.z, (REAL) .0);
+    REAL FMB = max(FaceVels.B.z, (REAL) .0);
 #endif
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        Vect3 fe = FP.E * TransVars[q] - FM.E * (*Neighb_Val[q].E);
-        Vect3 fw = FP.W * TransVars[q] - FM.W * (*Neighb_Val[q].W);
-        Vect3 fn = FP.N * TransVars[q] - FM.N * (*Neighb_Val[q].N);
-        Vect3 fs = FP.S * TransVars[q] - FM.S * (*Neighb_Val[q].S);
+        Vect3 fe = FPE * TransVars[q] - FME * (*Neighb_Val[q].E);
+        Vect3 fw = FPW * TransVars[q] - FMW * (*Neighb_Val[q].W);
+        Vect3 fn = FPN * TransVars[q] - FMN * (*Neighb_Val[q].N);
+        Vect3 fs = FPS * TransVars[q] - FMS * (*Neighb_Val[q].S);
 #ifdef MODE_3D
-        Vect3 ft = FP.T * TransVars[q] - FM.T * (*Neighb_Val[q].T);
-        Vect3 fb = FP.B * TransVars[q] - FM.B * (*Neighb_Val[q].B);
+        Vect3 ft = FPT * TransVars[q] - FMT * (*Neighb_Val[q].T);
+        Vect3 fb = FPB * TransVars[q] - FMB * (*Neighb_Val[q].B);
 #else
         Vect3 ft, fb;
 #endif
@@ -576,16 +614,64 @@ void FVMCell::O1UW() {
         TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
     }
 }
+/**************************************************************/
+void FVMCell::Stretch() {
+Vect3 GradU(VelGrads[0].x, VelGrads[1].x, VelGrads[2].x);
+    Vect3 GradV(VelGrads[0].y, VelGrads[1].y, VelGrads[2].y);
+    Vect3 GradW(VelGrads[0].z, VelGrads[1].z, VelGrads[2].z);
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
 
+        
+        Vect3 StretchDeriv = Vect3(TransVars[q].Dot(GradU), TransVars[q].Dot(GradV), TransVars[q].Dot(GradW));
+        TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
+
+        REAL h = 1.;
+
+        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
+        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
+
+        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12;
+        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12;
+
+        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
+        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
+
+        
+        
+        
+        Vect3 ViscDeriv = globalSystem->Nu * ((de-dw) + (dn-ds) + (dt-db));
+        TransDerivs[TIME_STEPPER::RKStep][q] = ViscDeriv;
+
+    }
+}
+/**************************************************************/
+void FVMCell::Diffuse() {
+    REAL h = 1.;
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
+        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
+
+        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12;
+        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12;
+
+        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
+        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
+
+
+
+
+        Vect3 ViscDeriv = globalSystem->Nu * ((de - dw) + (dn - ds) + (dt - db));
+        TransDerivs[TIME_STEPPER::RKStep][q] = ViscDeriv;
+    }
+}
 /**************************************************************/
 void FVMCell::O2UWx() {
-    NeighbSet <REAL> FP, FM;
 
-    FP.E = max(FaceVels.E.x, (REAL) .0);
-    FP.W = max(-FaceVels.W.x, (REAL) .0);
+    REAL FPE = max(FaceVels.E.x, (REAL) .0);
+    REAL FPW = max(-FaceVels.W.x, (REAL) .0);
   
-    FM.E = max(-FaceVels.E.x, (REAL) .0);
-    FM.W = max(FaceVels.W.x, (REAL) .0);
+    REAL FME = max(-FaceVels.E.x, (REAL) .0);
+    REAL FMW = max(FaceVels.W.x, (REAL) .0);
    
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
@@ -605,12 +691,9 @@ void FVMCell::O2UWx() {
         Vect3 spsim_e = flim(rem);
         Vect3 spsim_w = flim(rwm);
 
-        Vect3 fe = FP.E * (TransVars[q] + .5 * spsip_e * ep) - FM.E * ((*Neighb_Val[q].E) - .5 * spsim_e * ep);
-        Vect3 fw = FP.W * (TransVars[q] - .5 * spsip_w * pw) - FM.W * ((*Neighb_Val[q].W) + .5 * spsim_w * pw);
+        Vect3 fe = FPE * (TransVars[q] + .5 * spsip_e * ep) - FME * ((*Neighb_Val[q].E) - .5 * spsim_e * ep);
+        Vect3 fw = FPW * (TransVars[q] - .5 * spsip_w * pw) - FMW * ((*Neighb_Val[q].W) + .5 * spsim_w * pw);
    
-        Vect3 ft = FP.T * (TransVars[q] + .5 * spsip_t * tp) - FM.T * ((*Neighb_Val[q].T) - .5 * spsim_t * tp);
-        Vect3 fb = FP.B * (TransVars[q] - .5 * spsip_b * pb) - FM.B * ((*Neighb_Val[q].B) + .5 * spsim_b * pb);
-
 
         Vect3 convection = fe + fw;
         TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
@@ -620,14 +703,13 @@ void FVMCell::O2UWx() {
 
 /**************************************************************/
 void FVMCell::O2UWy() {
-    NeighbSet <REAL> FP, FM;
 
    
-    FP.N = max(FaceVels.N.y, (REAL) .0);
-    FP.S = max(-FaceVels.S.y, (REAL) .0);
+    REAL FPN = max(FaceVels.N.y, (REAL) .0);
+    REAL FPS = max(-FaceVels.S.y, (REAL) .0);
 
-    FM.N = max(-FaceVels.N.y, (REAL) .0);
-    FM.S = max(FaceVels.S.y, (REAL) .0);
+    REAL FMN = max(-FaceVels.N.y, (REAL) .0);
+    REAL FMS = max(FaceVels.S.y, (REAL) .0);
 
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
@@ -651,8 +733,8 @@ void FVMCell::O2UWy() {
         Vect3 spsim_n = flim(rnm);
         Vect3 spsim_s = flim(rsm);
 
-        Vect3 fn = FP.N * (TransVars[q] + .5 * spsip_n * np) - FM.N * ((*Neighb_Val[q].N) - .5 * spsim_n * np);
-        Vect3 fs = FP.S * (TransVars[q] - .5 * spsip_s * ps) - FM.S * ((*Neighb_Val[q].S) + .5 * spsim_s * ps);
+        Vect3 fn = FPN * (TransVars[q] + .5 * spsip_n * np) - FMN * ((*Neighb_Val[q].N) - .5 * spsim_n * np);
+        Vect3 fs = FPS * (TransVars[q] - .5 * spsip_s * ps) - FMS * ((*Neighb_Val[q].S) + .5 * spsim_s * ps);
 
         Vect3 convection = fn + fs;
         TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
@@ -661,12 +743,11 @@ void FVMCell::O2UWy() {
 
 /**************************************************************/
 void FVMCell::O2UWz() {
+    REAL FPT = max(FaceVels.T.z, (REAL) .0);
+    REAL FPB = max(-FaceVels.B.z, (REAL) .0);
     
-    FP.T = max(FaceVels.T.z, (REAL) .0);
-    FP.B = max(-FaceVels.B.z, (REAL) .0);
-    
-    FM.T = max(-FaceVels.T.z, (REAL) .0);
-    FM.B = max(FaceVels.B.z, (REAL) .0);
+    REAL FMT = max(-FaceVels.T.z, (REAL) .0);
+    REAL FMB = max(FaceVels.B.z, (REAL) .0);
     
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
@@ -687,8 +768,8 @@ void FVMCell::O2UWz() {
         Vect3 spsim_t = flim(rtm);
         Vect3 spsim_b = flim(rbm);
 
-        Vect3 ft = FP.T * (TransVars[q] + .5 * spsip_t * tp) - FM.T * ((*Neighb_Val[q].T) - .5 * spsim_t * tp);
-        Vect3 fb = FP.B * (TransVars[q] - .5 * spsip_b * pb) - FM.B * ((*Neighb_Val[q].B) + .5 * spsim_b * pb);
+        Vect3 ft = FPT * (TransVars[q] + .5 * spsip_t * tp) - FMT * ((*Neighb_Val[q].T) - .5 * spsim_t * tp);
+        Vect3 fb = FPB * (TransVars[q] - .5 * spsip_b * pb) - FMB * ((*Neighb_Val[q].B) + .5 * spsim_b * pb);
 
         Vect3 convection = ft + fb;
         TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
@@ -697,23 +778,21 @@ void FVMCell::O2UWz() {
 
 /**************************************************************/
 void FVMCell::O2UW() {
-    NeighbSet <REAL> FP, FM;
-
-    FP.E = max(FaceVels.E.x, (REAL) .0);
-    FP.W = max(-FaceVels.W.x, (REAL) .0);
-    FP.N = max(FaceVels.N.y, (REAL) .0);
-    FP.S = max(-FaceVels.S.y, (REAL) .0);
+    REAL FPE = max(FaceVels.E.x, (REAL) .0);
+    REAL FPW = max(-FaceVels.W.x, (REAL) .0);
+    REAL FPN = max(FaceVels.N.y, (REAL) .0);
+    REAL FPS = max(-FaceVels.S.y, (REAL) .0);
 #ifdef MODE_3D
-    FP.T = max(FaceVels.T.z, (REAL) .0);
-    FP.B = max(-FaceVels.B.z, (REAL) .0);
+    REAL FPT = max(FaceVels.T.z, (REAL) .0);
+    REAL FPB = max(-FaceVels.B.z, (REAL) .0);
 #endif
-    FM.E = max(-FaceVels.E.x, (REAL) .0);
-    FM.W = max(FaceVels.W.x, (REAL) .0);
-    FM.N = max(-FaceVels.N.y, (REAL) .0);
-    FM.S = max(FaceVels.S.y, (REAL) .0);
+    REAL FME = max(-FaceVels.E.x, (REAL) .0);
+    REAL FMW = max(FaceVels.W.x, (REAL) .0);
+    REAL FMN = max(-FaceVels.N.y, (REAL) .0);
+    REAL FMS = max(FaceVels.S.y, (REAL) .0);
 #ifdef MODE_3D
-    FM.T = max(-FaceVels.T.z, (REAL) .0);
-    FM.B = max(FaceVels.B.z, (REAL) .0);
+    REAL FMT = max(-FaceVels.T.z, (REAL) .0);
+    REAL FMB = max(FaceVels.B.z, (REAL) .0);
 #endif
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
@@ -762,13 +841,13 @@ void FVMCell::O2UW() {
         Vect3 spsim_t = flim(rtm);
         Vect3 spsim_b = flim(rbm);
 #endif
-        Vect3 fe = FP.E * (TransVars[q] + .5 * spsip_e * ep) - FM.E * ((*Neighb_Val[q].E) - .5 * spsim_e * ep);
-        Vect3 fw = FP.W * (TransVars[q] - .5 * spsip_w * pw) - FM.W * ((*Neighb_Val[q].W) + .5 * spsim_w * pw);
-        Vect3 fn = FP.N * (TransVars[q] + .5 * spsip_n * np) - FM.N * ((*Neighb_Val[q].N) - .5 * spsim_n * np);
-        Vect3 fs = FP.S * (TransVars[q] - .5 * spsip_s * ps) - FM.S * ((*Neighb_Val[q].S) + .5 * spsim_s * ps);
+        Vect3 fe = FPE * (TransVars[q] + .5 * spsip_e * ep) - FME * ((*Neighb_Val[q].E) - .5 * spsim_e * ep);
+        Vect3 fw = FPW * (TransVars[q] - .5 * spsip_w * pw) - FMW * ((*Neighb_Val[q].W) + .5 * spsim_w * pw);
+        Vect3 fn = FPN * (TransVars[q] + .5 * spsip_n * np) - FMN * ((*Neighb_Val[q].N) - .5 * spsim_n * np);
+        Vect3 fs = FPS * (TransVars[q] - .5 * spsip_s * ps) - FMS * ((*Neighb_Val[q].S) + .5 * spsim_s * ps);
 #ifdef MODE_3D
-        Vect3 ft = FP.T * (TransVars[q] + .5 * spsip_t * tp) - FM.T * ((*Neighb_Val[q].T) - .5 * spsim_t * tp);
-        Vect3 fb = FP.B * (TransVars[q] - .5 * spsip_b * pb) - FM.B * ((*Neighb_Val[q].B) + .5 * spsim_b * pb);
+        Vect3 ft = FPT * (TransVars[q] + .5 * spsip_t * tp) - FMT * ((*Neighb_Val[q].T) - .5 * spsim_t * tp);
+        Vect3 fb = FPB * (TransVars[q] - .5 * spsip_b * pb) - FMB * ((*Neighb_Val[q].B) + .5 * spsim_b * pb);
 #else
         Vect3 ft, fb;
 #endif

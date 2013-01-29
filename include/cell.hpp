@@ -55,9 +55,9 @@ public:
 
     NeighbSet <Vect3> FaceVels;
 
-    Array <Vect3> Deriv, IPs, IPVels;
+    Array <Vect3> Deriv;
 
-    Vect3 srad, cfl;
+    Vect3 srad, cfl, VelHold, OmegaHold;
     
     
     
@@ -67,7 +67,7 @@ public:
 
 //    Vect3 VelTensor[3];               // unused?
 
-    Array <Vect3> Laplacian, VelGrads;
+    Array <Vect3> VelGrads, VelGradsHold;
 
     static void InitMomsInds(int MaxP);
 
@@ -101,7 +101,11 @@ public:
     void SetVelsZero();
 
     void Integrate();
-
+    
+    void Stretch();
+    
+    void Diffuse();
+    
     Vect3 ReturnSpectralRadius();
 
     void GetLaplacian();
@@ -109,6 +113,10 @@ public:
 //    void GetVelTensor();
 
     void ReportSpectralRadius();
+    
+    void UpdateVelsFromDeltaOmega();
+    
+    void UpdateGradsFromDeltaOmega();
     
     void vCollapseVField();
 
@@ -125,6 +133,9 @@ public:
     void O1UW();
 
     void O2UW();
+    void O2UWx();
+    void O2UWy();
+    void O2UWz();
 
     void GetBEV();
 

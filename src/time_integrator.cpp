@@ -126,8 +126,88 @@ void TIME_STEPPER::DoFMM() {
 
 /**************************************************************/
 void TIME_STEPPER::TimeAdvance() {
+#ifdef USE_SWSS
+    //  This is a SWSS
+    
+    //  First 
+    
+    //  t0: Calc FMM and get DT
+    DoFMM();
+    //  t0: calculate face velocities due to body
+    globalSystem->GetFaceVels();
+    //  t0: calculate face velocities due to body
+    time_step();
+    //  t0: get panel FMM Vels
+    if (globalSystem->useBodies) {
+        globalSystem->GetPanelFMMVelocities(dt);
 
+        //  t0: get time derivatives at t0
 
+        //  t0: advance innter (body) timestep
+
+        if (TIME_STEPPER::RK2Mode)
+            BODY::BodySubStep(dt / 2.0, globalSystem->NumSubSteps);
+        else
+            BODY::BodySubStep(dt, globalSystem->NumSubSteps);
+
+    }
+    
+    globalSystem->GetFaceVels();
+    
+    /* Order of integrations is as follows:
+     * 0) Panel  
+     * 1) stretch
+     * 2) diffuse
+     * 3) O2x
+     * 4) O2y
+     * 5) O2z
+     * 
+     * 
+     * Other sweep is reverse
+     */
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+#endif
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     TIME_STEPPER::RKStep = 0;
     //  t0: Calc FMM and get DT

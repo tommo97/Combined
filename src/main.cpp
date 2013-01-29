@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
 
     //  Some default values
     globalSystem->GambitScale = 1.0;
-    globalSystem->MaxP = 5;
+    globalSystem->MaxP = 8;
     globalSystem->Del2 = 1.25;// * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
     {
         
         
-        REAL Radius = 20.0;
+        REAL Radius = 50.0;
         REAL gamma = 5.0;
         int n = 10000;
         Array <REAL> thetas = globalLinspace(0.0,2*pi,n);

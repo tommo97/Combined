@@ -141,22 +141,12 @@ void OCTREE::FVM() {
         AllCells[i]->GetBEV();
     }
 
-    //    if (globalTimeStepper->t > 2)
-    //    {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
     for (int i = 0; i < AllCells.size(); ++i)
         AllCells[i]->O2UW();
-    //    }
-    //    else
-    //    {
-    //#ifdef _OPENMP
-    //#pragma omp parallel for
-    //#endif
-    //    for (int i = 0; i < AllCells.size(); ++i)
-    //        AllCells[i]->O1UW();
-    //    }
+   
 #endif
 #ifdef TIME_STEPS
     long unsigned int t11 = ticks();
