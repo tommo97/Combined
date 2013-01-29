@@ -57,7 +57,9 @@ public:
 
     Array <Vect3> Deriv, IPs, IPVels;
 
-    Vect3 ConvDeriv, ViscDeriv, StretchDeriv, ArtViscDeriv, srad, cfl;
+    Vect3 srad, cfl;
+    
+    
     
     int age;
     
@@ -65,7 +67,7 @@ public:
 
 //    Vect3 VelTensor[3];               // unused?
 
-    Array <Vect3> Laplacian;
+    Array <Vect3> Laplacian, VelGrads;
 
     static void InitMomsInds(int MaxP);
 

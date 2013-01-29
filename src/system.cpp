@@ -833,10 +833,6 @@ void SYSTEM::WriteData() {
         CellOms[i] = globalOctree->AllCells[i]->Omega;
         CellVel[i] = globalOctree->AllCells[i]->Velocity;
         CellCFL[i] = globalOctree->AllCells[i]->cfl;
-        CellConvDeriv[i] = globalOctree->AllCells[i]->ConvDeriv;
-        CellTiltDeriv[i] = globalOctree->AllCells[i]->StretchDeriv;
-        CellViscDeriv[i] = globalOctree->AllCells[i]->ViscDeriv;
-        CellArtDeriv[i] = globalOctree->AllCells[i]->ArtViscDeriv;
         for (int j = 0; j < globalSystem->NumTransVars; ++j)
             TransVars[i][j] = globalOctree->AllCells[i]->TransVars[j];
     }

@@ -129,11 +129,11 @@ int main(int argc, char *argv[]) {
 
 
 
-
+//
 //    TestFMM(argc, argv);
 //
 //    return 0;
-
+//
 
 
 //
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
 
     //  Some default values
     globalSystem->GambitScale = 1.0;
-    globalSystem->MaxP = 8;
+    globalSystem->MaxP = 5;
     globalSystem->Del2 = 1.25;// * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
     {
         
         
-        REAL Radius = 30.0;
+        REAL Radius = 20.0;
         REAL gamma = 5.0;
         int n = 10000;
         Array <REAL> thetas = globalLinspace(0.0,2*pi,n);
@@ -781,7 +781,28 @@ Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega, REAL del2) {
     mult = -1 / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
+/**************************************************************/
+void UTIL::globalDirectVelGrads(Vect3 diff, Vect3 omega, REAL del2, Array <Vect3> &Grads) {
+    //  Diff here is Xsource - Xtarget
+    REAL mult, nrm, R, R3, R5;
+    
+    
+    R = sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z + del2);
+    R3 = R*R*R;
+    R5 = R3*R*R;
+    
+    Grads[0].x  += -(3.0*diff.x*(omega.z*diff.y - omega.y*diff.z))/(four_pi*R5); 
+    Grads[0].y  += (3.0*diff.x*(omega.z*diff.x - omega.x*diff.z))/(four_pi*R5) - omega.z/(four_pi*R3);
+    Grads[0].z  += omega.y/(four_pi*R3) - (3.0*diff.x*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
+    Grads[1].x  += omega.z/(four_pi*R3) - (3.0*diff.y*(omega.z*diff.y - omega.y*diff.z))/(four_pi*R5);
+    Grads[1].y  += (3.0*diff.y*(omega.z*diff.x - omega.x*diff.z))/(four_pi*R5);
+    Grads[1].z  += -omega.x/(four_pi*R3) - (3.0*diff.y*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
+    Grads[2].x  += -omega.y/(four_pi*R3) - (3.0*diff.z*(omega.z*diff.y - omega.y*diff.z))/(four_pi*R5);
+    Grads[2].y  += omega.x/(four_pi*R3) + (3.0*diff.z*(omega.z*diff.x - omega.x*diff.z))/(four_pi*R5);
+    Grads[2].z  += -(3.0*diff.z*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
+    
 
+}
 /**************************************************************/
 void SolveMatfileVels(string fname, int pmax, REAL del2) {
 
@@ -1478,7 +1499,7 @@ void TestFMM(int argc, char *argv[]) {
     globalOctree->Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
     
     
-    
+    globalOctree->InitVelsGetLaplacian();
     cout << "done" << endl << "Setting Vels to 0" << endl;
     globalOctree->Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
     cout << "done" << endl << "Getting Vels..." << endl;
@@ -1490,7 +1511,7 @@ void TestFMM(int argc, char *argv[]) {
 //    //globalOctree->Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::SetVelsEqual, &Node::DoNothing);
     
     REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation..." << endl;
+    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation (including velocity gradients)..." << endl;
     Posns.clear();
     Omegas.clear();
     n = globalOctree->AllCells.size();
@@ -1538,16 +1559,41 @@ void TestFMM(int argc, char *argv[]) {
 
 
     Array <Vect3> DirectVels(Indices.size());
+    
+    Array < Array <Vect3> > DirectVelGrads(Indices.size(), Array <Vect3> (3, Vect3(0.0))), NumVelGradients(Indices.size(), Array <Vect3> (3, Vect3(0.0)));;
 
     REAL t2 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
 #pragma omp parallel for
     for (int i = 0; i < Indices.size(); ++i) {
         Vect3 V(0, 0, 0);
+
         for (int j = 0; j < Posns.size(); ++j) {
             Vect3 D = Posns[j] - Posns[Indices[i]];
             V += globalDirectVel(D, Omegas[j]);
 
+            UTIL::globalDirectVelGrads(D, Omegas[j], globalSystem->Del2, DirectVelGrads[i]);
         }
+
+
+        REAL h = 0.001;
+
+        Vect3 VelN(0.), VelS(0.), VelE(0.), VelW(0.), VelT(0.), VelB(0.);
+
+        for (int j = 0; j < Posns.size(); ++j) {
+            VelE += globalDirectVel(Posns[j] - (Vect3(h, 0., 0.) + Posns[Indices[i]]), Omegas[j]);
+            VelW += globalDirectVel(Posns[j] - (Vect3(-h, 0., 0.) + Posns[Indices[i]]), Omegas[j]);
+            VelN += globalDirectVel(Posns[j] - (Vect3(0., h, 0.) + Posns[Indices[i]]), Omegas[j]);
+            VelS += globalDirectVel(Posns[j] - (Vect3(0., -h, 0.) + Posns[Indices[i]]), Omegas[j]);
+            VelT += globalDirectVel(Posns[j] - (Vect3(0., 0., h) + Posns[Indices[i]]), Omegas[j]);
+            VelB += globalDirectVel(Posns[j] - (Vect3(0., 0., -h) + Posns[Indices[i]]), Omegas[j]);
+        }
+
+
+
+        NumVelGradients[i][0] = (VelE - VelW) / (2 * h);
+        NumVelGradients[i][1] = (VelN - VelS) / (2 * h);
+        NumVelGradients[i][2] = (VelT - VelB) / (2 * h);
+
         DirectVels[i] = (V);
     }
     REAL t3 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
@@ -1563,7 +1609,10 @@ void TestFMM(int argc, char *argv[]) {
 
 	REAL ErrorPercent = 0.0, MaxErr = 0.0;
     for (int i = 0; i < Indices.size(); ++i) {
-        cout << "error percent: " << 100*(DirectVels[i] - FMMVels[Indices[i]]).Mag()/FMMVels[Indices[i]].Mag() << "%. " <<DirectVels[i] << " " << FMMVels[Indices[i]] << endl;
+        cout << "---" << endl << "Vel error percent: " << 100*(DirectVels[i] - FMMVels[Indices[i]]).Mag()/FMMVels[Indices[i]].Mag() << "%. " <<DirectVels[i] << " " << FMMVels[Indices[i]] << endl;
+        cout << "xGrads: err \t" << 100*(DirectVelGrads[i][0] - globalOctree->AllCells[Indices[i]]->VelGrads[0]).Mag()/globalOctree->AllCells[Indices[i]]->VelGrads[0].Mag() << " " << globalOctree->AllCells[Indices[i]]->VelGrads[0] << " \t" << DirectVelGrads[i][0] << "\t" << NumVelGradients[i][0] << endl;
+        cout << "yGrads: err \t" << 100*(DirectVelGrads[i][1] - globalOctree->AllCells[Indices[i]]->VelGrads[1]).Mag()/globalOctree->AllCells[Indices[i]]->VelGrads[1].Mag() << " " << globalOctree->AllCells[Indices[i]]->VelGrads[1] << " \t" << DirectVelGrads[i][1] << "\t" << NumVelGradients[i][1] << endl;
+        cout << "zGrads: err \t" << 100*(DirectVelGrads[i][2] - globalOctree->AllCells[Indices[i]]->VelGrads[2]).Mag()/globalOctree->AllCells[Indices[i]]->VelGrads[2].Mag() << " " << globalOctree->AllCells[Indices[i]]->VelGrads[2] << " \t" << DirectVelGrads[i][2] << "\t" << NumVelGradients[i][2] << endl;
         //cout << "Cell " << i << "\tError L2 Norm " << (DirectVels[i] - FMMVels[Indices[i]]).Mag() << " \t " << DirectVels[i] << endl << "\t\t\t\t\t\t " << FMMVels[Indices[i]] << endl;
         l2 += (DirectVels[i] - FMMVels[Indices[i]]).Mag()*(DirectVels[i] - FMMVels[Indices[i]]).Mag();
         Vmean += DirectVels[i].Mag();

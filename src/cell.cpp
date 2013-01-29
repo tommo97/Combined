@@ -46,6 +46,7 @@ FVMCell::FVMCell() : Node(), FaceVels(0.) {
 FVMCell::FVMCell(Node *parent, int i, int j, int k) : Node(parent, i, j, k), FaceVels(0.), age(0) {
     FVMCell::NumCells++;
     Laplacian.assign(globalSystem->NumTransVars, Vect3());
+    VelGrads.assign(3, Vect3(0.0,0.0,0.0));
     BEV.assign(globalSystem->NumTransVars, Vect3());
 
 }
@@ -81,40 +82,30 @@ void FVMCell::Integrate() {
     HasLoad = false;
     cfl = globalTimeStepper->dt * srad;
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        //        TransDerivs[q] += globalSystem->Nu * Laplacian[q];
-        //        TransDerivs[q] += VectMultMatrixTranspose(VelTensor, TransVars[q]);
+        Vect3 GradU(VelGrads[0].x,VelGrads[1].x,VelGrads[2].x);
+        Vect3 GradV(VelGrads[0].y,VelGrads[1].y,VelGrads[2].y);
+        Vect3 GradW(VelGrads[0].z,VelGrads[1].z,VelGrads[2].z);
+        
+        Vect3 StretchDeriv = Vect3(TransVars[q].Dot(GradU), TransVars[q].Dot(GradV), TransVars[q].Dot(GradW));
+        TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
 
-        //      Tilting/stretching term via central differences.
-        //      Get face vorticity fields
-        Vect3 OMe = 0.5 * ((*Neighb_Val[q].E) + TransVars[q]);
-        Vect3 OMw = 0.5 * ((*Neighb_Val[q].W) + TransVars[q]);
-        Vect3 OMn = 0.5 * ((*Neighb_Val[q].N) + TransVars[q]);
-        Vect3 OMs = 0.5 * ((*Neighb_Val[q].S) + TransVars[q]);
-        Vect3 OMt = 0.5 * ((*Neighb_Val[q].T) + TransVars[q]);
-        Vect3 OMb = 0.5 * ((*Neighb_Val[q].B) + TransVars[q]);
+        REAL h = 1.;
 
-        StretchDeriv = Vect3(0.0, 0.0, 0.0);
+        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
+        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
 
-        StretchDeriv.x = (OMe.x * FaceVels.E.x - OMw.x * FaceVels.W.x
-                + OMn.y * FaceVels.N.x - OMs.y * FaceVels.S.x
-                + OMt.z * FaceVels.T.x - OMb.z * FaceVels.B.x);
+        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12;
+        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12;
 
-        StretchDeriv.y = (OMe.x * FaceVels.E.y - OMw.x * FaceVels.W.y
-                + OMn.y * FaceVels.N.y - OMs.y * FaceVels.S.y
-                + OMt.z * FaceVels.T.y - OMb.z * FaceVels.B.y);
+        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
+        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
 
-        StretchDeriv.z = (OMe.x * FaceVels.E.z - OMw.x * FaceVels.W.z
-                + OMn.y * FaceVels.N.z - OMs.y * FaceVels.S.z
-                + OMt.z * FaceVels.T.z - OMb.z * FaceVels.B.z);
+        
+        
+        
+        Vect3 ViscDeriv = globalSystem->Nu * ((de-dw) + (dn-ds) + (dt-db));
+        TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
 
-        //TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
-
-
-        //      Viscous diffusion by central differences. Already calc'd by GetLaplacian()
-        ViscDeriv = globalSystem->Nu * Laplacian[q];
-        //      TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
-
-        ArtViscDeriv = 0.5 * Velocity.Mag()*(1 - cfl.Mag()) * Laplacian[q];
     }
 
 
@@ -427,14 +418,64 @@ void FVMCell::vCollapseVField() {
         {
             //JaggedArray <Vect3> *Ptr2VField = &(static_cast<Branch*> (Parent))->VelField;
             //JaggedArray <Vect3> &ParentField = *Ptr2VField;
-            for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
+            
+            
+            
+            
+            
+
+            Vect3 DX = Position - Parent->Position;
+
+            REAL dxn = 1, mult;
+            {
+                int k1 = 0;
+                REAL dyn = 1;
                 for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
                     for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
-#ifdef COLLAPSE_TO_FACES
-                        FaceVels[i] += Node::FaceCllpsMlt[x][y][z][k1][k2][k3][i] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
-#else
                         Velocity += Node::CllpsMlt[x][y][z][k1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
-#endif
+
+                REAL dxkn = 1;
+                for (k1 = 1; k1 < globalSystem->MaxP; ++k1) {
+                    REAL dyn = 1.;
+                    for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2) {
+                        REAL dzn = 1.;
+                        for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
+                            Velocity += Node::CllpsMlt[x][y][z][k1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
+
+
+
+                            mult = dxkn * dyn * dzn / REAL (globalFactorial[k1 - 1] * globalFactorial[k2] * globalFactorial[k3]);
+
+                            // du/dx, dv/dx, dw/dx
+                            VelGrads[0] -= mult * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
+                            // du/dy, dv/dy, dw/dy
+                            VelGrads[1] -= mult * (static_cast<Branch*> (Parent))->VelField[k1 - 1][k2 + 1][k3];
+                            // du/dz, dv/dz, dw/dz
+                            VelGrads[2] -= mult * (static_cast<Branch*> (Parent))->VelField[k1 - 1][k2][k3 + 1];
+                            dzn = dzn * DX.z;
+                        }
+                        dyn = dyn * DX.y;
+                    }
+                    dxkn = dxkn * DX.x;
+                }
+            }
+
+            
+            
+            
+//            for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
+//                for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
+//                    for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
+//#ifdef COLLAPSE_TO_FACES
+//                        FaceVels[i] += Node::FaceCllpsMlt[x][y][z][k1][k2][k3][i] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
+//#else
+//                        Velocity += Node::CllpsMlt[x][y][z][k1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
+//                        
+//                        
+//                        
+//                        
+//                        
+//#endif
             for (int ix = 0; ix < 3; ++ix)
                 for (int iy = 0; iy < 3; ++iy)
                     for (int iz = 0; iz < 3; ++iz)
@@ -445,7 +486,7 @@ void FVMCell::vCollapseVField() {
                                         if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
                                             Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
 
-
+                                            UTIL::globalDirectVelGrads(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, globalSystem->Del2, VelGrads);
 #ifdef COLLAPSE_TO_FACES
                                             globalDirectVel(PV - Node::NeighbOffset[i], Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, FaceVels[i]);
 #else   
@@ -455,6 +496,8 @@ void FVMCell::vCollapseVField() {
                                             Velocity += Node::DirVelMultsX[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.x;
                                             Velocity += Node::DirVelMultsY[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.y;
                                             Velocity += Node::DirVelMultsZ[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.z;
+                                            
+                                            
 #endif
                                         }
         }
@@ -528,7 +571,6 @@ void FVMCell::O1UW() {
 
         Vect3 convection = fe + fw + fn + fs + ft + fb;
         TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
-        ConvDeriv = -convection;
     }
 }
 
@@ -612,7 +654,6 @@ void FVMCell::O2UW() {
 
         Vect3 convection = fe + fw + fn + fs + ft + fb;
         TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
-        ConvDeriv = -convection;
     }
 }
 
@@ -718,7 +759,6 @@ void FVMCell::MUSCL() {
 
         Vect3 convection = (Hx_e - Hx_w) + (Hy_n - Hy_s) + (Hz_t - Hz_b);
         TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
-        ConvDeriv = -convection;
     }
 }
 
@@ -747,22 +787,6 @@ void FVMCell::CollapseToIP(OctreeCapsule &IP) {
 
 /**************************************************************/
 void FVMCell::GetLaplacian() {
-    //  Here the cells are cubic (henge all displacements are orthogonal to the face planes)
-    //  and cell side lengths (and thus face areas and volumes) are unity.
-    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        Laplacian[q] = 0.;
-        if (Neighb.E) Laplacian[q] += Neighb.E->TransVars[q] - TransVars[q];
-        if (Neighb.W) Laplacian[q] -= Neighb.W->TransVars[q] - TransVars[q];
-        if (Neighb.N) Laplacian[q] += Neighb.N->TransVars[q] - TransVars[q];
-        if (Neighb.S) Laplacian[q] -= Neighb.S->TransVars[q] - TransVars[q];
-        if (Neighb.T) Laplacian[q] += Neighb.T->TransVars[q] - TransVars[q];
-        if (Neighb.B) Laplacian[q] -= Neighb.B->TransVars[q] - TransVars[q];
-
-    }
+    //  Everything that was in this function is now in the Integrate() function...
 }
-
-//void FVMCell::GetVelTensor() {
-//    VelTensor[0] = FaceVels.E - FaceVels.W; //  dVeldx
-//    VelTensor[1] = FaceVels.N - FaceVels.S; //  dVeldy
-//    VelTensor[2] = FaceVels.T - FaceVels.B; //  dVeldz
-//}
+ 
