@@ -112,7 +112,7 @@ void FVMCell::Integrate() {
 
         //      Viscous diffusion by central differences. Already calc'd by GetLaplacian()
         ViscDeriv = globalSystem->Nu * Laplacian[q];
-        TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
+        //      TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
 
         ArtViscDeriv = 0.5 * Velocity.Mag()*(1 - cfl.Mag()) * Laplacian[q];
     }

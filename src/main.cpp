@@ -155,8 +155,8 @@ int main(int argc, char *argv[]) {
 
     //  Some default values
     globalSystem->GambitScale = 1.0;
-    globalSystem->MaxP = 5;
-    globalSystem->Del2 = 0.25;// * globalSystem->GambitScale*globalSystem->GambitScale;
+    globalSystem->MaxP = 8;
+    globalSystem->Del2 = 1.25;// * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
     globalSystem->h = 2;
