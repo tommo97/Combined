@@ -976,7 +976,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
     }
     cout << "Scaled domain bounds: [" << Mins.x << " " << Maxs.x << "][" << Mins.y << " " << Maxs.y << "][" << Mins.z << " " << Maxs.z << "]" << endl;
     cout << "Calculating velocities..." << endl;
-    globalOctree->InitVelsGetLaplacian();
+    globalOctree->ResetAllVelsAndFields();
     globalOctree->GetVels();
     REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     cout << "Done. Time elapsed: " << t1 - t0 << endl;
@@ -1499,7 +1499,7 @@ void TestFMM(int argc, char *argv[]) {
     globalOctree->Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
     
     
-    globalOctree->InitVelsGetLaplacian();
+    globalOctree->ResetAllVelsAndFields();
     cout << "done" << endl << "Setting Vels to 0" << endl;
     globalOctree->Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
     cout << "done" << endl << "Getting Vels..." << endl;

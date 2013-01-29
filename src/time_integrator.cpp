@@ -120,7 +120,7 @@ void lamb_dipole(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL ampl
 /**************************************************************/
 
 void TIME_STEPPER::DoFMM() {
-    globalOctree->InitVelsGetLaplacian();
+    globalOctree->ResetAllVelsAndFields();
     globalOctree->GetVels();
 }
 
@@ -196,7 +196,7 @@ void TIME_STEPPER::time_loop() {
             globalSystem->PutWakesInTree();
         }
         globalOctree->Reset();
-        globalOctree->InitVelsGetLaplacian();
+        
 //        globalOctree->GetVels();
           for (int i = 0; i < globalOctree->AllCells.size(); ++i)
         globalOctree->AllCells[i]->Velocity = Vect3(0.0);

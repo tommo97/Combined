@@ -54,7 +54,7 @@ public:
     void GetVels();
     void GetSRad();
     void Prune();
-    void InitVelsGetLaplacian();
+    void ResetAllVelsAndFields();
     Vect3 TreeVel(Vect3);
 };
 

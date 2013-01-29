@@ -44,7 +44,7 @@ OCTREE::~OCTREE() {
 }
 
 /**************************************************************/
-void OCTREE::InitVelsGetLaplacian() {
+void OCTREE::ResetAllVelsAndFields() {
 #ifdef TIME_STEPS
     long unsigned int t4 = ticks();
 #endif
@@ -85,6 +85,7 @@ void OCTREE::Reset() {
 #ifdef TIME_STEPS
     long unsigned int t3 = ticks();
 #endif
+    ResetAllVelsAndFields();
     //  Everything which changes the shape of the tree must be done recursively
     Root->ApplyRecursively(&Node::MarkWithoutLoad, &Node::MarkWithoutLoad, &Node::DoNothing);
     Root->ApplyRecursively(&Node::DoNothing, &Node::CheckLoad, &Node::DoNothing);

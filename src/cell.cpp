@@ -81,10 +81,11 @@ void FVMCell::InitMomsInds(int MaxP) {
 void FVMCell::Integrate() {
     HasLoad = false;
     cfl = globalTimeStepper->dt * srad;
+    Vect3 GradU(VelGrads[0].x, VelGrads[1].x, VelGrads[2].x);
+    Vect3 GradV(VelGrads[0].y, VelGrads[1].y, VelGrads[2].y);
+    Vect3 GradW(VelGrads[0].z, VelGrads[1].z, VelGrads[2].z);
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        Vect3 GradU(VelGrads[0].x,VelGrads[1].x,VelGrads[2].x);
-        Vect3 GradV(VelGrads[0].y,VelGrads[1].y,VelGrads[2].y);
-        Vect3 GradW(VelGrads[0].z,VelGrads[1].z,VelGrads[2].z);
+
         
         Vect3 StretchDeriv = Vect3(TransVars[q].Dot(GradU), TransVars[q].Dot(GradV), TransVars[q].Dot(GradW));
         TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
@@ -111,6 +112,8 @@ void FVMCell::Integrate() {
 
 
     globalTimeStepper->Integrate(this);
+    Vect3 OmegaPrev = Omega;
+
     Omega = Vect3(0., 0., 0.);
 
 
@@ -138,7 +141,6 @@ void FVMCell::Integrate() {
                 }
 
             }
-
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
         if ((TransVars[q].x*TransVars[q].x) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
@@ -307,6 +309,7 @@ void FVMCell::vApplyRecursivelyP(BranchFuncPtr down, FVMCellFuncPtr bottom, Bran
 /**************************************************************/
 void FVMCell::SetVelsZero() {
     FaceVels = Velocity = Vect3(globalSystem->scaledVinf.x, globalSystem->scaledVinf.y, globalSystem->scaledVinf.z);
+    VelGrads[0] = VelGrads[1] = VelGrads[2] = Vect3(0.0);
 }
 
 /**************************************************************/
@@ -575,6 +578,124 @@ void FVMCell::O1UW() {
 }
 
 /**************************************************************/
+void FVMCell::O2UWx() {
+    NeighbSet <REAL> FP, FM;
+
+    FP.E = max(FaceVels.E.x, (REAL) .0);
+    FP.W = max(-FaceVels.W.x, (REAL) .0);
+  
+    FM.E = max(-FaceVels.E.x, (REAL) .0);
+    FM.W = max(FaceVels.W.x, (REAL) .0);
+   
+
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+        Vect3 ep = ((*Neighb_Val[q].E) - TransVars[q]);
+        Vect3 pw = (TransVars[q] - (*Neighb_Val[q].W));
+    
+        Vect3 rep = (pw / (ep + 1e-16));
+        Vect3 rwp = (ep / (pw + 1e-16));
+   
+        Vect3 rem = (((*Neighb_Neighb_Val[q].E) - (*Neighb_Val[q].E)) / (ep + 1e-16));
+        Vect3 rwm = (((*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / (pw + 1e-16));
+   
+        Vect3 spsip_e = flim(rep);
+        Vect3 spsip_w = flim(rwp);
+      
+
+        Vect3 spsim_e = flim(rem);
+        Vect3 spsim_w = flim(rwm);
+
+        Vect3 fe = FP.E * (TransVars[q] + .5 * spsip_e * ep) - FM.E * ((*Neighb_Val[q].E) - .5 * spsim_e * ep);
+        Vect3 fw = FP.W * (TransVars[q] - .5 * spsip_w * pw) - FM.W * ((*Neighb_Val[q].W) + .5 * spsim_w * pw);
+   
+        Vect3 ft = FP.T * (TransVars[q] + .5 * spsip_t * tp) - FM.T * ((*Neighb_Val[q].T) - .5 * spsim_t * tp);
+        Vect3 fb = FP.B * (TransVars[q] - .5 * spsip_b * pb) - FM.B * ((*Neighb_Val[q].B) + .5 * spsim_b * pb);
+
+
+        Vect3 convection = fe + fw;
+        TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
+    }
+}
+
+
+/**************************************************************/
+void FVMCell::O2UWy() {
+    NeighbSet <REAL> FP, FM;
+
+   
+    FP.N = max(FaceVels.N.y, (REAL) .0);
+    FP.S = max(-FaceVels.S.y, (REAL) .0);
+
+    FM.N = max(-FaceVels.N.y, (REAL) .0);
+    FM.S = max(FaceVels.S.y, (REAL) .0);
+
+
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+
+        Vect3 np = ((*Neighb_Val[q].N) - TransVars[q]);
+        Vect3 ps = (TransVars[q] - (*Neighb_Val[q].S));
+
+
+
+
+        Vect3 rnp = (ps / (np + 1e-16));
+        Vect3 rsp = (np / (ps + 1e-16));
+
+        Vect3 rnm = (((*Neighb_Neighb_Val[q].N) - (*Neighb_Val[q].N)) / (np + 1e-16));
+        Vect3 rsm = (((*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / (ps + 1e-16));
+        //
+
+        Vect3 spsip_n = flim(rnp);
+        Vect3 spsip_s = flim(rsp);
+        
+        Vect3 spsim_n = flim(rnm);
+        Vect3 spsim_s = flim(rsm);
+
+        Vect3 fn = FP.N * (TransVars[q] + .5 * spsip_n * np) - FM.N * ((*Neighb_Val[q].N) - .5 * spsim_n * np);
+        Vect3 fs = FP.S * (TransVars[q] - .5 * spsip_s * ps) - FM.S * ((*Neighb_Val[q].S) + .5 * spsim_s * ps);
+
+        Vect3 convection = fn + fs;
+        TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
+    }
+}
+
+/**************************************************************/
+void FVMCell::O2UWz() {
+    
+    FP.T = max(FaceVels.T.z, (REAL) .0);
+    FP.B = max(-FaceVels.B.z, (REAL) .0);
+    
+    FM.T = max(-FaceVels.T.z, (REAL) .0);
+    FM.B = max(FaceVels.B.z, (REAL) .0);
+    
+
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+        Vect3 tp = ((*Neighb_Val[q].T) - TransVars[q]);
+        Vect3 pb = (TransVars[q] - (*Neighb_Val[q].B));
+
+
+
+        Vect3 rtp = (pb / (tp + 1e-16));
+        Vect3 rbp = (tp / (pb + 1e-16));
+
+        Vect3 rtm = (((*Neighb_Neighb_Val[q].T) - (*Neighb_Val[q].T)) / (tp + 1e-16));
+        Vect3 rbm = (((*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / (pb + 1e-16));
+
+        Vect3 spsip_t = flim(rtp);
+        Vect3 spsip_b = flim(rbp);
+
+        Vect3 spsim_t = flim(rtm);
+        Vect3 spsim_b = flim(rbm);
+
+        Vect3 ft = FP.T * (TransVars[q] + .5 * spsip_t * tp) - FM.T * ((*Neighb_Val[q].T) - .5 * spsim_t * tp);
+        Vect3 fb = FP.B * (TransVars[q] - .5 * spsip_b * pb) - FM.B * ((*Neighb_Val[q].B) + .5 * spsim_b * pb);
+
+        Vect3 convection = ft + fb;
+        TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
+    }
+}
+
+/**************************************************************/
 void FVMCell::O2UW() {
     NeighbSet <REAL> FP, FM;
 
@@ -657,9 +778,7 @@ void FVMCell::O2UW() {
     }
 }
 
-
-
-
+/**************************************************************/
 inline static Vect3 minmod(Vect3 x, Vect3 y);
 
 inline static Vect3 minmod(Vect3 x, Vect3 y) {
