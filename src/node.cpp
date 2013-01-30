@@ -42,7 +42,7 @@ Array < Array <Array <Array < Array < Array < Array < Array < Array <Array < Vec
 Array < Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > > Node::DirGradMultsZ;
 Array <Node*> Node::AllNodes, Node::UpList, Node::DownList;
 Array < Array <int> > Node::ISBRecipInds(8, Array <int> (189,-1));
-Array <int> Node::ISARecipInds(9,-1);
+Array <int> Node::ISARecipInds(27,-1);
 Array < Array < Array <Vect3> > > Node::ISBGradMultsX(8, Array < Array <Vect3 > > (189, Array <Vect3> (3, Vect3(0.0))));
 Array < Array < Array <Vect3> > > Node::ISBGradMultsY(8, Array < Array <Vect3 > > (189, Array <Vect3> (3, Vect3(0.0))));
 Array < Array < Array <Vect3> > > Node::ISBGradMultsZ(8, Array < Array <Vect3 > > (189, Array <Vect3> (3, Vect3(0.0))));
@@ -266,7 +266,7 @@ void Node::SetUpISBIndices() {
                             for (int K = -1; K < 2; ++K) {
                                 Vect3 R2 = Vect3(1.0 * REAL(I), 1.0 * REAL(J), 1.0 * REAL(K)); //   PV from source parent centroid to target ISA centroid 
                                 if ((R + R2).Mag() < 1e-9) // i.e. if one PV is the equal and opposite of the other
-                                    Node::ISBRecipInds[count] = count2;
+                                    Node::ISARecipInds[count] = count2;
 
                                 count2++;
                             }
