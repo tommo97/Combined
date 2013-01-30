@@ -126,7 +126,7 @@ void TIME_STEPPER::DoFMM() {
 
 /**************************************************************/
 void TIME_STEPPER::TimeAdvance() {
-#define USE_SWSS
+
 #ifdef USE_SWSS
     //  This is a SWSS
     
@@ -172,6 +172,7 @@ void TIME_STEPPER::TimeAdvance() {
     {
         globalOctree->AllCells[i]->VelHold = globalOctree->AllCells[i]->Velocity;       //      this is done in vCollapseVelField
         globalOctree->AllCells[i]->VelGradsHold = globalOctree->AllCells[i]->VelGrads;  //      this is done in vCollapseVelField
+        globalOctree->AllCells[i]->TransVarsHold = Array <Vect3> (globalSystem->NumTransVars);
         for (int q = 0; q < globalSystem->NumTransVars; ++q)
             globalOctree->AllCells[i]->TransVarsHold[q] = globalOctree->AllCells[i]->TransVars[q];
         globalOctree->AllCells[i]->OmegaHold = globalOctree->AllCells[i]->Omega;
