@@ -879,21 +879,20 @@ void Node::UpdateMomentMults() {
                                             LinTlrCffts[mlev][Indxs[ix][iy][iz]][count] = ARRAY3(Vect3) (globalSystem->MaxP);
                                             for (int k1 = 0; k1 < globalSystem->MaxP; ++k1) {
                                                 TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1] = ARRAY2(Vect3) (globalSystem->MaxP);
-
+                                                LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1] = ARRAY2(Vect3) (globalSystem->MaxP);
                                                 for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2) {
                                                     TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2] = Array <Vect3 > (globalSystem->MaxP);
-
+                                                    LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2] = Array <Vect3 > (globalSystem->MaxP);
                                                     for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
-                                                        TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].x = pow(-1,k1+k2+k3) * (k1 + 1) * coeffts[k1 + 1][k2][k3];
-                                                        TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].y = pow(-1,k1+k2+k3) * (k2 + 1) * coeffts[k1][k2 + 1][k3];
-                                                        TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].z = pow(-1,k1+k2+k3) * (k3 + 1) * coeffts[k1][k2][k3 + 1];
+                                                        //TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].x = pow(-1,k1+k2+k3) * (k1 + 1) * coeffts[k1 + 1][k2][k3];
+                                                        //TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].y = pow(-1,k1+k2+k3) * (k2 + 1) * coeffts[k1][k2 + 1][k3];
+                                                        //TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].z = pow(-1,k1+k2+k3) * (k3 + 1) * coeffts[k1][k2][k3 + 1];
                                                         LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2][k3].x  = pow(-1,k1+k2+k3) * (k1 + 1) * coeffts[k1 + 1][k2][k3];
                                                         LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2][k3].y  = pow(-1,k1+k2+k3) * (k2 + 1) * coeffts[k1][k2 + 1][k3];
                                                         LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2][k3].z  = pow(-1,k1+k2+k3) * (k3 + 1) * coeffts[k1][k2][k3 + 1];
                                                     }
                                                 }
                                             }
-                                            cout << count << endl;
                                             count++;
                                         }
                                     }

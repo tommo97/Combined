@@ -238,7 +238,6 @@ void Branch::GetVelField() {
 
         for (int i = 0; i < 216; ++i)
             if (LinISB[i]) {
-
                 for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
                     for (int n2 = 0; n1 + n2 < globalSystem->MaxP; ++n2)
                         for (int n3 = 0; n1 + n2 + n3 < globalSystem->MaxP; ++n3)
@@ -247,44 +246,11 @@ void Branch::GetVelField() {
                                     for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; ++k3) {
                                         VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * LinTlrCffts[m][indx][i][k1][k2][k3].Cross((static_cast<Branch*> (LinISB[i]))->Moments[k1 - n1][k2 - n2][k3 - n3]);
                                     }
-
             }
         
-        
-        
-        
-        
-        
-        
-        for (int ix = 0; ix < 3; ++ix)
-            for (int iy = 0; iy < 3; ++iy)
-                for (int iz = 0; iz < 3; ++iz)
-                    if (ISA[ix][iy][iz]) ISA[ix][iy][iz]->skip_here[tid] = true; //  This is it! I think this means it is not thread safe!
-
-        for (int ix = 0; ix < 3; ++ix)
-            for (int iy = 0; iy < 3; ++iy)
-                for (int iz = 0; iz < 3; ++iz)
-                    if (Parent->ISA[ix][iy][iz])
-                        for (int ay = 0; ay < 2; ++ay)
-                            for (int be = 0; be < 2; ++be)
-                                for (int ce = 0; ce < 2; ++ce)
-                                    if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]) {
-                                        if (!Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->skip_here[tid] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
-                                            for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
-                                                for (int n2 = 0; n1 + n2 < globalSystem->MaxP; ++n2)
-                                                    for (int n3 = 0; n1 + n2 + n3 < globalSystem->MaxP; ++n3)
-                                                        for (int k1 = n1; k1 < globalSystem->MaxP; ++k1)
-                                                            for (int k2 = n2; k1 + k2 < globalSystem->MaxP; ++k2)
-                                                                for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; ++k3) {
-                                                                    VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce][k1][k2][k3].Cross((static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments[k1 - n1][k2 - n2][k3 - n3]);
-                                                                }
-                                        } else {
-                                            Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->skip_here[tid] = false;
-                                        }
-                                    }
     }
-}
 
+}
 /**************************************************************/
 void Branch::InheritVField() {
     if (m > 0) {
