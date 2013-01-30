@@ -79,6 +79,7 @@ public:
     static const Vect3 NeighbOffset[6];
     static const int deREF[][3];
     static ARRAY13(Vect3) TlrCffts;
+    static ARRAY6 (Vect3) LinTlrCffts;
     static ARRAY6(REAL) VlFldMlt;
     static ARRAY10(Vect3) TlrCfftsdx;
     static ARRAY6(NeighbSet <REAL>) FaceCllpsMlt;
@@ -98,7 +99,7 @@ public:
     long unsigned int ID;
     REAL size;
     Array<bool> skip_here;
-    bool InList;
+    bool SkipAdd2List;
 
     bool HasLoad;
     bool to_report;
@@ -188,15 +189,8 @@ public:
                 for (int k = 0; k < 3; ++k)
                     ISA[i][j][k] = NULL;
             
-            LinISB = Array <Node*> (189,NULL);
-            LinISA = Array <Node*> (9,NULL);
-            //for (int i = 0; i < 189; ++i)
-            //    ISB[i] = NULL;
-
-//        for (int i = 0; i < 6; ++i)
-//            for (int j = 0; j < 6; ++j)
-//                for (int k = 0; k < 6; ++k)
-//                    ISB[i][k][j] = NULL;
+            LinISB = Array <Node*> (216,NULL);
+            LinISA = Array <Node*> (27,NULL);
     }
 
     void SetKidsNull() {

@@ -479,15 +479,15 @@ void FVMCell::vCollapseVField() {
             }
 
             
-
-            for (int i = 0; i < 189; ++i)
+            Vect3 TA(0.);
+            for (int i = 0; i < 216; ++i)
                 if (LinISB[i]) {
-
+                 
                     VelGrads[0] += Node::ISBGradMultsX[indx][i][0] * LinISB[i]->Omega.x;
                     VelGrads[0] += Node::ISBGradMultsY[indx][i][0] * LinISB[i]->Omega.y;
                     VelGrads[0] += Node::ISBGradMultsZ[indx][i][0] * LinISB[i]->Omega.z;
 
-                    VelGrads[1] += Node::ISBGradMultsX[indx][1][1] * LinISB[i]->Omega.x;
+                    VelGrads[1] += Node::ISBGradMultsX[indx][i][1] * LinISB[i]->Omega.x;
                     VelGrads[1] += Node::ISBGradMultsY[indx][i][1] * LinISB[i]->Omega.y;
                     VelGrads[1] += Node::ISBGradMultsZ[indx][i][1] * LinISB[i]->Omega.z;
 
@@ -498,78 +498,32 @@ void FVMCell::vCollapseVField() {
                     Velocity += Node::ISBDirMultsX[indx][i] * LinISB[i]->Omega.x;
                     Velocity += Node::ISBDirMultsY[indx][i] * LinISB[i]->Omega.y;
                     Velocity += Node::ISBDirMultsZ[indx][i] * LinISB[i]->Omega.z;
-
-
+//                    Velocity += globalDirectVel(LinISB[i]->Position - Position, LinISB[i]->Omega);
 
                 }
             
             for (int i = 0; i < 27; ++i)
                 if (LinISA[i]) {
-
                     VelGrads[0] += Node::ISAGradMultsX[i][0] * LinISA[i]->Omega.x;
                     VelGrads[0] += Node::ISAGradMultsY[i][0] * LinISA[i]->Omega.y;
                     VelGrads[0] += Node::ISAGradMultsZ[i][0] * LinISA[i]->Omega.z;
 
-                    VelGrads[1] += Node::ISAGradMultsX[1][1] * LinISA[i]->Omega.x;
+                    VelGrads[1] += Node::ISAGradMultsX[i][1] * LinISA[i]->Omega.x;
                     VelGrads[1] += Node::ISAGradMultsY[i][1] * LinISA[i]->Omega.y;
                     VelGrads[1] += Node::ISAGradMultsZ[i][1] * LinISA[i]->Omega.z;
 
                     VelGrads[2] += Node::ISAGradMultsX[i][2] * LinISA[i]->Omega.x;
                     VelGrads[2] += Node::ISAGradMultsY[i][2] * LinISA[i]->Omega.y;
                     VelGrads[2] += Node::ISAGradMultsZ[i][2] * LinISA[i]->Omega.z;
-
+//
                     Velocity += Node::ISADirMultsX[i] * LinISA[i]->Omega.x;
                     Velocity += Node::ISADirMultsY[i] * LinISA[i]->Omega.y;
                     Velocity += Node::ISADirMultsZ[i] * LinISA[i]->Omega.z;
 
-
+//                Velocity += globalDirectVel(LinISA[i]->Position - Position, LinISA[i]->Omega);
 
                 }
-            
         }
-            
-            
-//            for (int ix = 0; ix < 3; ++ix)
-//                for (int iy = 0; iy < 3; ++iy)
-//                    for (int iz = 0; iz < 3; ++iz)
-//                        if (Parent->ISA[ix][iy][iz])
-//                            for (int ay = 0; ay < 2; ++ay)
-//                                for (int be = 0; be < 2; ++be)
-//                                    for (int ce = 0; ce < 2; ++ce){
-//                                        if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
-//
-//
-//                                            VelGrads[0] += Node::DirGradMultsX[x][y][z][ix][iy][iz][ay][be][ce][0] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.x;
-//                                            VelGrads[0] += Node::DirGradMultsY[x][y][z][ix][iy][iz][ay][be][ce][0] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.y;
-//                                            VelGrads[0] += Node::DirGradMultsZ[x][y][z][ix][iy][iz][ay][be][ce][0] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.z;
-//
-//                                            VelGrads[1] += Node::DirGradMultsX[x][y][z][ix][iy][iz][ay][be][ce][1] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.x;
-//                                            VelGrads[1] += Node::DirGradMultsY[x][y][z][ix][iy][iz][ay][be][ce][1] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.y;
-//                                            VelGrads[1] += Node::DirGradMultsZ[x][y][z][ix][iy][iz][ay][be][ce][1] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.z;
-//
-//                                            VelGrads[2] += Node::DirGradMultsX[x][y][z][ix][iy][iz][ay][be][ce][2] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.x;
-//                                            VelGrads[2] += Node::DirGradMultsY[x][y][z][ix][iy][iz][ay][be][ce][2] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.y;
-//                                            VelGrads[2] += Node::DirGradMultsZ[x][y][z][ix][iy][iz][ay][be][ce][2] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.z;
-//#ifdef COLLAPSE_TO_FACES
-//                                            globalDirectVel(PV - Node::NeighbOffset[i], Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, FaceVels[i]);
-//#else   
-//                                            //                                            Vect3 V;
-//                                            //                                                                                        globalDirectVel(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, Velocity);
-//                                            //                                            
-//                                            Velocity += Node::DirVelMultsX[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.x;
-//                                            Velocity += Node::DirVelMultsY[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.y;
-//                                            Velocity += Node::DirVelMultsZ[x][y][z][ix][iy][iz][ay][be][ce] * Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega.z;
-//
-//
-//#endif
-//                                        }
-//                                        if ((Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position).Mag() > 3.) {
-//                                            cout << Parent->ISA[ix][iy][iz]->Children[ay][be][ce] << " " << ISB[count] << " "  << this << " " << ISB[count]->ISB[ISBRecipInds[indx][count]] << endl;
-//                                        }
-//                                        count++;
-//                                    }
-//        }
-
 #ifndef COLLAPSE_TO_FACES
     FaceVels = Velocity;
 #endif

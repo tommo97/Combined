@@ -221,6 +221,7 @@ void Branch::vEvalCapsule(OctreeCapsule &C) {
             Children[i][j][k] = new FVMCell(this, i, j, k);
         }
         Children[i][j][k]->GetISA();
+        Children[i][j][k]->GetISB();
     }
 
     Children[i][j][k]->EvalCapsule(C);
@@ -233,6 +234,28 @@ void Branch::GetVelField() {
     tid = omp_get_thread_num();
 #endif
     if (m > 0) {
+
+
+        for (int i = 0; i < 216; ++i)
+            if (LinISB[i]) {
+
+                for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
+                    for (int n2 = 0; n1 + n2 < globalSystem->MaxP; ++n2)
+                        for (int n3 = 0; n1 + n2 + n3 < globalSystem->MaxP; ++n3)
+                            for (int k1 = n1; k1 < globalSystem->MaxP; ++k1)
+                                for (int k2 = n2; k1 + k2 < globalSystem->MaxP; ++k2)
+                                    for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; ++k3) {
+                                        VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * LinTlrCffts[m][indx][k1][k2][k3].Cross((static_cast<Branch*> (LinISB[i]))->Moments[k1 - n1][k2 - n2][k3 - n3]);
+                                    }
+
+            }
+        
+        
+        
+        
+        
+        
+        
         for (int ix = 0; ix < 3; ++ix)
             for (int iy = 0; iy < 3; ++iy)
                 for (int iz = 0; iz < 3; ++iz)

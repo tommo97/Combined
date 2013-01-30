@@ -125,6 +125,11 @@ int main(int argc, char *argv[]) {
      *     provided at runtime.
      */
 
+//    {
+//        SYSTEM System(0);
+//        globalOctree->Root->SetUpISBIndices() ;
+//    }
+//    return 0;
 
 //
     TestFMM(argc, argv);
