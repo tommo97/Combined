@@ -192,6 +192,10 @@ void Node::RemoveFromNeighbs() {
         if (LinISB[i]) {
             LinISB[i]->LinISB[Node::ISBRecipInds[indx][i]] = NULL;
         }
+
+    for (int i = 0; i < 27; ++i)
+        if (LinISA[i])
+            LinISA[i]->LinISA[ISARecipInds[i]] = NULL;
 }
 
 /**************************************************************/
@@ -510,18 +514,19 @@ void Node::GetISA() {
                             ISA[i][j][k]->ISA[I][J][K] = this;
 
                         LinISA[count] = ReturnNeighb(i, j, k);
-                        LinISA[count]->LinISA[ISARecipInds[count]] = this;
+                        if (LinISA[count])
+                            LinISA[count]->LinISA[ISARecipInds[count]] = this;
                     }
                     count++;
                 }
 
     }
-    Neighb.E = ISA[2][1][1];
-    Neighb.W = ISA[0][1][1];
-    Neighb.N = ISA[1][2][1];
-    Neighb.S = ISA[1][0][1];
-    Neighb.T = ISA[1][1][2];
-    Neighb.B = ISA[1][1][0];
+    Neighb.E = ReturnNeighb(2, 1, 1);
+    Neighb.W = ReturnNeighb(0, 1, 1);
+    Neighb.N = ReturnNeighb(1, 2, 1);
+    Neighb.S = ReturnNeighb(1, 0, 1);
+    Neighb.T = ReturnNeighb(1, 1, 2);
+    Neighb.B = ReturnNeighb(1, 1, 0);
 
     for (int i = 0; i < 6; ++i) {
         if (Neighb[i]) {
