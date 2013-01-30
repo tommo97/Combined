@@ -245,7 +245,7 @@ void Branch::GetVelField() {
                             for (int k1 = n1; k1 < globalSystem->MaxP; ++k1)
                                 for (int k2 = n2; k1 + k2 < globalSystem->MaxP; ++k2)
                                     for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; ++k3) {
-                                        VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * LinTlrCffts[m][indx][k1][k2][k3].Cross((static_cast<Branch*> (LinISB[i]))->Moments[k1 - n1][k2 - n2][k3 - n3]);
+                                        VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * LinTlrCffts[m][indx][i][k1][k2][k3].Cross((static_cast<Branch*> (LinISB[i]))->Moments[k1 - n1][k2 - n2][k3 - n3]);
                                     }
 
             }
