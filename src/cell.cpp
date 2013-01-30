@@ -612,9 +612,9 @@ void FVMCell::GetISAVels() {
     for (int i = 0; i < 27; ++i)
         if (LinISA[i]) {
             Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (Parent))->OmegaHold;
-            Velocity += Node::ISADirMultsX[indx][i] * DeltaOmega.x;
-            Velocity += Node::ISADirMultsY[indx][i] * DeltaOmega.y;
-            Velocity += Node::ISADirMultsZ[indx][i] * DeltaOmega.z;
+            Velocity += Node::ISADirMultsX[i] * DeltaOmega.x;
+            Velocity += Node::ISADirMultsY[i] * DeltaOmega.y;
+            Velocity += Node::ISADirMultsZ[i] * DeltaOmega.z;
         }
 }
 
