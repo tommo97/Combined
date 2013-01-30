@@ -132,9 +132,9 @@ int main(int argc, char *argv[]) {
 //    return 0;
 
 //
-    TestFMM(argc, argv);
+//    TestFMM(argc, argv);
 //
-    return 0;
+//    return 0;
 //
 
 
@@ -157,8 +157,8 @@ int main(int argc, char *argv[]) {
 
     //  Some default values
     globalSystem->GambitScale = 1.0;
-    globalSystem->MaxP = 8;
-    globalSystem->Del2 = 1.25;// * globalSystem->GambitScale*globalSystem->GambitScale;
+    globalSystem->MaxP = 6;
+    globalSystem->Del2 = .25;// * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
     globalSystem->h = 2;
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
         TIME_STEPPER::MaxTime = 100.0;
         globalSystem->useBodies = false;
 
-        globalSystem->NumTransVars = 2;
+        globalSystem->NumTransVars = 1;
 
 
     globalSystem->Initialise();
@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
     {
         
         
-        REAL Radius = 25.0;
+        REAL Radius = 10.0;
         REAL gamma = 5.0;
         int n = 10000;
         Array <REAL> thetas = globalLinspace(0.0,2*pi,n);
@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
         {
             Xs[i].z *= -1;
             Oms[i] = -Oms[i];
-            IDs[i] = 1;
+            IDs[i] = 0;
         }
         
         

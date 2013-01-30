@@ -126,6 +126,7 @@ void TIME_STEPPER::DoFMM() {
 
 /**************************************************************/
 void TIME_STEPPER::TimeAdvance() {
+#define USE_SWSS
 #ifdef USE_SWSS
     //  This is a SWSS
     
@@ -166,16 +167,93 @@ void TIME_STEPPER::TimeAdvance() {
      * Other sweep is reverse
      */
     
+    //  Record initial vals
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+    {
+        globalOctree->AllCells[i]->VelHold = globalOctree->AllCells[i]->Velocity;       //      this is done in vCollapseVelField
+        globalOctree->AllCells[i]->VelGradsHold = globalOctree->AllCells[i]->VelGrads;  //      this is done in vCollapseVelField
+        for (int q = 0; q < globalSystem->NumTransVars; ++q)
+            globalOctree->AllCells[i]->TransVarsHold[q] = globalOctree->AllCells[i]->TransVars[q];
+        globalOctree->AllCells[i]->OmegaHold = globalOctree->AllCells[i]->Omega;
+    }
+
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->Stretch();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->Diffuse();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UWx();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);    
+     for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UWy();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);     
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UWz();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);      
     
     
+    //  Second sweep
+    //  Reset initial values -- VelHold is still unchanged - can be reused; same with its gradients
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+    {
+        Array <Vect3> TransVarTmp = globalOctree->AllCells[i]->TransVars;
+        globalOctree->AllCells[i]->TransVars = globalOctree->AllCells[i]->TransVarsHold;
+        globalOctree->AllCells[i]->TransVarsHold = TransVarTmp;
+        globalOctree->AllCells[i]->Velocity = globalOctree->AllCells[i]->VelHold;
+        globalOctree->AllCells[i]->Omega = globalOctree->AllCells[i]->Omega;
+    }
     
-    
-    
-    
-    
-    
-    
-#endif
+
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UWz();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UWy();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UWx();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->Diffuse();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->Stretch();
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+
+
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        globalOctree->AllCells[i]->Omega = Vect3(0.0);
+        Array <Vect3> TransVarTmp = globalOctree->AllCells[i]->TransVars;
+        for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+            globalOctree->AllCells[i]->TransVars [q] = 0.5 * (globalOctree->AllCells[i]->TransVarsHold[q] + TransVarTmp[q]);
+            globalOctree->AllCells[i]->Omega += globalOctree->AllCells[i]->TransVars [q];
+        }
+    }
+#else
     
     
     
@@ -250,7 +328,7 @@ void TIME_STEPPER::TimeAdvance() {
         globalOctree->Integrate(); //  t = t0 -> t1
     }
 
-
+#endif
     //  Put the wake in the tree from the bodytimestep
     if (globalSystem->useBodies) {
         globalSystem->PutWakesInTree();

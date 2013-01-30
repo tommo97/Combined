@@ -52,11 +52,11 @@ using namespace std;
 #define LIMITER Koren
 
 //#define COLLAPSE_TO_FACES
-
+#define USE_SWSS
 #define NX 300
 #define NY 300
 //  Disables bounds checking in Array class... use with caution. Make sure code runs, and doesn't change...
-#define ARRAY_NO_CHECK
+//#define ARRAY_NO_CHECK
 //#define USE_ROLLED_LOOPS
 
 //  Some simulation parameters

@@ -59,7 +59,15 @@ public:
 
     Vect3 srad, cfl, VelHold, OmegaHold;
     
+    void AdvanceDt(REAL);
     
+    void GetISAVels();
+    
+    void GetISBVels();
+
+    void GetISAGrads();
+
+    void GetISBGrads();
     
     int age;
     
