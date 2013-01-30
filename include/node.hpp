@@ -52,6 +52,28 @@ public:
     static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsX;
     static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsY;
     static Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > DirVelMultsZ;
+    
+    static Array < Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > > DirGradMultsX;
+    static Array < Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > > DirGradMultsY;
+    static Array < Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > > DirGradMultsZ;
+    
+    static Array < Array <int> > ISBRecipInds;
+    static Array <int> ISARecipInds;
+
+    static Array < Array < Array <Vect3> > > ISBGradMultsX;
+    static Array < Array < Array <Vect3> > > ISBGradMultsY;
+    static Array < Array < Array <Vect3> > > ISBGradMultsZ;
+    static Array < Array <Vect3> > ISBDirMultsX;
+    static Array < Array <Vect3> > ISBDirMultsY;
+    static Array < Array <Vect3> > ISBDirMultsZ;
+
+    static Array < Array <Vect3> > ISAGradMultsX;
+    static Array < Array <Vect3> > ISAGradMultsY;
+    static Array < Array <Vect3> > ISAGradMultsZ;
+    static Array <Vect3> ISADirMultsX;
+    static Array <Vect3> ISADirMultsY;
+    static Array <Vect3> ISADirMultsZ;
+    
     static const Vect3 Offset[2][2][2];
     static const int Indxs[2][2][2];
     static const Vect3 NeighbOffset[6];
@@ -82,8 +104,11 @@ public:
     bool to_report;
     Node *Children[2][2][2];
     Node *ISA[3][3][3]; // this should replace Neighb?
+    Array <Node*> LinISB, LinISA;
 //    Node *ISB[6][6][6];
     Array<int> Trans;
+    
+    
     
     //  Not really needed any more
     int x, y, z;
@@ -99,6 +124,8 @@ public:
     
     
     void UpdateMomentMults();
+    
+    void SetUpISBIndices();
 
     void GetISA();
 
@@ -119,6 +146,8 @@ public:
                     }
     }
     
+    
+    void GetISB();
     
     void MarkWithoutLoad() {
         HasLoad = false;
@@ -158,6 +187,11 @@ public:
             for (int j = 0; j < 3; ++j)
                 for (int k = 0; k < 3; ++k)
                     ISA[i][j][k] = NULL;
+            
+            LinISB = Array <Node*> (189,NULL);
+            LinISA = Array <Node*> (9,NULL);
+            //for (int i = 0; i < 189; ++i)
+            //    ISB[i] = NULL;
 
 //        for (int i = 0; i < 6; ++i)
 //            for (int j = 0; j < 6; ++j)

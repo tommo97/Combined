@@ -247,57 +247,14 @@ void Branch::GetVelField() {
                                 for (int ce = 0; ce < 2; ++ce)
                                     if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]) {
                                         if (!Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->skip_here[tid] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
-                                            int MaxP = globalSystem->MaxP;
-//                                            Array < Array < Array < Vect3 > > > *Ptr2Coeffts = &TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce];
-//                                            JaggedArray <Vect3> *Ptr2Moms = &(static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments;
-//                                            Array < Array < Array <Vect3> > > &a = *Ptr2Coeffts;
-//                                            JaggedArray <Vect3> &m = *Ptr2Moms;
-                                            for (int n1 = 0; n1 < MaxP; ++n1)
-                                                for (int n2 = 0; n1 + n2 < MaxP; ++n2)
-                                                    for (int n3 = 0; n1 + n2 + n3 < MaxP; ++n3)
-                                                        for (int k1 = n1; k1 < MaxP; ++k1)
-                                                            for (int k2 = n2; k1 + k2 < MaxP; ++k2)
-                                                                for (int k3 = n3; k1 + k2 + k3 < MaxP; ++k3) {
-                                                                    //VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce][k1][k2][k3].Cross((static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments[k1-n1][k2-n2][k3-n3]);
-                                                                    REAL mult = (pow(-1, n1) * pow(-1, n2) * pow(-1, n3)) * (REAL(globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3])) / (REAL(globalFactorial[k1 - n1] * globalFactorial[k2 - n2] * globalFactorial[k3 - n3]));
-                                                                    VelField[n1][n2][n3] += mult * TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce][k1][k2][k3].Cross((static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments[k1-n1][k2-n2][k3-n3]);
-
-                                                                    //VelField[n1][n2][n3].x = VelField[n1][n2][n3].x + mult * (a[k1][k2][k3].y * m[k1-n1][k2-n2][k3-n3].z - a[k1][k2][k3].z * m[k1-n1][k2-n2][k3-n3].y);
-                                                                    //VelField[n1][n2][n3].y = VelField[n1][n2][n3].y + mult * (a[k1][k2][k3].z * m[k1-n1][k2-n2][k3-n3].x - a[k1][k2][k3].x * m[k1-n1][k2-n2][k3-n3].z);
-                                                                    //VelField[n1][n2][n3].z = VelField[n1][n2][n3].z + mult * (a[k1][k2][k3].x * m[k1-n1][k2-n2][k3-n3].y - a[k1][k2][k3].y * m[k1-n1][k2-n2][k3-n3].x);
+                                            for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
+                                                for (int n2 = 0; n1 + n2 < globalSystem->MaxP; ++n2)
+                                                    for (int n3 = 0; n1 + n2 + n3 < globalSystem->MaxP; ++n3)
+                                                        for (int k1 = n1; k1 < globalSystem->MaxP; ++k1)
+                                                            for (int k2 = n2; k1 + k2 < globalSystem->MaxP; ++k2)
+                                                                for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; ++k3) {
+                                                                    VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce][k1][k2][k3].Cross((static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments[k1 - n1][k2 - n2][k3 - n3]);
                                                                 }
-                                            
-                                            
-                                            
-                                            
-                                            
-//                                            
-//                                            
-//                                            for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
-//                                                for (int n2 = 0; n2 + n1 < globalSystem->MaxP; ++n2)
-//                                                    for (int n3 = 0; n3 + n2 + n1 < globalSystem->MaxP; ++n3)
-//                                                        for (int k1 = n1; k1 < globalSystem->MaxP; k1++)
-//                                                            for (int k2 = n2; k1 + k2 < globalSystem->MaxP; k2++)
-//                                                                for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; k3++) {
-////                                                                    REAL mult = (pow(-1,n1)*pow(-1,n2)*pow(-1,n3)) * (REAL(globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3] ))/(REAL (globalFactorial[k1 - n1] * globalFactorial[k2 - n2] * globalFactorial[k3 - n3]));
-//                                                                    VelField[n1][n2][n3] += (VlFldMlt[n1][n2][n3][k1][k2][k3] *
-//                                                                            TlrCffts[m][x][y][z][ix][iy][iz][ay][be][ce][k1][k2][k3].Cross((static_cast<Branch*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]))->Moments[k1 - n1][k2 - n2][k3 - n3]));
-//                                                                }
-//                                        
-//                                        
-//                                        
-//                                        
-//                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
                                         } else {
                                             Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->skip_here[tid] = false;
                                         }

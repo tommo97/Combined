@@ -37,7 +37,27 @@ Array <Array <int> > Node::CellMomentIndex(3, Array <int> ());
 Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > Node::DirVelMultsX;
 Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > Node::DirVelMultsY;
 Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > Node::DirVelMultsZ;
+Array < Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > > Node::DirGradMultsX;
+Array < Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > > Node::DirGradMultsY;
+Array < Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > > Node::DirGradMultsZ;
 Array <Node*> Node::AllNodes, Node::UpList, Node::DownList;
+Array < Array <int> > Node::ISBRecipInds(8, Array <int> (189,-1));
+Array <int> Node::ISARecipInds(9,-1);
+Array < Array < Array <Vect3> > > Node::ISBGradMultsX(8, Array < Array <Vect3 > > (189, Array <Vect3> (3, Vect3(0.0))));
+Array < Array < Array <Vect3> > > Node::ISBGradMultsY(8, Array < Array <Vect3 > > (189, Array <Vect3> (3, Vect3(0.0))));
+Array < Array < Array <Vect3> > > Node::ISBGradMultsZ(8, Array < Array <Vect3 > > (189, Array <Vect3> (3, Vect3(0.0))));
+Array < Array <Vect3> > Node::ISBDirMultsX(8, Array <Vect3 > (189, Vect3(0.)));
+Array < Array <Vect3> > Node::ISBDirMultsY(8, Array <Vect3 > (189, Vect3(0.)));
+Array < Array <Vect3> > Node::ISBDirMultsZ(8, Array <Vect3 > (189, Vect3(0.)));
+
+Array < Array <Vect3> > Node::ISAGradMultsX(27, Array <Vect3 > (3, Vect3(0.)));
+Array < Array <Vect3> > Node::ISAGradMultsY(27, Array <Vect3 > (3, Vect3(0.)));
+Array < Array <Vect3> > Node::ISAGradMultsZ(27, Array <Vect3 > (3, Vect3(0.)));
+Array <Vect3> Node::ISADirMultsX(Array < Vect3 > (27, Vect3(0.)));
+Array <Vect3> Node::ISADirMultsY(Array < Vect3 > (27, Vect3(0.)));
+Array <Vect3> Node::ISADirMultsZ(Array < Vect3 > (27, Vect3(0.)));
+    
+    
 
 /**************************************************************/
 Node::~Node() {
@@ -167,6 +187,11 @@ void Node::RemoveFromNeighbs() {
             for (int k = 0, K = 2; k < 3; ++k, --K)
                 if (ISA[i][j][k])
                     ISA[i][j][k]->ISA[I][J][K] = NULL;
+
+    for (int i = 0; i < 189; ++i)
+        if (LinISB[i]) {
+            LinISB[i]->LinISB[Node::ISBRecipInds[indx][i]] = NULL;
+        }
 }
 
 /**************************************************************/
@@ -190,6 +215,133 @@ void Node::Recurrance(JaggedArray <REAL> &coeffts, int k1, int k2, int k3, Vect3
     }
 }
 
+/**************************************************************/
+void Node::SetUpISBIndices() {
+    //  This is a bit of a cludge...
+
+
+
+    {
+        int count = 0;
+        for (int i = -1; i < 2; ++i)
+            for (int j = -1; j < 2; ++j)
+                for (int k = -1; k < 2; ++k) {
+                    Vect3 R = Vect3(1.0 * REAL(i), 1.0 * REAL(j), 1.0 * REAL(k)); //   PV from source  centroid to target ISA centroid   
+
+                    {
+                        Vect3 Vx, Vy, Vz;
+                        globalDirectVel(R, Vect3(1., 0., 0.), Vx);
+                        globalDirectVel(R, Vect3(0., 1., 0.), Vy);
+                        globalDirectVel(R, Vect3(0., 0., 1.), Vz);
+                        Node::ISADirMultsX[count] = Vx;
+                        Node::ISADirMultsY[count] = Vy;
+                        Node::ISADirMultsZ[count] = Vz;
+
+
+                        Array <Vect3 > GradsX(3, Vect3(0.0));
+                        UTIL::globalDirectVelGrads(R, Vect3(1., 0., 0.), globalSystem->Del2, GradsX);
+                        Array <Vect3 > GradsY(3, Vect3(0.0));
+                        UTIL::globalDirectVelGrads(R, Vect3(0., 1., 0.), globalSystem->Del2, GradsY);
+                        Array <Vect3 > GradsZ(3, Vect3(0.0));
+                        UTIL::globalDirectVelGrads(R, Vect3(0., 0., 1.), globalSystem->Del2, GradsZ);
+
+                        Node::ISAGradMultsX[count] = GradsX;
+                        Node::ISAGradMultsY[count] = GradsY;
+                        Node::ISAGradMultsZ[count] = GradsZ;
+                    }
+
+
+
+
+
+
+
+
+
+
+
+                    int count2 = 0;
+                    for (int I = -1; I < 2; ++I)
+                        for (int J = -1; J < 2; ++J)
+                            for (int K = -1; K < 2; ++K) {
+                                Vect3 R2 = Vect3(1.0 * REAL(I), 1.0 * REAL(J), 1.0 * REAL(K)); //   PV from source parent centroid to target ISA centroid 
+                                if ((R + R2).Mag() < 1e-9) // i.e. if one PV is the equal and opposite of the other
+                                    Node::ISBRecipInds[count] = count2;
+
+                                count2++;
+                            }
+
+                    count++;
+                }
+    }
+
+
+
+
+    //  For all 8 nodes in parent, find all ISBs, then for each ISB, go through all of its ISBs until the original node is found - this gives the reciprocal
+    Node::ISBRecipInds = Array < Array <int > > (8, Array <int> (189));
+    for (int ix = 0; ix < 2; ++ix)
+        for (int iy = 0; iy < 2; ++iy)
+            for (int iz = 0; iz < 2; ++iz) { //   This has looped over the 8 nodes inside
+                Vect3 R1 = -1.0 * Offset[ix][iy][iz]; //     PV to target from parent centroid
+                int count = 0;
+                for (int i = -1; i < 2; ++i)
+                    for (int j = -1; j < 2; ++j)
+                        for (int k = -1; k < 2; ++k) { //     This has looped over 27 of the parent ISA
+                            Vect3 R2 = Vect3(2.0 * REAL(i), 2.0 * REAL(j), 2.0 * REAL(k)); //   PV from source parent centroid to target parent centroid     
+                            for (int jx = 0; jx < 2; ++jx)
+                                for (int jy = 0; jy < 2; ++jy)
+                                    for (int jz = 0; jz < 2; ++jz) { //   This has looped over 8 nodes of each parent ISA
+                                        Vect3 R3 = 1.0 * Offset[jx][jy][jz]; //      PV from source cell to source parent.
+                                        if ((R1 + R2 + R3).Mag() > sqrt(3.)) { //  Need to exclude ISA of initial node -- these are cells which are |R1 + R2 + R3| < (1, sqrt(2) or sqrt(3)) away
+                                            {
+                                                Vect3 R = R1 + R2 + R3;
+                                                Vect3 Vx, Vy, Vz;
+                                                globalDirectVel(R, Vect3(1., 0., 0.), Vx);
+                                                globalDirectVel(R, Vect3(0., 1., 0.), Vy);
+                                                globalDirectVel(R, Vect3(0., 0., 1.), Vz);
+                                                Node::ISBDirMultsX[Indxs[ix][iy][iz]][count] = Vx;
+                                                Node::ISBDirMultsY[Indxs[ix][iy][iz]][count] = Vy;
+                                                Node::ISBDirMultsZ[Indxs[ix][iy][iz]][count] = Vz;
+
+
+                                                Array <Vect3 > GradsX(3, Vect3(0.0));
+                                                UTIL::globalDirectVelGrads(R, Vect3(1., 0., 0.), globalSystem->Del2, GradsX);
+                                                Array <Vect3 > GradsY(3, Vect3(0.0));
+                                                UTIL::globalDirectVelGrads(R, Vect3(0., 1., 0.), globalSystem->Del2, GradsY);
+                                                Array <Vect3 > GradsZ(3, Vect3(0.0));
+                                                UTIL::globalDirectVelGrads(R, Vect3(0., 0., 1.), globalSystem->Del2, GradsZ);
+
+                                                Node::ISBGradMultsX[Indxs[ix][iy][iz]][count] = GradsX;
+                                                Node::ISBGradMultsY[Indxs[ix][iy][iz]][count] = GradsY;
+                                                Node::ISBGradMultsZ[Indxs[ix][iy][iz]][count] = GradsZ;
+                                            }
+
+                                            Vect3 RR1 = -1.0 * Offset[jx][jy][jz]; //     PV to target from parent centroid
+                                            //      Now have position of ISB node - now work tho' its ISB until reaching original node
+                                            int count2 = 0;
+                                            for (int I = -1; I < 2; ++I)
+                                                for (int J = -1; J < 2; ++J)
+                                                    for (int K = -1; K < 2; ++K) {
+                                                        Vect3 RR2 = Vect3(2.0 * REAL(I), 2.0 * REAL(J), 2.0 * REAL(K)); //   PV from source parent centroid to target parent centroid     
+                                                        for (int JX = 0; JX < 2; ++JX)
+                                                            for (int JY = 0; JY < 2; ++JY)
+                                                                for (int JZ = 0; JZ < 2; ++JZ) {
+                                                                    Vect3 RR3 = 1.0 * Offset[JX][JY][JZ]; //      PV from source cell to source parent.
+                                                                    if ((RR1 + RR2 + RR3).Mag() > sqrt(3.)) {
+                                                                        if ((R1 + R2 + R3 + RR1 + RR2 + RR3).Mag() < 1e-9) {
+                                                                            Node::ISBRecipInds[Indxs[ix][iy][iz]][count] = count2;
+                                                                        }
+                                                                        count2++;
+                                                                    }
+                                                                }
+                                                    }
+                                            count++;
+                                        }
+                                    }
+                        }
+            }
+}
 /**************************************************************/
 void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 //#define VERSION_2
@@ -348,14 +500,20 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 void Node::GetISA() {
     ISA[1][1][1] = this;
     if (m > 0) {
+        int count = 0;
         for (int i = 0, I = 2; i < 3; ++i, --I)
             for (int j = 0, J = 2; j < 3; ++j, --J)
-                for (int k = 0, K = 2; k < 3; ++k, --K)
+                for (int k = 0, K = 2; k < 3; ++k, --K) {
                     if (!ISA[i][j][k]) {
                         ISA[i][j][k] = ReturnNeighb(i, j, k);
                         if (ISA[i][j][k])
                             ISA[i][j][k]->ISA[I][J][K] = this;
+
+                        LinISA[count] = ReturnNeighb(i, j, k);
+                        LinISA[count]->LinISA[ISARecipInds[count]] = this;
                     }
+                    count++;
+                }
 
     }
     Neighb.E = ISA[2][1][1];
@@ -378,8 +536,30 @@ void Node::GetISA() {
             }
         }
     }
+    GetISB();
 }
+/**************************************************************/
+void Node::GetISB() {
 
+    if (m > 1) {
+        int count = 0;
+        for (int ix = 0; ix < 3; ++ix)
+                for (int iy = 0; iy < 3; ++iy)
+                    for (int iz = 0; iz < 3; ++iz)
+                    if (Parent->ISA[ix][iy][iz])
+                        for (int ay = 0; ay < 2; ++ay)
+                            for (int be = 0; be < 2; ++be)
+                                for (int ce = 0; ce < 2; ++ce)
+                                    if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce])
+                                        if ((Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position).Mag() > 3.0) 
+                                        {
+                                            LinISB[count] = Parent->ISA[ix][iy][iz]->Children[ay][be][ce];
+                                            LinISB[count]->LinISB[Node::ISBRecipInds[indx][count]] = this;
+                                            count++;
+                                        }
+    }
+    
+}
 /**************************************************************/
 Node* Node::ReturnNeighb(int i, int j, int k) {
     Array <int> v;
@@ -467,43 +647,69 @@ void Node::UpdateMomentMults() {
     DirVelMultsX = ARRAY9(Vect3) (2);
     DirVelMultsY = ARRAY9(Vect3) (2);
     DirVelMultsZ = ARRAY9(Vect3) (2);
+    DirGradMultsX = ARRAY10(Vect3) (2);
+    DirGradMultsY = ARRAY10(Vect3) (2);
+    DirGradMultsZ = ARRAY10(Vect3) (2);
 
     for (int ix = 0; ix < 2; ++ix) {
         DirVelMultsX[ix] = ARRAY8(Vect3) (2);
         DirVelMultsY[ix] = ARRAY8(Vect3) (2);
         DirVelMultsZ[ix] = ARRAY8(Vect3) (2);
+        DirGradMultsX[ix] = ARRAY9(Vect3) (2);
+        DirGradMultsY[ix] = ARRAY9(Vect3) (2);
+        DirGradMultsZ[ix] = ARRAY9(Vect3) (2);
         for (int iy = 0; iy < 2; ++iy) {
             DirVelMultsX[ix][iy] = ARRAY7(Vect3) (2);
             DirVelMultsY[ix][iy] = ARRAY7(Vect3) (2);
             DirVelMultsZ[ix][iy] = ARRAY7(Vect3) (2);
+            DirGradMultsX[ix][iy] = ARRAY8(Vect3) (2);
+            DirGradMultsY[ix][iy] = ARRAY8(Vect3) (2);
+            DirGradMultsZ[ix][iy] = ARRAY8(Vect3) (2);            
             for (int iz = 0; iz < 2; ++iz) {
                 DirVelMultsX[ix][iy][iz] = ARRAY6(Vect3) (3);
                 DirVelMultsY[ix][iy][iz] = ARRAY6(Vect3) (3);
                 DirVelMultsZ[ix][iy][iz] = ARRAY6(Vect3) (3);
+                DirGradMultsX[ix][iy][iz] = ARRAY7(Vect3) (3);
+                DirGradMultsY[ix][iy][iz] = ARRAY7(Vect3) (3);
+                DirGradMultsZ[ix][iy][iz] = ARRAY7(Vect3) (3);
                 Vect3 R1 = -1.0*Offset[ix][iy][iz]; //     PV to target from parent centroid
                 for (int i = -1, I = 0; i < 2; ++i, ++I) {
                     DirVelMultsX[ix][iy][iz][I] = ARRAY5(Vect3) (3);
                     DirVelMultsY[ix][iy][iz][I] = ARRAY5(Vect3) (3);
                     DirVelMultsZ[ix][iy][iz][I] = ARRAY5(Vect3) (3);
+                    DirGradMultsX[ix][iy][iz][I] = ARRAY6(Vect3) (3);
+                    DirGradMultsY[ix][iy][iz][I] = ARRAY6(Vect3) (3);
+                    DirGradMultsZ[ix][iy][iz][I] = ARRAY6(Vect3) (3);
                     for (int j = -1, J = 0; j < 2; ++j, ++J) {
                         DirVelMultsX[ix][iy][iz][I][J] = ARRAY4(Vect3) (3);
                         DirVelMultsY[ix][iy][iz][I][J] = ARRAY4(Vect3) (3);
                         DirVelMultsZ[ix][iy][iz][I][J] = ARRAY4(Vect3) (3);
+                        DirGradMultsX[ix][iy][iz][I][J] = ARRAY5(Vect3) (3);
+                        DirGradMultsY[ix][iy][iz][I][J] = ARRAY5(Vect3) (3);
+                        DirGradMultsZ[ix][iy][iz][I][J] = ARRAY5(Vect3) (3);
                         for (int k = -1, K = 0; k < 2; ++k, ++K) {
                             DirVelMultsX[ix][iy][iz][I][J][K] = ARRAY3(Vect3) (2);
                             DirVelMultsY[ix][iy][iz][I][J][K] = ARRAY3(Vect3) (2);
                             DirVelMultsZ[ix][iy][iz][I][J][K] = ARRAY3(Vect3) (2);
+                            DirGradMultsX[ix][iy][iz][I][J][K] = ARRAY4(Vect3) (2);
+                            DirGradMultsY[ix][iy][iz][I][J][K] = ARRAY4(Vect3) (2);
+                            DirGradMultsZ[ix][iy][iz][I][J][K] = ARRAY4(Vect3) (2);
                             Vect3 R2 = Vect3(2.0 * REAL(i), 2.0 * REAL(j), 2.0 * REAL(k)); //   PV from source parent centroid to target parent centroid     
                             for (int jx = 0; jx < 2; ++jx) {
                                 DirVelMultsX[ix][iy][iz][I][J][K][jx] = ARRAY2(Vect3) (2);
                                 DirVelMultsY[ix][iy][iz][I][J][K][jx] = ARRAY2(Vect3) (2);
                                 DirVelMultsZ[ix][iy][iz][I][J][K][jx] = ARRAY2(Vect3) (2);
+                                DirGradMultsX[ix][iy][iz][I][J][K][jx] = ARRAY3(Vect3) (2);
+                                DirGradMultsY[ix][iy][iz][I][J][K][jx] = ARRAY3(Vect3) (2);
+                                DirGradMultsZ[ix][iy][iz][I][J][K][jx] = ARRAY3(Vect3) (2);
 
                                 for (int jy = 0; jy < 2; ++jy) {
                                     DirVelMultsX[ix][iy][iz][I][J][K][jx][jy] = Array <Vect3> (2);
                                     DirVelMultsY[ix][iy][iz][I][J][K][jx][jy] = Array <Vect3> (2);
                                     DirVelMultsZ[ix][iy][iz][I][J][K][jx][jy] = Array <Vect3> (2);
-
+                                    DirGradMultsX[ix][iy][iz][I][J][K][jx][jy] = Array < Array <Vect3> > (2);
+                                    DirGradMultsY[ix][iy][iz][I][J][K][jx][jy] = Array < Array <Vect3> > (2);
+                                    DirGradMultsZ[ix][iy][iz][I][J][K][jx][jy] = Array < Array <Vect3> > (2);
                                     for (int jz = 0; jz < 2; ++jz) {
                                         Vect3 R3 = 1.0 * Offset[jx][jy][jz]; //      PV from source cell to source parent.
                                         Vect3 Vx, Vy, Vz;
@@ -511,12 +717,22 @@ void Node::UpdateMomentMults() {
                                         globalDirectVel(R1+R2+R3, Vect3(0.,1.,0.), Vy);
                                         globalDirectVel(R1+R2+R3, Vect3(0.,0.,1.), Vz);
                                         
-                                        
-                                        
-                                        
                                         DirVelMultsX[ix][iy][iz][I][J][K][jx][jy][jz] = Vx;
                                         DirVelMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = Vy;
                                         DirVelMultsZ[ix][iy][iz][I][J][K][jx][jy][jz] = Vz;
+                                                
+                                        DirGradMultsX[ix][iy][iz][I][J][K][jx][jy][jz] = Array <Vect3 > (3);
+                                        DirGradMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = Array <Vect3 > (3);
+                                        DirGradMultsZ[ix][iy][iz][I][J][K][jx][jy][jz] = Array <Vect3 > (3);
+                                        Array <Vect3 > GradsX(3, Vect3(0.0));
+                                        UTIL::globalDirectVelGrads(R1 + R2 + R3, Vect3(1., 0., 0.), globalSystem->Del2, GradsX);
+                                        Array <Vect3 > GradsY(3, Vect3(0.0));
+                                        UTIL::globalDirectVelGrads(R1 + R2 + R3, Vect3(0., 1., 0.), globalSystem->Del2, GradsY);
+                                        Array <Vect3 > GradsZ(3, Vect3(0.0));
+                                        UTIL::globalDirectVelGrads(R1 + R2 + R3, Vect3(0., 0., 1.), globalSystem->Del2, GradsZ);
+                                        DirGradMultsX[ix][iy][iz][I][J][K][jx][jy][jz] = GradsX;
+                                        DirGradMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = GradsY;
+                                        DirGradMultsZ[ix][iy][iz][I][J][K][jx][jy][jz] = GradsZ;
                                     }
                                 }
                             }

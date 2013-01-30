@@ -126,13 +126,10 @@ int main(int argc, char *argv[]) {
      */
 
 
-
-
-
 //
-//    TestFMM(argc, argv);
+    TestFMM(argc, argv);
 //
-//    return 0;
+    return 0;
 //
 
 
@@ -184,7 +181,7 @@ int main(int argc, char *argv[]) {
     {
         
         
-        REAL Radius = 50.0;
+        REAL Radius = 25.0;
         REAL gamma = 5.0;
         int n = 10000;
         Array <REAL> thetas = globalLinspace(0.0,2*pi,n);

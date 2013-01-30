@@ -36,6 +36,7 @@ OCTREE::OCTREE() {
     Root->UpdateMomentMults();
     FVMCell::InitMomsInds(globalSystem->MaxP);
     Branch::InitMomsInds(globalSystem->MaxP);
+    Root->SetUpISBIndices();
 }
 
 /**************************************************************/
