@@ -82,21 +82,23 @@ void OCTREE::Reset() {
 #ifdef TIME_STEPS
     long unsigned int t3 = ticks();
 #endif
-    
-        #ifdef _OPENMP
+
+#ifdef _OPENMP
 #pragma omp parallel for
 #endif
     for (int i = 0; i < AllCells.size(); ++i)
         globalOctree->AllCells[i]->CheckActive();
 
     for (int mlev = 0; mlev < globalOctree->AllBranches.size(); ++mlev)
+#ifndef NOFMM
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
         for (int i = 0; i < globalOctree->AllBranches[mlev].size(); ++i) globalOctree->AllBranches[mlev][i]->SetFieldsZero();
-    
-    
+
+
     ResetAllVelsAndFields();
+#endif 
     //  Everything which changes the shape of the tree must be done recursively
     Root->ApplyRecursively(&Node::MarkWithoutLoad, &Node::MarkWithoutLoad, &Node::DoNothing);
     Root->ApplyRecursively(&Node::DoNothing, &Node::CheckLoad, &Node::DoNothing);

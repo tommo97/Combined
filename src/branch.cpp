@@ -40,12 +40,21 @@ Branch::~Branch() {
 }
 
 /**************************************************************/
+#ifndef NOFMM
+
+Branch::Branch() : Node() {
+#else
 Branch::Branch() : Node(), Moments(globalSystem->MaxP), VelField(globalSystem->MaxP) {
+#endif
     Branch::NumBranches++;
 }
 
 /**************************************************************/
+#ifndef NOFMM
 Branch::Branch(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Moments(globalSystem->MaxP), VelField(globalSystem->MaxP) {
+#else
+Branch::Branch(Node *parent, int i, int j, int k) : Node(parent, i, j, k) {
+#endif
     Branch::NumBranches++;
 }
 

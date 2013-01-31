@@ -133,12 +133,27 @@ void TIME_STEPPER::TimeAdvance() {
     //  First 
     TIME_STEPPER::RKStep = 0;
     //  t0: Calc FMM and get DT
-    DoFMM();
+#ifndef NOFMM
+    //    DoFMM();
+#else
+#pragma omp parallel for
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        globalOctree->AllCells[i]->Velocity = 0.0;
+        globalOctree->AllCells[i]->VelGrads[0] = globalOctree->AllCells[i]->VelGrads[1] = globalOctree->AllCells[i]->VelGrads[2] = Vect3(0.0);
+        for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
+            Vect3 D = globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position;
+            globalOctree->AllCells[i]->Velocity += globalDirectVel(D, globalOctree->AllCells[j]->Omega);
+            UTIL::globalDirectVelGrads(D, globalOctree->AllCells[j]->Omega, globalSystem->Del2, globalOctree->AllCells[i]->VelGrads);
+        }
+
+    }
+#endif
     //  t0: calculate face velocities due to body
     globalSystem->GetFaceVels();
     //  t0: calculate face velocities due to body
     time_step();
     //  t0: get panel FMM Vels
+    #ifndef NOFMM
     if (globalSystem->useBodies) {
         globalSystem->GetPanelFMMVelocities(dt);
 
@@ -152,7 +167,7 @@ void TIME_STEPPER::TimeAdvance() {
             BODY::BodySubStep(dt, globalSystem->NumSubSteps);
 
     }
-    
+#endif
     
     /* Order of integrations is as follows:
      * 0) Panel  

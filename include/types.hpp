@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef TYPES_INCL
 #define TYPES_INCL
 
-
+#define NOFMM
 
 #define STRINGIZE(X) #X
 #define StringFromMakefile(X) (STRINGIZE(X))
