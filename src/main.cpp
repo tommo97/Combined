@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
     {
         
         
-        REAL Radius = 10.0;
+        REAL Radius = 25.0;
         REAL gamma = 5.0;
         int n = 10000;
         Array <REAL> thetas = globalLinspace(0.0,2*pi,n);

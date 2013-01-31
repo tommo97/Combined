@@ -73,8 +73,6 @@ public:
     
 //    REAL Phi;                         // unused?
 
-//    Vect3 VelTensor[3];               // unused?
-
     Array <Vect3> VelGrads, VelGradsHold;
 
     static void InitMomsInds(int MaxP);
@@ -113,6 +111,12 @@ public:
     void Stretch();
     
     void Diffuse();
+    
+    void DiffuseX();
+    
+    void DiffuseY();
+    
+    void DiffuseZ();
     
     Vect3 ReturnSpectralRadius();
 

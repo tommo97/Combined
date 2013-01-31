@@ -120,7 +120,7 @@ public:
     NeighbSet<Node*> Neighb;
     Array<NeighbSet<Vect3> > BEV;
     Array<NeighbSet<Vect3*> > Neighb_Val, Neighb_Neighb_Val;
-    Array<Vect3> TransVars, TransVarsHold;
+    Array<Vect3> TransVars, TransVarsHold, TransVars0;
     Array <Array<Vect3> > TransDerivs;
     
     

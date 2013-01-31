@@ -45,7 +45,7 @@ FVMCell::FVMCell() : Node(), FaceVels(0.) {
 /**************************************************************/
 FVMCell::FVMCell(Node *parent, int i, int j, int k) : Node(parent, i, j, k), FaceVels(0.), age(0) {
     FVMCell::NumCells++;
-    VelGrads.assign(3, Vect3(0.0,0.0,0.0));
+    VelGrads.assign(3, Vect3(0.0, 0.0, 0.0));
     BEV.assign(globalSystem->NumTransVars, Vect3());
 
 }
@@ -85,8 +85,8 @@ void FVMCell::Integrate() {
     Vect3 GradW(VelGrads[0].z, VelGrads[1].z, VelGrads[2].z);
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
 
-        
-        Vect3 StretchDeriv = -1.0*Vect3(TransVars[q].Dot(GradU), TransVars[q].Dot(GradV), TransVars[q].Dot(GradW));
+
+        Vect3 StretchDeriv = Vect3(TransVars[q].Dot(GradU), TransVars[q].Dot(GradV), TransVars[q].Dot(GradW));
         TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
 
         REAL h = 1.;
@@ -100,10 +100,10 @@ void FVMCell::Integrate() {
         Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
         Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
 
-        
-        
-        
-        Vect3 ViscDeriv = globalSystem->Nu * ((de-dw) + (dn-ds) + (dt-db));
+
+
+
+        Vect3 ViscDeriv = globalSystem->Nu * ((de - dw) + (dn - ds) + (dt - db));
         //TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
 
     }
@@ -142,11 +142,11 @@ void FVMCell::Integrate() {
             }
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        if ((TransVars[q].x*TransVars[q].x) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
+        if ((TransVars[q].x * TransVars[q].x) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
             TransVars[q].x = 0.0;
-        if ((TransVars[q].y*TransVars[q].y) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
+        if ((TransVars[q].y * TransVars[q].y) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
             TransVars[q].y = 0.0;
-        if ((TransVars[q].z*TransVars[q].z) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
+        if ((TransVars[q].z * TransVars[q].z) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
             TransVars[q].z = 0.0;
         Omega += TransVars[q];
     }
@@ -370,7 +370,7 @@ void FVMCell::vCheckNeighbs() {
 
 void FVMCell::SetVelsEqual() {
 
-    
+
 #ifndef COLLAPSE_TO_FACES
     FaceVels = Velocity;
     if (Neighb.S) FaceVels.S = .5 * (Velocity + static_cast<FVMCell*> (Neighb.S)->Velocity);
@@ -380,18 +380,7 @@ void FVMCell::SetVelsEqual() {
     if (Neighb.E) FaceVels.E = .5 * (Velocity + static_cast<FVMCell*> (Neighb.E)->Velocity);
     if (Neighb.T) FaceVels.T = .5 * (Velocity + static_cast<FVMCell*> (Neighb.T)->Velocity);
 #endif
-    //    if (Neighb.N)
-    //        FaceVels.N.y += (static_cast<FVMCell*> (Neighb.N)->Phi - Phi);
-    //    if (Neighb.S)
-    //        FaceVels.S.y += (Phi - static_cast<FVMCell*> (Neighb.S)->Phi);
-    //    if (Neighb.E)
-    //        FaceVels.E.x += (static_cast<FVMCell*> (Neighb.E)->Phi - Phi);
-    //    if (Neighb.W)
-    //        FaceVels.W.x += (Phi - static_cast<FVMCell*> (Neighb.W)->Phi);
-    //    if (Neighb.T)
-    //        FaceVels.T.z += (static_cast<FVMCell*> (Neighb.T)->Phi - Phi);
-    //    if (Neighb.B)
-    //        FaceVels.B.z += (Phi - static_cast<FVMCell*> (Neighb.B)->Phi);
+
 }
 
 /**************************************************************/
@@ -412,7 +401,7 @@ void FVMCell::ReportSpectralRadius() {
 /**************************************************************/
 void FVMCell::UpdateGradsFromDeltaOmega() {
     //  Updates the velocity gradients due to the changes in the nearby vorticity field
-    
+
     VelGrads = VelGradsHold;
     for (int ix = 0; ix < 3; ++ix)
         for (int iy = 0; iy < 3; ++iy)
@@ -448,6 +437,7 @@ void FVMCell::UpdateVelsFromDeltaOmega() {
                                 }
     FaceVels = Velocity;
 }
+
 /**************************************************************/
 
 void FVMCell::vCollapseVField() {
@@ -468,20 +458,20 @@ void FVMCell::vCollapseVField() {
                         for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
                             Velocity += Node::CllpsMlt[x][y][z][k1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
                             // du/dx, dv/dx, dw/dx NB this is += rather than -= since am reusing the CllpsMlt, which is -ve what the mult should be
-                            VelGrads[0] += Node::CllpsMlt[x][y][z][k1-1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
+                            VelGrads[0] += Node::CllpsMlt[x][y][z][k1 - 1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
                             // du/dy, dv/dy, dw/dy
-                            VelGrads[1] += Node::CllpsMlt[x][y][z][k1-1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1 - 1][k2 + 1][k3];
+                            VelGrads[1] += Node::CllpsMlt[x][y][z][k1 - 1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1 - 1][k2 + 1][k3];
                             // du/dz, dv/dz, dw/dz
-                            VelGrads[2] += Node::CllpsMlt[x][y][z][k1-1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1 - 1][k2][k3 + 1];
+                            VelGrads[2] += Node::CllpsMlt[x][y][z][k1 - 1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1 - 1][k2][k3 + 1];
                         }
                     }
                 }
             }
 
-            
+
             for (int i = 0; i < 216; ++i)
                 if (LinISB[i]) {
-                 
+
                     VelGrads[0] += Node::ISBGradMultsX[indx][i][0] * LinISB[i]->Omega.x;
                     VelGrads[0] += Node::ISBGradMultsY[indx][i][0] * LinISB[i]->Omega.y;
                     VelGrads[0] += Node::ISBGradMultsZ[indx][i][0] * LinISB[i]->Omega.z;
@@ -499,7 +489,7 @@ void FVMCell::vCollapseVField() {
                     Velocity += Node::ISBDirMultsZ[indx][i] * LinISB[i]->Omega.z;
 
                 }
-            
+
             for (int i = 0; i < 27; ++i)
                 if (LinISA[i]) {
                     VelGrads[0] += Node::ISAGradMultsX[i][0] * LinISA[i]->Omega.x;
@@ -530,10 +520,10 @@ void FVMCell::vCollapseVField() {
 
 /**************************************************************/
 void FVMCell::vPassMmnts2Prnt() {
-    
 
-//    JaggedArray <Vect3> *Ptr2Moms = &(static_cast<Branch*> (Parent))->Moments;
-//    JaggedArray <Vect3> &ParentMoments = *Ptr2Moms;
+
+    //    JaggedArray <Vect3> *Ptr2Moms = &(static_cast<Branch*> (Parent))->Moments;
+    //    JaggedArray <Vect3> &ParentMoments = *Ptr2Moms;
     if (HasLoad) {
 #ifdef USE_ROLLED_LOOPS 
 
@@ -551,9 +541,9 @@ void FVMCell::vPassMmnts2Prnt() {
                 += Omega * FVMCell::OffsetPows[indx][i];
 
 #endif
-            Parent->HasLoad = true;
+        Parent->HasLoad = true;
     }
-    
+
 }
 
 /**************************************************************/
@@ -599,7 +589,7 @@ void FVMCell::GetISBVels() {
     Velocity = VelHold;
     for (int i = 0; i < 216; ++i)
         if (LinISB[i]) {
-            Vect3 DeltaOmega = LinISB[i]->Omega - (static_cast<FVMCell*> (Parent))->OmegaHold;
+            Vect3 DeltaOmega = LinISB[i]->Omega - (static_cast<FVMCell*> (LinISB[i]))->OmegaHold;
             Velocity += Node::ISBDirMultsX[indx][i] * DeltaOmega.x;
             Velocity += Node::ISBDirMultsY[indx][i] * DeltaOmega.y;
             Velocity += Node::ISBDirMultsZ[indx][i] * DeltaOmega.z;
@@ -609,13 +599,13 @@ void FVMCell::GetISBVels() {
 /**************************************************************/
 void FVMCell::GetISAVels() {
     Velocity = VelHold;
-    for (int i = 0; i < 27; ++i)
-        if (LinISA[i]) {
-            Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (Parent))->OmegaHold;
-            Velocity += Node::ISADirMultsX[i] * DeltaOmega.x;
-            Velocity += Node::ISADirMultsY[i] * DeltaOmega.y;
-            Velocity += Node::ISADirMultsZ[i] * DeltaOmega.z;
-        }
+        for (int i = 0; i < 27; ++i)
+            if (LinISA[i]) {
+                Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (LinISA[i]))->OmegaHold;
+                Velocity += Node::ISADirMultsX[i] * DeltaOmega.x;
+                Velocity += Node::ISADirMultsY[i] * DeltaOmega.y;
+                Velocity += Node::ISADirMultsZ[i] * DeltaOmega.z;
+            }
 }
 
 /**************************************************************/
@@ -623,7 +613,7 @@ void FVMCell::GetISBGrads() {
     VelGrads = VelGradsHold;
     for (int i = 0; i < 216; ++i)
         if (LinISB[i]) {
-            Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (Parent))->OmegaHold;
+            Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (LinISB[i]))->OmegaHold;
             VelGrads[0] += Node::ISBGradMultsX[indx][i][0] * DeltaOmega.x;
             VelGrads[0] += Node::ISBGradMultsY[indx][i][0] * DeltaOmega.y;
             VelGrads[0] += Node::ISBGradMultsZ[indx][i][0] * DeltaOmega.z;
@@ -640,27 +630,27 @@ void FVMCell::GetISBGrads() {
 
 /**************************************************************/
 void FVMCell::GetISAGrads() {
-
     VelGrads = VelGradsHold;
-    for (int i = 0; i < 27; ++i)
-        if (LinISA[i]) {
-            Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (Parent))->OmegaHold;
-            VelGrads[0] += Node::ISAGradMultsX[i][0] * DeltaOmega.x;
-            VelGrads[0] += Node::ISAGradMultsY[i][0] * DeltaOmega.y;
-            VelGrads[0] += Node::ISAGradMultsZ[i][0] * DeltaOmega.z;
-
-            VelGrads[1] += Node::ISAGradMultsX[i][1] * DeltaOmega.x;
-            VelGrads[1] += Node::ISAGradMultsY[i][1] * DeltaOmega.y;
-            VelGrads[1] += Node::ISAGradMultsZ[i][1] * DeltaOmega.z;
-
-            VelGrads[2] += Node::ISAGradMultsX[i][2] * DeltaOmega.x;
-            VelGrads[2] += Node::ISAGradMultsY[i][2] * DeltaOmega.y;
-            VelGrads[2] += Node::ISAGradMultsZ[i][2] * DeltaOmega.z;
-        }
+        for (int i = 0; i < 27; ++i)
+            if (LinISA[i]) {
+                Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (LinISA[i]))->OmegaHold;
+                VelGrads[0] += Node::ISAGradMultsX[i][0] * DeltaOmega.x;
+                VelGrads[0] += Node::ISAGradMultsY[i][0] * DeltaOmega.y;
+                VelGrads[0] += Node::ISAGradMultsZ[i][0] * DeltaOmega.z;
+    
+                VelGrads[1] += Node::ISAGradMultsX[i][1] * DeltaOmega.x;
+                VelGrads[1] += Node::ISAGradMultsY[i][1] * DeltaOmega.y;
+                VelGrads[1] += Node::ISAGradMultsZ[i][1] * DeltaOmega.z;
+    
+                VelGrads[2] += Node::ISAGradMultsX[i][2] * DeltaOmega.x;
+                VelGrads[2] += Node::ISAGradMultsY[i][2] * DeltaOmega.y;
+                VelGrads[2] += Node::ISAGradMultsZ[i][2] * DeltaOmega.z;
+            }
 }
+
 /**************************************************************/
 void FVMCell::Stretch() {
-Vect3 GradU(VelGrads[0].x, VelGrads[1].x, VelGrads[2].x);
+    Vect3 GradU(VelGrads[0].x, VelGrads[1].x, VelGrads[2].x);
     Vect3 GradV(VelGrads[0].y, VelGrads[1].y, VelGrads[2].y);
     Vect3 GradW(VelGrads[0].z, VelGrads[1].z, VelGrads[2].z);
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
@@ -668,9 +658,10 @@ Vect3 GradU(VelGrads[0].x, VelGrads[1].x, VelGrads[2].x);
         TransDerivs[TIME_STEPPER::RKStep][q] = StretchDeriv;
     }
 }
+
 /**************************************************************/
 void FVMCell::Diffuse() {
-    REAL h = 1.;
+
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
         Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
         Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
@@ -684,47 +675,80 @@ void FVMCell::Diffuse() {
         TransDerivs[TIME_STEPPER::RKStep][q] = ViscDeriv;
     }
 }
+
+/**************************************************************/
+void FVMCell::DiffuseX() {
+
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
+        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
+        Vect3 ViscDeriv = globalSystem->Nu * ((de - dw));
+        TransDerivs[TIME_STEPPER::RKStep][q] = ViscDeriv;
+    }
+}
+
+/**************************************************************/
+void FVMCell::DiffuseY() {
+
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12;
+        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12;
+        Vect3 ViscDeriv = globalSystem->Nu * ((dn - ds));
+        TransDerivs[TIME_STEPPER::RKStep][q] = ViscDeriv;
+    }
+}
+
+/**************************************************************/
+void FVMCell::DiffuseZ() {
+
+    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
+        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
+        Vect3 ViscDeriv = globalSystem->Nu * ((dt - db));
+        TransDerivs[TIME_STEPPER::RKStep][q] = ViscDeriv;
+    }
+}
+
 /**************************************************************/
 void FVMCell::O2UWx() {
 
     REAL FPE = max(FaceVels.E.x, (REAL) .0);
     REAL FPW = max(-FaceVels.W.x, (REAL) .0);
-  
+
     REAL FME = max(-FaceVels.E.x, (REAL) .0);
     REAL FMW = max(FaceVels.W.x, (REAL) .0);
-   
+
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
         Vect3 ep = ((*Neighb_Val[q].E) - TransVars[q]);
         Vect3 pw = (TransVars[q] - (*Neighb_Val[q].W));
-    
+
         Vect3 rep = (pw / (ep + 1e-16));
         Vect3 rwp = (ep / (pw + 1e-16));
-   
+
         Vect3 rem = (((*Neighb_Neighb_Val[q].E) - (*Neighb_Val[q].E)) / (ep + 1e-16));
         Vect3 rwm = (((*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / (pw + 1e-16));
-   
+
         Vect3 spsip_e = flim(rep);
         Vect3 spsip_w = flim(rwp);
-      
+
 
         Vect3 spsim_e = flim(rem);
         Vect3 spsim_w = flim(rwm);
 
         Vect3 fe = FPE * (TransVars[q] + .5 * spsip_e * ep) - FME * ((*Neighb_Val[q].E) - .5 * spsim_e * ep);
         Vect3 fw = FPW * (TransVars[q] - .5 * spsip_w * pw) - FMW * ((*Neighb_Val[q].W) + .5 * spsim_w * pw);
-   
+
 
         Vect3 convection = fe + fw;
         TransDerivs[TIME_STEPPER::RKStep][q] = -convection;
     }
 }
 
-
 /**************************************************************/
 void FVMCell::O2UWy() {
 
-   
+
     REAL FPN = max(FaceVels.N.y, (REAL) .0);
     REAL FPS = max(-FaceVels.S.y, (REAL) .0);
 
@@ -749,7 +773,7 @@ void FVMCell::O2UWy() {
 
         Vect3 spsip_n = flim(rnp);
         Vect3 spsip_s = flim(rsp);
-        
+
         Vect3 spsim_n = flim(rnm);
         Vect3 spsim_s = flim(rsm);
 
@@ -765,10 +789,10 @@ void FVMCell::O2UWy() {
 void FVMCell::O2UWz() {
     REAL FPT = max(FaceVels.T.z, (REAL) .0);
     REAL FPB = max(-FaceVels.B.z, (REAL) .0);
-    
+
     REAL FMT = max(-FaceVels.T.z, (REAL) .0);
     REAL FMB = max(FaceVels.B.z, (REAL) .0);
-    
+
 
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
         Vect3 tp = ((*Neighb_Val[q].T) - TransVars[q]);
@@ -1007,52 +1031,52 @@ void FVMCell::CollapseToIP(OctreeCapsule &IP) {
 void FVMCell::GetLaplacian() {
     //  Everything that was in this function is now in the Integrate() function...
 }
-/**************************************************************/
 
- void FVMCell::AdvanceDt(REAL dt){
-     
-     // Advance transport variables...
+/**************************************************************/
+void FVMCell::AdvanceDt(REAL dt) {
+
+    // Advance transport variables...
     for (int q = 0; q < TransVars.size(); ++q) {
         TransVars[q] += dt * TransDerivs[TIME_STEPPER::RKStep][q];
-        TransDerivs[TIME_STEPPER::RKStep][q] = Vect3(0.);
     }
+
+
+
+
+    //    //  Normalise/obliterate the vorticities in the cell
+    //    for (int q1 = 0; q1 < globalSystem->NumTransVars; ++q1)
+    //        for (int q2 = 0; q2 < globalSystem->NumTransVars; ++q2)
+    //            if (q1 != q2) {
+    //                if (SIGN(TransVars[q1].x) != SIGN(TransVars[q2].x)) {
+    //                    if (fabs(TransVars[q1].x) > fabs(TransVars[q2].x)) {
+    //                        TransVars[q1].x += TransVars[q2].x;
+    //                        TransVars[q2].x = 0;
+    //                    }
+    //                }
+    //                if (SIGN(TransVars[q1].y) != SIGN(TransVars[q2].y)) {
+    //                    if (fabs(TransVars[q1].y) > fabs(TransVars[q2].y)) {
+    //                        TransVars[q1].y += TransVars[q2].y;
+    //                        TransVars[q2].y = 0;
+    //                    }
+    //                }
+    //                if (SIGN(TransVars[q1].z) != SIGN(TransVars[q2].z)) {
+    //                    if (fabs(TransVars[q1].z) > fabs(TransVars[q2].z)) {
+    //                        TransVars[q1].z += TransVars[q2].z;
+    //                        TransVars[q2].z = 0;
+    //                    }
+    //                }
+    //            }
 
     Omega = Vect3(0., 0., 0.);
-
-
-    //  Normalise/obliterate the vorticities in the cell
-    for (int q1 = 0; q1 < globalSystem->NumTransVars; ++q1)
-        for (int q2 = 0; q2 < globalSystem->NumTransVars; ++q2)
-            if (q1 != q2) {
-                if (SIGN(TransVars[q1].x) != SIGN(TransVars[q2].x)) {
-                    if (fabs(TransVars[q1].x) > fabs(TransVars[q2].x)) {
-                        TransVars[q1].x += TransVars[q2].x;
-                        TransVars[q2].x = 0;
-                    }
-                }
-                if (SIGN(TransVars[q1].y) != SIGN(TransVars[q2].y)) {
-                    if (fabs(TransVars[q1].y) > fabs(TransVars[q2].y)) {
-                        TransVars[q1].y += TransVars[q2].y;
-                        TransVars[q2].y = 0;
-                    }
-                }
-                if (SIGN(TransVars[q1].z) != SIGN(TransVars[q2].z)) {
-                    if (fabs(TransVars[q1].z) > fabs(TransVars[q2].z)) {
-                        TransVars[q1].z += TransVars[q2].z;
-                        TransVars[q2].z = 0;
-                    }
-                }
-            }
-
     for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        if ((TransVars[q].x * TransVars[q].x) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
-            TransVars[q].x = 0.0;
-        if ((TransVars[q].y * TransVars[q].y) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
-            TransVars[q].y = 0.0;
-        if ((TransVars[q].z * TransVars[q].z) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
-            TransVars[q].z = 0.0;
+        //        if ((TransVars[q].x * TransVars[q].x) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
+        //            TransVars[q].x = 0.0;
+        //        if ((TransVars[q].y * TransVars[q].y) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
+        //            TransVars[q].y = 0.0;
+        //        if ((TransVars[q].z * TransVars[q].z) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))
+        //            TransVars[q].z = 0.0;
         Omega += TransVars[q];
     }
-     
-     
- }
+
+
+}

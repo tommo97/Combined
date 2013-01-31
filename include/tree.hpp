@@ -55,6 +55,17 @@ public:
     void GetSRad();
     void Prune();
     void ResetAllVelsAndFields();
+    
+    
+    void StretchAndAdvance(REAL);
+    void DiffuseAndAdvance(REAL);
+    void DiffuseXAndAdvance(REAL);
+    void DiffuseYAndAdvance(REAL);
+    void DiffuseZAndAdvance(REAL);
+    void O2UWxAndAdvance(REAL);
+    void O2UWyAndAdvance(REAL);
+    void O2UWzAndAdvance(REAL);
+    void O2UWAndAdvance(REAL);
     Vect3 TreeVel(Vect3);
 };
 

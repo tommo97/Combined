@@ -50,12 +50,8 @@ void OCTREE::ResetAllVelsAndFields() {
     long unsigned int t4 = ticks();
 #endif
     Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int i = 0; i < AllCells.size(); ++i) {
-        AllCells[i]->GetLaplacian();
-    }
+
+  
 #ifdef TIME_STEPS
     long unsigned int t5 = ticks();
     stringstream tmp;
@@ -86,6 +82,20 @@ void OCTREE::Reset() {
 #ifdef TIME_STEPS
     long unsigned int t3 = ticks();
 #endif
+    
+        #ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < AllCells.size(); ++i)
+        globalOctree->AllCells[i]->CheckActive();
+
+    for (int mlev = 0; mlev < globalOctree->AllBranches.size(); ++mlev)
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (int i = 0; i < globalOctree->AllBranches[mlev].size(); ++i) globalOctree->AllBranches[mlev][i]->SetFieldsZero();
+    
+    
     ResetAllVelsAndFields();
     //  Everything which changes the shape of the tree must be done recursively
     Root->ApplyRecursively(&Node::MarkWithoutLoad, &Node::MarkWithoutLoad, &Node::DoNothing);
@@ -156,7 +166,170 @@ void OCTREE::FVM() {
     globalIO->step_data += tmp.str();
 #endif
 }
+/**************************************************************/
+void OCTREE::DiffuseAndAdvance(REAL dt) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->Diffuse();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+}
+/**************************************************************/
+void OCTREE::DiffuseXAndAdvance(REAL dt) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->DiffuseX();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+}
+/**************************************************************/
+void OCTREE::DiffuseYAndAdvance(REAL dt) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->DiffuseY();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+}
+/**************************************************************/
+void OCTREE::DiffuseZAndAdvance(REAL dt) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->DiffuseZ();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+}
+/**************************************************************/
+void OCTREE::StretchAndAdvance(REAL dt) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAGrads();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->Stretch();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+}
+/**************************************************************/
+void OCTREE::O2UWxAndAdvance(REAL dt) {
+    #ifdef _OPENMP
+#pragma omp parallel for
+#endif   
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif   
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->SetVelsEqual();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UWx();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+}
 
+/**************************************************************/
+void OCTREE::O2UWyAndAdvance(REAL dt) {
+    #ifdef _OPENMP
+#pragma omp parallel for
+#endif   
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif   
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->SetVelsEqual();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UWy();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+}
+
+/**************************************************************/
+void OCTREE::O2UWzAndAdvance(REAL dt) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif   
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif   
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->SetVelsEqual();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UWz();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+}
+/**************************************************************/
+void OCTREE::O2UWAndAdvance(REAL dt) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif   
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->GetISAVels();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif   
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->SetVelsEqual();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->O2UW();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->AdvanceDt(dt);
+}
 /**************************************************************/
 void OCTREE::Integrate() {
 #ifdef TIME_STEPS
