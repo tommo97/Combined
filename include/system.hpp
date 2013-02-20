@@ -1,14 +1,9 @@
 /*
 This file is part of the Combined Wake Modelling Code Version 1.0
 
-V3D Code Copyright Tom McCombes 2011
+V3D Code Copyright Tom McCombes 2013
 This code solves the 3D unsteady incompressible
-Navier-Stokes equations in velociy vorticity form
-
-
-$Rev:: 23               $:  Revision of last commit
-$Author:: tom           $:  Author of last commit
-$Date:: 2011-11-03 01:3#$:  Date of last commit
+Navier-Stokes equations in velocity vorticity form
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,7 +37,7 @@ public:
   int MaxP, NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval, NumTransVars;
   bool LiftingLineMode, ZeroBodyRelativeMotion, useBodies;
   REAL dtInit, GambitScale, Del2, DS, h;
-  REAL Mu,Nu,Rho,Temp;
+  REAL Mu,Nu,Rho,Temp,g;
   string NeuFile, CaseName, WorkingDir;
   Vect3 scaledVinf, unscaledVinf;
   SYSTEM(int);
@@ -100,6 +95,7 @@ public:
   void AddVortonsToTree(Array <Vect3> &, Array <Vect3> &, Array <int> &);
   void GetFaceVels();
   void GetPanelFMMVelocities(REAL);
+  void LinearWaves();
   void MoveBodies(REAL, bool);
   void WriteDomain();
   void WriteData();

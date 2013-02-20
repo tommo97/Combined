@@ -1,14 +1,9 @@
 /*
 This file is part of the Combined Wake Modelling Code Version 1.0
 
-V3D Code Copyright Tom McCombes 2011
+V3D Code Copyright Tom McCombes 2013
 This code solves the 3D unsteady incompressible
-Navier-Stokes equations in velociy vorticity form
-
-
-$Rev:: 35               $:  Revision of last commit
-$Author:: tom           $:  Author of last commit
-$Date:: 2011-11-16 00:1#$:  Date of last commit
+Navier-Stokes equations in velocity vorticity form
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef TYPES_INCL
 #define TYPES_INCL
 
-#define NOFMM
+//#define NOFMM
 
 #define STRINGIZE(X) #X
 #define StringFromMakefile(X) (STRINGIZE(X))
@@ -153,6 +148,7 @@ class OctreeCapsule;
 
 #define MINMOD3(x,y,z) MINMOD2(x,MINMOD2(y,z))
 
+#define sech(x) 1.0/cosh(x)
 
 #define NVARS 3
 #define CELL_ISA_NUMBER 26
@@ -243,6 +239,8 @@ class TIME_STEPPER;
 class OCTREE;
 
 class SYSTEM;
+
+class WaveField;
 
 /**************************************************************/
 /* global variable declarations */

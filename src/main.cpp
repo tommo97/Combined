@@ -1,14 +1,9 @@
 /*
 This file is part of the Combined Wake Modelling Code Version 1.0
 
-V3D Code Copyright Tom McCombes 2011
+V3D Code Copyright Tom McCombes 2013
 This code solves the 3D unsteady incompressible
-Navier-Stokes equations in velociy vorticity form
-
-
-$Rev:: 35               $:  Revision of last commit
-$Author:: tom           $:  Author of last commit
-$Date:: 2011-11-16 00:1#$:  Date of last commit
+Navier-Stokes equations in velocity vorticity form
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,6 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "tree.hpp"
 #include "node.hpp"
 #include "system.hpp"
+#include "waves.hpp"
 #define MAXMEM 90
 //      maximum memory use before bombing out
 
@@ -107,6 +103,30 @@ private:
 int main(int argc, char *argv[]) {
     system("clear");
 
+
+    {
+        SYSTEM System(0);
+        WaveField::Depth = 25.0;
+        WaveField Field0, Field1;
+        Field0.SetPeakFreq(0.1/(2.*pi));
+        Field0.SetHSig(1.0);
+
+        Field1.SetModalFreq(0.1/(2.*pi)); 
+        Field1.SetHSig(1.0);
+        
+        Field0.getWaveFeld(&WaveField::JONSWAP,2.5,20.0,150);
+        Field1.getWaveFeld(&WaveField::Bretschneider,2.5,20.0,150);
+        Array <REAL> S0 = Field0.Spectrum(), S1 = Field1.Spectrum();
+        
+        for (int i = 0; i < S1.size(); ++i)
+            cout << S0[i] << " " << S1[i] << endl;
+        
+        cout << TIME_STEPPER::SimTime << endl;
+        
+    }
+    return 0;
+    
+    
     
     /*
      *  This code has several "modes:"
@@ -186,7 +206,7 @@ int main(int argc, char *argv[]) {
     {
         
         
-        REAL Radius = 25.0;
+        REAL Radius = 10.0;
         REAL gamma = 5.0;
         int n = 10000;
         Array <REAL> thetas = globalLinspace(0.0,2*pi,n);

@@ -1,14 +1,9 @@
 /*
 This file is part of the Combined Wake Modelling Code Version 1.0
 
-V3D Code Copyright Tom McCombes 2011
+V3D Code Copyright Tom McCombes 2013
 This code solves the 3D unsteady incompressible
-Navier-Stokes equations in velociy vorticity form
-
-
-$Rev:: 35               $:  Revision of last commit
-$Author:: tom           $:  Author of last commit
-$Date:: 2011-11-16 00:1#$:  Date of last commit
+Navier-Stokes equations in velocity vorticity form
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -134,7 +129,7 @@ void TIME_STEPPER::TimeAdvance() {
     TIME_STEPPER::RKStep = 0;
     //  t0: Calc FMM and get DT
 #ifndef NOFMM
-    //    DoFMM();
+        DoFMM();
 #else
 #pragma omp parallel for
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {

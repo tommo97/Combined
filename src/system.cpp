@@ -1,14 +1,9 @@
 /*
 This file is part of the Combined Wake Modelling Code Version 1.0
 
-V3D Code Copyright Tom McCombes 2011
+V3D Code Copyright Tom McCombes 2013
 This code solves the 3D unsteady incompressible
-Navier-Stokes equations in velociy vorticity form
-
-
-$Rev:: 35               $:  Revision of last commit
-$Author:: tom           $:  Author of last commit
-$Date:: 2011-11-16 00:1#$:  Date of last commit
+Navier-Stokes equations in velocity vorticity form
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -54,9 +49,10 @@ SYSTEM::SYSTEM(int NT) {
     unscaledVinf = scaledVinf;
     MaxP = 3;
     DS = .3;
+    g = 9.80665;    // m/s/s
     Temp = 288.15; //  Kelvin
     Rho = 1027; //1.226; //1027; //  Kg/m3
-    Mu = 1e-3; //(sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity kg/ms
+    Mu = 1e-1; //(sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity kg/ms
     GambitScale = 1;
     NumThreads = 1;
 #ifdef _OPENMP
