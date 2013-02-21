@@ -833,7 +833,7 @@ void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet
             St4 = ((x - x4) * dy4 - (y - y4) * dx4) / sd4 * log((r4 + r1 + sd4) / (r4 + r1 - sd4));
         }
 
-
+        cout << Dt1 << " " << Dt2 << " " << Dt3 << " " << Dt4 << endl;
 
         if (abs(XP.z) < 1e-12)
             PhiDoublet = 0.0;
@@ -844,8 +844,8 @@ void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet
             PhiDoublet = 0.5;
 
 
-        PhiSource = -2 * ((St1 + St2 + St3 + St4) / four_pi - XP.z * PhiDoublet);
-        PhiDoublet *= 2;
+        PhiSource = -2.0 * ((St1 + St2 + St3 + St4) / four_pi - XP.z * PhiDoublet);
+        PhiDoublet *= 2.0;
         
     } else {
         REAL MagP = XPg.Mag();
@@ -854,7 +854,10 @@ void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet
         PhiDoublet *= Mult;
 
         PhiSource = source->Area / (two_pi * MagP);
+        cout << MagP << endl;
     }
+    
+    cout << "PhiS " << PhiSource << " PhiD " << PhiDoublet << endl;
 }
 /**************************************************************/
 
