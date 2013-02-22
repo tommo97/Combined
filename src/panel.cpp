@@ -296,11 +296,11 @@ REAL PANEL::GetCp() {
 
 /**************************************************************/
 Vect3 PANEL::VortexPanelVelocity(Vect3 pTarget) {
-    Vect3 V;
-    V += PANEL::LineVelocity(C1, C2, pTarget, Gamma);
+    Vect3 V = PANEL::LineVelocity(C1, C2, pTarget, Gamma);
     V += PANEL::LineVelocity(C2, C3, pTarget, Gamma);
     V += PANEL::LineVelocity(C3, C4, pTarget, Gamma);
     V += PANEL::LineVelocity(C4, C1, pTarget, Gamma);
+    cout << V << endl;
     return V;
 }
 
@@ -383,7 +383,8 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
     Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
     REAL MagP = P.Mag(), Mult = Sigma / two_pi;
 
-    if (MagP < PANEL::FarField * MaxDiagonal) {
+    if (MagP < PANEL::FarField * MaxDiagonal)
+    {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
         REAL Pz2 = P.z * P.z;
@@ -433,10 +434,10 @@ Vect3 PANEL::LineVelocity(Vect3 &lineStart, Vect3 &lineEnd, Vect3 &pTarget, REAL
 
     Vect3 R1 = pTarget - lineStart;
     Vect3 R2 = pTarget - lineEnd;
+    
     Vect3 C = R1.Cross(R2);
     REAL C2 = C.x * C.x + C.y * C.y + C.z * C.z, MagR1 = R1.Mag(), MagR2 = R2.Mag();
     Vect3 Vout = 0.;
-
 
 
     if ((MagR1 > 0) && (MagR2 > 0) && (C2 > 0)) {
@@ -732,7 +733,8 @@ void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet
     PhiSource = PhiDoublet = 0.0;
     Vect3 XPg = target - source->Centroid;
     
-    if (XPg.Dot(XPg) < ((PANEL::FarField * source->MaxDiagonal)*(PANEL::FarField * source->MaxDiagonal)) ){
+//    if (XPg.Dot(XPg) < ((PANEL::FarField * source->MaxDiagonal)*(PANEL::FarField * source->MaxDiagonal)) )
+        {
 
         Vect3 X1g = source->C1 - source->CollocationPoint;
         Vect3 X1 = VectMultMatrix(source->TRANS, X1g);
@@ -833,7 +835,6 @@ void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet
             St4 = ((x - x4) * dy4 - (y - y4) * dx4) / sd4 * log((r4 + r1 + sd4) / (r4 + r1 - sd4));
         }
 
-        cout << Dt1 << " " << Dt2 << " " << Dt3 << " " << Dt4 << endl;
 
         if (abs(XP.z) < 1e-12)
             PhiDoublet = 0.0;
@@ -847,17 +848,18 @@ void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet
         PhiSource = -2.0 * ((St1 + St2 + St3 + St4) / four_pi - XP.z * PhiDoublet);
         PhiDoublet *= 2.0;
         
-    } else {
-        REAL MagP = XPg.Mag();
-        REAL Mult = source->Area / (4 * two_pi * MagP * MagP * MagP);
-        PhiDoublet = XPg.Dot(source->NC1) + XPg.Dot(source->NC2) + XPg.Dot(source->NC3) + XPg.Dot(source->NC4);
-        PhiDoublet *= Mult;
-
-        PhiSource = source->Area / (two_pi * MagP);
-        cout << MagP << endl;
-    }
+    } 
+//    else 
+//    {
+//        REAL MagP = XPg.Mag();
+//        REAL Mult = source->Area / (4 * two_pi * MagP * MagP * MagP);
+//        PhiDoublet = XPg.Dot(source->NC1) + XPg.Dot(source->NC2) + XPg.Dot(source->NC3) + XPg.Dot(source->NC4);
+//        PhiDoublet *= Mult;
+//
+//        PhiSource = source->Area / (two_pi * MagP);
+//        cout << MagP << endl;
+//    }
     
-    cout << "PhiS " << PhiSource << " PhiD " << PhiDoublet << endl;
 }
 /**************************************************************/
 

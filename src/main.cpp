@@ -1697,7 +1697,7 @@ void WeeAmble() {
      *  the same purpose as the appendix in which it's found.
      */
     
-    PANEL::FarField = 1e32;
+    
     Array <PANEL> Pans;
 
     Pans.push_back(PANEL(Vect3(0, 1, 0), Vect3(0, -0.5, 0.866), Vect3(1, 0, 0), Vect3(0, 1, 0)));
@@ -1711,19 +1711,27 @@ void WeeAmble() {
     
 
 
-    REAL dlta = 1e-2;
+    REAL dlta = 1e-12;
     Vect3 dx(dlta, 0, 0), dy(0, dlta, 0), dz(0, 0, dlta);
-    REAL PhiDE = 0, PhiDW = 0, PhiDEd = 0, PhiDWd = 0;
-    REAL PhiSE = 0, PhiSW = 0, PhiSEd = 0, PhiSWd = 0;
-    REAL PhiDN = 0, PhiDS = 0, PhiDNd = 0, PhiDSd = 0;
-    REAL PhiSN = 0, PhiSS = 0, PhiSNd = 0, PhiSSd = 0;
-    REAL PhiDT = 0, PhiDB = 0, PhiDTd = 0, PhiDBd = 0;
-    REAL PhiST = 0, PhiSB = 0, PhiSTd = 0, PhiSBd = 0;
+    
+    
+    
     Vect3 Target = Vect3(5.43, 6.54, 7.65);
     Vect3 VDTarget(0.0,0.0,0.0), VSTarget(0.0,0.0,0.0);
+    Vect3 VDTargetD(0.0,0.0,0.0), VSTargetD(0.0,0.0,0.0);
     REAL PhiS = 0.0, PhiD = 0.0;
     
+
+    Array <Array <Array <REAL> > > PhiDs, PhiSs;
+    PhiDs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+    PhiSs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+
+    Array <Array <Array <REAL> > > PhiDd, PhiSd;
+    PhiDd.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+    PhiSd.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+    
     cout << "------" << endl;
+     PANEL::FarField = 1e32;
     Array < Array <REAL> > FiS = UTIL::zeros(6, 6), FiD = UTIL::zeros(6, 6), FiSd = UTIL::zeros(6, 6), FiDd = UTIL::zeros(6, 6);
     for (int i = 0; i < 6; ++i) {
         
@@ -1735,43 +1743,45 @@ void WeeAmble() {
             PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
             FiS[i][j] = PhiS;
             FiD[i][j] = PhiD;
-
-            //   Using Gaussian Quadrature Rules...
-
-
-
         }
         Pans[i].GetNormal();
         PANEL *src = &Pans[i];
-        src->Gamma = 1.0;
-        src->Sigma = 1.0;
-        src->Mu = 1.0;
+        src->Gamma = i + 3.14159;
+        src->Sigma = i - 3.14159;
+        src->Mu = i + 3.14159;
+        PANEL::FarField = 1e32;
+        for (int I = -1; I < 2; ++I)
+            for (int J = -1; J < 2; ++J)
+                for (int K = -1; K < 2; ++K)
+                    PANEL::SourceDoubletPotential(src, Target + Vect3(I * dlta, J * dlta, K * dlta), PhiDs[I + 1][J + 1][K + 1], PhiSs[I + 1][J + 1][K + 1], 1, 2);
+       
+            
+        PANEL::FarField = 1;
+        for (int I = -1; I < 2; ++I)
+            for (int J = -1; J < 2; ++J)
+                for (int K = -1; K < 2; ++K)
+                    PANEL::SourceDoubletPotential(src, Target + Vect3(I * dlta, J * dlta, K * dlta), PhiDd[I + 1][J + 1][K + 1], PhiSd[I + 1][J + 1][K + 1], 1, 2);
 
-        VDTarget += src->VortexPanelVelocity(Target);
-        VSTarget += src->SourceVel(Target);
 
-        PhiS = 0.0, PhiD = 0.0;
-        PANEL::SourceDoubletPotential(src, Target + dx, PhiD, PhiS, 1, 2);
-        PhiDEd += PhiD; PhiSEd += PhiS;
-        PhiS = 0.0, PhiD = 0.0;
-        PANEL::SourceDoubletPotential(src, Target - dx, PhiD, PhiS, 1, 2);
-        PhiDWd += PhiD; PhiSWd += PhiS;
+        PANEL::FarField = 1e32;
+        src->Mu = src->Gamma = i + 3.14159;
+        src->Sigma = 0.0;
+        VDTarget = VDTarget + src->VortexPanelVelocity(Target);
+        src->Mu = src->Gamma = 0;
+        src->Sigma = i - 3.14159;
+        VSTarget = VSTarget + src->SourceVel(Target);
 
-        PhiS = 0.0, PhiD = 0.0;
-        PANEL::SourceDoubletPotential(src, Target + dy, PhiD, PhiS, 1, 2);
-        PhiDNd += PhiD; PhiSNd += PhiS;
-        PhiS = 0.0, PhiD = 0.0;
-        PANEL::SourceDoubletPotential(src, Target - dy, PhiD, PhiS, 1, 2);
-        PhiDSd += PhiD; PhiSSd += PhiS;
-
-        PhiS = 0.0, PhiD = 0.0;
-        PANEL::SourceDoubletPotential(src, Target + dz, PhiD, PhiS, 1, 2);
-        PhiDTd += PhiD; PhiDTd += PhiS;
-        PhiS = 0.0, PhiD = 0.0;
-        PANEL::SourceDoubletPotential(src, Target - dz, PhiD, PhiS, 1, 2);
-        PhiDBd += PhiD; PhiSBd += PhiS;
+        PANEL::FarField = 1;
+        src->Mu = src->Gamma = i + 3.14159;
+        src->Sigma = 0.0;
+        VDTargetD = VDTargetD + src->BodyPanelVelocity(Target);
+        src->Mu = src->Gamma = 0;
+        src->Sigma = i - 3.14159;
+        VSTargetD = VSTargetD + src->BodyPanelVelocity(Target);       
 
     }
+    
+    
     cout << "Sigma Panel -------" << endl;
     for (int i = 0; i < 6; ++i) {
         for (int j = 0; j < 6; ++j)
@@ -1815,20 +1825,22 @@ void WeeAmble() {
     
 
 
-    Vect3 GraD = Vect3((PhiDEd - PhiDWd), (PhiDNd - PhiDSd), (PhiDTd - PhiDBd));
+    Vect3 GraD = Vect3(PhiDs[2][1][1] - PhiDs[0][1][1], PhiDs[1][2][1] - PhiDs[1][0][1], PhiDs[1][1][2] - PhiDs[1][1][0]);
     GraD = GraD / (2. * dlta);
-    Vect3 GraS = Vect3((PhiSEd - PhiSWd), (PhiSNd - PhiSSd), (PhiSTd - PhiSBd));
+    Vect3 GraS = Vect3(PhiSs[2][1][1] - PhiSs[0][1][1], PhiSs[1][2][1] - PhiSs[1][0][1], PhiSs[1][1][2] - PhiSs[1][1][0]);
     GraS = GraS / (2. * dlta);
-    cout << "GradPhiD: " << GraD << "\t\t <-- From O2 c. diff on phi using phi from SourceDoubletPotential()" << endl;
-    cout << "Linear D: " << VDTarget << "\t\t <-- From VortexPanelVel()" << endl;
-    cout << "GradPhiS: " << GraS << "\t\t <-- From O2 c. diff on phi using phi from SourceDoubletPotential()" << endl;
-    cout << "Linear S: " << VSTarget << "\t\t <-- From SourceVel()" << endl;
+    cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from SourceDoubletPotential()" << endl;
+    cout << "Linear D: " << VDTarget << "\t <-- From VortexPanelVel()" << endl;
+    cout << "GradPhiS: " << GraS << "\t <-- From O2 c. diff on phi using phi from SourceDoubletPotential()" << endl;
+    cout << "Linear S: " << VSTarget << "\t <-- From SourceVel()" << endl;
     
-    return;
     
     
     PANEL P(Vect3(-1, -1, 0), Vect3(1, -1, 0), Vect3(1, 1, 0), Vect3(-1, 1, 0));
     PANEL *src = &P;
+    P.Sigma = 1.0;
+    P.Gamma = 1.0;
+    P.Mu = 1.0;
     
     PhiD = 0, PhiS = 0;
     
@@ -1836,10 +1848,74 @@ void WeeAmble() {
 
 
 
+    PhiDs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+    PhiSs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+
+    PANEL::FarField = 1e32;
+    for (int I = -1; I < 2; ++I)
+        for (int J = -1; J < 2; ++J)
+            for (int K = -1; K < 2; ++K)
+                PANEL::SourceDoubletPotential(src, Target + Vect3(I * dlta, J * dlta, K * dlta), PhiDs[I + 1][J + 1][K + 1], PhiSs[I + 1][J + 1][K + 1], 1, 2);
+    
+
+    
+    VSTarget = src->SourceVel(Target);
+    GraD = Vect3(PhiDs[2][1][1] - PhiDs[0][1][1], PhiDs[1][2][1] - PhiDs[1][0][1], PhiDs[1][1][2] - PhiDs[1][1][0]);
+    GraD = GraD / (2. * dlta);
+    GraS = Vect3(PhiSs[2][1][1] - PhiSs[0][1][1], PhiSs[1][2][1] - PhiSs[1][0][1], PhiSs[1][1][2] - PhiSs[1][1][0]);
+    GraS = GraS / (2. * dlta);
+    cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from SourceDoubletPotential()" << endl;
+    cout << "Linear D: " << VDTarget << "\t <-- From VortexPanelVel()" << endl;
+    cout << "GradPhiS: " << GraS << "\t <-- From O2 c. diff on phi using phi from SourceDoubletPotential()" << endl;
+    cout << "Linear S: " << VSTarget << "\t <-- From SourceVel()" << endl;
+    
+    
+
+
+    PhiD = 0, PhiS = 0;
+    VT = 0.0;
+
+    P.Gamma = 1.0;
+    VT = 0.0;
+    VT = P.VortexPanelVelocity(Target);
+    cout << "LinD: " << VT << " <-- VortexPanelVelocity()" << endl;
+    P.Sigma = 1.0;
 
 
 
+    REAL PhiDE = 0, PhiDW = 0, PhiDEd = 0, PhiDWd = 0;
+    REAL PhiSE = 0, PhiSW = 0, PhiSEd = 0, PhiSWd = 0;
 
+    PANEL::SourceDoubletPotential(src, Target + dx, PhiDEd, PhiSEd, 1, 2);
+    PANEL::SourceDoubletPotential(src, Target - dx, PhiDWd, PhiSWd, 1, 2);
+
+    REAL PhiDN = 0, PhiDS = 0, PhiDNd = 0, PhiDSd = 0;
+    REAL PhiSN = 0, PhiSS = 0, PhiSNd = 0, PhiSSd = 0;
+
+    PANEL::SourceDoubletPotential(src, Target + dy, PhiDNd, PhiSNd, 1, 2);
+    PANEL::SourceDoubletPotential(src, Target - dy, PhiDSd, PhiSSd, 1, 2);
+
+
+    REAL PhiDT = 0, PhiDB = 0, PhiDTd = 0, PhiDBd = 0;
+    REAL PhiST = 0, PhiSB = 0, PhiSTd = 0, PhiSBd = 0;
+
+    PANEL::SourceDoubletPotential(src, Target + dz, PhiDTd, PhiSTd, 1, 2);
+    PANEL::SourceDoubletPotential(src, Target - dz, PhiDBd, PhiSBd, 1, 2);
+
+
+    Vect3 GraD100 = Vect3((PhiDE - PhiDW), (PhiDN - PhiDS), (PhiDT - PhiDB));
+    GraD100 = GraD100 / (2 * dlta);
+    GraD = Vect3((PhiDEd - PhiDWd), (PhiDNd - PhiDSd), (PhiDTd - PhiDBd));
+    GraD = GraD / (2 * dlta);
+    GraS = Vect3((PhiSEd - PhiSWd), (PhiSNd - PhiSSd), (PhiSTd - PhiSBd));
+    GraS = GraS / (2 * dlta);
+    cout << "GraD: " << GraD << " <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
+    cout << "GraS: " << GraS << " <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
+    cout << "LinO: " << P.SourceVel(Target) << " <-- From SourceVel()" << endl;
+    
+    
+    return;
+    
     PANEL::SourceDoubletPotential(&P, Target, PhiD, PhiS, 1, 2);
 
     cout << PhiD << " " << PhiS << endl;
