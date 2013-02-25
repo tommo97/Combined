@@ -36,10 +36,13 @@ void TestFMM(int argc, char *argv[]);
 void WeeAmble();
 void SolveMatfileVels(string fname, int pmax, REAL del2);
 void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude, REAL radius, REAL scale, REAL THETA);
-
+void PanelRecursiveDivide(PANEL &, Array <PANEL> &);
+REAL  PanelMaxTheta(PANEL &);
 /**************************************************************/
 class OutOfMemory {
 };
+
+
 
 class RunningStat {
 public:
@@ -292,7 +295,7 @@ int main(int argc, char *argv[]) {
         if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
     #endif
     
-        cout << "Number of cells:... " << FVMCell::NumCells << endl;
+        cout << "Number of cells: " << FVMCell::NumCells << endl;
     globalSystem->TimeStep();
 
 
@@ -840,7 +843,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
     Array <REAL> data;
 
     Array <int> dims;
-    cout << "Enter name of .mat file containing [Nx3] list of vortex locations..." << endl;
+    cout << "Enter name of .mat file containing [Nx3] list of vortex locations" << endl;
     getline(cin, fname);
     string varname = "Posns";
     int err = UTIL::readmat(fname, varname, data, dims, true);
@@ -856,7 +859,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
         //cout << Posns[i] << endl;
     }
     cout << "Domain bounds: [" << Mins.x << " " << Maxs.x << "][" << Mins.y << " " << Maxs.y << "][" << Mins.z << " " << Maxs.z << "]" << endl;
-    cout << "Enter name of .mat file containing [" << dims[0] << "x3] list of vortex strengths..." << endl;
+    cout << "Enter name of .mat file containing [" << dims[0] << "x3] list of vortex strengths" << endl;
     getline(cin, fname);
     varname = "Omegas";
     err = UTIL::readmat(fname, varname, data, dims, true);
@@ -874,7 +877,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 
     data.clear();
 
-    cout << "done reading. Finding active cells...";
+    cout << "done reading. Finding active cells";
 
     Array <bool> isActive(Omegas.size(), false);
     unsigned long int activeCount = 0;
@@ -911,7 +914,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 
 
 
-//        cout << "Not using tree... Doing direct calc. This might take some time....." << endl;
+//        cout << "Not using tree Doing direct calc. This might take some time.." << endl;
 //        
 //        
 //        
@@ -945,15 +948,15 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 
         SYSTEM System(0);
 
-    cout << "Enter GambitScale..." << endl;
+    cout << "Enter GambitScale" << endl;
     cin >> globalSystem->GambitScale;
-    cout << "Enter MaxP..." << endl;
+    cout << "Enter MaxP" << endl;
     cin >> globalSystem->MaxP;
-    cout << "Enter Del2..." << endl;
+    cout << "Enter Del2" << endl;
     cin >> globalSystem->Del2;
 
 
-    cout << "Beginning insertion into tree..." << endl;
+    cout << "Beginning insertion into tree" << endl;
 
     globalSystem->Initialise();
 
@@ -999,7 +1002,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
         Maxs = max(globalOctree->AllCells[i]->Position, Maxs);
     }
     cout << "Scaled domain bounds: [" << Mins.x << " " << Maxs.x << "][" << Mins.y << " " << Maxs.y << "][" << Mins.z << " " << Maxs.z << "]" << endl;
-    cout << "Calculating velocities..." << endl;
+    cout << "Calculating velocities" << endl;
     globalOctree->ResetAllVelsAndFields();
     globalOctree->GetVels();
     REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
@@ -1033,7 +1036,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
     
     
 
-    cout << "Clearing tree... ";
+    cout << "Clearing tree ";
     globalOctree->ClearNodes();
     cout << "done." << endl;
     string top_data = "\t\t" + globalGetStdoutFromCommand(globalIO->top_command);
@@ -1043,7 +1046,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
     psdata >> temp >> MEM_PERCENT;
     cout << FVMCell::NumCells << " " << Node::NumNodes << " mem used: " << MEM_PERCENT << " percent" << endl;
     cin.ignore();
-    cout << "Enter name of .mat file to write list of [" << numel << "x9] vortex positions, strengths and velocities..." << endl;
+    cout << "Enter name of .mat file to write list of [" << numel << "x9] vortex positions, strengths and velocities" << endl;
     getline(cin, fname);
     string vname = "DomainData";
 
@@ -1069,7 +1072,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 ////    globalOctree->InitVelsGetLaplacian();
 ////    globalOctree->GetVels();
 ////    REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-////    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation..." << endl;
+////    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation" << endl;
 ////    Posns.clear();
 ////    Omegas.clear();
 ////    int n = globalOctree->AllCells.size();
@@ -1130,7 +1133,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 ////        DirectVels[i] = (V);
 ////    }
 ////    REAL t3 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-////    cout << "Done. Time elapsed: " << t3 - t2 << endl << "Calculating error L2 norm...";
+////    cout << "Done. Time elapsed: " << t3 - t2 << endl << "Calculating error L2 norm";
 ////    REAL l2 = 0, Vmean = 0;
 ////
 ////
@@ -1243,7 +1246,7 @@ void TestFMM(int argc, char *argv[]) {
 
     Posns.allocate(n);
     Omegas.allocate(n);
-    cout << "Generating " << n << " points... Preparing ";
+    cout << "Generating " << n << " points Preparing ";
 
     if (geometry.compare(cube) == 0) {
         REAL rho = 4095 * 2;
@@ -1464,7 +1467,7 @@ void TestFMM(int argc, char *argv[]) {
     //    
     //    string line;
     //    ifstream myfile("infile.dat");
-    //    cout << "Reading file..." << endl;
+    //    cout << "Reading file" << endl;
     //    if (myfile.is_open()) {
     //        while (myfile.good()) {
     //            getline(myfile, line);
@@ -1482,17 +1485,17 @@ void TestFMM(int argc, char *argv[]) {
     //        myfile.close();
     //    }
     //    
-    //    cout << "Done." << endl << "Putting Cells In Tree..." << endl;
+    //    cout << "Done." << endl << "Putting Cells In Tree" << endl;
 
     //    for (int i = 0; i < Posns.size(); ++i) {
     //           
     //    }
-	cout << "Done." << endl << "Calculating FMM..." << endl;
+	cout << "Done." << endl << "Calculating FMM" << endl;
 
 
     REAL t0 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     
-    cout << "Resetting..." << endl;
+    cout << "Resetting" << endl;
     
     
     //  This is a version of the RESET() function, without the neighbour checking
@@ -1526,7 +1529,7 @@ void TestFMM(int argc, char *argv[]) {
     globalOctree->ResetAllVelsAndFields();
     cout << "done" << endl << "Setting Vels to 0" << endl;
     globalOctree->Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
-    cout << "done" << endl << "Getting Vels..." << endl;
+    cout << "done" << endl << "Getting Vels" << endl;
     globalOctree->GetVels();
 //    globalOctree->Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::SetVelsZero, &Node::DoNothing);
 //    globalOctree->Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::PassMmnts2Prnt, &Node::DoNothing);
@@ -1535,7 +1538,7 @@ void TestFMM(int argc, char *argv[]) {
 //    //globalOctree->Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::SetVelsEqual, &Node::DoNothing);
     
     REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation (including velocity gradients)..." << endl;
+    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation (including velocity gradients)" << endl;
     Posns.clear();
     Omegas.clear();
     n = globalOctree->AllCells.size();
@@ -1621,7 +1624,7 @@ void TestFMM(int argc, char *argv[]) {
         DirectVels[i] = (V);
     }
     REAL t3 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
-    cout << "Done. Time elapsed: " << t3 - t2 << endl << "Calculating error L2 norm...";
+    cout << "Done. Time elapsed: " << t3 - t2 << endl << "Calculating error L2 norm";
     REAL l2 = 0, Vmean = 0;
 
 
@@ -1711,7 +1714,7 @@ void WeeAmble() {
     
 
 
-    REAL dlta = 1e-12;
+    REAL dlta = 1e-6;
     Vect3 dx(dlta, 0, 0), dy(0, dlta, 0), dz(0, 0, dlta);
     
     
@@ -1731,7 +1734,7 @@ void WeeAmble() {
     PhiSd.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
     
     cout << "------" << endl;
-     PANEL::FarField = 1e32;
+    PANEL::FarField = 1e32;
     Array < Array <REAL> > FiS = UTIL::zeros(6, 6), FiD = UTIL::zeros(6, 6), FiSd = UTIL::zeros(6, 6), FiDd = UTIL::zeros(6, 6);
     for (int i = 0; i < 6; ++i) {
         
@@ -1745,6 +1748,7 @@ void WeeAmble() {
             FiD[i][j] = PhiD;
         }
         Pans[i].GetNormal();
+        Pans[i].GetEdgeInfo();
         PANEL *src = &Pans[i];
         src->Gamma = i + 3.14159;
         src->Sigma = i - 3.14159;
@@ -1835,8 +1839,14 @@ void WeeAmble() {
     cout << "Linear S: " << VSTarget << "\t <-- From SourceVel()" << endl;
     
     
+    cout << "--------------" << endl;
+    PANEL P(Vect3(-1.2, -1.3, 0.2), Vect3(1.5, -1, 1), Vect3(1, 1, 0.12), Vect3(-1.23, 0.987, -0.3));
+    P.GetNormal();
     
-    PANEL P(Vect3(-1, -1, 0), Vect3(1, -1, 0), Vect3(1, 1, 0), Vect3(-1, 1, 0));
+    
+
+    
+    
     PANEL *src = &P;
     P.Sigma = 1.0;
     P.Gamma = 1.0;
@@ -1858,61 +1868,139 @@ void WeeAmble() {
                 PANEL::SourceDoubletPotential(src, Target + Vect3(I * dlta, J * dlta, K * dlta), PhiDs[I + 1][J + 1][K + 1], PhiSs[I + 1][J + 1][K + 1], 1, 2);
     
 
-    
+    VDTarget = src->VortexPanelVelocity(Target);
     VSTarget = src->SourceVel(Target);
     GraD = Vect3(PhiDs[2][1][1] - PhiDs[0][1][1], PhiDs[1][2][1] - PhiDs[1][0][1], PhiDs[1][1][2] - PhiDs[1][1][0]);
     GraD = GraD / (2. * dlta);
     GraS = Vect3(PhiSs[2][1][1] - PhiSs[0][1][1], PhiSs[1][2][1] - PhiSs[1][0][1], PhiSs[1][1][2] - PhiSs[1][1][0]);
     GraS = GraS / (2. * dlta);
     cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from SourceDoubletPotential()" << endl;
-    cout << "Linear D: " << VDTarget << "\t <-- From VortexPanelVel()" << endl;
+    
     cout << "GradPhiS: " << GraS << "\t <-- From O2 c. diff on phi using phi from SourceDoubletPotential()" << endl;
-    cout << "Linear S: " << VSTarget << "\t <-- From SourceVel()" << endl;
     
     
 
+    Array <Array <Array <REAL> > > PhiDD, PhiSD;
+    PhiDD.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+    PhiSD.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
 
-    PhiD = 0, PhiS = 0;
-    VT = 0.0;
-
-    P.Gamma = 1.0;
-    VT = 0.0;
-    VT = P.VortexPanelVelocity(Target);
-    cout << "LinD: " << VT << " <-- VortexPanelVelocity()" << endl;
-    P.Sigma = 1.0;
-
-
-
-    REAL PhiDE = 0, PhiDW = 0, PhiDEd = 0, PhiDWd = 0;
-    REAL PhiSE = 0, PhiSW = 0, PhiSEd = 0, PhiSWd = 0;
-
-    PANEL::SourceDoubletPotential(src, Target + dx, PhiDEd, PhiSEd, 1, 2);
-    PANEL::SourceDoubletPotential(src, Target - dx, PhiDWd, PhiSWd, 1, 2);
-
-    REAL PhiDN = 0, PhiDS = 0, PhiDNd = 0, PhiDSd = 0;
-    REAL PhiSN = 0, PhiSS = 0, PhiSNd = 0, PhiSSd = 0;
-
-    PANEL::SourceDoubletPotential(src, Target + dy, PhiDNd, PhiSNd, 1, 2);
-    PANEL::SourceDoubletPotential(src, Target - dy, PhiDSd, PhiSSd, 1, 2);
-
-
-    REAL PhiDT = 0, PhiDB = 0, PhiDTd = 0, PhiDBd = 0;
-    REAL PhiST = 0, PhiSB = 0, PhiSTd = 0, PhiSBd = 0;
-
-    PANEL::SourceDoubletPotential(src, Target + dz, PhiDTd, PhiSTd, 1, 2);
-    PANEL::SourceDoubletPotential(src, Target - dz, PhiDBd, PhiSBd, 1, 2);
-
-
-    Vect3 GraD100 = Vect3((PhiDE - PhiDW), (PhiDN - PhiDS), (PhiDT - PhiDB));
-    GraD100 = GraD100 / (2 * dlta);
-    GraD = Vect3((PhiDEd - PhiDWd), (PhiDNd - PhiDSd), (PhiDTd - PhiDBd));
-    GraD = GraD / (2 * dlta);
-    GraS = Vect3((PhiSEd - PhiSWd), (PhiSNd - PhiSSd), (PhiSTd - PhiSBd));
-    GraS = GraS / (2 * dlta);
-    cout << "GraD: " << GraD << " <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
-    cout << "GraS: " << GraS << " <-- From c.diff on phi using phi from SourceDoubletPotential" << endl;
-    cout << "LinO: " << P.SourceVel(Target) << " <-- From SourceVel()" << endl;
+    Vect3 VelD(0.0,0.0,0.0), VelS(0.0,0.0,0.0);
     
+    
+    {
+        REAL Us = 0;
+        REAL Vs = 0;
+        REAL Ws = 0;
+        
+        REAL Ud = 0;
+        REAL Vd = 0;
+        REAL Wd = 0;
+        
+        
+        int n = 500;
+        Array < Array < Vect3 > > CP;
+        Array < Array < Vect3 > > N;
+        Array < Array < REAL > > A;
+        src->DivPanel(n, CP, N, A);
+
+
+        REAL PhiSource = 0.0;
+        for (int i = 0; i < n; ++i)
+            for (int j = 0; j < n; ++j) {
+
+                Vect3 DX = (CP[i][j] - Target);
+                REAL DXMag = DX.Mag();
+                REAL DXMag2 = DXMag * DXMag;
+                REAL DXMag3 = DXMag2 * DXMag;
+             
+
+                Vect3 MU = P.Mu * A[i][j] * N[i][j];
+
+
+                REAL DXdotMU = DX.Dot(MU);
+
+                REAL phi_d = -DXdotMU / (two_pi * DXMag3);
+
+                VelD += phi_d * (MU / DXdotMU - 3.0 * DX / DXMag2);
+                VelS += A[i][j] * DX / (two_pi * DXMag3);   
+                 
+
+                     
+                for (int I = -1; I < 2; ++I)
+                    for (int J = -1; J < 2; ++J)
+                        for (int K = -1; K < 2; ++K) {
+                            DX = (CP[i][j] - Target + Vect3(I * dlta, J * dlta, K * dlta));
+                            DXMag = DX.Mag();
+                            DXdotMU = DX.Dot(MU);
+                            DXMag3 = DXMag * DXMag * DXMag;
+                            PhiSD[I + 1][J + 1][K + 1] += - A[i][j] / (two_pi * DXMag);
+                            PhiDD[I + 1][J + 1][K + 1] += - DXdotMU / (two_pi * DXMag3);
+                        }
+            }
+
+
+        GraS = Vect3(PhiSD[2][1][1] - PhiSD[0][1][1], PhiSD[1][2][1] - PhiSD[1][0][1], PhiSD[1][1][2] - PhiSD[1][1][0]);
+        GraS = GraS / (2. * dlta);
+        cout << "GradPhiS: " << GraS << "\t <-- From O2 c. diff on phi using phi from " << n << " subpanels" << endl;
+        cout << "Direct S: " << VelS << "\t <-- From analytical gradiants of phis(x,y,z),  using " << n << " subpanels" << endl;
+        cout << "Linear S: " << VSTarget << "\t <-- From SourceVel()" << endl;
+        cout << "Direct D: " << VelD << "\t <-- From analytical gradiants of phid(x,y,z),  using " << n << " subpanels" << endl;
+        GraD = Vect3(PhiDD[2][1][1] - PhiDD[0][1][1], PhiDD[1][2][1] - PhiDD[1][0][1], PhiDD[1][1][2] - PhiDD[1][1][0]);
+        GraD= GraD / (2. * dlta);
+        cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from " << n << " subpanels" << endl;
+        cout << "Linear D: " << VDTarget << "\t <-- From VortexPanelVel()" << endl;
+
+    }
+    
+   
+    PANEL::MaxTheta = 1;
+    PANEL::NumPans = 1;
+    Array <PANEL> daPans;
+    PanelRecursiveDivide(P, daPans);
+
+    PhiDs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+    PhiSs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+    VDTarget = VSTarget = Vect3(0.0, 0.0, 0.0);
+    PANEL::FarField = 1e32;
+
+
+    for (int i = 0; i < daPans.size(); ++i) {
+
+        PANEL *src = &daPans[i];
+        src->GetNormal();
+        src->GetEdgeInfo();
+        src->Gamma = src->Mu = src->Sigma = 1.0;
+
+        VDTarget += src->VortexPanelVelocity(Target);
+        VSTarget += src->SourceVel(Target);
+
+        for (int I = -1; I < 2; ++I)
+            for (int J = -1; J < 2; ++J)
+                for (int K = -1; K < 2; ++K)
+                    PANEL::SourceDoubletPotential(src, Target + Vect3(I * dlta, J * dlta, K * dlta), PhiDs[I + 1][J + 1][K + 1], PhiSs[I + 1][J + 1][K + 1], 1, 2);
+
+    }
+
+
+    GraS = Vect3(PhiSs[2][1][1] - PhiSs[0][1][1], PhiSs[1][2][1] - PhiSs[1][0][1], PhiSs[1][1][2] - PhiSs[1][1][0]);
+    GraS = GraS / (2. * dlta);
+    cout << "GradPhiS: " << GraS << "\t <-- From O2 c. diff on phi using phi from " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
+    cout << "Linear S: " << VSTarget << "\t <-- From SourceVel() on " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
+    GraD = Vect3(PhiDs[2][1][1] - PhiDs[0][1][1], PhiDs[1][2][1] - PhiDs[1][0][1], PhiDs[1][1][2] - PhiDs[1][1][0]);
+    GraD = GraD / (2. * dlta);
+    cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
+    
+    
+    
+    
+    
+//    for (int i = 0; i < daPans.size(); ++i)
+//    {    
+//        cout << "line([" ;
+//        cout << daPans[i].C1.x << "; " << daPans[i].C2.x << "; " << daPans[i].C3.x << "; " << daPans[i].C4.x << "; " << daPans[i].C1.x << "],[";
+//        cout << daPans[i].C1.y << "; " << daPans[i].C2.y << "; " << daPans[i].C3.y << "; " << daPans[i].C4.y << "; " << daPans[i].C1.y << "],[";
+//        cout << daPans[i].C1.z << "; " << daPans[i].C2.z << "; " << daPans[i].C3.z << "; " << daPans[i].C4.z << "; " << daPans[i].C1.z << "]);" << endl;
+//    }
     
     return;
     
@@ -1946,7 +2034,7 @@ void WeeAmble() {
 
 
 
-    // Test to see if it is quicker to calculate velocities or potentials at what would be cell centroids...
+    // Test to see if it is quicker to calculate velocities or potentials at what would be cell centroids
 
     // First calc velocities with no farfield
     PANEL::FarField = 1e32;
@@ -2190,4 +2278,82 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
 
     X = Xn;
     Omega = Omn;
+}
+/**************************************************************/
+REAL PanelMaxTheta(PANEL &P)
+{
+    Vect3 N1 = ((P.C2-P.C1).Cross(P.C1-P.C4)).Normalise();
+    Vect3 N2 = ((P.C3-P.C2).Cross(P.C2-P.C1)).Normalise();
+    Vect3 N3 = ((P.C4-P.C3).Cross(P.C3-P.C2)).Normalise();
+    Vect3 N4 = ((P.C1-P.C4).Cross(P.C4-P.C3)).Normalise();
+    
+    
+    REAL MaxTheta = max(acosd(N1.Dot(N2)),acosd(N1.Dot(N3)));
+    MaxTheta = max(MaxTheta,acosd(N1.Dot(N4)));
+    MaxTheta = max(MaxTheta,acosd(N2.Dot(N3)));
+    MaxTheta = max(MaxTheta,acosd(N2.Dot(N4)));
+    MaxTheta = max(MaxTheta,acosd(N3.Dot(N4)));
+    
+    return MaxTheta;
+    
+}
+/**************************************************************/
+void PanelRecursiveDivide(PANEL &P, Array <PANEL> &Output)
+{
+    
+    Array <PANEL>  tmp(4);
+    //  Get curvature of original panel
+    
+    Vect3 C1 = P.C1, C2 = P.C2, C3 = P.C3, C4 = P.C4;
+    Vect3 CP = 0.25*(C1 + C2 + C3 + C4);
+   
+    //  Subdivide panel
+    
+    Vect3 C12 = 0.5*(P.C1 + P.C2);
+    Vect3 C23 = 0.5*(P.C2 + P.C3);
+    Vect3 C34 = 0.5*(P.C3 + P.C4);
+    Vect3 C41 = 0.5*(P.C4 + P.C1);
+    PANEL::NumPans += 3;
+
+    tmp[0] = PANEL(P.C1, C12, CP, C41);
+    tmp[0].GetNormal();
+    REAL th1 = PanelMaxTheta(tmp[0]);
+    
+    tmp[1] = PANEL(C12, P.C2, C23, CP);
+    tmp[1].GetNormal();
+    REAL th2 = PanelMaxTheta(tmp[1]);
+    
+    tmp[2] = PANEL(CP, C23, P.C3, C34);
+    tmp[2].GetNormal();
+    REAL th3 = PanelMaxTheta(tmp[2]);
+    
+    tmp[3] = PANEL(C41, CP, C34, P.C4);
+    tmp[3].GetNormal();
+    REAL th4 = PanelMaxTheta(tmp[3]);
+    
+    
+    
+    
+
+    //cout << th1 << " " << th2 << " " << th3 << " " << th4 << " " << PANEL::NumPans << endl;
+    if (th1 > PANEL::MaxTheta)
+        PanelRecursiveDivide(tmp[0], Output);
+    else
+        Output.push_back(tmp[0]);
+    
+    if (th2 > PANEL::MaxTheta)
+        PanelRecursiveDivide(tmp[1], Output);
+    else
+        Output.push_back(tmp[1]);
+    
+    if (th3 > PANEL::MaxTheta)
+        PanelRecursiveDivide(tmp[2], Output);
+    else
+        Output.push_back(tmp[2]);
+    
+    if (th4 > PANEL::MaxTheta)
+        PanelRecursiveDivide(tmp[3], Output);
+    else
+        Output.push_back(tmp[3]);
+    
 }

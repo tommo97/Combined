@@ -32,6 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "pgesv.hpp"
 
 REAL PANEL::FarField = 5.0;
+REAL PANEL::MaxTheta = 0.01;
+int PANEL::MaxRecurse = 8, PANEL::NumPans = 0;
 /**************************************************************/
 void PANEL::LinearSubPan(PANEL *trg, int n, REAL Mu1, REAL Mu2, REAL &PhiD, Vect3 &V)
 {
@@ -94,7 +96,7 @@ void PANEL::DivPanel(int n, Array < Array < Vect3 > > &CP, Array < Array < Vect3
 
             Vect3 crd = dx1.Cross(dx2);
 
-            A[i][j] = crd.Mag();
+            A[i][j] = crd.Mag()/2.0;
             N[i][j] = crd/crd.Mag();
 
         }
@@ -300,7 +302,6 @@ Vect3 PANEL::VortexPanelVelocity(Vect3 pTarget) {
     V += PANEL::LineVelocity(C2, C3, pTarget, Gamma);
     V += PANEL::LineVelocity(C3, C4, pTarget, Gamma);
     V += PANEL::LineVelocity(C4, C1, pTarget, Gamma);
-    cout << V << endl;
     return V;
 }
 
@@ -963,7 +964,7 @@ void PANEL::GetNormal() {
 
 
 
-    Vect3 VJ = 0.5 * (C3 + C4) - Centroid;
+    Vect3 VJ = 0.5 * (C1 + C2) - Centroid;
 
 
     //  Unit vectors of the same
