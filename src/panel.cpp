@@ -33,7 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 REAL PANEL::FarField = 5.0;
 REAL PANEL::MaxTheta = 0.01;
-int PANEL::MaxRecurse = 8, PANEL::NumPans = 0;
+int PANEL::MaxRecurse = 8, PANEL::NumPans = 0, PANEL::RecurseLev = 0;
 /**************************************************************/
 void PANEL::LinearSubPan(PANEL *trg, int n, REAL Mu1, REAL Mu2, REAL &PhiD, Vect3 &V)
 {
@@ -384,7 +384,7 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
     Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
     REAL MagP = P.Mag(), Mult = Sigma / two_pi;
 
-    if (MagP < PANEL::FarField * MaxDiagonal)
+    //if (MagP < PANEL::FarField * MaxDiagonal)
     {
 
         Vect3 dX1 = P - Xcb[0], dX2 = P - Xcb[1], dX3 = P - Xcb[2], dX4 = P - Xcb[3];
@@ -424,8 +424,8 @@ Vect3 PANEL::SourceVel(Vect3 pTarget) {
         //  This return value has been changed......
         Vect3 Vout = VectMultMatrixTranspose(TRANS, Vect3(sum(B * DY) * Mult, sum(B * DX) * Mult, T * Mult));
         return Vect3(Vout.x,-Vout.y,Vout.z);
-    } else
-        return VectMultMatrixTranspose(TRANS, -Mult * Area * P / (MagP * MagP * MagP));
+    } //else
+       // return VectMultMatrixTranspose(TRANS, -Mult * Area * P / (MagP * MagP * MagP));
 
 }
 
@@ -938,7 +938,7 @@ void PANEL::GetNormal() {
         
     } else {
 
-            Area = 0.5 * CRMag;
+        Area = 0.5 * CRMag;
 
         if (R1Mag < 1e-12)
         Centroid = (C2 + C3 + C4) / 3;

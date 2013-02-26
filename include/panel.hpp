@@ -33,7 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class PANEL {
 public:
     static REAL FarField, MaxTheta;
-    static int MaxRecurse, NumPans;
+    static int MaxRecurse, NumPans, RecurseLev;
     Vect3 C1, C2, C3, C4, Vd, Centroid, CollocationPoint, Normal, Eta, Epsilon;
     Vect3 TRANS[3], edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, VWakePrev, Vkin, VWake, VCentroid, dF;
     Array <Vect3> Xcb;
