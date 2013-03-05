@@ -32,11 +32,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class PANEL {
 public:
-    static Array <REAL> QuadPts, QuadWts, CornerEta, CornerZeta, CornerNodalShapeFuncs;
+    static Array <REAL> QuadPts, QuadWts, CornerEta, CornerZeta;
+    static Array <Array <REAL> > CornerNodalShapeFuncs;
     static REAL FarField, MaxTheta;
     static int MaxRecurse, NumPans, RecurseLev;
     Vect3 C1, C2, C3, C4, Vd, Centroid, CollocationPoint, Normal, Eta, Epsilon;
     Vect3 edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, VWakePrev, Vkin, VWake, VCentroid, dF;
+    
+    Array <Vect3> aZeta, aEta, ZetaCrossEta, CornerNodes, CornerNormal;
+    Array <REAL> aZetaMag, aEtaMag, CornerMult;
+    Vect3 n0, Mult1Dash, Mult2Dash, Mult3Dash, Mult4Dash;
+
     Array <Vect3> Xcb, TRANS;
     Vect4 DX, DY, M, D;
     Vect3 C1o, C2o, C3o, C4o;
@@ -52,6 +58,7 @@ public:
     PanelNeighbSet <REAL> Theta;
     Array <REAL> PhiPrev;
     Vect3 dVFMM_dt;
+    static void Initialise();
     void CN() {
 
 //        if (!Neighb.L)
@@ -184,7 +191,8 @@ public:
     REAL BodyPanelPotential(Vect3);
     REAL WakePanelPotential(Vect3);
     Vect3 VortexPanelVelocity(Vect3);
-    
+    Vect3 DoubletPanelVelocity(Vect3);
+    Vect3 SourcePanelVelocity(Vect3);
     
     Vect3 SourceVel(Vect3);
     REAL GetCp();

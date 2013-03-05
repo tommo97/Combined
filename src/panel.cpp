@@ -34,7 +34,31 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 REAL PANEL::FarField = 5.0;
 REAL PANEL::MaxTheta = 0.01;
 int PANEL::MaxRecurse = 8, PANEL::NumPans = 0, PANEL::RecurseLev = 0;
-Array <REAL> PANEL::QuadPts, PANEL::QuadWts, PANEL::CornerEta, PANEL::CornerZeta, PANEL::CornerNodalShapeFuncs;
+Array <REAL> PANEL::QuadPts, PANEL::QuadWts, PANEL::CornerEta, PANEL::CornerZeta;
+Array < Array <REAL> > PANEL::CornerNodalShapeFuncs;
+void PANEL::Initialise()
+{
+
+    //  Initialise corner shape functions
+    PANEL::CornerZeta.push_back(-1.0);
+    PANEL::CornerEta.push_back(-1.0);
+    PANEL::CornerZeta.push_back(-1.0);
+    PANEL::CornerEta.push_back(1.0);
+    PANEL::CornerZeta.push_back(1.0);
+    PANEL::CornerEta.push_back(1.0);
+    PANEL::CornerZeta.push_back(1.0);
+    PANEL::CornerEta.push_back(-1.0);
+        //   Nodal shape functions
+    PANEL::CornerNodalShapeFuncs.assign(4, Array <REAL> (4, 0.0));
+
+    for (int i = 0; i < 4; ++i) {
+        PANEL::CornerNodalShapeFuncs[i][0] = 0.25 * (1 - PANEL::CornerZeta[i])*(1 - PANEL::CornerEta[i]);
+        PANEL::CornerNodalShapeFuncs[i][1] = 0.25 * (1 + PANEL::CornerZeta[i])*(1 - PANEL::CornerEta[i]);
+        PANEL::CornerNodalShapeFuncs[i][2] = 0.25 * (1 + PANEL::CornerZeta[i])*(1 + PANEL::CornerEta[i]);
+        PANEL::CornerNodalShapeFuncs[i][3] = 0.25 * (1 - PANEL::CornerZeta[i])*(1 + PANEL::CornerEta[i]);
+    }
+    
+}
 /**************************************************************/
 void PANEL::LinearSubPan(PANEL *trg, int n, REAL Mu1, REAL Mu2, REAL &PhiD, Vect3 &V)
 {
@@ -984,7 +1008,62 @@ void PANEL::GetNormal() {
 
     CollocationPoint = Centroid;
     Normal = TRANS[2];
+    aZeta.allocate(4);
+    aEta.allocate(4);
+    aEtaMag.allocate(4);
+    aZetaMag.allocate(4);
+    ZetaCrossEta.allocate(4);
+    CornerNodes.allocate(4);
+    CornerNodes[0] = C1;
+    CornerNodes[1] = C2;
+    CornerNodes[2] = C3;
+    CornerNodes[3] = C4;
+    for (int i = 0; i < 4; ++i) {
+        Vect3 DXDZeta = -0.25 * C1 * (1 - PANEL::CornerEta[i]) + 0.25 * C4 * (1 - PANEL::CornerEta[i]) - 0.25 * C2 * (1 + PANEL::CornerEta[i]) + 0.25 * C3 * (1 + PANEL::CornerEta[i]);
+        Vect3 DXDEta = -0.25 * C1 * (1 - PANEL::CornerZeta[i]) + 0.25 * C2 * (1 - PANEL::CornerZeta[i]) + 0.25 * C3 * (1 + PANEL::CornerZeta[i]) - 0.25 * C4 * (1 + PANEL::CornerZeta[i]);
 
+        aZeta[i] = DXDZeta;
+        aEta[i] = DXDEta;
+        aEtaMag[i] = aEta[i].Mag();
+        aZetaMag[i] = aZeta[i].Mag();
+        ZetaCrossEta[i] = (DXDZeta.Cross(DXDEta));
+        
+    }
+        
+    REAL eta = 0.0, zeta = 0.0;
+
+
+    Vect3 DXDZeta = -0.25 * C1 * (1 - eta) + 0.25 * C4 * (1 - eta) - 0.25 * C2 * (1 + eta) + 0.25 * C3 * (1 + eta);
+    Vect3 DXDEta = -0.25 * C1 * (1 - zeta) + 0.25 * C2 * (1 - zeta) + 0.25 * C3 * (1 + zeta) - 0.25 * C4 * (1 + zeta);
+    n0 = (DXDZeta.Cross(DXDEta)).Normalise();
+
+
+    Mult1Dash = Vect3((Vect3(1., 0., 0.).Cross(aEta[0])).Dot(n0),
+            (Vect3(0., 1., 0.).Cross(aEta[0])).Dot(n0),
+            (Vect3(0., 0., 1.).Cross(aEta[0])).Dot(n0)) / aEtaMag[0];
+
+    Mult2Dash = Vect3((Vect3(1., 0., 0.).Cross(aZeta[1])).Dot(n0),
+            (Vect3(0., 1., 0.).Cross(aZeta[1])).Dot(n0),
+            (Vect3(0., 0., 1.).Cross(aZeta[1])).Dot(n0)) / aZetaMag[1];
+
+    Mult3Dash = Vect3((Vect3(1., 0., 0.).Cross(aEta[2])).Dot(n0),
+            (Vect3(0., 1., 0.).Cross(aEta[2])).Dot(n0),
+            (Vect3(0., 0., 1.).Cross(aEta[2])).Dot(n0)) / aEtaMag[2];
+
+    Mult4Dash = Vect3((Vect3(1., 0., 0.).Cross(aZeta[3])).Dot(n0),
+            (Vect3(0., 1., 0.).Cross(aZeta[3])).Dot(n0),
+            (Vect3(0., 0., 1.).Cross(aZeta[3])).Dot(n0)) / aZetaMag[3];
+    
+    CornerMult.allocate(4);
+    CornerMult[0] = aEtaMag[0];
+    CornerMult[1] = aZetaMag[1];
+    CornerMult[2] = aEtaMag[2];
+    CornerMult[3] = aZetaMag[3];
+    CornerNormal.allocate(4);
+    CornerNormal[0] = aEta[0];
+    CornerNormal[1] = aZeta[1];
+    CornerNormal[2] = aEta[2];
+    CornerNormal[3] = aZeta[3];
 }
 /**************************************************************/
 void PANEL::CheckNeighb(PANEL *Face) {
@@ -1287,10 +1366,6 @@ REAL PANEL::CurvedDoubletPhi(Vect3& XP) {
             REAL ratio = (RF) / (RC);
 
             Phi -= PANEL::QuadWts[i] * PANEL::QuadWts[j] * Mu * dRC * Jdet;
-
-            //cout << "scatter3([" << XpC.x << " " << XpF.x << "],[" << XpC.y << " " << XpF.y << "],["<< XpC.z << " " << XpF.z << "]);" << endl;
-
-
         }
     }
     return Phi / two_pi;
@@ -1299,29 +1374,12 @@ REAL PANEL::CurvedDoubletPhi(Vect3& XP) {
 /**************************************************************/
 REAL PANEL::HyperboloidDoubletPhi(Vect3& XP) {
 
-    Array <REAL> Eta, Zeta;
-    Zeta.push_back(-1.0); Eta.push_back(-1.0);
-    Zeta.push_back(-1.0); Eta.push_back(1.0);
-    Zeta.push_back(1.0); Eta.push_back(1.0);
-    Zeta.push_back(1.0); Eta.push_back(-1.0);
     Array <REAL> beta(4, 0.0);
     for (int i = 0; i < 4; ++i) {
-        REAL zeta = Zeta[i], eta = Eta[i];
-        //   Nodal shape functions
-        REAL N1 = 0.25 * (1 - zeta)*(1 - eta);
-        REAL N4 = 0.25 * (1 + zeta)*(1 - eta);
-        REAL N3 = 0.25 * (1 + zeta)*(1 + eta);
-        REAL N2 = 0.25 * (1 - zeta)*(1 + eta);
-        //   Elements of Jacobian matrix
-        Vect3 DXDZeta = -0.25 * C1 * (1 - eta) + 0.25 * C4 * (1 - eta) - 0.25 * C2 * (1 + eta) + 0.25 * C3 * (1 + eta);
-        Vect3 DXDEta = -0.25 * C1 * (1 - zeta) + 0.25 * C2 * (1 - zeta) + 0.25 * C3 * (1 + zeta) - 0.25 * C4 * (1 + zeta);
 
-        Vect3 ZetaCrossEta = (DXDZeta.Cross(DXDEta));
-        Vect3 r = XP - (N1 * C1 + N2 * C2 + N3 * C3 + N4 * C4);
+        Vect3 r = XP - CornerNodes[i];
         REAL rmag = r.Mag();
-        beta[i] = atan2(rmag * r.Dot(ZetaCrossEta), (r.Cross(DXDZeta)).Dot(r.Cross(DXDEta)));
-
-
+        beta[i] = atan2(rmag * r.Dot(ZetaCrossEta[i]), (r.Cross(aZeta[i])).Dot(r.Cross(aEta[i])));
     }
 
     return -(beta[0] - beta[1] + beta[2] - beta[3]) / two_pi;
@@ -1330,65 +1388,144 @@ REAL PANEL::HyperboloidDoubletPhi(Vect3& XP) {
 /**************************************************************/
 REAL PANEL::HyperboloidSourcePhi(Vect3& XP) {
 
-    Array <REAL> Eta, Zeta;
-    Zeta.push_back(-1.0); Eta.push_back(-1.0);
-    Zeta.push_back(-1.0); Eta.push_back(1.0);
-    Zeta.push_back(1.0); Eta.push_back(1.0);
-    Zeta.push_back(1.0); Eta.push_back(-1.0);
-    Array <REAL> beta(4, 0.0), RMag(4, 0.0), aEtaMag(4, 0.0), aZetaMag(4, 0.0);
-    Array <Vect3> aZeta(4), aEta(4), R(4), n(4);
-    for (int i = 0; i < 4; ++i) {
-        REAL zeta = Zeta[i], eta = Eta[i];
-        //   Nodal shape functions
-        REAL N1 = 0.25 * (1 - zeta)*(1 - eta);
-        REAL N4 = 0.25 * (1 + zeta)*(1 - eta);
-        REAL N3 = 0.25 * (1 + zeta)*(1 + eta);
-        REAL N2 = 0.25 * (1 - zeta)*(1 + eta);
-        //   Elements of Jacobian matrix
-        Vect3 DXDZeta = -0.25 * C1 * (1 - eta) + 0.25 * C4 * (1 - eta) - 0.25 * C2 * (1 + eta) + 0.25 * C3 * (1 + eta);
-        Vect3 DXDEta = -0.25 * C1 * (1 - zeta) + 0.25 * C2 * (1 - zeta) + 0.25 * C3 * (1 + zeta) - 0.25 * C4 * (1 + zeta);
 
-        aZeta[i] = DXDZeta;
-        aEta[i] = DXDEta;
-        aEtaMag[i] = aEta[i].Mag();
-        aZetaMag[i] = aZeta[i].Mag();
-        Vect3 ZetaCrossEta = (DXDZeta.Cross(DXDEta));
-        Vect3 r = XP - (N1 * C1 + N2 * C2 + N3 * C3 + N4 * C4);
-        R[i] = r;
-        REAL rmag = r.Mag();
-        RMag[i] = rmag;
-        beta[i] = atan2(rmag * r.Dot(ZetaCrossEta), (r.Cross(DXDZeta)).Dot(r.Cross(DXDEta)));
-        n[i] = ZetaCrossEta.Normalise();
-
+    Array <REAL> beta(4, 0.0), RMag(4, 0.0), Mult(4,0.0), ln(4,0.0);
+    Array <Vect3>  R(4);
+    R[0] = XP - CornerNodes[0]; RMag[0] = R[0].Mag();
+    R[1] = XP - CornerNodes[1]; RMag[1] = R[1].Mag();
+    R[2] = XP - CornerNodes[2]; RMag[2] = R[2].Mag();
+    R[3] = XP - CornerNodes[3]; RMag[3] = R[3].Mag();
+    //  Use i & j counters starting at i = -1 (equiv. i = 3), where j = i + 1, so i & j always < 4
+    int i = 3;
+    for (int j = 0; j < 4; ++j) {
+        beta[i] = atan2(RMag[i] * R[i].Dot(ZetaCrossEta[i]), (R[i].Cross(aZeta[i])).Dot(R[i].Cross(aEta[i])));
+        Mult[i] = (R[i].Cross(CornerNormal[i])).Dot(n0)/CornerMult[i];
+        REAL u = RMag[i] + RMag[j] + 2.0 * CornerMult[0];
+        REAL v = RMag[i] + RMag[j] - 2.0 * CornerMult[0];
+        REAL f = u / v;
+        ln[i] = log(f);
+        i = j;
     }
 
-    REAL eta = 0.0, zeta = 0.0;
-    REAL N1 = 0.25 * (1 - zeta)*(1 - eta);
-    REAL N4 = 0.25 * (1 + zeta)*(1 - eta);
-    REAL N3 = 0.25 * (1 + zeta)*(1 + eta);
-    REAL N2 = 0.25 * (1 - zeta)*(1 + eta);
     
-    Vect3 DXDZeta = -0.25 * C1 * (1 - eta) + 0.25 * C4 * (1 - eta) - 0.25 * C2 * (1 + eta) + 0.25 * C3 * (1 + eta);
-    Vect3 DXDEta = -0.25 * C1 * (1 - zeta) + 0.25 * C2 * (1 - zeta) + 0.25 * C3 * (1 + zeta) - 0.25 * C4 * (1 + zeta);
-    Vect3 n0 = (DXDZeta.Cross(DXDEta)).Normalise();
-
-    REAL Mult1 = (R[0].Cross(aEta[0])).Dot(n0)/aEtaMag[0];
-    REAL Mult2 = (R[1].Cross(aZeta[1])).Dot(n0)/aZetaMag[1];
-    REAL Mult3 = (R[2].Cross(aEta[2])).Dot(n0)/aEtaMag[2];
-    REAL Mult4 = (R[3].Cross(aZeta[3])).Dot(n0)/aZetaMag[3]; 
-
-    REAL ln1 = log((RMag[0] + RMag[1] + 2.0*aEtaMag[0])  /  (RMag[0] + RMag[1] - 2.0*aEtaMag[0]));
-    REAL ln2 = log((RMag[1] + RMag[2] + 2.0*aZetaMag[1])  / (RMag[1] + RMag[2] - 2.0*aZetaMag[1]));
-    REAL ln3 = log((RMag[2] + RMag[3] + 2.0*aEtaMag[2])  /  (RMag[2] + RMag[3] - 2.0*aEtaMag[2]));
-    REAL ln4 = log((RMag[3] + RMag[0] + 2.0*aZetaMag[3])  / (RMag[3] + RMag[0] - 2.0*aZetaMag[3]));
-
     REAL PhiD = (beta[0] - beta[1] + beta[2] - beta[3]);
     
-    REAL PhiS = Mult1*ln1 + Mult2*ln2 - Mult3*ln3 - Mult4*ln4;
+    REAL PhiS = Mult[0]*ln[0] + Mult[1]*ln[1] - Mult[2]*ln[2] - Mult[3]*ln[3];
     
-    //cout << PhiS << " " << PhiD << endl;
-    
-    Vect3 r = XP - (N1 * C1 + N2 * C2 + N3 * C3 + N4 * C4);
+    Vect3 r = XP - CollocationPoint;
 
     return (-PhiS + r.Dot(n0)*PhiD)/two_pi;
+}
+/**************************************************************/
+Vect3 PANEL::DoubletPanelVelocity(Vect3 XP) {
+   
+    Array <Vect3> betadash(4,Vect3(0,0,0));
+    for (int i = 0; i < 4; ++i) {
+       
+        Vect3 r = XP - CornerNodes[i];
+        REAL rmag = r.Mag();
+
+        REAL A;
+        Vect3 Adash;
+        REAL B;
+        Vect3 Bdash;
+        {
+            REAL u = r.Dot(ZetaCrossEta[i]), v = rmag;
+            A = u*v;
+            Vect3 udashv = ZetaCrossEta[i] * v;
+            Vect3 vdashu = u * r / rmag;
+            Adash = udashv + vdashu;
+        }
+        
+        {
+            Vect3 u = r.Cross(aZeta[i]), v = r.Cross(aEta[i]);
+            B = u.Dot(v);
+            Vect3 udash1 = (Vect3(1.,0.,0.).Cross((aZeta[i])));
+            Vect3 udash2 = (Vect3(0.,1.,0.).Cross((aZeta[i])));
+            Vect3 udash3 = (Vect3(0.,0.,1.).Cross((aZeta[i])));
+            Vect3 vdash1 = (Vect3(1.,0.,0.).Cross((aEta[i])));
+            Vect3 vdash2 = (Vect3(0.,1.,0.).Cross((aEta[i])));
+            Vect3 vdash3 = (Vect3(0.,0.,1.).Cross((aEta[i])));           
+            
+            Bdash.x = udash1.Dot(v) + vdash1.Dot(u);
+            Bdash.y = udash2.Dot(v) + vdash2.Dot(u);
+            Bdash.z = udash3.Dot(v) + vdash3.Dot(u);
+            
+        }
+        betadash[i] = (1.0/B) * (Adash - A*Bdash/B) / (1.0 + (A*A/(B*B)));
+
+    }
+    
+    
+    Vect3 V = (betadash[0] - betadash[1] + betadash[2] - betadash[3]);
+
+    return V/two_pi;
+}
+/**************************************************************/
+Vect3 PANEL::SourcePanelVelocity(Vect3 XP) {
+
+    Array <Vect3> betadash(4,Vect3(0,0,0)), lndash(4,Vect3(0,0,0));
+    Array <REAL> beta(4, 0.0), RMag(4, 0.0), Mult(4,0.0), ln(4,0.0);
+    Array <Vect3> R(4);
+    
+    R[0] = XP - CornerNodes[0]; RMag[0] = R[0].Mag();
+    R[1] = XP - CornerNodes[1]; RMag[1] = R[1].Mag();
+    R[2] = XP - CornerNodes[2]; RMag[2] = R[2].Mag();
+    R[3] = XP - CornerNodes[3]; RMag[3] = R[3].Mag();
+    //  Use i & j counters starting at i = -1 (equiv. i = 3), where j = i + 1, so i & j always < 4
+    int i = 3;
+    for (int j = 0; j < 4; ++j)  {
+        REAL A;
+        Vect3 Adash;
+        REAL B;
+        Vect3 Bdash;
+        {
+            REAL u = R[i].Dot(ZetaCrossEta[i]), v = RMag[i];
+            A = u*v;
+            Vect3 udashv = ZetaCrossEta[i] * v;
+            Vect3 vdashu = u * R[i] / RMag[i];
+            Adash = udashv + vdashu;
+        }
+        
+        {
+            Vect3 u = R[i].Cross(aZeta[i]), v = R[i].Cross(aEta[i]);
+            B = u.Dot(v);
+            Vect3 udash1 = (Vect3(1.,0.,0.).Cross((aZeta[i])));
+            Vect3 udash2 = (Vect3(0.,1.,0.).Cross((aZeta[i])));
+            Vect3 udash3 = (Vect3(0.,0.,1.).Cross((aZeta[i])));
+            Vect3 vdash1 = (Vect3(1.,0.,0.).Cross((aEta[i])));
+            Vect3 vdash2 = (Vect3(0.,1.,0.).Cross((aEta[i])));
+            Vect3 vdash3 = (Vect3(0.,0.,1.).Cross((aEta[i])));           
+            
+            Bdash.x = udash1.Dot(v) + vdash1.Dot(u);
+            Bdash.y = udash2.Dot(v) + vdash2.Dot(u);
+            Bdash.z = udash3.Dot(v) + vdash3.Dot(u);
+            
+        }
+        betadash[i] = (1.0/B) * (Adash - A*Bdash/B) / (1.0 + (A*A/(B*B)));
+        beta[i] = atan2(RMag[i] * R[i].Dot(ZetaCrossEta[i]), (R[i].Cross(aZeta[i])).Dot(R[i].Cross(aEta[i])));
+  
+        Mult[i] = (R[i].Cross(CornerNormal[i])).Dot(n0)/CornerMult[i];
+        REAL C = CornerMult[i];
+        REAL u = RMag[i] + RMag[j] + 2.0 * C;
+        REAL v = RMag[i] + RMag[j] - 2.0 * C;
+        REAL f = u / v;
+        ln[i] = log(f);
+        Vect3 uDash = (XP - CornerNodes[i]) / RMag[i] + (XP - CornerNodes[j]) / RMag[j];
+        Vect3 fDash = (uDash * (v - u)) / (v * v);
+        lndash[i] = fDash / f;
+        i = j;
+    }
+    
+    REAL PhiD = (beta[0] - beta[1] + beta[2] - beta[3]);
+    Vect3 VD = (betadash[0] - betadash[1] + betadash[2] - betadash[3]);
+
+    
+    Vect3 VS = ((Mult1Dash * ln[0] + lndash[0] * Mult[0]) + (Mult2Dash * ln[1] + lndash[1] * Mult[1]) - 
+            (Mult3Dash * ln[2] + lndash[2] * Mult[2]) - (Mult4Dash * ln[3] + lndash[3] * Mult[3]));
+    Vect3 r = XP - CollocationPoint;
+ 
+
+    Vect3 V = -1.0*VS + r.Dot(n0)*VD + PhiD*n0;
+    return V/two_pi;
 }

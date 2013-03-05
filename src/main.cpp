@@ -107,7 +107,7 @@ private:
 /**************************************************************/
 int main(int argc, char *argv[]) {
     system("clear");
-    
+    PANEL::Initialise();
     //  Get quadrature points and weights
         lgwt(8, PANEL::QuadPts, PANEL::QuadWts);
             
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
         Pans.push_back(PANEL(Verts[1],Verts[5],Verts[6],Verts[2]));
         Pans.push_back(PANEL(Verts[4],Verts[0],Verts[3],Verts[7]));
         
-        int N = 5000;
+        int N = 100;
         Array <REAL> xs = UTIL::globalLinspace(-3,3,N);
         
         Array <Vect3> Vels(N), Velps(N);
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
         UTIL::WriteMATLABMatrix1DVect3("Vels","Vels.mat",Vels);
         UTIL::WriteMATLABMatrix1DVect3("VelPs","Vels.mat",Vels);
         UTIL::WriteMATLABMatrix1D("xs","Vels.mat",xs);
-        return 0;
+//        return 0;
         
         
         WeeAmble();
@@ -1985,7 +1985,7 @@ void WeeAmble() {
     cout << "--------------" << endl;
 //    PANEL P(Vect3(-2.1, -3.2, 4.0), Vect3(2.3, -1.4, 3.0), Vect3(1.5, 2.6, 1.0), Vect3(-1.7, 2.8, 0.0));
 //        PANEL P(Vect3(-1.2, -1.3, 0.2), Vect3(1.5, -1, 1), Vect3(1, 1, 0.12), Vect3(-1.23, 0.987, -0.3));
-    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 0.));
+    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 1.), Vect3(1., 1., 0.), Vect3(-1., 1., 0.));
 
     P.GetNormal();
     
@@ -2134,9 +2134,8 @@ void WeeAmble() {
     GraS = Vect3(PhiSs[2][1][1] - PhiSs[0][1][1], PhiSs[1][2][1] - PhiSs[1][0][1], PhiSs[1][1][2] - PhiSs[1][1][0]);
     GraS = GraS / (2. * dlta);
     //cout << "GradPhiS: " << GraS << "\t <-- From O2 c. diff on phi using phi from " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
-    cout << "Linear D: " << VDTarget << "\t <-- From VortexPanelVel() on " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
-
-    cout << "Linear S: " << VSTarget << "\t <-- From SourceVel() on " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
+    cout << "Linear D:  " << VDTarget << "\t <-- From VortexPanelVel() on " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
+    cout << "Linear S:  " << VSTarget << "\t <-- From SourceVel() on " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
     GraD = Vect3(PhiDs[2][1][1] - PhiDs[0][1][1], PhiDs[1][2][1] - PhiDs[1][0][1], PhiDs[1][1][2] - PhiDs[1][1][0]);
     GraD = GraD / (2. * dlta);
     //cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
@@ -2151,9 +2150,9 @@ void WeeAmble() {
     GraD = Vect3(PhiDs[2][1][1] - PhiDs[0][1][1], PhiDs[1][2][1] - PhiDs[1][0][1], PhiDs[1][1][2] - PhiDs[1][1][0]);
     GraD = GraD / (2. * dlta);
     cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from 2 triangular subpanels" << endl;
+    cout << "DelPhi D  " << src->DoubletPanelVelocity(Target)   << "\t <-- From gradients of hyperboloidal doublet panel calculated analyitically" << endl; 
+    cout << "DelPhi S  " << src->SourcePanelVelocity(Target)   << "\t <-- From gradients of hyperboloidal source panel calculated analyitically" << endl;
 
-
-    
     REAL PhisSDP = 0.0, TEMP;
     PANEL::SourceDoubletPotential(src, Target, TEMP, PhisSDP, 1, 2);
     cout << setprecision(16) << two_pi*PhiDoubletDirect << " PhiDdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;

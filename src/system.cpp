@@ -68,6 +68,7 @@ SYSTEM::SYSTEM(int NT) {
 
     globalSystem = this;
     globalIO = new IO();
+    
 
 }
 
