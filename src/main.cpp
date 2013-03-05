@@ -2150,9 +2150,9 @@ void WeeAmble() {
     GraD = Vect3(PhiDs[2][1][1] - PhiDs[0][1][1], PhiDs[1][2][1] - PhiDs[1][0][1], PhiDs[1][1][2] - PhiDs[1][1][0]);
     GraD = GraD / (2. * dlta);
     cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from 2 triangular subpanels" << endl;
-    cout << "DelPhi D  " << src->DoubletPanelVelocity(Target)   << "\t <-- From gradients of hyperboloidal doublet panel calculated analyitically" << endl; 
-    cout << "DelPhi S  " << src->SourcePanelVelocity(Target)   << "\t <-- From gradients of hyperboloidal source panel calculated analyitically" << endl;
-
+    cout << "DelPhi D  " << src->DoubletPanelVelocity(Target)   << "\t <-- From analyitcal gradients of quad hyperboloidal doublet panel" << endl; 
+    cout << "DelPhi S  " << src->SourcePanelVelocity(Target)   << "\t <-- From analyitcal gradients of quad hyperboloidal source panel" << endl;
+    cout << "DelPhiTriS" << src->GetTriTesselatedSourceVel(Target)   << "\t <-- From analyitcal gradients of quad hyperboloidal source panel calculated using tris" << endl;
     REAL PhisSDP = 0.0, TEMP;
     PANEL::SourceDoubletPotential(src, Target, TEMP, PhisSDP, 1, 2);
     cout << setprecision(16) << two_pi*PhiDoubletDirect << " PhiDdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;

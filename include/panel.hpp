@@ -35,7 +35,7 @@ public:
     static Array <REAL> QuadPts, QuadWts, CornerEta, CornerZeta;
     static Array <Array <REAL> > CornerNodalShapeFuncs;
     static REAL FarField, MaxTheta;
-    static int MaxRecurse, NumPans, RecurseLev;
+    static int MaxRecurse, NumPans, RecurseLev, CornerCount;
     Vect3 C1, C2, C3, C4, Vd, Centroid, CollocationPoint, Normal, Eta, Epsilon;
     Vect3 edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, VWakePrev, Vkin, VWake, VCentroid, dF;
     
@@ -100,8 +100,14 @@ public:
     }
 
     PANEL(Vect3 P1, Vect3 P2, Vect3 P3, Vect3 P4) {
-        C1  = P1; C2  = P2; C3  = P3; C4  = P4;
-        C1o = C1; C2o = C2; C3o = C3; C4o = C4;
+        C1 = P1;
+        C2 = P2;
+        C3 = P3;
+        C4 = P4;
+        C1o = C1;
+        C2o = C2;
+        C3o = C3;
+        C4o = C4;
         edgeX1 = edgeX2 = dF = Vect3(0.0);
         Sigma = Mu = PhiWakePrev = 0.0;
         Gamma = Phi = Sigma = Mu = 0.0;
@@ -113,13 +119,13 @@ public:
         Theta = 0.0;
         isBound = isTop = isWake = false;
         BoundBC = ID = -1;
-        TRANS.assign(3,Vect3(0.));
-        GetNormal();
-        PhiPrev = Array <REAL> (4,0.0);
-        Cloc = Rloc = 0.0;
-        Vfmm = dVFMM_dt = VWakePrev =  Vect3(0.);
-                DoubletValidRange2 = ValidRange = 1e32;
+        TRANS.assign(3, Vect3(0.));
 
+        PhiPrev = Array <REAL > (4, 0.0);
+        Cloc = Rloc = 0.0;
+        Vfmm = dVFMM_dt = VWakePrev = Vect3(0.);
+        DoubletValidRange2 = ValidRange = 1e32;
+        GetNormal();
     }
 
     PANEL(const PANEL &C)  {
@@ -193,7 +199,7 @@ public:
     Vect3 VortexPanelVelocity(Vect3);
     Vect3 DoubletPanelVelocity(Vect3);
     Vect3 SourcePanelVelocity(Vect3);
-    
+    Vect3 GetTriTesselatedSourceVel(Vect3);
     Vect3 SourceVel(Vect3);
     REAL GetCp();
     REAL GetCpD();

@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "panel.hpp"
 #include "body.hpp"
 #include "pgesv.hpp"
-
+int PANEL::CornerCount = 4;
 REAL PANEL::FarField = 5.0;
 REAL PANEL::MaxTheta = 0.01;
 int PANEL::MaxRecurse = 8, PANEL::NumPans = 0, PANEL::RecurseLev = 0;
@@ -1473,8 +1473,8 @@ Vect3 PANEL::SourcePanelVelocity(Vect3 XP) {
     R[2] = XP - CornerNodes[2]; RMag[2] = R[2].Mag();
     R[3] = XP - CornerNodes[3]; RMag[3] = R[3].Mag();
     //  Use i & j counters starting at i = -1 (equiv. i = 3), where j = i + 1, so i & j always < 4
-    int i = 3;
-    for (int j = 0; j < 4; ++j)  {
+    int i = PANEL::CornerCount - 1;
+    for (int j = 0; j < PANEL::CornerCount; ++j)  {
         REAL A;
         Vect3 Adash;
         REAL B;
@@ -1506,6 +1506,7 @@ Vect3 PANEL::SourcePanelVelocity(Vect3 XP) {
         beta[i] = atan2(RMag[i] * R[i].Dot(ZetaCrossEta[i]), (R[i].Cross(aZeta[i])).Dot(R[i].Cross(aEta[i])));
   
         Mult[i] = (R[i].Cross(CornerNormal[i])).Dot(n0)/CornerMult[i];
+        cout << CornerNormal[i] << " " << CornerMult[i] << endl;
         REAL C = CornerMult[i];
         REAL u = RMag[i] + RMag[j] + 2.0 * C;
         REAL v = RMag[i] + RMag[j] - 2.0 * C;
@@ -1529,3 +1530,20 @@ Vect3 PANEL::SourcePanelVelocity(Vect3 XP) {
     Vect3 V = -1.0*VS + r.Dot(n0)*VD + PhiD*n0;
     return V/two_pi;
 }
+/**************************************************************/
+Vect3 PANEL::GetTriTesselatedSourceVel(Vect3 Target) {
+    // Switch to triangle mode -- must take care when multithreading
+    PANEL::CornerCount = 3;
+    if ((Target - CollocationPoint).Dot(TRANS[2]) < 0.0) {
+        PANEL P1(C1, C2, C3, C1), P2(C3, C4, C1, C3);
+        return P1.SourcePanelVelocity(Target) + P2.SourcePanelVelocity(Target);
+
+    } else {
+        PANEL P1(C1, C2, C4, C1), P2(C2, C3, C4, C2);
+        return P1.SourcePanelVelocity(Target) + P2.SourcePanelVelocity(Target);
+
+    }
+    //  and recover
+    PANEL::CornerCount = 4;
+
+}    
