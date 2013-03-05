@@ -274,35 +274,35 @@ public:
     };
 };
 
-inline Vect3 VectMultMatrix(Vect3 M[], Vect3 Vin) {
+inline Vect3 VectMultMatrix(Array <Vect3> &M, Vect3 Vin) {
     return Vect3(M[0].Dot(Vin), M[1].Dot(Vin), M[2].Dot(Vin));
 }
 
-inline Vect3 VectMultMatrixTranspose(Vect3 M[], Vect3 Vin) {
+inline Vect3 VectMultMatrixTranspose(Array <Vect3> &M, Vect3 Vin) {
     return Vect3(M[0].x * Vin[0] + M[1].x * Vin[1] + M[2].x * Vin[2],
             M[0].y * Vin[0] + M[1].y * Vin[1] + M[2].y * Vin[2],
             M[0].z * Vin[0] + M[1].z * Vin[1] + M[2].z * Vin[2]);
 }
 
-inline void VectMultMatrix(Vect3 M[3], Vect3 Vin, Vect3 &Vout) {
+inline void VectMultMatrix(Array <Vect3> &M, Vect3 Vin, Vect3 &Vout) {
     Vout.x = M[0].Dot(Vin);
     Vout.y = M[1].Dot(Vin);
     Vout.z = M[2].Dot(Vin);
 }
 
-inline void VectMultMatrixPlus(Vect3 M[3], Vect3 Vin, Vect3 &Vout) {
+inline void VectMultMatrixPlus(Array <Vect3> &M, Vect3 Vin, Vect3 &Vout) {
     Vout.x += M[0].Dot(Vin);
     Vout.y += M[1].Dot(Vin);
     Vout.z += M[2].Dot(Vin);
 }
 
-inline void VectMultMatrixTransposePlus(Vect3 M[3], Vect3 Vin, Vect3 &Vout) {
+inline void VectMultMatrixTransposePlus(Array <Vect3> &M, Vect3 Vin, Vect3 &Vout) {
     Vout.x += M[0].x * Vin.x + M[1].x * Vin.y + M[2].x * Vin.z;
     Vout.y += M[0].y * Vin.x + M[1].y * Vin.y + M[2].y * Vin.z;
     Vout.z += M[0].z * Vin.x + M[1].z * Vin.y + M[2].z * Vin.z;
 }
 
-inline void VectMultMatrixTranspose(Vect3 M[3], Vect3 Vin, Vect3 &Vout) {
+inline void VectMultMatrixTranspose(Array <Vect3> &M, Vect3 Vin, Vect3 &Vout) {
     Vout.x = M[0].x * Vin.x + M[1].x * Vin.y + M[2].x * Vin.z;
     Vout.y = M[0].y * Vin.x + M[1].y * Vin.y + M[2].y * Vin.z;
     Vout.z = M[0].z * Vin.x + M[1].z * Vin.y + M[2].z * Vin.z;

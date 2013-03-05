@@ -39,6 +39,7 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
 void PanelRecursiveDivide(PANEL &, Array <PANEL> &);
 void PanelTriangleDivide(PANEL &, Array <PANEL> &);
 REAL  PanelMaxTheta(PANEL &);
+void lgwt(int, Array <REAL> &, Array <REAL> &);
 /**************************************************************/
 class OutOfMemory {
 };
@@ -106,10 +107,14 @@ private:
 /**************************************************************/
 int main(int argc, char *argv[]) {
     system("clear");
-
-
+    
+    //  Get quadrature points and weights
+        lgwt(8, PANEL::QuadPts, PANEL::QuadWts);
+            
     {
         SYSTEM System(0);
+        globalSystem->Del2 = .0;// * globalSystem->GambitScale*globalSystem->GambitScale;
+
         WaveField::Depth = 25.0;
         WaveField Field0, Field1;
         Field0.SetPeakFreq(0.1/(2.*pi));
@@ -122,10 +127,62 @@ int main(int argc, char *argv[]) {
         Field1.getWaveFeld(&WaveField::Bretschneider,2.5,20.0,150);
         Array <REAL> S0 = Field0.Spectrum(), S1 = Field1.Spectrum();
         
-        for (int i = 0; i < S1.size(); ++i)
-            cout << S0[i] << " " << S1[i] << endl;
+//        for (int i = 0; i < S1.size(); ++i)
+//            cout << S0[i] << " " << S1[i] << endl;
+//        
+//        cout << TIME_STEPPER::SimTime << endl;
         
-        cout << TIME_STEPPER::SimTime << endl;
+        
+        
+        Array <Vect3> Verts(8);
+        Verts[0] = 0.5*Vect3(-1,-1,-1); Verts[1] = 0.5*Vect3(-1,-1,1); Verts[2] = 0.5*Vect3(1,-1,1); Verts[3] = 0.5*Vect3(1,-1,-1);
+        Verts[4] = 0.5*Vect3(-1,1,-1); Verts[5] = 0.5*Vect3(-1,1,1); Verts[6] = 0.5*Vect3(1,1,1); Verts[7] = 0.5*Vect3(1,1,-1);
+        Array <PANEL> Pans;
+        
+        Pans.push_back(PANEL(Verts[0],Verts[1],Verts[2],Verts[3]));
+        Pans.push_back(PANEL(Verts[3],Verts[2],Verts[6],Verts[7]));
+        Pans.push_back(PANEL(Verts[7],Verts[6],Verts[5],Verts[4]));
+        Pans.push_back(PANEL(Verts[4],Verts[5],Verts[1],Verts[0]));
+        Pans.push_back(PANEL(Verts[1],Verts[5],Verts[6],Verts[2]));
+        Pans.push_back(PANEL(Verts[4],Verts[0],Verts[3],Verts[7]));
+        
+        int N = 5000;
+        Array <REAL> xs = UTIL::globalLinspace(-3,3,N);
+        
+        Array <Vect3> Vels(N), Velps(N);
+        for (int I = 0; I < N; ++I)
+        {
+        
+        Vect3 Target(xs[I],0.,0.), Omega(0.,-1.0,0.0), VelP(0.,0.,0.);
+        
+
+        for (int i = 0; i < Pans.size(); ++i)
+        {
+            Pans[i].GetNormal();
+            Pans[i].Sigma = 1.0;
+            REAL Phi = Pans[i].HyperboloidSourcePhi(Target);
+            //cout << Pans[i].TRANS[2] << " " << Phi << endl;
+            VelP += -Pans[i].TRANS[2].Cross(Omega)*Phi*two_pi/four_pi;
+        }
+        
+        
+        int n = 100;
+        Array <REAL> pts = UTIL::globalLinspace(-0.5,0.5,n);
+        Vect3 Vel(0.,0.,0.);
+        for (int i = 0; i < n; ++i)
+            for (int j = 0; j < n; ++j)
+                for (int k = 0; k < n; ++k)
+                    Vel += globalDirectVel(Target - Vect3(pts[i],pts[j],pts[k]), Omega/(REAL (n*n*n)));
+            
+            Vels[I] = Vel;
+            Velps[I] = VelP;
+        }
+        
+        UTIL::WriteMATLABMatrix1DVect3("Vels","Vels.mat",Vels);
+        UTIL::WriteMATLABMatrix1DVect3("VelPs","Vels.mat",Vels);
+        UTIL::WriteMATLABMatrix1D("xs","Vels.mat",xs);
+        return 0;
+        
         
         WeeAmble();
         
@@ -307,6 +364,91 @@ int main(int argc, char *argv[]) {
     if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
 #endif
 }
+
+/**************************************************************/
+void lgwt(int N, Array <REAL> &x, Array <REAL> &w)
+{
+/*
+ * Translation of lgwt.m -- see original header below
+% lgwt.m
+%
+% This script is for computing definite integrals using Legendre-Gauss 
+% Quadrature. Computes the Legendre-Gauss nodes and weights  on an interval
+% [a,b] with truncation order N
+%
+% Suppose you have a continuous function f(x) which is defined on [a,b]
+% which you can evaluate at any x in [a,b]. Simply evaluate it at all of
+% the values contained in the x vector to obtain a vector f. Then compute
+% the definite integral using sum(f.*w);
+%
+% Written by Greg von Winckel - 02/25/2004
+*/
+
+    REAL a = -1.0, b = 1.0;
+    N = N - 1;
+    int N1 = N + 1, N2 = N + 2;
+    Array <REAL> xu = globalLinspace(-1.0, 1.0, N1);
+
+    // Initial guess
+    Array <REAL> y(N1);
+    x.allocate(N1);
+    w.allocate(N1);
+    for (int i = 0; i < N1; ++i)
+        y[i] = cos((2 * i + 1) * pi / (2 * N + 2))+(0.27 / N1) * sin(pi * xu[i] * N / N2);
+
+
+    // Legendre-Gauss Vandermonde Matrix
+    Array <Array <REAL> > L = UTIL::zeros(N1, N2);
+
+
+    // Derivative of LGVM
+     Array <REAL> Lp = Array <REAL> (N1,0.0);
+
+    // Compute the zeros of the N+1 Legendre Polynomial
+    // using the recursion relation and the Newton-Raphson method
+
+
+// Iterate until new points are uniformly within epsilon of old points
+    REAL Linf = 1.0e6;
+    while (Linf > 1e-10) {
+
+        for (int i = 0; i < N1; ++i) {
+            L[i][0] = 1.0;
+            Lp[i] = 0.0;
+            L[i][1] = y[i];
+        }
+
+        for (int i = 0; i < N1; ++i)
+            for (int k = 0; k < N; ++k)
+                L[i][k + 2] = (((2 * (k + 2)) - 1) * y[i] * L[i][k + 1]-(k + 1) * L[i][k]) / (k + 2);
+
+         
+        for (int i = 0; i < N1; ++i)
+            Lp[i] = N2 * (L[i][N] - y[i] * L[i][N1]) / (1.0 - y[i] * y[i]);
+
+
+        Array <REAL> y0 = y;
+        for (int i = 0; i < N1; ++i)
+            y[i] = y0[i] - L[i][N1] / Lp[i];
+
+        Linf = 0.0;
+        for (int i = 0; i < N1; ++i)
+            Linf = max(Linf, abs(y[i] - y0[i]));
+
+    }
+
+    x.allocate(N1);
+    w.allocate(N1);
+    for (int i = 0; i < N1; ++i) {
+        // Linear map from[-1, 1] to [a, b]
+        x[i] = (a * (1. - y[i]) + b * (1. + y[i])) / 2.0;
+
+        // Compute the weights
+        w[i] = (b-a)/((1.-y[i]*y[i])*Lp[i]*Lp[i])*(1.0*N2*N2)/(1.0*N1*N1);
+
+    }
+}
+
 
 /**************************************************************/
 void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
@@ -1720,7 +1862,7 @@ void WeeAmble() {
     
     
     
-    Vect3 Target = Vect3(5.43, 6.54, 7.65);
+    Vect3 Target = Vect3(6.,7.,8.);
     Vect3 VDTarget(0.0,0.0,0.0), VSTarget(0.0,0.0,0.0);
     Vect3 VDTargetD(0.0,0.0,0.0), VSTargetD(0.0,0.0,0.0);
     REAL PhiS = 0.0, PhiD = 0.0;
@@ -1841,7 +1983,10 @@ void WeeAmble() {
     
     
     cout << "--------------" << endl;
-    PANEL P(Vect3(-1.2, -1.3, 0.2), Vect3(1.5, -1, 1), Vect3(1, 1, 0.12), Vect3(-1.23, 0.987, -0.3));
+//    PANEL P(Vect3(-2.1, -3.2, 4.0), Vect3(2.3, -1.4, 3.0), Vect3(1.5, 2.6, 1.0), Vect3(-1.7, 2.8, 0.0));
+//        PANEL P(Vect3(-1.2, -1.3, 0.2), Vect3(1.5, -1, 1), Vect3(1, 1, 0.12), Vect3(-1.23, 0.987, -0.3));
+    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 0.));
+
     P.GetNormal();
     
     
@@ -1857,7 +2002,7 @@ void WeeAmble() {
     
     Vect3 VT = 0.0;
 
-
+    REAL PhiDoubletDirect = 0.0;
 
     PhiDs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
     PhiSs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
@@ -1886,8 +2031,8 @@ void WeeAmble() {
     PhiSD.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
 
     Vect3 VelD(0.0,0.0,0.0), VelS(0.0,0.0,0.0);
-    
-    
+    REAL PhiSourceDirect = 0.0;
+    int npts = 500;
     {
         REAL Us = 0;
         REAL Vs = 0;
@@ -1898,7 +2043,7 @@ void WeeAmble() {
         REAL Wd = 0;
         
         
-        int n = 500;
+        int n = npts;
         Array < Array < Vect3 > > CP;
         Array < Array < Vect3 > > N;
         Array < Array < REAL > > A;
@@ -1906,6 +2051,7 @@ void WeeAmble() {
 
 
         REAL PhiSource = 0.0;
+
         for (int i = 0; i < n; ++i)
             for (int j = 0; j < n; ++j) {
 
@@ -1925,7 +2071,8 @@ void WeeAmble() {
                 VelD += phi_d * (MU / DXdotMU - 3.0 * DX / DXMag2);
                 VelS += A[i][j] * DX / (two_pi * DXMag3);   
                  
-
+                PhiSourceDirect += -A[i][j] / (two_pi * DXMag);
+                PhiDoubletDirect += -P.Mu * A[i][j] * N[i][j].Dot(DX) / (two_pi * DXMag3);
                      
                 for (int I = -1; I < 2; ++I)
                     for (int J = -1; J < 2; ++J)
@@ -1956,7 +2103,7 @@ void WeeAmble() {
    
     PANEL::MaxTheta = 0.01;
     PANEL::NumPans = 1;
-    PANEL::MaxRecurse = 4;
+    PANEL::MaxRecurse = 2;
     Array <PANEL> daPans;
     PanelRecursiveDivide(P, daPans);
 
@@ -1993,18 +2140,35 @@ void WeeAmble() {
     GraD = Vect3(PhiDs[2][1][1] - PhiDs[0][1][1], PhiDs[1][2][1] - PhiDs[1][0][1], PhiDs[1][1][2] - PhiDs[1][1][0]);
     GraD = GraD / (2. * dlta);
     //cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from " << PANEL::NumPans << " recursive subpanels, thetamax = " << PANEL::MaxTheta << endl;
+
+    PhiDs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+    PhiSs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+    for (int I = -1; I < 2; ++I)
+        for (int J = -1; J < 2; ++J)
+            for (int K = -1; K < 2; ++K)
+                PhiDs[I + 1][J + 1][K + 1] = src->GetTriTesselatedDoubletPhi(Target + Vect3(I * dlta, J * dlta, K * dlta));
+
+    GraD = Vect3(PhiDs[2][1][1] - PhiDs[0][1][1], PhiDs[1][2][1] - PhiDs[1][0][1], PhiDs[1][1][2] - PhiDs[1][1][0]);
+    GraD = GraD / (2. * dlta);
+    cout << "GradPhiD: " << GraD << "\t <-- From O2 c. diff on phi using phi from 2 triangular subpanels" << endl;
+
+
     
+    REAL PhisSDP = 0.0, TEMP;
+    PANEL::SourceDoubletPotential(src, Target, TEMP, PhisSDP, 1, 2);
+    cout << setprecision(16) << two_pi*PhiDoubletDirect << " PhiDdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
+    cout << setprecision(16) << two_pi*src->GetTriTesselatedDoubletPhi(Target) <<  " GetTriTesselatedDoubletPhi(x,y,z),  using the Willis method" << endl;
+    cout << setprecision(16) << two_pi*src->CurvedDoubletPhi(Target) << " CurvedDoubletPhi(x,y,z),  using the Wang method" << endl;
+    cout << setprecision(16) << two_pi*src->HyperboloidDoubletPhi(Target) << " HyperboloidDoubletPhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl;
+
+    cout << setprecision(16) << two_pi*PhiSourceDirect << " PhiSdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
+    cout << setprecision(16) << two_pi*src->CurvedSourcePhi(Target) << " CurvedSourcePhi(x,y,z),  using the Wang method" << endl;
+    //cout << PhisSDP << " SourceDoubletPotential(x,y,z),  using the flat panel (e.g. Katz & Plotkin) method" << endl;
+    cout << setprecision(16) << two_pi*src->HyperboloidSourcePhi(Target) << " HyperboloidSourcePhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl; 
     
-    
-    
-//    
-//    for (int i = 0; i < daPans.size(); ++i)
-//    {    
-//        cout << "line([" ;
-//        cout << daPans[i].C1.x << "; " << daPans[i].C2.x << "; " << daPans[i].C3.x << "; " << daPans[i].C4.x << "; " << daPans[i].C1.x << "],[";
-//        cout << daPans[i].C1.y << "; " << daPans[i].C2.y << "; " << daPans[i].C3.y << "; " << daPans[i].C4.y << "; " << daPans[i].C1.y << "],[";
-//        cout << daPans[i].C1.z << "; " << daPans[i].C2.z << "; " << daPans[i].C3.z << "; " << daPans[i].C4.z << "; " << daPans[i].C1.z << "]);" << endl;
-//    }
+    cout << "Hyper PhiD error  " << abs(src->GetTriTesselatedDoubletPhi(Target) - src->HyperboloidDoubletPhi(Target)) << endl;
+    cout << "PhiD error " << abs(src->GetTriTesselatedDoubletPhi(Target) - src->CurvedDoubletPhi(Target)) << endl;
+    cout << "PhiS error " << abs(PhiSourceDirect - src->CurvedSourcePhi(Target)) << endl;
     
     return;
     

@@ -118,7 +118,7 @@ public:
     static Array <Vect3> PointsAsRead;
     static Array <Array < int > > PanelsAsRead;
 
-    Vect3 TRANS[3];
+    Array <Vect3> TRANS;
     Array <PANEL> Faces;
     Array <Array <PANEL> > ProtoWakes;
     Array < Array < Array < Vect3> > > VortonX, VortonOM, VortonVel;
@@ -129,6 +129,7 @@ public:
     Array < Array < Array < PANEL > > > WkTmp;
 
     BODY(Vect3 Or, Vect3 At, Vect3 Ve, Vect3 Ra, string Na) : CG(Or), Attitude(At), Velocity(Ve), Name(Na), BodyRates(Ra) {
+        TRANS.assign(3, Vect3(0.0));
         EulerAngles = Attitude; //  psi theta phi
         SetEulerTrans();
         BodyAngles = Vect3(0.0); //  omx omy omz

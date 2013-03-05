@@ -32,11 +32,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class PANEL {
 public:
+    static Array <REAL> QuadPts, QuadWts, CornerEta, CornerZeta, CornerNodalShapeFuncs;
     static REAL FarField, MaxTheta;
     static int MaxRecurse, NumPans, RecurseLev;
     Vect3 C1, C2, C3, C4, Vd, Centroid, CollocationPoint, Normal, Eta, Epsilon;
-    Vect3 TRANS[3], edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, VWakePrev, Vkin, VWake, VCentroid, dF;
-    Array <Vect3> Xcb;
+    Vect3 edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, VWakePrev, Vkin, VWake, VCentroid, dF;
+    Array <Vect3> Xcb, TRANS;
     Vect4 DX, DY, M, D;
     Vect3 C1o, C2o, C3o, C4o;
     Vect3 NC1, NC2, NC3, NC4;
@@ -84,7 +85,7 @@ public:
         Theta = 0.0;
         isBound = isTop = isWake = false;
         BoundBC = ID = -1;
-        TRANS[0] = TRANS[1] = TRANS[2] = Vect3(0.);
+        TRANS.assign(3,Vect3(0.));
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
         Vfmm = dVFMM_dt = VWakePrev = Vect3(0.);
@@ -105,6 +106,7 @@ public:
         Theta = 0.0;
         isBound = isTop = isWake = false;
         BoundBC = ID = -1;
+        TRANS.assign(3,Vect3(0.));
         GetNormal();
         PhiPrev = Array <REAL> (4,0.0);
         Cloc = Rloc = 0.0;
@@ -113,7 +115,7 @@ public:
 
     }
 
-    PANEL(const PANEL &C) {
+    PANEL(const PANEL &C)  {
         C1 =  C.C1; C2 =  C.C2; C3 =  C.C3; C4 =  C.C4;
         C1o = C.C1; C2o = C.C2; C3o = C.C3; C4o = C.C4;
         Sigma = C.Sigma;
@@ -127,6 +129,7 @@ public:
         Vn = C.Vn;
         MuPrev = C.MuPrev;
         Centroid = C.Centroid;
+        TRANS.allocate(3);
         TRANS[0] = C.TRANS[0];
         TRANS[1] = C.TRANS[1];
         TRANS[2] = C.TRANS[2];
@@ -170,8 +173,13 @@ public:
     void CheckNeighb(PANEL *Face);
     void SourceDoubletPotential(Vect3 IP, REAL Mu, REAL Sigma, REAL Phi[]);
     void GetEdgeInfo();
-    
-    
+
+    REAL GetTriTesselatedDoubletPhi(Vect3 P);
+    REAL TriDoubletPhi(Vect3 &C1, Vect3 &C2, Vect3 &C3, Vect3& XP);
+    REAL CurvedSourcePhi(Vect3& XP);
+    REAL CurvedDoubletPhi(Vect3& XP);
+    REAL HyperboloidDoubletPhi(Vect3& XP);
+    REAL HyperboloidSourcePhi(Vect3 &);
     Vect3 BodyPanelVelocity(Vect3);
     REAL BodyPanelPotential(Vect3);
     REAL WakePanelPotential(Vect3);

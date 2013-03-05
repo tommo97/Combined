@@ -1305,10 +1305,11 @@ void BODY::SetUpProtoWakes(REAL dt) {
 /**************************************************************/
 void BODY::GetEulerRates() {
     REAL cosphi = cos(EulerAngles.x), tanthe = tan(EulerAngles.y + 1e-16);
-    REAL sinphi = sin(EulerAngles.x), secthe = 1 / (cos(EulerAngles.y) + 1e-16);
-    Vect3 vTransform[3] = {Vect3(1, tanthe*sinphi, tanthe * cosphi),
-        Vect3(0, cosphi, -sinphi),
-        Vect3(0, secthe*sinphi, secthe * cosphi)};
+    REAL sinphi = sin(EulerAngles.x), secthe = 1. / (cos(EulerAngles.y) + 1e-16);
+    Array <Vect3> vTransform(3);
+    vTransform[0] = Vect3(1., tanthe*sinphi, tanthe * cosphi);
+    vTransform[1] = Vect3(0., cosphi, -sinphi);
+    vTransform[2] = Vect3(0., secthe*sinphi, secthe * cosphi);
     EulerRates = VectMultMatrix(vTransform, BodyRates);
 }
 
@@ -1316,9 +1317,10 @@ void BODY::GetEulerRates() {
 void BODY::GetBodyRates() {
     REAL cosphi = cos(EulerAngles.x), costhe = cos(EulerAngles.y);
     REAL sinphi = sin(EulerAngles.x), sinthe = sin(EulerAngles.y);
-    Vect3 vTransform[3] = {Vect3(1, 0, -sinthe),
-        Vect3(0, costhe, costhe * sinphi),
-        Vect3(0, -sinphi, costhe * cosphi)};
+    Array <Vect3> vTransform(3);
+    vTransform[0] = Vect3(1., 0., -sinthe);
+    vTransform[1] = Vect3(0., costhe, costhe * sinphi);
+    vTransform[2] = Vect3(0., -sinphi, costhe * cosphi);
     BodyRates = VectMultMatrix(vTransform, EulerRates);
 }
 

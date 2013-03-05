@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 REAL PANEL::FarField = 5.0;
 REAL PANEL::MaxTheta = 0.01;
 int PANEL::MaxRecurse = 8, PANEL::NumPans = 0, PANEL::RecurseLev = 0;
+Array <REAL> PANEL::QuadPts, PANEL::QuadWts, PANEL::CornerEta, PANEL::CornerZeta, PANEL::CornerNodalShapeFuncs;
 /**************************************************************/
 void PANEL::LinearSubPan(PANEL *trg, int n, REAL Mu1, REAL Mu2, REAL &PhiD, Vect3 &V)
 {
@@ -1035,4 +1036,359 @@ void PANEL::CheckNeighb(PANEL *Face) {
     //    }
 
 
+}
+/**************************************************************/
+REAL PANEL::GetTriTesselatedDoubletPhi(Vect3 P) {
+
+    if ((P - CollocationPoint).Dot(TRANS[2]) < 0.0)
+        return TriDoubletPhi(C1, C2, C3, P) + TriDoubletPhi(C3, C4, C1, P);
+    else
+        return TriDoubletPhi(C1, C2, C4, P) + TriDoubletPhi(C2, C3, C4, P);
+
+}
+/**************************************************************/
+REAL PANEL::TriDoubletPhi(Vect3 &C1, Vect3 &C2, Vect3 &C3, Vect3& XP) {
+
+    Vect3 CP = (C1 + C2 + C3) / 3.0;
+    
+    //  Project onto unit sphere centered at XP and get PVs to corners from P
+    
+    Vect3 R1 = (C1 - XP).Normalise();
+    Vect3 R2 = (C2 - XP).Normalise();
+    Vect3 R3 = (C3 - XP).Normalise();
+    
+    //  Angles between points
+    REAL cosa = R1.Dot(R2);
+    REAL cosb = R2.Dot(R3);
+    REAL cosc = R3.Dot(R1);
+    REAL sina = sqrt(1.0-cosa*cosa);
+    REAL sinb = sqrt(1.0-cosb*cosb);
+    REAL sinc = sqrt(1.0-cosc*cosc);
+
+    // opposite angles
+    REAL alfa = acos((cosa - cosb*cosc) / (sinb*sinc));
+    REAL beta = acos((cosb - cosc*cosa) / (sinc*sina));
+    REAL gama = acos((cosc - cosa*cosb) / (sina*sinb));
+    // Projected area
+    REAL Area = alfa + beta + gama - pi;
+
+    //  Check if XP is above or below the collocation point...
+    REAL dz = (XP-CP).Dot((C2 - C1).Cross(C1 - C3)); // don't really need to normalise the normal, only need direction.
+
+    if (dz>0.0)
+        return -Mu * Area/(two_pi);
+    else
+        return Mu * Area/(two_pi);
+
+}
+///**************************************************************/
+//REAL PANEL::GetTriTesselatedSourcetPhi(Vect3 P) {
+//
+//    if ((P - CollocationPoint).Dot(TRANS[2]) < 0.0)
+//        return TriSourcePhi(C1, C2, C3, P) + TriSourcePhi(C3, C4, C1, P);
+//    else
+//        return TriSourcePhi(C1, C2, C4, P) + TriSourcePhi(C2, C3, C4, P);
+//
+//}
+///**************************************************************/
+//REAL PANEL::TriSourcetPhi(Vect3 &C1, Vect3 &C2, Vect3 &C3, Vect3& XP) {
+//
+//    Vect3 CP = (C1 + C2 + C3) / 3.0;
+//    
+//    //  Project onto unit sphere centered at XP and get PVs to corners from P
+//    
+//    Vect3 R1 = (C1 - XP).Normalise();
+//    Vect3 R2 = (C2 - XP).Normalise();
+//    Vect3 R3 = (C3 - XP).Normalise();
+//    
+//    //  Angles between points
+//    REAL cosa = R1.Dot(R2);
+//    REAL cosb = R2.Dot(R3);
+//    REAL cosc = R3.Dot(R1);
+//    REAL sina = sqrt(1.0-cosa*cosa);
+//    REAL sinb = sqrt(1.0-cosb*cosb);
+//    REAL sinc = sqrt(1.0-cosc*cosc);
+//
+//    // opposite angles
+//    REAL alfa = acos((cosa - cosb*cosc) / (sinb*sinc));
+//    REAL beta = acos((cosb - cosc*cosa) / (sinc*sina));
+//    REAL gama = acos((cosc - cosa*cosb) / (sina*sinb));
+//    // Projected area
+//    REAL Area = alfa + beta + gama - pi;
+//
+//    //  Check if XP is above or below the collocation point...
+//    REAL dz = (XP-CP).Dot((C2 - C1).Cross(C1 - C3)); // don't really need to normalise the normal, only need direction.
+//
+//    if (dz>0.0)
+//        return -Sigma * Area/(two_pi);
+//    else
+//        return Sigma * Area/(two_pi);
+//
+//}
+/**************************************************************/
+REAL PANEL::CurvedSourcePhi(Vect3& XP) {
+    REAL Phi = 0.0;
+    //   Define a local coordinate system on the curved panel
+    Array <Vect3> Trans(3);
+    Trans[0] = (0.5 * (C1 + C2) - CollocationPoint).Normalise(); // Xdash
+
+    //   The cross of the corner PVs works better than the normal calc'd
+    //   by the cross of the xdash and ydash: so use this order here...
+
+    Trans[2] = ((C4 - C2).Cross(C3 - C1)).Normalise(); // Zdash
+    Trans[1] = Trans[2].Cross(Trans[0]); // Ydash - this way round to get it pointing in the correct right-handed direction
+    
+    Vect3 DX1 = C1 - CollocationPoint;
+    Vect3 DX2 = C2 - CollocationPoint;
+    Vect3 DX3 = C3 - CollocationPoint;
+    Vect3 DX4 = C4 - CollocationPoint;
+    
+    Vect3 X1Dash = VectMultMatrix(Trans, DX1); X1Dash.z = 0.0;
+    Vect3 X2Dash = VectMultMatrix(Trans, DX2); X2Dash.z = 0.0;
+    Vect3 X3Dash = VectMultMatrix(Trans, DX3); X3Dash.z = 0.0;
+    Vect3 X4Dash = VectMultMatrix(Trans, DX4); X4Dash.z = 0.0;
+    
+    Vect3 C1F = CollocationPoint + VectMultMatrixTranspose(Trans,X1Dash);
+    Vect3 C2F = CollocationPoint + VectMultMatrixTranspose(Trans,X2Dash);
+    Vect3 C3F = CollocationPoint + VectMultMatrixTranspose(Trans,X3Dash);
+    Vect3 C4F = CollocationPoint + VectMultMatrixTranspose(Trans,X4Dash);
+    
+    /*
+    cout << "Xs = [" << C1F.x << " " << C2F.x << "; " << C4F.x << " " << C3F.x << "];" << endl;
+    cout << "Ys = [" << C1F.y << " " << C2F.y << "; " << C4F.y << " " << C3F.y << "];" << endl;
+    cout << "Zs = [" << C1F.z << " " << C2F.z << "; " << C4F.z << " " << C3F.z << "];" << endl;
+    cout << "surf(Xs,Ys,Zs,'FaceAlpha',0.25,'FaceColor','b')" << endl;
+    */
+
+    Array < Array <REAL> > QuadPts;
+    Array <REAL> QuadWts;
+    for (int i = 0; i < PANEL::QuadPts.size(); ++i) {
+        REAL zeta = PANEL::QuadPts[i];
+        for (int j = 0; j < PANEL::QuadPts.size(); ++j) {
+            REAL wt = PANEL::QuadWts[i] * PANEL::QuadWts[j];
+            REAL eta = PANEL::QuadPts[j];
+            QuadPts.push_back(Array <REAL > (2, 0.0));
+            QuadPts.back()[0] = zeta;
+            QuadPts.back()[1] = eta;
+            QuadWts.push_back(wt);
+
+            //   Nodal shape functions
+            REAL N1 = 0.25 * (1 - zeta)*(1 - eta);
+            REAL N2 = 0.25 * (1 + zeta)*(1 - eta);
+            REAL N3 = 0.25 * (1 + zeta)*(1 + eta);
+            REAL N4 = 0.25 * (1 - zeta)*(1 + eta);
+
+
+            //   Elements of Jacobian matrix
+            Vect3 DXDZeta = 0.25 * ((eta - 1.) * C1 + (1. - eta) * C2 + (eta + 1.) * C3 + (-eta - 1.) * C4);
+            Vect3 DXDEta = 0.25 * ((zeta - 1.) * C1 + (-zeta - 1.) * C2 + (zeta + 1.) * C3 + (1. - zeta) * C4);
+            
+            //   Determinant of Jacobian matrix
+            REAL Jdet = (DXDZeta.Cross(DXDEta)).Mag();
+
+            Vect3 XpC = N1 * C1 + N2 * C2 + N3 * C3 + N4 * C4;
+            Vect3 XpF = N1 * C1F + N2 * C2F + N3 * C3F + N4 * C4F;
+            
+            REAL RC = (XP - XpC).Mag();
+            
+            REAL RF = (XP - XpF).Mag();
+            REAL ratio = RF/RC;
+
+            Phi -= PANEL::QuadWts[i] * PANEL::QuadWts[j] * Sigma *  Jdet * ratio / RF;
+
+            //cout << "scatter3([" << XpC.x << " " << XpF.x << "],[" << XpC.y << " " << XpF.y << "],["<< XpC.z << " " << XpF.z << "]);" << endl;
+            
+
+        }
+    }
+    return Phi/two_pi;
+}
+/**************************************************************/
+REAL PANEL::CurvedDoubletPhi(Vect3& XP) {
+    REAL Phi = 0.0;
+    //   Define a local coordinate system on the curved panel
+    Array <Vect3> Trans(3);
+    Trans[0] = (0.5 * (C1 + C2) - CollocationPoint).Normalise(); // Xdash
+
+    //   The cross of the corner PVs works better than the normal calc'd
+    //   by the cross of the xdash and ydash: so use this order here...
+
+    Trans[2] = ((C4 - C2).Cross(C3 - C1)).Normalise(); // Zdash
+    Trans[1] = Trans[2].Cross(Trans[0]); // Ydash - this way round to get it pointing in the correct right-handed direction
+    
+    Vect3 DX1 = C1 - CollocationPoint;
+    Vect3 DX2 = C2 - CollocationPoint;
+    Vect3 DX3 = C3 - CollocationPoint;
+    Vect3 DX4 = C4 - CollocationPoint;
+    
+    Vect3 X1Dash = VectMultMatrix(Trans, DX1); X1Dash.z = 0.0;
+    Vect3 X2Dash = VectMultMatrix(Trans, DX2); X2Dash.z = 0.0;
+    Vect3 X3Dash = VectMultMatrix(Trans, DX3); X3Dash.z = 0.0;
+    Vect3 X4Dash = VectMultMatrix(Trans, DX4); X4Dash.z = 0.0;
+    
+    Vect3 C1F = CollocationPoint + VectMultMatrixTranspose(Trans,X1Dash);
+    Vect3 C2F = CollocationPoint + VectMultMatrixTranspose(Trans,X2Dash);
+    Vect3 C3F = CollocationPoint + VectMultMatrixTranspose(Trans,X3Dash);
+    Vect3 C4F = CollocationPoint + VectMultMatrixTranspose(Trans,X4Dash);
+    
+
+    //   Normals of original panel
+    Vect3 Cr1 = 1.*((C2 - C1).Cross(C1 - C4)).Normalise();
+    Vect3 Cr2 = 1.*((C3 - C2).Cross(C2 - C1)).Normalise();
+    Vect3 Cr3 = 1.*((C4 - C3).Cross(C3 - C2)).Normalise();
+    Vect3 Cr4 = 1.*((C1 - C4).Cross(C4 - C3)).Normalise();
+    
+    /*
+    cout << "Xs = [" << C1F.x << " " << C2F.x << "; " << C4F.x << " " << C3F.x << "];" << endl;
+    cout << "Ys = [" << C1F.y << " " << C2F.y << "; " << C4F.y << " " << C3F.y << "];" << endl;
+    cout << "Zs = [" << C1F.z << " " << C2F.z << "; " << C4F.z << " " << C3F.z << "];" << endl;
+    cout << "surf(Xs,Ys,Zs,'FaceAlpha',0.25,'FaceColor','b')" << endl;
+     */
+
+    Array < Array <REAL> > QuadPts;
+    Array <REAL> QuadWts;
+    for (int i = 0; i < PANEL::QuadPts.size(); ++i) {
+        REAL zeta = PANEL::QuadPts[i];
+        for (int j = 0; j < PANEL::QuadPts.size(); ++j) {
+            REAL wt = PANEL::QuadWts[i] * PANEL::QuadWts[j];
+            REAL eta = PANEL::QuadPts[j];
+            QuadPts.push_back(Array <REAL > (2, 0.0));
+            QuadPts.back()[0] = zeta;
+            QuadPts.back()[1] = eta;
+            QuadWts.push_back(wt);
+
+            //   Nodal shape functions
+            REAL N1 = 0.25 * (1 - zeta)*(1 - eta);
+            REAL N2 = 0.25 * (1 + zeta)*(1 - eta);
+            REAL N3 = 0.25 * (1 + zeta)*(1 + eta);
+            REAL N4 = 0.25 * (1 - zeta)*(1 + eta);
+
+
+            //   Elements of Jacobian matrix
+            Vect3 DXDZeta = 0.25 * ((eta - 1.) * C1 + (1. - eta) * C2 + (eta + 1.) * C3 + (-eta - 1.) * C4);
+            Vect3 DXDEta = 0.25 * ((zeta - 1.) * C1 + (-zeta - 1.) * C2 + (zeta + 1.) * C3 + (1. - zeta) * C4);
+
+            //   Determinant of Jacobian matrix
+            REAL Jdet = (DXDZeta.Cross(DXDEta)).Mag();
+
+            Vect3 XpC = N1 * C1 + N2 * C2 + N3 * C3 + N4 * C4;
+            Vect3 XpF = N1 * C1F + N2 * C2F + N3 * C3F + N4 * C4F;
+            Vect3 NormC = (N1 * Cr1 + N2 * Cr2 + N3 * Cr3 + N4 * Cr4).Normalise();
+
+            Vect3 DXF = XP - XpF;
+            Vect3 DXC = XP - XpC;
+
+            REAL RC = DXC.Mag();
+            REAL RF = DXF.Mag();
+
+            REAL dRC = DXC.Dot(NormC) / (RF * RF * RC);
+            REAL dRF = DXF.Dot(Trans[2]) / (RF * RF * RF);
+
+            REAL ratio = (RF) / (RC);
+
+            Phi -= PANEL::QuadWts[i] * PANEL::QuadWts[j] * Mu * dRC * Jdet;
+
+            //cout << "scatter3([" << XpC.x << " " << XpF.x << "],[" << XpC.y << " " << XpF.y << "],["<< XpC.z << " " << XpF.z << "]);" << endl;
+
+
+        }
+    }
+    return Phi / two_pi;
+}
+
+/**************************************************************/
+REAL PANEL::HyperboloidDoubletPhi(Vect3& XP) {
+
+    Array <REAL> Eta, Zeta;
+    Zeta.push_back(-1.0); Eta.push_back(-1.0);
+    Zeta.push_back(-1.0); Eta.push_back(1.0);
+    Zeta.push_back(1.0); Eta.push_back(1.0);
+    Zeta.push_back(1.0); Eta.push_back(-1.0);
+    Array <REAL> beta(4, 0.0);
+    for (int i = 0; i < 4; ++i) {
+        REAL zeta = Zeta[i], eta = Eta[i];
+        //   Nodal shape functions
+        REAL N1 = 0.25 * (1 - zeta)*(1 - eta);
+        REAL N4 = 0.25 * (1 + zeta)*(1 - eta);
+        REAL N3 = 0.25 * (1 + zeta)*(1 + eta);
+        REAL N2 = 0.25 * (1 - zeta)*(1 + eta);
+        //   Elements of Jacobian matrix
+        Vect3 DXDZeta = -0.25 * C1 * (1 - eta) + 0.25 * C4 * (1 - eta) - 0.25 * C2 * (1 + eta) + 0.25 * C3 * (1 + eta);
+        Vect3 DXDEta = -0.25 * C1 * (1 - zeta) + 0.25 * C2 * (1 - zeta) + 0.25 * C3 * (1 + zeta) - 0.25 * C4 * (1 + zeta);
+
+        Vect3 ZetaCrossEta = (DXDZeta.Cross(DXDEta));
+        Vect3 r = XP - (N1 * C1 + N2 * C2 + N3 * C3 + N4 * C4);
+        REAL rmag = r.Mag();
+        beta[i] = atan2(rmag * r.Dot(ZetaCrossEta), (r.Cross(DXDZeta)).Dot(r.Cross(DXDEta)));
+
+
+    }
+
+    return -(beta[0] - beta[1] + beta[2] - beta[3]) / two_pi;
+}
+
+/**************************************************************/
+REAL PANEL::HyperboloidSourcePhi(Vect3& XP) {
+
+    Array <REAL> Eta, Zeta;
+    Zeta.push_back(-1.0); Eta.push_back(-1.0);
+    Zeta.push_back(-1.0); Eta.push_back(1.0);
+    Zeta.push_back(1.0); Eta.push_back(1.0);
+    Zeta.push_back(1.0); Eta.push_back(-1.0);
+    Array <REAL> beta(4, 0.0), RMag(4, 0.0), aEtaMag(4, 0.0), aZetaMag(4, 0.0);
+    Array <Vect3> aZeta(4), aEta(4), R(4), n(4);
+    for (int i = 0; i < 4; ++i) {
+        REAL zeta = Zeta[i], eta = Eta[i];
+        //   Nodal shape functions
+        REAL N1 = 0.25 * (1 - zeta)*(1 - eta);
+        REAL N4 = 0.25 * (1 + zeta)*(1 - eta);
+        REAL N3 = 0.25 * (1 + zeta)*(1 + eta);
+        REAL N2 = 0.25 * (1 - zeta)*(1 + eta);
+        //   Elements of Jacobian matrix
+        Vect3 DXDZeta = -0.25 * C1 * (1 - eta) + 0.25 * C4 * (1 - eta) - 0.25 * C2 * (1 + eta) + 0.25 * C3 * (1 + eta);
+        Vect3 DXDEta = -0.25 * C1 * (1 - zeta) + 0.25 * C2 * (1 - zeta) + 0.25 * C3 * (1 + zeta) - 0.25 * C4 * (1 + zeta);
+
+        aZeta[i] = DXDZeta;
+        aEta[i] = DXDEta;
+        aEtaMag[i] = aEta[i].Mag();
+        aZetaMag[i] = aZeta[i].Mag();
+        Vect3 ZetaCrossEta = (DXDZeta.Cross(DXDEta));
+        Vect3 r = XP - (N1 * C1 + N2 * C2 + N3 * C3 + N4 * C4);
+        R[i] = r;
+        REAL rmag = r.Mag();
+        RMag[i] = rmag;
+        beta[i] = atan2(rmag * r.Dot(ZetaCrossEta), (r.Cross(DXDZeta)).Dot(r.Cross(DXDEta)));
+        n[i] = ZetaCrossEta.Normalise();
+
+    }
+
+    REAL eta = 0.0, zeta = 0.0;
+    REAL N1 = 0.25 * (1 - zeta)*(1 - eta);
+    REAL N4 = 0.25 * (1 + zeta)*(1 - eta);
+    REAL N3 = 0.25 * (1 + zeta)*(1 + eta);
+    REAL N2 = 0.25 * (1 - zeta)*(1 + eta);
+    
+    Vect3 DXDZeta = -0.25 * C1 * (1 - eta) + 0.25 * C4 * (1 - eta) - 0.25 * C2 * (1 + eta) + 0.25 * C3 * (1 + eta);
+    Vect3 DXDEta = -0.25 * C1 * (1 - zeta) + 0.25 * C2 * (1 - zeta) + 0.25 * C3 * (1 + zeta) - 0.25 * C4 * (1 + zeta);
+    Vect3 n0 = (DXDZeta.Cross(DXDEta)).Normalise();
+
+    REAL Mult1 = (R[0].Cross(aEta[0])).Dot(n0)/aEtaMag[0];
+    REAL Mult2 = (R[1].Cross(aZeta[1])).Dot(n0)/aZetaMag[1];
+    REAL Mult3 = (R[2].Cross(aEta[2])).Dot(n0)/aEtaMag[2];
+    REAL Mult4 = (R[3].Cross(aZeta[3])).Dot(n0)/aZetaMag[3]; 
+
+    REAL ln1 = log((RMag[0] + RMag[1] + 2.0*aEtaMag[0])  /  (RMag[0] + RMag[1] - 2.0*aEtaMag[0]));
+    REAL ln2 = log((RMag[1] + RMag[2] + 2.0*aZetaMag[1])  / (RMag[1] + RMag[2] - 2.0*aZetaMag[1]));
+    REAL ln3 = log((RMag[2] + RMag[3] + 2.0*aEtaMag[2])  /  (RMag[2] + RMag[3] - 2.0*aEtaMag[2]));
+    REAL ln4 = log((RMag[3] + RMag[0] + 2.0*aZetaMag[3])  / (RMag[3] + RMag[0] - 2.0*aZetaMag[3]));
+
+    REAL PhiD = (beta[0] - beta[1] + beta[2] - beta[3]);
+    
+    REAL PhiS = Mult1*ln1 + Mult2*ln2 - Mult3*ln3 - Mult4*ln4;
+    
+    //cout << PhiS << " " << PhiD << endl;
+    
+    Vect3 r = XP - (N1 * C1 + N2 * C2 + N3 * C3 + N4 * C4);
+
+    return (-PhiS + r.Dot(n0)*PhiD)/two_pi;
 }

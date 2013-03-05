@@ -205,7 +205,7 @@ partLS:
     const T & operator() (int ind) const;
 #ifndef ARRAY_NO_CHECK
 
-    T & operator[] (int i) {
+    T & operator[] (int i) const {
         if (i >= length || i < 0) {
             printf("Array Bounds Violation: Attempted to access element %d, array length %d - ", i, length);
 
