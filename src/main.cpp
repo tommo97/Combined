@@ -109,11 +109,11 @@ int main(int argc, char *argv[]) {
     system("clear");
     PANEL::Initialise();
     //  Get quadrature points and weights
-        lgwt(8, PANEL::QuadPts, PANEL::QuadWts);
+        lgwt(16, PANEL::QuadPts, PANEL::QuadWts);
             
     {
         SYSTEM System(0);
-        globalSystem->Del2 = .0;// * globalSystem->GambitScale*globalSystem->GambitScale;
+        globalSystem->Del2 = 0.001;//sqrt(2.)*0.5015;// * globalSystem->GambitScale*globalSystem->GambitScale;
 
         WaveField::Depth = 25.0;
         WaveField Field0, Field1;
@@ -146,42 +146,52 @@ int main(int argc, char *argv[]) {
         Pans.push_back(PANEL(Verts[1],Verts[5],Verts[6],Verts[2]));
         Pans.push_back(PANEL(Verts[4],Verts[0],Verts[3],Verts[7]));
         
-        int N = 100;
+        int N = 1000;
         Array <REAL> xs = UTIL::globalLinspace(-3,3,N);
         
-        Array <Vect3> Vels(N), Velps(N);
-        for (int I = 0; I < N; ++I)
-        {
-        
-        Vect3 Target(xs[I],0.,0.), Omega(0.,-1.0,0.0), VelP(0.,0.,0.);
-        
+        Array <Vect3> Vels(N), Velps(N), Velqs(N);
+        for (int I = 0; I < N; ++I) {
 
-        for (int i = 0; i < Pans.size(); ++i)
-        {
-            Pans[i].GetNormal();
-            Pans[i].Sigma = 1.0;
-            REAL Phi = Pans[i].HyperboloidSourcePhi(Target);
-            //cout << Pans[i].TRANS[2] << " " << Phi << endl;
-            VelP += -Pans[i].TRANS[2].Cross(Omega)*Phi*two_pi/four_pi;
-        }
-        
-        
-        int n = 100;
-        Array <REAL> pts = UTIL::globalLinspace(-0.5,0.5,n);
-        Vect3 Vel(0.,0.,0.);
-        for (int i = 0; i < n; ++i)
-            for (int j = 0; j < n; ++j)
-                for (int k = 0; k < n; ++k)
-                    Vel += globalDirectVel(Target - Vect3(pts[i],pts[j],pts[k]), Omega/(REAL (n*n*n)));
-            
+            Vect3 Target(xs[I], 0., 0.), Omega(0., -1.0, 0.0), VelP(0., 0., 0.);
+
+
+            for (int i = 0; i < Pans.size(); ++i) {
+                Pans[i].GetNormal();
+                Pans[i].Sigma = 1.0;
+                REAL Phi = Pans[i].HyperboloidSourcePhi(Target);
+                //cout << Pans[i].TRANS[2] << " " << Phi << endl;
+                VelP += -Pans[i].TRANS[2].Cross(Omega) * Phi * two_pi / four_pi;
+            }
+
+
+            int n = 100;
+            Array <REAL> pts = UTIL::globalLinspace(-0.5, 0.5, n);
+            Vect3 Vel(0., 0., 0.);
+            for (int i = 0; i < n; ++i)
+                for (int j = 0; j < n; ++j)
+                    for (int k = 0; k < n; ++k)
+                        Vel += globalDirectVel(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)));
+
             Vels[I] = Vel;
             Velps[I] = VelP;
+
+            Vect3 VelQ(0., 0., 0.);
+            for (int i = 0; i < PANEL::QuadPts.size(); ++i)
+                for (int j = 0; j < PANEL::QuadPts.size(); ++j)
+                    for (int k = 0; k < PANEL::QuadPts.size(); ++k)
+                        VelQ += PANEL::QuadWts[i] * PANEL::QuadWts[j] * PANEL::QuadWts[k] *
+                            globalDirectVel(Target - Vect3(0.5 * PANEL::QuadPts[i], 0.5 * PANEL::QuadPts[j], 0.5 * PANEL::QuadPts[k]), Omega);
+            Velqs[I] = VelQ/8.0;
         }
         
         UTIL::WriteMATLABMatrix1DVect3("Vels","Vels.mat",Vels);
-        UTIL::WriteMATLABMatrix1DVect3("VelPs","Vels.mat",Vels);
+        UTIL::WriteMATLABMatrix1DVect3("VelPs","Vels.mat",Velps);
+        UTIL::WriteMATLABMatrix1DVect3("VelQs","Vels.mat",Velqs);
         UTIL::WriteMATLABMatrix1D("xs","Vels.mat",xs);
-//        return 0;
+        
+        
+        
+        return 0;
         
         
         WeeAmble();
@@ -447,6 +457,7 @@ void lgwt(int N, Array <REAL> &x, Array <REAL> &w)
         w[i] = (b-a)/((1.-y[i]*y[i])*Lp[i]*Lp[i])*(1.0*N2*N2)/(1.0*N1*N1);
 
     }
+    
 }
 
 
