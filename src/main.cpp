@@ -108,9 +108,19 @@ private:
 int main(int argc, char *argv[]) {
     system("clear");
     PANEL::Initialise();
+    UTIL::GetCellPans();
+
     //  Get quadrature points and weights
-        lgwt(16, PANEL::QuadPts, PANEL::QuadWts);
-            
+    lgwt(4, UTIL::QuadPts, UTIL::QuadWts);
+    for (int i = 0; i < UTIL::QuadPts.size(); ++i)
+    {
+        UTIL::QuadPts[i] = UTIL::QuadPts[i] / 2.0;
+        UTIL::QuadWts[i] = UTIL::QuadWts[i] / 8.0;
+    }
+
+    TestFMM(argc, argv);
+
+    return 0;
     {
         SYSTEM System(0);
         globalSystem->Del2 = 0.001;//sqrt(2.)*0.5015;// * globalSystem->GambitScale*globalSystem->GambitScale;
@@ -134,34 +144,16 @@ int main(int argc, char *argv[]) {
         
         
         
-        Array <Vect3> Verts(8);
-        Verts[0] = 0.5*Vect3(-1,-1,-1); Verts[1] = 0.5*Vect3(-1,-1,1); Verts[2] = 0.5*Vect3(1,-1,1); Verts[3] = 0.5*Vect3(1,-1,-1);
-        Verts[4] = 0.5*Vect3(-1,1,-1); Verts[5] = 0.5*Vect3(-1,1,1); Verts[6] = 0.5*Vect3(1,1,1); Verts[7] = 0.5*Vect3(1,1,-1);
-        Array <PANEL> Pans;
-        
-        Pans.push_back(PANEL(Verts[0],Verts[1],Verts[2],Verts[3]));
-        Pans.push_back(PANEL(Verts[3],Verts[2],Verts[6],Verts[7]));
-        Pans.push_back(PANEL(Verts[7],Verts[6],Verts[5],Verts[4]));
-        Pans.push_back(PANEL(Verts[4],Verts[5],Verts[1],Verts[0]));
-        Pans.push_back(PANEL(Verts[1],Verts[5],Verts[6],Verts[2]));
-        Pans.push_back(PANEL(Verts[4],Verts[0],Verts[3],Verts[7]));
-        
+      
         int N = 1000;
         Array <REAL> xs = UTIL::globalLinspace(-3,3,N);
         
         Array <Vect3> Vels(N), Velps(N), Velqs(N);
         for (int I = 0; I < N; ++I) {
 
-            Vect3 Target(xs[I], 0., 0.), Omega(0., -1.0, 0.0), VelP(0., 0., 0.);
+            Vect3 Target(xs[I], 0., 0.), Omega(0., -1.0, 0.0);
 
-
-            for (int i = 0; i < Pans.size(); ++i) {
-                Pans[i].GetNormal();
-                Pans[i].Sigma = 1.0;
-                REAL Phi = Pans[i].HyperboloidSourcePhi(Target);
-                //cout << Pans[i].TRANS[2] << " " << Phi << endl;
-                VelP += -Pans[i].TRANS[2].Cross(Omega) * Phi * two_pi / four_pi;
-            }
+            Vect3 VelP = UTIL::globalCubicDirectVel(Target,Omega);
 
 
             int n = 100;
@@ -170,18 +162,18 @@ int main(int argc, char *argv[]) {
             for (int i = 0; i < n; ++i)
                 for (int j = 0; j < n; ++j)
                     for (int k = 0; k < n; ++k)
-                        Vel += globalDirectVel(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)));
+                        Vel += UTIL::globalDirectVel(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)));
 
             Vels[I] = Vel;
             Velps[I] = VelP;
 
             Vect3 VelQ(0., 0., 0.);
-            for (int i = 0; i < PANEL::QuadPts.size(); ++i)
-                for (int j = 0; j < PANEL::QuadPts.size(); ++j)
-                    for (int k = 0; k < PANEL::QuadPts.size(); ++k)
-                        VelQ += PANEL::QuadWts[i] * PANEL::QuadWts[j] * PANEL::QuadWts[k] *
-                            globalDirectVel(Target - Vect3(0.5 * PANEL::QuadPts[i], 0.5 * PANEL::QuadPts[j], 0.5 * PANEL::QuadPts[k]), Omega);
-            Velqs[I] = VelQ/8.0;
+            for (int i = 0; i < UTIL::QuadPts.size(); ++i)
+                for (int j = 0; j < UTIL::QuadPts.size(); ++j)
+                    for (int k = 0; k < UTIL::QuadPts.size(); ++k)
+                        VelQ += UTIL::QuadWts[i] * UTIL::QuadWts[j] * UTIL::QuadWts[k] *
+                            UTIL::globalDirectVel(Target - Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]), Omega);
+            Velqs[I] = VelQ;      // divided by 8 since the range of points is only -0.5->0.5 rather than -1->1
         }
         
         UTIL::WriteMATLABMatrix1DVect3("Vels","Vels.mat",Vels);
@@ -191,7 +183,7 @@ int main(int argc, char *argv[]) {
         
         
         
-        return 0;
+//        return 0;
         
         
         WeeAmble();
@@ -250,8 +242,8 @@ int main(int argc, char *argv[]) {
 
     //  Some default values
     globalSystem->GambitScale = 1.0;
-    globalSystem->MaxP = 6;
-    globalSystem->Del2 = .25;// * globalSystem->GambitScale*globalSystem->GambitScale;
+    globalSystem->MaxP = 5;
+    globalSystem->Del2 = 0.001;// * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05;
     globalSystem->h = 2;
@@ -461,23 +453,6 @@ void lgwt(int N, Array <REAL> &x, Array <REAL> &w)
 }
 
 
-/**************************************************************/
-void globalDirectVel(Vect3 diff, Vect3 omega, Vect3 & vel) {
-
-    REAL mult, nrm;
-    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
-    mult = -1 / (four_pi * nrm * nrm * nrm);
-    vel += mult * diff.Cross(omega);
-}
-
-/**************************************************************/
-Vect3 globalDirectVel(Vect3 diff, Vect3 omega) {
-
-    REAL mult, nrm;
-    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
-    mult = -1 / (four_pi * nrm * nrm * nrm);
-    return mult * diff.Cross(omega);
-}
 
 /**************************************************************/
 void UTIL::PostAmble(string fname) {
@@ -953,22 +928,70 @@ void UTIL::PreAmble() {
     //    BODY::BodySubStep(maxT, nSteps);
 
 }
-
 /**************************************************************/
-Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega, REAL del2) {
+void UTIL::GetCellPans() {
+    Array <Vect3> Verts(8);
+    Verts[0] = 0.5 * Vect3(-1, -1, -1);
+    Verts[1] = 0.5 * Vect3(-1, -1, 1);
+    Verts[2] = 0.5 * Vect3(1, -1, 1);
+    Verts[3] = 0.5 * Vect3(1, -1, -1);
+    Verts[4] = 0.5 * Vect3(-1, 1, -1);
+    Verts[5] = 0.5 * Vect3(-1, 1, 1);
+    Verts[6] = 0.5 * Vect3(1, 1, 1);
+    Verts[7] = 0.5 * Vect3(1, 1, -1);
+    
+
+    UTIL::Pans.push_back(new PANEL(Verts[0], Verts[1], Verts[2], Verts[3]));
+    UTIL::Pans.push_back(new PANEL(Verts[3], Verts[2], Verts[6], Verts[7]));
+    UTIL::Pans.push_back(new PANEL(Verts[7], Verts[6], Verts[5], Verts[4]));
+    UTIL::Pans.push_back(new PANEL(Verts[4], Verts[5], Verts[1], Verts[0]));
+    UTIL::Pans.push_back(new PANEL(Verts[1], Verts[5], Verts[6], Verts[2]));
+    UTIL::Pans.push_back(new PANEL(Verts[4], Verts[0], Verts[3], Verts[7]));
+
+    for (int i = 0; i < 6; ++i) {
+        UTIL::Pans[i]->GetNormal();
+        UTIL::Pans[i]->Sigma = UTIL::Pans[i]->Gamma = UTIL::Pans[i]->Mu = 1.0;
+    }
+}
+/**************************************************************/
+Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega) {
 
     REAL mult, nrm;
-    nrm = sqrt(del2 + diff.Dot(diff));
-    mult = -1 / (four_pi * nrm * nrm * nrm);
+    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
+    mult = -1. / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
 /**************************************************************/
-void UTIL::globalDirectVelGrads(Vect3 diff, Vect3 omega, REAL del2, Array <Vect3> &Grads) {
+Vect3 UTIL::globalCubicDirectVel(Vect3 diff, Vect3 omega) {
+    if (diff.Dot(diff) > 3.0) {
+        Vect3 VelQ(0., 0., 0.);
+        for (int i = 0; i < UTIL::QuadPts.size(); ++i)
+            for (int j = 0; j < UTIL::QuadPts.size(); ++j)
+                for (int k = 0; k < UTIL::QuadPts.size(); ++k)
+                    VelQ += UTIL::QuadWts[i] * UTIL::QuadWts[j] * UTIL::QuadWts[k] *
+                        UTIL::globalDirectVel(diff - Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]), omega);
+        return VelQ; // divide
+    } else {
+        Vect3 VelP(0., 0., 0.);
+
+
+        for (int i = 0; i < 6; ++i) {
+
+            REAL Phi = UTIL::Pans[i]->HyperboloidSourcePhi(diff);
+            //cout << Pans[i].TRANS[2] << " " << Phi << endl;
+            VelP -= UTIL::Pans[i]->TRANS[2].Cross(omega) * Phi * two_pi / four_pi;
+        }
+        return VelP;
+    }
+}
+
+/**************************************************************/
+void UTIL::globalDirectVelGrads(Vect3 diff, Vect3 omega, Array <Vect3> &Grads) {
     //  Diff here is Xsource - Xtarget
-    REAL mult, nrm, R, R3, R5;
+    REAL R, R3, R5;
     
     
-    R = sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z + del2);
+    R = sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z + globalSystem->Del2);
     R3 = R*R*R;
     R5 = R3*R*R;
     
@@ -983,6 +1006,43 @@ void UTIL::globalDirectVelGrads(Vect3 diff, Vect3 omega, REAL del2, Array <Vect3
     Grads[2].z  += -(3.0*diff.z*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
     
 
+}
+/**************************************************************/
+void UTIL::globalCubicDirectVelGrads(Vect3 diff, Vect3 omega, Array <Vect3> &Grads) {
+    //  Diff here is Xsource - Xtarget
+
+    if (diff.Dot(diff) > 3.0) {
+        for (int i = 0; i < UTIL::QuadPts.size(); ++i)
+            for (int j = 0; j < UTIL::QuadPts.size(); ++j)
+                for (int k = 0; k < UTIL::QuadPts.size(); ++k) {
+                    REAL R, R3, R5;
+
+                    Vect3 DX = diff + Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]);
+                    R = sqrt(DX.x * DX.x + DX.y * DX.y + DX.z * DX.z + globalSystem->Del2);
+                    R3 = R * R*R;
+                    R5 = R3 * R*R;
+
+                    Grads[0].x += -(3.0 * DX.x * (omega.z * DX.y - omega.y * DX.z)) / (four_pi * R5);
+                    Grads[0].y += (3.0 * DX.x * (omega.z * DX.x - omega.x * DX.z)) / (four_pi * R5) - omega.z / (four_pi * R3);
+                    Grads[0].z += omega.y / (four_pi * R3) - (3.0 * DX.x * (omega.y * DX.x - omega.x * DX.y)) / (four_pi * R5);
+                    Grads[1].x += omega.z / (four_pi * R3) - (3.0 * DX.y * (omega.z * DX.y - omega.y * DX.z)) / (four_pi * R5);
+                    Grads[1].y += (3.0 * DX.y * (omega.z * DX.x - omega.x * DX.z)) / (four_pi * R5);
+                    Grads[1].z += -omega.x / (four_pi * R3) - (3.0 * DX.y * (omega.y * DX.x - omega.x * DX.y)) / (four_pi * R5);
+                    Grads[2].x += -omega.y / (four_pi * R3) - (3.0 * DX.z * (omega.z * DX.y - omega.y * DX.z)) / (four_pi * R5);
+                    Grads[2].y += omega.x / (four_pi * R3) + (3.0 * DX.z * (omega.z * DX.x - omega.x * DX.z)) / (four_pi * R5);
+                    Grads[2].z += -(3.0 * DX.z * (omega.y * DX.x - omega.x * DX.y)) / (four_pi * R5);
+                }
+    }
+    else
+    {
+        for (int i = 0; i < 6; ++i) {
+            Vect3 V = UTIL::Pans[i]->SourceVel(diff) * two_pi/four_pi;
+            Vect3 C = UTIL::Pans[i]->TRANS[2].Cross(omega);
+            Grads[0] += V.x*C;
+            Grads[1] += V.y*C;
+            Grads[2] += V.z*C;
+        }
+    }
 }
 /**************************************************************/
 void SolveMatfileVels(string fname, int pmax, REAL del2) {
@@ -1183,7 +1243,7 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 #pragma omp parallel for
     for (int i = 0; i < n; ++i){
         for (int j = 0; j < n; ++j)
-            DirVels[i] += UTIL::globalDirectVel(Posns[j] - Posns[i], Omegas[j], 0.25) ;
+            DirVels[i] += UTIL::globalDirectVel(Posns[j] - Posns[i], Omegas[j]) ;
         
         //cout << DirVels[i] << " " << FMMVels[i] << (DirVels[i] - FMMVels[i]).Mag() << endl;
     }
@@ -1711,18 +1771,19 @@ void TestFMM(int argc, char *argv[]) {
     }
 
 
+    int nIndices = 1000;
 
     Array <int> Indices;
     REAL Mult = 1.0;
-    if (Posns.size() > 10000) {
-        Mult = Posns.size() / 10000.0;
-        Indices = Array <int> (10000, 0);
+    if (Posns.size() > nIndices) {
+        Mult = Posns.size() / (REAL) nIndices;
+        Indices = Array <int> (nIndices, 0);
         int count = 0;
         //while (RandIndices.size() < 10000)
-        while (count < 10000) {
+        while (count < nIndices) {
             int randint = int (Posns.size()*(REAL(rand()) / RAND_MAX));
             bool isin = false;
-            for (int i = 0; i < 10000; ++i)
+            for (int i = 0; i < nIndices; ++i)
                 if (Indices[i] == randint)
                     isin = true;
 
@@ -1750,9 +1811,9 @@ void TestFMM(int argc, char *argv[]) {
 
         for (int j = 0; j < Posns.size(); ++j) {
             Vect3 D = Posns[j] - Posns[Indices[i]];
-            V += globalDirectVel(D, Omegas[j]);
+            V += UTIL::globalCubicDirectVel(D, Omegas[j]);
 
-            UTIL::globalDirectVelGrads(D, Omegas[j], globalSystem->Del2, DirectVelGrads[i]);
+            UTIL::globalCubicDirectVelGrads(D, Omegas[j], DirectVelGrads[i]);
         }
 
 
@@ -1761,12 +1822,12 @@ void TestFMM(int argc, char *argv[]) {
         Vect3 VelN(0.), VelS(0.), VelE(0.), VelW(0.), VelT(0.), VelB(0.);
 
         for (int j = 0; j < Posns.size(); ++j) {
-            VelE += globalDirectVel(Posns[j] - (Vect3(h, 0., 0.) + Posns[Indices[i]]), Omegas[j]);
-            VelW += globalDirectVel(Posns[j] - (Vect3(-h, 0., 0.) + Posns[Indices[i]]), Omegas[j]);
-            VelN += globalDirectVel(Posns[j] - (Vect3(0., h, 0.) + Posns[Indices[i]]), Omegas[j]);
-            VelS += globalDirectVel(Posns[j] - (Vect3(0., -h, 0.) + Posns[Indices[i]]), Omegas[j]);
-            VelT += globalDirectVel(Posns[j] - (Vect3(0., 0., h) + Posns[Indices[i]]), Omegas[j]);
-            VelB += globalDirectVel(Posns[j] - (Vect3(0., 0., -h) + Posns[Indices[i]]), Omegas[j]);
+            VelE += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(h, 0., 0.) + Posns[Indices[i]]), Omegas[j]);
+            VelW += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(-h, 0., 0.) + Posns[Indices[i]]), Omegas[j]);
+            VelN += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(0., h, 0.) + Posns[Indices[i]]), Omegas[j]);
+            VelS += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(0., -h, 0.) + Posns[Indices[i]]), Omegas[j]);
+            VelT += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(0., 0., h) + Posns[Indices[i]]), Omegas[j]);
+            VelB += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(0., 0., -h) + Posns[Indices[i]]), Omegas[j]);
         }
 
 
@@ -1996,7 +2057,7 @@ void WeeAmble() {
     cout << "--------------" << endl;
 //    PANEL P(Vect3(-2.1, -3.2, 4.0), Vect3(2.3, -1.4, 3.0), Vect3(1.5, 2.6, 1.0), Vect3(-1.7, 2.8, 0.0));
 //        PANEL P(Vect3(-1.2, -1.3, 0.2), Vect3(1.5, -1, 1), Vect3(1, 1, 0.12), Vect3(-1.23, 0.987, -0.3));
-    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 1.), Vect3(1., 1., 0.), Vect3(-1., 1., 0.));
+    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 0.));
 
     P.GetNormal();
     

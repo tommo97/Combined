@@ -137,8 +137,8 @@ void TIME_STEPPER::TimeAdvance() {
         globalOctree->AllCells[i]->VelGrads[0] = globalOctree->AllCells[i]->VelGrads[1] = globalOctree->AllCells[i]->VelGrads[2] = Vect3(0.0);
         for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
             Vect3 D = globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position;
-            globalOctree->AllCells[i]->Velocity += globalDirectVel(D, globalOctree->AllCells[j]->Omega);
-            UTIL::globalDirectVelGrads(D, globalOctree->AllCells[j]->Omega, globalSystem->Del2, globalOctree->AllCells[i]->VelGrads);
+            globalOctree->AllCells[i]->Velocity += UTIL::globalDirectVel(D, globalOctree->AllCells[j]->Omega);
+            UTIL::globalCubicDirectVelGrads(D, globalOctree->AllCells[j]->Omega, globalSystem->Del2, globalOctree->AllCells[i]->VelGrads);
         }
 
     }
@@ -148,7 +148,7 @@ void TIME_STEPPER::TimeAdvance() {
     //  t0: calculate face velocities due to body
     time_step();
     //  t0: get panel FMM Vels
-    #ifndef NOFMM
+#ifndef NOFMM
     if (globalSystem->useBodies) {
         globalSystem->GetPanelFMMVelocities(dt);
 
@@ -310,7 +310,7 @@ void TIME_STEPPER::time_loop() {
 #pragma omp parallel for
         for (int i = 0; i < globalOctree->AllCells.size(); ++i)
             for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-                globalOctree->AllCells[i]->Velocity += globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega);
+                globalOctree->AllCells[i]->Velocity += UTIL::globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega);
         first_step = false;
     } else {
 #ifdef TIME_STEPS

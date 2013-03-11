@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class PANEL {
 public:
-    static Array <REAL> QuadPts, QuadWts, CornerEta, CornerZeta;
+    static Array <REAL> CornerEta, CornerZeta;
     static Array <Array <REAL> > CornerNodalShapeFuncs;
     static REAL FarField, MaxTheta;
     static int MaxRecurse, NumPans, RecurseLev, CornerCount;

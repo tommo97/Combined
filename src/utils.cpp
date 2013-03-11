@@ -25,8 +25,8 @@ unsigned long int LineVelCnt = 0;
 int NumThreads = 1;
 
 long unsigned int UTIL::cpu_t = 0;
-
-
+Array <REAL> UTIL::QuadPts, UTIL::QuadWts;
+Array <PANEL*> UTIL::Pans;
 /**************************************************************/
 /*      This piece of code is for fast reciprocal square root approximation as used in Quake*/
 double UTIL::FastInverseSqrt( double number )

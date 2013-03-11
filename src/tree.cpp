@@ -381,7 +381,7 @@ void OCTREE::GetVels() {
 #pragma omp parallel for
         for (int i = 0; i < AllCells.size(); ++i)
             for (int j = 0; j < AllCells.size(); ++j)
-                AllCells[i]->Velocity += globalDirectVel(AllCells[i]->Position - AllCells[j]->Position, AllCells[j]->Omega);
+                AllCells[i]->Velocity += UTIL::globalDirectVel(AllCells[i]->Position - AllCells[j]->Position, AllCells[j]->Omega);
 #else
 #ifdef RECURSE
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::SetVelsZero, &Node::DoNothing);

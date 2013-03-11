@@ -45,6 +45,7 @@ public:
   bool PanelMode;
   int num_out;
   string InputStr;
+  static Array <REAL> QuadPts, QuadWts;
 
   Array <Vect3> ATTITUDE, VELOCITY, ORIGIN, RATES;
   Array <Vect3> VortonsXs, VortonOmegas;

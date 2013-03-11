@@ -34,7 +34,7 @@ int PANEL::CornerCount = 4;
 REAL PANEL::FarField = 5.0;
 REAL PANEL::MaxTheta = 0.01;
 int PANEL::MaxRecurse = 8, PANEL::NumPans = 0, PANEL::RecurseLev = 0;
-Array <REAL> PANEL::QuadPts, PANEL::QuadWts, PANEL::CornerEta, PANEL::CornerZeta;
+Array <REAL> PANEL::CornerEta, PANEL::CornerZeta;
 Array < Array <REAL> > PANEL::CornerNodalShapeFuncs;
 void PANEL::Initialise()
 {
@@ -1241,11 +1241,11 @@ REAL PANEL::CurvedSourcePhi(Vect3& XP) {
 
     Array < Array <REAL> > QuadPts;
     Array <REAL> QuadWts;
-    for (int i = 0; i < PANEL::QuadPts.size(); ++i) {
-        REAL zeta = PANEL::QuadPts[i];
-        for (int j = 0; j < PANEL::QuadPts.size(); ++j) {
-            REAL wt = PANEL::QuadWts[i] * PANEL::QuadWts[j];
-            REAL eta = PANEL::QuadPts[j];
+    for (int i = 0; i < UTIL::QuadPts.size(); ++i) {
+        REAL zeta = UTIL::QuadPts[i];
+        for (int j = 0; j < UTIL::QuadPts.size(); ++j) {
+            REAL wt = UTIL::QuadWts[i] * UTIL::QuadWts[j];
+            REAL eta = UTIL::QuadPts[j];
             QuadPts.push_back(Array <REAL > (2, 0.0));
             QuadPts.back()[0] = zeta;
             QuadPts.back()[1] = eta;
@@ -1273,7 +1273,7 @@ REAL PANEL::CurvedSourcePhi(Vect3& XP) {
             REAL RF = (XP - XpF).Mag();
             REAL ratio = RF/RC;
 
-            Phi -= PANEL::QuadWts[i] * PANEL::QuadWts[j] * Sigma *  Jdet * ratio / RF;
+            Phi -= UTIL::QuadWts[i] * UTIL::QuadWts[j] * Sigma *  Jdet * ratio / RF;
 
             //cout << "scatter3([" << XpC.x << " " << XpF.x << "],[" << XpC.y << " " << XpF.y << "],["<< XpC.z << " " << XpF.z << "]);" << endl;
             
@@ -1326,11 +1326,11 @@ REAL PANEL::CurvedDoubletPhi(Vect3& XP) {
 
     Array < Array <REAL> > QuadPts;
     Array <REAL> QuadWts;
-    for (int i = 0; i < PANEL::QuadPts.size(); ++i) {
-        REAL zeta = PANEL::QuadPts[i];
-        for (int j = 0; j < PANEL::QuadPts.size(); ++j) {
-            REAL wt = PANEL::QuadWts[i] * PANEL::QuadWts[j];
-            REAL eta = PANEL::QuadPts[j];
+    for (int i = 0; i < UTIL::QuadPts.size(); ++i) {
+        REAL zeta = UTIL::QuadPts[i];
+        for (int j = 0; j < UTIL::QuadPts.size(); ++j) {
+            REAL wt = UTIL::QuadWts[i] * UTIL::QuadWts[j];
+            REAL eta = UTIL::QuadPts[j];
             QuadPts.push_back(Array <REAL > (2, 0.0));
             QuadPts.back()[0] = zeta;
             QuadPts.back()[1] = eta;
@@ -1365,7 +1365,7 @@ REAL PANEL::CurvedDoubletPhi(Vect3& XP) {
 
             REAL ratio = (RF) / (RC);
 
-            Phi -= PANEL::QuadWts[i] * PANEL::QuadWts[j] * Mu * dRC * Jdet;
+            Phi -= UTIL::QuadWts[i] * UTIL::QuadWts[j] * Mu * dRC * Jdet;
         }
     }
     return Phi / two_pi;

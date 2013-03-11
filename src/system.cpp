@@ -494,16 +494,16 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
         #pragma omp parallel for
             for (int i = 0; i < sz; ++i) {
                 for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
-                    V1[i] += globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
+                    V1[i] += UTIL::globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
                             globalOctree->AllCells[j]->Omega);
                     
                     
-                    V2[i] += globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
+                    V2[i] += UTIL::globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
                             globalOctree->AllCells[j]->Omega);
                     
                 }
-//                cout << "V1: " << V1[i] << " " << globalOctree->TreeVel(P1[i]) << " " << P1[i] << endl;
-//                cout << "V2: " << V2[i] << " " << globalOctree->TreeVel(P2[i]) << " " << P2[i] << endl;
+                cout << "V1: " << V1[i] << " " << globalOctree->TreeVel(P1[i]) << " " << P1[i] << endl;
+                cout << "V2: " << V2[i] << " " << globalOctree->TreeVel(P2[i]) << " " << P2[i] << endl;
             }
 
 //    for (int i = 0; i < sz; ++i)

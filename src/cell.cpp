@@ -29,7 +29,6 @@ unsigned long int FVMCell::NumCells = 0;
 Array < Array <int> > FVMCell::MomentInds;
 int FVMCell::MomentIndsSize;
 Array < Array <REAL> > FVMCell::OffsetPows;
-
 /**************************************************************/
 FVMCell::FVMCell() : Node(), FaceVels(0.) {
     if (WRITE_TO_SCREEN) cout << "Warning - uninitialised cell" << endl;
@@ -59,16 +58,40 @@ void FVMCell::InitMomsInds(int MaxP) {
             }
     FVMCell::MomentIndsSize = FVMCell::MomentInds.size();
     FVMCell::OffsetPows.allocate(8);
-    bool isdone = false;
     for (int i = 0; i < 2; ++i)
         for (int j = 0; j < 2; ++j)
             for (int k = 0; k < 2; ++k) {
                 Vect3 Dx = Node::Offset[i][j][k];
                 for (int k1 = 0; k1 < MaxP; ++k1)
                     for (int k2 = 0; k2 + k1 < MaxP; ++k2)
-                        for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
-                            FVMCell::OffsetPows[Node::Indxs[i][j][k]].push_back(pow(Dx, k1, k2, k3));
+                        for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3) {
+                            REAL mult = 0.0;
+                            for (int ii = 0; ii < UTIL::QuadPts.size(); ++ii)
+                                for (int jj = 0; jj < UTIL::QuadPts.size(); ++jj)
+                                    for (int kk = 0; kk < UTIL::QuadPts.size(); ++kk) {
+                                        REAL wt = UTIL::QuadWts[ii] * UTIL::QuadWts[jj] * UTIL::QuadWts[kk];
+                                        Vect3 DXQ = Dx + Vect3(UTIL::QuadPts[ii], UTIL::QuadPts[jj], UTIL::QuadPts[kk]);
+                                        mult += wt * pow(DXQ, k1, k2, k3);
+                                    }
+                            FVMCell::OffsetPows[Node::Indxs[i][j][k]].push_back(mult);
+                        }
             }
+    
+    
+//    This is for when there is only a single point
+//    FVMCell::OffsetPows.allocate(8);
+//    for (int i = 0; i < 2; ++i)
+//        for (int j = 0; j < 2; ++j)
+//            for (int k = 0; k < 2; ++k) {
+//                Vect3 Dx = Node::Offset[i][j][k];
+//                for (int k1 = 0; k1 < MaxP; ++k1)
+//                    for (int k2 = 0; k2 + k1 < MaxP; ++k2)
+//                        for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
+//                            FVMCell::OffsetPows[Node::Indxs[i][j][k]].push_back(pow(Dx, k1, k2, k3));
+//            }
+//    
+//    
+    
 };
 
 /**************************************************************/
@@ -249,17 +272,17 @@ void FVMCell::Report() {
                             for (int ce = 0; ce < 2; ++ce)
                                 if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
                                     Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
-                                    globalDirectVel(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega, Vfmm);
+                                    Vfmm += UTIL::globalDirectVel(PV, Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega);
                                 }
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
         Vect3 PV = globalOctree->AllCells[i]->Position - Position;
-        globalDirectVel(PV, globalOctree->AllCells[i]->Omega, Vel);
-        globalDirectVel(PV - Vect3(.0, .5, .0), globalOctree->AllCells[i]->Omega, VelN);
-        globalDirectVel(PV + Vect3(.0, .5, .0), globalOctree->AllCells[i]->Omega, VelS);
-        globalDirectVel(PV - Vect3(.5, .0, .0), globalOctree->AllCells[i]->Omega, VelE);
-        globalDirectVel(PV + Vect3(.5, .0, .0), globalOctree->AllCells[i]->Omega, VelW);
-        globalDirectVel(PV - Vect3(.0, .0, .5), globalOctree->AllCells[i]->Omega, VelT);
-        globalDirectVel(PV + Vect3(.0, .0, .5), globalOctree->AllCells[i]->Omega, VelB);
+        Vel += UTIL::globalDirectVel(PV, globalOctree->AllCells[i]->Omega);
+        VelN += UTIL::globalDirectVel(PV - Vect3(.0, .5, .0), globalOctree->AllCells[i]->Omega);
+        VelS += UTIL::globalDirectVel(PV + Vect3(.0, .5, .0), globalOctree->AllCells[i]->Omega);
+        VelE += UTIL::globalDirectVel(PV - Vect3(.5, .0, .0), globalOctree->AllCells[i]->Omega);
+        VelW += UTIL::globalDirectVel(PV + Vect3(.5, .0, .0), globalOctree->AllCells[i]->Omega);
+        VelT += UTIL::globalDirectVel(PV - Vect3(.0, .0, .5), globalOctree->AllCells[i]->Omega);
+        VelB += UTIL::globalDirectVel(PV + Vect3(.0, .0, .5), globalOctree->AllCells[i]->Omega);
     }
     if (WRITE_TO_SCREEN) {
         cout << " x-> " << Position << " FMM: " << Vfmm << " Dir: " << Vel + Vinf << endl;
@@ -408,7 +431,7 @@ void FVMCell::UpdateGradsFromDeltaOmega() {
                                 if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
                                     Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
 
-                                    UTIL::globalDirectVelGrads(PV, (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega - OmegaHold), globalSystem->Del2, VelGrads);
+                                    UTIL::globalCubicDirectVelGrads(PV, (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega - OmegaHold), VelGrads);
                                 }
 }
 
@@ -1017,9 +1040,8 @@ void FVMCell::CollapseToIP(OctreeCapsule &IP) {
                         for (int be = 0; be < 2; ++be)
                             for (int ce = 0; ce < 2; ++ce)
                                 if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad)
-                                    globalDirectVel(Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - IP.tPosition,
-                                        static_cast<FVMCell*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce])->Omega,
-                                        IP.Velocity);
+                                    IP.Velocity += UTIL::globalCubicDirectVel(Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - IP.tPosition,
+                                        static_cast<FVMCell*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce])->Omega);
 }
 
 /**************************************************************/

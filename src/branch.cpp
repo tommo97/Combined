@@ -35,8 +35,7 @@ Branch::~Branch() {
 }
 
 /**************************************************************/
-#ifndef NOFMM
-
+#ifdef NOFMM
 Branch::Branch() : Node() {
 #else
 Branch::Branch() : Node(), Moments(globalSystem->MaxP), VelField(globalSystem->MaxP) {

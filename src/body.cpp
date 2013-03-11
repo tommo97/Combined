@@ -217,7 +217,7 @@ void BODY::GetLinearRHS() {
 #pragma omp parallel for
 #endif
         for (int j = 0; j < BODY::VortexPositions.size(); ++j)
-            VWake = VWake + globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
+            VWake = VWake + UTIL::globalDirectVel(BODY::AllBodyFaces[i]->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
 
 
 
@@ -378,7 +378,7 @@ void BODY::SplitUpLinearAlgebra() {
         REAL PhiWake = 0.0;
 
         for (int j = 0; j < BODY::VortexPositions.size(); ++j)
-            VWake += 1.0 * globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
+            VWake += 1.0 * UTIL::globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
 
         /*        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
                     VWake += 2.0*globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,

@@ -233,21 +233,20 @@ void Node::SetUpISBIndices() {
                     Vect3 R = Vect3(1.0 * REAL(i), 1.0 * REAL(j), 1.0 * REAL(k)); //   PV from source  centroid to target ISA centroid   
 
                     {
-                        Vect3 Vx, Vy, Vz;
-                        globalDirectVel(1.0*R, Vect3(1., 0., 0.), Vx);
-                        globalDirectVel(1.0*R, Vect3(0., 1., 0.), Vy);
-                        globalDirectVel(1.0*R, Vect3(0., 0., 1.), Vz);
+                        Vect3 Vx = UTIL::globalCubicDirectVel(1.0*R, Vect3(1., 0., 0.));
+                        Vect3 Vy = UTIL::globalCubicDirectVel(1.0*R, Vect3(0., 1., 0.));
+                        Vect3 Vz = UTIL::globalCubicDirectVel(1.0*R, Vect3(0., 0., 1.));
                         Node::ISADirMultsX[count] = Vx;
                         Node::ISADirMultsY[count] = Vy;
                         Node::ISADirMultsZ[count] = Vz;
 
 
                         Array <Vect3 > GradsX(3, Vect3(0.0));
-                        UTIL::globalDirectVelGrads(R, Vect3(1., 0., 0.), globalSystem->Del2, GradsX);
+                        UTIL::globalCubicDirectVelGrads(R, Vect3(1., 0., 0.), GradsX);
                         Array <Vect3 > GradsY(3, Vect3(0.0));
-                        UTIL::globalDirectVelGrads(R, Vect3(0., 1., 0.), globalSystem->Del2, GradsY);
+                        UTIL::globalCubicDirectVelGrads(R, Vect3(0., 1., 0.), GradsY);
                         Array <Vect3 > GradsZ(3, Vect3(0.0));
-                        UTIL::globalDirectVelGrads(R, Vect3(0., 0., 1.), globalSystem->Del2, GradsZ);
+                        UTIL::globalCubicDirectVelGrads(R, Vect3(0., 0., 1.), GradsZ);
 
                         Node::ISAGradMultsX[count] = GradsX;
                         Node::ISAGradMultsY[count] = GradsY;
@@ -294,21 +293,20 @@ void Node::SetUpISBIndices() {
                                         { //  Need to exclude ISA of initial node -- these are cells which are |R1 + R2 + R3| < (1, sqrt(2) or sqrt(3)) away
                                             {
                                                 Vect3 R = R1 + R2 + R3;
-                                                Vect3 Vx, Vy, Vz;
-                                                globalDirectVel(1.0 * R, Vect3(1., 0., 0.), Vx);
-                                                globalDirectVel(1.0 * R, Vect3(0., 1., 0.), Vy);
-                                                globalDirectVel(1.0 * R, Vect3(0., 0., 1.), Vz);
+                                                Vect3 Vx = UTIL::globalCubicDirectVel(1.0 * R, Vect3(1., 0., 0.));
+                                                Vect3 Vy = UTIL::globalCubicDirectVel(1.0 * R, Vect3(0., 1., 0.));
+                                                Vect3 Vz = UTIL::globalCubicDirectVel(1.0 * R, Vect3(0., 0., 1.));
                                                 Node::ISBDirMultsX[Indxs[ix][iy][iz]][count] = Vx;
                                                 Node::ISBDirMultsY[Indxs[ix][iy][iz]][count] = Vy;
                                                 Node::ISBDirMultsZ[Indxs[ix][iy][iz]][count] = Vz;
 
 
                                                 Array <Vect3 > GradsX(3, Vect3(0.0));
-                                                UTIL::globalDirectVelGrads(R, Vect3(1., 0., 0.), globalSystem->Del2, GradsX);
+                                                UTIL::globalCubicDirectVelGrads(R, Vect3(1., 0., 0.), GradsX);
                                                 Array <Vect3 > GradsY(3, Vect3(0.0));
-                                                UTIL::globalDirectVelGrads(R, Vect3(0., 1., 0.), globalSystem->Del2, GradsY);
+                                                UTIL::globalCubicDirectVelGrads(R, Vect3(0., 1., 0.), GradsY);
                                                 Array <Vect3 > GradsZ(3, Vect3(0.0));
-                                                UTIL::globalDirectVelGrads(R, Vect3(0., 0., 1.), globalSystem->Del2, GradsZ);
+                                                UTIL::globalCubicDirectVelGrads(R, Vect3(0., 0., 1.), GradsZ);
 
                                                 Node::ISBGradMultsX[Indxs[ix][iy][iz]][count] = GradsX;
                                                 Node::ISBGradMultsY[Indxs[ix][iy][iz]][count] = GradsY;
@@ -741,10 +739,9 @@ void Node::UpdateMomentMults() {
                                     DirGradMultsZ[ix][iy][iz][I][J][K][jx][jy] = Array < Array <Vect3> > (2);
                                     for (int jz = 0; jz < 2; ++jz) {
                                         Vect3 R3 = 1.0 * Offset[jx][jy][jz]; //      PV from source cell to source parent.
-                                        Vect3 Vx, Vy, Vz;
-                                        globalDirectVel(R1+R2+R3, Vect3(1.,0.,0.), Vx);
-                                        globalDirectVel(R1+R2+R3, Vect3(0.,1.,0.), Vy);
-                                        globalDirectVel(R1+R2+R3, Vect3(0.,0.,1.), Vz);
+                                        Vect3 Vx = UTIL::globalCubicDirectVel(R1+R2+R3, Vect3(1.,0.,0.));
+                                        Vect3 Vy = UTIL::globalCubicDirectVel(R1+R2+R3, Vect3(0.,1.,0.));
+                                        Vect3 Vz = UTIL::globalCubicDirectVel(R1+R2+R3, Vect3(0.,0.,1.));
                                         
                                         DirVelMultsX[ix][iy][iz][I][J][K][jx][jy][jz] = Vx;
                                         DirVelMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = Vy;
@@ -754,11 +751,11 @@ void Node::UpdateMomentMults() {
                                         DirGradMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = Array <Vect3 > (3);
                                         DirGradMultsZ[ix][iy][iz][I][J][K][jx][jy][jz] = Array <Vect3 > (3);
                                         Array <Vect3 > GradsX(3, Vect3(0.0));
-                                        UTIL::globalDirectVelGrads(R1 + R2 + R3, Vect3(1., 0., 0.), globalSystem->Del2, GradsX);
+                                        UTIL::globalCubicDirectVelGrads(R1 + R2 + R3, Vect3(1., 0., 0.), GradsX);
                                         Array <Vect3 > GradsY(3, Vect3(0.0));
-                                        UTIL::globalDirectVelGrads(R1 + R2 + R3, Vect3(0., 1., 0.), globalSystem->Del2, GradsY);
+                                        UTIL::globalCubicDirectVelGrads(R1 + R2 + R3, Vect3(0., 1., 0.), GradsY);
                                         Array <Vect3 > GradsZ(3, Vect3(0.0));
-                                        UTIL::globalDirectVelGrads(R1 + R2 + R3, Vect3(0., 0., 1.), globalSystem->Del2, GradsZ);
+                                        UTIL::globalCubicDirectVelGrads(R1 + R2 + R3, Vect3(0., 0., 1.), GradsZ);
                                         DirGradMultsX[ix][iy][iz][I][J][K][jx][jy][jz] = GradsX;
                                         DirGradMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = GradsY;
                                         DirGradMultsZ[ix][iy][iz][I][J][K][jx][jy][jz] = GradsZ;
