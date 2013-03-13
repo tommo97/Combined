@@ -233,20 +233,20 @@ void Node::SetUpISBIndices() {
                     Vect3 R = Vect3(1.0 * REAL(i), 1.0 * REAL(j), 1.0 * REAL(k)); //   PV from source  centroid to target ISA centroid   
 
                     {
-                        Vect3 Vx = UTIL::globalCubicDirectVel(1.0*R, Vect3(1., 0., 0.));
-                        Vect3 Vy = UTIL::globalCubicDirectVel(1.0*R, Vect3(0., 1., 0.));
-                        Vect3 Vz = UTIL::globalCubicDirectVel(1.0*R, Vect3(0., 0., 1.));
+                        Vect3 Vx = UTIL::globalCubicDirectVel(-1.0*R, Vect3(1., 0., 0.));
+                        Vect3 Vy = UTIL::globalCubicDirectVel(-1.0*R, Vect3(0., 1., 0.));
+                        Vect3 Vz = UTIL::globalCubicDirectVel(-1.0*R, Vect3(0., 0., 1.));
                         Node::ISADirMultsX[count] = Vx;
                         Node::ISADirMultsY[count] = Vy;
                         Node::ISADirMultsZ[count] = Vz;
 
 
                         Array <Vect3 > GradsX(3, Vect3(0.0));
-                        UTIL::globalCubicDirectVelGrads(R, Vect3(1., 0., 0.), GradsX);
+                        UTIL::globalCubicDirectVelGrads(-1.0*R, Vect3(1., 0., 0.), GradsX);
                         Array <Vect3 > GradsY(3, Vect3(0.0));
-                        UTIL::globalCubicDirectVelGrads(R, Vect3(0., 1., 0.), GradsY);
+                        UTIL::globalCubicDirectVelGrads(-1.0*R, Vect3(0., 1., 0.), GradsY);
                         Array <Vect3 > GradsZ(3, Vect3(0.0));
-                        UTIL::globalCubicDirectVelGrads(R, Vect3(0., 0., 1.), GradsZ);
+                        UTIL::globalCubicDirectVelGrads(-1.0*R, Vect3(0., 0., 1.), GradsZ);
 
                         Node::ISAGradMultsX[count] = GradsX;
                         Node::ISAGradMultsY[count] = GradsY;
@@ -293,20 +293,20 @@ void Node::SetUpISBIndices() {
                                         { //  Need to exclude ISA of initial node -- these are cells which are |R1 + R2 + R3| < (1, sqrt(2) or sqrt(3)) away
                                             {
                                                 Vect3 R = R1 + R2 + R3;
-                                                Vect3 Vx = UTIL::globalCubicDirectVel(1.0 * R, Vect3(1., 0., 0.));
-                                                Vect3 Vy = UTIL::globalCubicDirectVel(1.0 * R, Vect3(0., 1., 0.));
-                                                Vect3 Vz = UTIL::globalCubicDirectVel(1.0 * R, Vect3(0., 0., 1.));
+                                                Vect3 Vx = UTIL::globalCubicDirectVel(-1.0 * R, Vect3(1., 0., 0.));
+                                                Vect3 Vy = UTIL::globalCubicDirectVel(-1.0 * R, Vect3(0., 1., 0.));
+                                                Vect3 Vz = UTIL::globalCubicDirectVel(-1.0 * R, Vect3(0., 0., 1.));
                                                 Node::ISBDirMultsX[Indxs[ix][iy][iz]][count] = Vx;
                                                 Node::ISBDirMultsY[Indxs[ix][iy][iz]][count] = Vy;
                                                 Node::ISBDirMultsZ[Indxs[ix][iy][iz]][count] = Vz;
 
 
                                                 Array <Vect3 > GradsX(3, Vect3(0.0));
-                                                UTIL::globalCubicDirectVelGrads(R, Vect3(1., 0., 0.), GradsX);
+                                                UTIL::globalCubicDirectVelGrads(-1.0*R, Vect3(1., 0., 0.), GradsX);
                                                 Array <Vect3 > GradsY(3, Vect3(0.0));
-                                                UTIL::globalCubicDirectVelGrads(R, Vect3(0., 1., 0.), GradsY);
+                                                UTIL::globalCubicDirectVelGrads(-1.0*R, Vect3(0., 1., 0.), GradsY);
                                                 Array <Vect3 > GradsZ(3, Vect3(0.0));
-                                                UTIL::globalCubicDirectVelGrads(R, Vect3(0., 0., 1.), GradsZ);
+                                                UTIL::globalCubicDirectVelGrads(-1.0*R, Vect3(0., 0., 1.), GradsZ);
 
                                                 Node::ISBGradMultsX[Indxs[ix][iy][iz]][count] = GradsX;
                                                 Node::ISBGradMultsY[Indxs[ix][iy][iz]][count] = GradsY;
@@ -739,9 +739,9 @@ void Node::UpdateMomentMults() {
                                     DirGradMultsZ[ix][iy][iz][I][J][K][jx][jy] = Array < Array <Vect3> > (2);
                                     for (int jz = 0; jz < 2; ++jz) {
                                         Vect3 R3 = 1.0 * Offset[jx][jy][jz]; //      PV from source cell to source parent.
-                                        Vect3 Vx = UTIL::globalCubicDirectVel(R1+R2+R3, Vect3(1.,0.,0.));
-                                        Vect3 Vy = UTIL::globalCubicDirectVel(R1+R2+R3, Vect3(0.,1.,0.));
-                                        Vect3 Vz = UTIL::globalCubicDirectVel(R1+R2+R3, Vect3(0.,0.,1.));
+                                        Vect3 Vx = UTIL::globalCubicDirectVel(-1.0*(R1 + R2 + R3), Vect3(1.,0.,0.));
+                                        Vect3 Vy = UTIL::globalCubicDirectVel(-1.0*(R1 + R2 + R3), Vect3(0.,1.,0.));
+                                        Vect3 Vz = UTIL::globalCubicDirectVel(-1.0*(R1 + R2 + R3), Vect3(0.,0.,1.));
                                         
                                         DirVelMultsX[ix][iy][iz][I][J][K][jx][jy][jz] = Vx;
                                         DirVelMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = Vy;
@@ -751,11 +751,11 @@ void Node::UpdateMomentMults() {
                                         DirGradMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = Array <Vect3 > (3);
                                         DirGradMultsZ[ix][iy][iz][I][J][K][jx][jy][jz] = Array <Vect3 > (3);
                                         Array <Vect3 > GradsX(3, Vect3(0.0));
-                                        UTIL::globalCubicDirectVelGrads(R1 + R2 + R3, Vect3(1., 0., 0.), GradsX);
+                                        UTIL::globalCubicDirectVelGrads(-1.0*(R1 + R2 + R3), Vect3(1., 0., 0.), GradsX);
                                         Array <Vect3 > GradsY(3, Vect3(0.0));
-                                        UTIL::globalCubicDirectVelGrads(R1 + R2 + R3, Vect3(0., 1., 0.), GradsY);
+                                        UTIL::globalCubicDirectVelGrads(-1.0*(R1 + R2 + R3), Vect3(0., 1., 0.), GradsY);
                                         Array <Vect3 > GradsZ(3, Vect3(0.0));
-                                        UTIL::globalCubicDirectVelGrads(R1 + R2 + R3, Vect3(0., 0., 1.), GradsZ);
+                                        UTIL::globalCubicDirectVelGrads(-1.0*(R1 + R2 + R3), Vect3(0., 0., 1.), GradsZ);
                                         DirGradMultsX[ix][iy][iz][I][J][K][jx][jy][jz] = GradsX;
                                         DirGradMultsY[ix][iy][iz][I][J][K][jx][jy][jz] = GradsY;
                                         DirGradMultsZ[ix][iy][iz][I][J][K][jx][jy][jz] = GradsZ;
@@ -925,14 +925,13 @@ void Node::UpdateMomentMults() {
                         FaceCllpsMlt[ix][iy][iz][k1][k2] = Array < NeighbSet <REAL> > (globalSystem->MaxP);
 
                         for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
-                            CllpsMlt[ix][iy][iz][k1][k2][k3] = -pow(Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].N = -pow(Vect3(0., 0.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].S = -pow(Vect3(0., -.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].E = -pow(Vect3(0.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].W = -pow(Vect3(-.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].T = -pow(Vect3(0., .0, 0.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].B = -pow(Vect3(0., .0, -.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
-                            //  The minus sign here is to fix a bizarre bug - velocities were coming out negative.
+                            CllpsMlt[ix][iy][iz][k1][k2][k3] = pow(Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].N = pow(Vect3(0., 0.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].S = pow(Vect3(0., -.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].E = pow(Vect3(0.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].W = pow(Vect3(-.5, .0, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].T = pow(Vect3(0., .0, 0.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
+                            FaceCllpsMlt[ix][iy][iz][k1][k2][k3].B = pow(Vect3(0., .0, -.5) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
                         }
                     }
                 }

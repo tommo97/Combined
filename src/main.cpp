@@ -39,7 +39,7 @@ void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude,
 void PanelRecursiveDivide(PANEL &, Array <PANEL> &);
 void PanelTriangleDivide(PANEL &, Array <PANEL> &);
 REAL  PanelMaxTheta(PANEL &);
-void lgwt(int, Array <REAL> &, Array <REAL> &);
+
 /**************************************************************/
 class OutOfMemory {
 };
@@ -111,86 +111,100 @@ int main(int argc, char *argv[]) {
     UTIL::GetCellPans();
 
     //  Get quadrature points and weights
-    lgwt(8, UTIL::QuadPts, UTIL::QuadWts);
+    UTIL::NumCellGaussPts = 8;
+    UTIL::lgwt(UTIL::NumCellGaussPts, UTIL::QuadPts, UTIL::QuadWts);
     for (int i = 0; i < UTIL::QuadPts.size(); ++i)
     {
         UTIL::QuadPts[i] = UTIL::QuadPts[i] / 2.0;
         UTIL::QuadWts[i] = UTIL::QuadWts[i] / 2.0;
     }
 
-    TestFMM(argc, argv);
+    //TestFMM(argc, argv);
+   // WeeAmble();
 
-    return 0;
-    {
-        SYSTEM System(0);
-        globalSystem->Del2 = 0.001;//sqrt(2.)*0.5015;// * globalSystem->GambitScale*globalSystem->GambitScale;
-
-        WaveField::Depth = 25.0;
-        WaveField Field0, Field1;
-        Field0.SetPeakFreq(0.1/(2.*pi));
-        Field0.SetHSig(1.0);
-
-        Field1.SetModalFreq(0.1/(2.*pi)); 
-        Field1.SetHSig(1.0);
-        
-        Field0.getWaveFeld(&WaveField::JONSWAP,2.5,20.0,150);
-        Field1.getWaveFeld(&WaveField::Bretschneider,2.5,20.0,150);
-        Array <REAL> S0 = Field0.Spectrum(), S1 = Field1.Spectrum();
-        
-//        for (int i = 0; i < S1.size(); ++i)
-//            cout << S0[i] << " " << S1[i] << endl;
+//    return 0;
+//    {
+//        SYSTEM System(0);
+//        globalSystem->Del2 = 0.001;//sqrt(2.)*0.5015;// * globalSystem->GambitScale*globalSystem->GambitScale;
+//
+//        WaveField::Depth = 25.0;
+//        WaveField Field0, Field1;
+//        Field0.SetPeakFreq(0.1/(2.*pi));
+//        Field0.SetHSig(1.0);
+//
+//        Field1.SetModalFreq(0.1/(2.*pi)); 
+//        Field1.SetHSig(1.0);
 //        
-//        cout << TIME_STEPPER::SimTime << endl;
-        
-        
-        
-      
-        int N = 1000;
-        Array <REAL> xs = UTIL::globalLinspace(-3,3,N);
-        
-        Array <Vect3> Vels(N), Velps(N), Velqs(N);
-        for (int I = 0; I < N; ++I) {
-
-            Vect3 Target(xs[I], 0., 0.), Omega(0., -1.0, 0.0);
-
-            Vect3 VelP = UTIL::globalCubicDirectVel(Target,Omega);
-
-
-            int n = 100;
-            Array <REAL> pts = UTIL::globalLinspace(-0.5, 0.5, n);
-            Vect3 Vel(0., 0., 0.);
-            for (int i = 0; i < n; ++i)
-                for (int j = 0; j < n; ++j)
-                    for (int k = 0; k < n; ++k)
-                        Vel += UTIL::globalDirectVel(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)));
-
-            Vels[I] = Vel;
-            Velps[I] = VelP;
-
-            Vect3 VelQ(0., 0., 0.);
-            for (int i = 0; i < UTIL::QuadPts.size(); ++i)
-                for (int j = 0; j < UTIL::QuadPts.size(); ++j)
-                    for (int k = 0; k < UTIL::QuadPts.size(); ++k)
-                        VelQ += UTIL::QuadWts[i] * UTIL::QuadWts[j] * UTIL::QuadWts[k] *
-                            UTIL::globalDirectVel(Target - Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]), Omega);
-            Velqs[I] = VelQ;      // divided by 8 since the range of points is only -0.5->0.5 rather than -1->1
-        }
-        
-        UTIL::WriteMATLABMatrix1DVect3("Vels","Vels.mat",Vels);
-        UTIL::WriteMATLABMatrix1DVect3("VelPs","Vels.mat",Velps);
-        UTIL::WriteMATLABMatrix1DVect3("VelQs","Vels.mat",Velqs);
-        UTIL::WriteMATLABMatrix1D("xs","Vels.mat",xs);
-        
-        
-        
-//        return 0;
-        
-        
-        WeeAmble();
-        
-    }
-    return 0;
-    
+//        Field0.getWaveFeld(&WaveField::JONSWAP,2.5,20.0,150);
+//        Field1.getWaveFeld(&WaveField::Bretschneider,2.5,20.0,150);
+//        Array <REAL> S0 = Field0.Spectrum(), S1 = Field1.Spectrum();
+//        
+////        for (int i = 0; i < S1.size(); ++i)
+////            cout << S0[i] << " " << S1[i] << endl;
+////        
+////        cout << TIME_STEPPER::SimTime << endl;
+//        
+//        
+//        
+//      
+//        int N = 1000;
+//        Array <REAL> xs = UTIL::globalLinspace(-3,3,N);
+//        
+//        Array <Vect3> Vels(N), Velps(N), Velqs(N), VelGrad0(N), VelCubicGrad0(N), VelGrad1(N), VelCubicGrad1(N), VelGrad2(N), VelCubicGrad2(N);
+//        for (int I = 0; I < N; ++I) {
+//
+//            Vect3 Target(xs[I], 0., 0.), Omega(1., 1.0, 1.0);
+//
+//            Vect3 VelP = UTIL::globalCubicDirectVel(Target,Omega);
+//            Array <Vect3> GradsC(3, Vect3(0.0,0.0,0.0));
+//            UTIL::globalCubicDirectVelGrads(Target, Omega, GradsC);
+//            VelCubicGrad0[I] = GradsC[0];
+//            VelCubicGrad1[I] = GradsC[1];
+//            VelCubicGrad2[I] = GradsC[2];
+//
+//            int n = 100;
+//            Array <REAL> pts = UTIL::globalLinspace(-0.5, 0.5, n);
+//            Vect3 Vel(0., 0., 0.);
+//            Array <Vect3> Grads(3, Vect3(0.0,0.0,0.0));
+//            for (int i = 0; i < n; ++i)
+//                for (int j = 0; j < n; ++j)
+//                    for (int k = 0; k < n; ++k){
+//                        Vel += UTIL::globalDirectVel(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)));
+//                        UTIL::globalDirectVelGrads(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)), Grads);
+//                    }
+//            Vels[I] = Vel;
+//            Velps[I] = VelP;
+//            VelGrad0[I] = Grads[0];
+//            VelGrad1[I] = Grads[1];
+//            VelGrad2[I] = Grads[2];
+//
+//            Vect3 VelQ(0., 0., 0.);
+//            for (int i = 0; i < UTIL::QuadPts.size(); ++i)
+//                for (int j = 0; j < UTIL::QuadPts.size(); ++j)
+//                    for (int k = 0; k < UTIL::QuadPts.size(); ++k)
+//                        VelQ += UTIL::QuadWts[i] * UTIL::QuadWts[j] * UTIL::QuadWts[k] *
+//                            UTIL::globalDirectVel(Target - Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]), Omega);
+//            Velqs[I] = VelQ;      // divided by 8 since the range of points is only -0.5->0.5 rather than -1->1
+//        }
+//        
+//        UTIL::WriteMATLABMatrix1DVect3("Vels","Vels.mat",Vels);
+//        UTIL::WriteMATLABMatrix1DVect3("VelPs","Vels.mat",Velps);
+//        UTIL::WriteMATLABMatrix1DVect3("VelQs","Vels.mat",Velqs);
+//        UTIL::WriteMATLABMatrix1D("xs","Vels.mat",xs);
+//        UTIL::WriteMATLABMatrix1DVect3("Grads0","Vels.mat",VelGrad0);
+//        UTIL::WriteMATLABMatrix1DVect3("Grads1","Vels.mat",VelGrad1);
+//        UTIL::WriteMATLABMatrix1DVect3("Grads2","Vels.mat",VelGrad2);
+//        UTIL::WriteMATLABMatrix1DVect3("GradsC0","Vels.mat",VelCubicGrad0);
+//        UTIL::WriteMATLABMatrix1DVect3("GradsC1","Vels.mat",VelCubicGrad1);
+//        UTIL::WriteMATLABMatrix1DVect3("GradsC2","Vels.mat",VelCubicGrad2);
+//        
+////        return 0;
+//        
+//        
+//        
+//    }
+//    return 0;
+//    
     
     
     /*
@@ -259,7 +273,7 @@ int main(int argc, char *argv[]) {
         TIME_STEPPER::MaxTime = 100.0;
         globalSystem->useBodies = false;
 
-        globalSystem->NumTransVars = 1;
+        globalSystem->NumTransVars = 2;
 
 
     globalSystem->Initialise();
@@ -271,7 +285,7 @@ int main(int argc, char *argv[]) {
     {
         
         
-        REAL Radius = 10.0;
+        REAL Radius = 20.0;
         REAL gamma = 5.0;
         int n = 10000;
         Array <REAL> thetas = globalLinspace(0.0,2*pi,n);
@@ -285,7 +299,7 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < n; ++i)
         {
             Xs[i] = Centre + Radius * Vect3(cos(thetas[i]), sin(thetas[i]),0.0);
-            Oms[i] = -gamma * arc_length * Radius * Vect3(-sin(thetas[i]), cos(thetas[i]), 0.0);
+            Oms[i] = gamma * arc_length * Radius * Vect3(-sin(thetas[i]), cos(thetas[i]), 0.0);
         }
         
         
@@ -296,7 +310,7 @@ int main(int argc, char *argv[]) {
         {
             Xs[i].z *= -1;
             Oms[i] = -Oms[i];
-            IDs[i] = 0;
+            IDs[i] = 1;
         }
         
         
@@ -367,90 +381,6 @@ int main(int argc, char *argv[]) {
 #endif
 }
 
-/**************************************************************/
-void lgwt(int N, Array <REAL> &x, Array <REAL> &w)
-{
-/*
- * Translation of lgwt.m -- see original header below
-% lgwt.m
-%
-% This script is for computing definite integrals using Legendre-Gauss 
-% Quadrature. Computes the Legendre-Gauss nodes and weights  on an interval
-% [a,b] with truncation order N
-%
-% Suppose you have a continuous function f(x) which is defined on [a,b]
-% which you can evaluate at any x in [a,b]. Simply evaluate it at all of
-% the values contained in the x vector to obtain a vector f. Then compute
-% the definite integral using sum(f.*w);
-%
-% Written by Greg von Winckel - 02/25/2004
-*/
-
-    REAL a = -1.0, b = 1.0;
-    N = N - 1;
-    int N1 = N + 1, N2 = N + 2;
-    Array <REAL> xu = globalLinspace(-1.0, 1.0, N1);
-
-    // Initial guess
-    Array <REAL> y(N1);
-    x.allocate(N1);
-    w.allocate(N1);
-    for (int i = 0; i < N1; ++i)
-        y[i] = cos((2 * i + 1) * pi / (2 * N + 2))+(0.27 / N1) * sin(pi * xu[i] * N / N2);
-
-
-    // Legendre-Gauss Vandermonde Matrix
-    Array <Array <REAL> > L = UTIL::zeros(N1, N2);
-
-
-    // Derivative of LGVM
-     Array <REAL> Lp = Array <REAL> (N1,0.0);
-
-    // Compute the zeros of the N+1 Legendre Polynomial
-    // using the recursion relation and the Newton-Raphson method
-
-
-// Iterate until new points are uniformly within epsilon of old points
-    REAL Linf = 1.0e6;
-    while (Linf > 1e-10) {
-
-        for (int i = 0; i < N1; ++i) {
-            L[i][0] = 1.0;
-            Lp[i] = 0.0;
-            L[i][1] = y[i];
-        }
-
-        for (int i = 0; i < N1; ++i)
-            for (int k = 0; k < N; ++k)
-                L[i][k + 2] = (((2 * (k + 2)) - 1) * y[i] * L[i][k + 1]-(k + 1) * L[i][k]) / (k + 2);
-
-         
-        for (int i = 0; i < N1; ++i)
-            Lp[i] = N2 * (L[i][N] - y[i] * L[i][N1]) / (1.0 - y[i] * y[i]);
-
-
-        Array <REAL> y0 = y;
-        for (int i = 0; i < N1; ++i)
-            y[i] = y0[i] - L[i][N1] / Lp[i];
-
-        Linf = 0.0;
-        for (int i = 0; i < N1; ++i)
-            Linf = max(Linf, abs(y[i] - y0[i]));
-
-    }
-
-    x.allocate(N1);
-    w.allocate(N1);
-    for (int i = 0; i < N1; ++i) {
-        // Linear map from[-1, 1] to [a, b]
-        x[i] = (a * (1. - y[i]) + b * (1. + y[i])) / 2.0;
-
-        // Compute the weights
-        w[i] = (b-a)/((1.-y[i]*y[i])*Lp[i]*Lp[i])*(1.0*N2*N2)/(1.0*N1*N1);
-
-    }
-    
-}
 
 
 
@@ -963,86 +893,64 @@ Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega) {
 }
 /**************************************************************/
 Vect3 UTIL::globalCubicDirectVel(Vect3 diff, Vect3 omega) {
-    //if (diff.Dot(diff) > 3.0) {
+   if (diff.Dot(diff) > 4) {
         Vect3 VelQ(0., 0., 0.);
         for (int i = 0; i < UTIL::QuadPts.size(); ++i)
             for (int j = 0; j < UTIL::QuadPts.size(); ++j)
                 for (int k = 0; k < UTIL::QuadPts.size(); ++k)
                     VelQ += UTIL::QuadWts[i] * UTIL::QuadWts[j] * UTIL::QuadWts[k] *
                         UTIL::globalDirectVel(diff - Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]), omega);
-        return VelQ; // divide
-//    } else {
-//        Vect3 VelP(0., 0., 0.);
-//
-//
-//        for (int i = 0; i < 6; ++i) {
-//
-//            REAL Phi = UTIL::Pans[i]->HyperboloidSourcePhi(diff);
-//            //cout << Pans[i].TRANS[2] << " " << Phi << endl;
-//            VelP -= UTIL::Pans[i]->TRANS[2].Cross(omega) * Phi * two_pi / four_pi;
-//        }
-//        return VelP;
-//    }
+        return VelQ; 
+    } else {
+        Vect3 VelP(0., 0., 0.);
+        for (int i = 0; i < 6; ++i) {
+            REAL Phi = UTIL::Pans[i]->HyperboloidSourcePhi(diff);
+            VelP -= UTIL::Pans[i]->TRANS[2].Cross(omega) * Phi / 2.0;
+        }
+        return VelP;
+    }
 }
 
 /**************************************************************/
 void UTIL::globalDirectVelGrads(Vect3 diff, Vect3 omega, Array <Vect3> &Grads) {
-    //  Diff here is Xsource - Xtarget
+    //  Diff here is Xtarget - Xsource (hence -ve (-=) below)
     REAL R, R3, R5;
-    
     
     R = sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z + globalSystem->Del2);
     R3 = R*R*R;
     R5 = R3*R*R;
     
-    Grads[0].x  += -(3.0*diff.x*(omega.z*diff.y - omega.y*diff.z))/(four_pi*R5); 
-    Grads[0].y  += (3.0*diff.x*(omega.z*diff.x - omega.x*diff.z))/(four_pi*R5) - omega.z/(four_pi*R3);
-    Grads[0].z  += omega.y/(four_pi*R3) - (3.0*diff.x*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
-    Grads[1].x  += omega.z/(four_pi*R3) - (3.0*diff.y*(omega.z*diff.y - omega.y*diff.z))/(four_pi*R5);
-    Grads[1].y  += (3.0*diff.y*(omega.z*diff.x - omega.x*diff.z))/(four_pi*R5);
-    Grads[1].z  += -omega.x/(four_pi*R3) - (3.0*diff.y*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
-    Grads[2].x  += -omega.y/(four_pi*R3) - (3.0*diff.z*(omega.z*diff.y - omega.y*diff.z))/(four_pi*R5);
-    Grads[2].y  += omega.x/(four_pi*R3) + (3.0*diff.z*(omega.z*diff.x - omega.x*diff.z))/(four_pi*R5);
-    Grads[2].z  += -(3.0*diff.z*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
+    Grads[0].x  -= -(3.0*diff.x*(omega.z*diff.y - omega.y*diff.z))/(four_pi*R5); 
+    Grads[0].y  -= (3.0*diff.x*(omega.z*diff.x - omega.x*diff.z))/(four_pi*R5) - omega.z/(four_pi*R3);
+    Grads[0].z  -= omega.y/(four_pi*R3) - (3.0*diff.x*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
+    Grads[1].x  -= omega.z/(four_pi*R3) - (3.0*diff.y*(omega.z*diff.y - omega.y*diff.z))/(four_pi*R5);
+    Grads[1].y  -= (3.0*diff.y*(omega.z*diff.x - omega.x*diff.z))/(four_pi*R5);
+    Grads[1].z  -= -omega.x/(four_pi*R3) - (3.0*diff.y*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
+    Grads[2].x  -= -omega.y/(four_pi*R3) - (3.0*diff.z*(omega.z*diff.y - omega.y*diff.z))/(four_pi*R5);
+    Grads[2].y  -= omega.x/(four_pi*R3) + (3.0*diff.z*(omega.z*diff.x - omega.x*diff.z))/(four_pi*R5);
+    Grads[2].z  -= -(3.0*diff.z*(omega.y*diff.x - omega.x*diff.y))/(four_pi*R5);
     
 
 }
 /**************************************************************/
-void UTIL::globalCubicDirectVelGrads(Vect3 diff, Vect3 omega, Array <Vect3> &Grads) {
-    //  Diff here is Xsource - Xtarget
+void UTIL::globalCubicDirectVelGrads(Vect3 diff, Vect3 Omega, Array <Vect3> &Grads) {
+    //  Diff here is Xtarget - Xsource (hence -ve (-=) below)
 
-//    if (diff.Dot(diff) > .0) {
+
+    if (diff.Dot(diff) > 4) {
         for (int i = 0; i < UTIL::QuadPts.size(); ++i)
             for (int j = 0; j < UTIL::QuadPts.size(); ++j)
-                for (int k = 0; k < UTIL::QuadPts.size(); ++k) {
-                    REAL R, R3, R5;
-
-                    Vect3 DX = diff + Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]);
-                    R = sqrt(DX.x * DX.x + DX.y * DX.y + DX.z * DX.z + globalSystem->Del2);
-                    R3 = R * R*R;
-                    R5 = R3 * R*R;
-
-                    Grads[0].x += -(3.0 * DX.x * (omega.z * DX.y - omega.y * DX.z)) / (four_pi * R5);
-                    Grads[0].y += (3.0 * DX.x * (omega.z * DX.x - omega.x * DX.z)) / (four_pi * R5) - omega.z / (four_pi * R3);
-                    Grads[0].z += omega.y / (four_pi * R3) - (3.0 * DX.x * (omega.y * DX.x - omega.x * DX.y)) / (four_pi * R5);
-                    Grads[1].x += omega.z / (four_pi * R3) - (3.0 * DX.y * (omega.z * DX.y - omega.y * DX.z)) / (four_pi * R5);
-                    Grads[1].y += (3.0 * DX.y * (omega.z * DX.x - omega.x * DX.z)) / (four_pi * R5);
-                    Grads[1].z += -omega.x / (four_pi * R3) - (3.0 * DX.y * (omega.y * DX.x - omega.x * DX.y)) / (four_pi * R5);
-                    Grads[2].x += -omega.y / (four_pi * R3) - (3.0 * DX.z * (omega.z * DX.y - omega.y * DX.z)) / (four_pi * R5);
-                    Grads[2].y += omega.x / (four_pi * R3) + (3.0 * DX.z * (omega.z * DX.x - omega.x * DX.z)) / (four_pi * R5);
-                    Grads[2].z += -(3.0 * DX.z * (omega.y * DX.x - omega.x * DX.y)) / (four_pi * R5);
-                }
-//    }
-//    else
-//    {
-//        for (int i = 0; i < 6; ++i) {
-//            Vect3 V = UTIL::Pans[i]->SourceVel(diff) * two_pi/four_pi;
-//            Vect3 C = UTIL::Pans[i]->TRANS[2].Cross(omega);
-//            Grads[0] += V.x*C;
-//            Grads[1] += V.y*C;
-//            Grads[2] += V.z*C;
-//        }
-//    }
+                for (int k = 0; k < UTIL::QuadPts.size(); ++k)
+                    UTIL::globalDirectVelGrads(diff - Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]), UTIL::QuadWts[i] * UTIL::QuadWts[j] * UTIL::QuadWts[k] * Omega, Grads);
+    } else {
+        for (int i = 0; i < 6; ++i) {
+            Vect3 V = UTIL::Pans[i]->SourcePanelVelocity(diff) * two_pi / four_pi;
+            Vect3 C = UTIL::Pans[i]->TRANS[2].Cross(Omega);
+            Grads[0] += V.x*C;
+            Grads[1] += V.y*C;  // NB this is -ve because the return value for V.y in SourceVel is -ve (why?)
+            Grads[2] += V.z*C;
+        }
+    }
 }
 /**************************************************************/
 void SolveMatfileVels(string fname, int pmax, REAL del2) {
@@ -1407,8 +1315,6 @@ void SolveMatfileVels(string fname, int pmax, REAL del2) {
 //}
 
 /**************************************************************/
-
-
 void TestFMM(int argc, char *argv[]) {
 
     system("clear");
@@ -1810,7 +1716,7 @@ void TestFMM(int argc, char *argv[]) {
         Vect3 V(0, 0, 0);
 
         for (int j = 0; j < Posns.size(); ++j) {
-            Vect3 D = Posns[j] - Posns[Indices[i]];
+            Vect3 D = Posns[Indices[i]] - Posns[j];
             V += UTIL::globalCubicDirectVel(D, Omegas[j]);
 
             UTIL::globalCubicDirectVelGrads(D, Omegas[j], DirectVelGrads[i]);
@@ -1822,21 +1728,17 @@ void TestFMM(int argc, char *argv[]) {
         Vect3 VelN(0.), VelS(0.), VelE(0.), VelW(0.), VelT(0.), VelB(0.);
 
         for (int j = 0; j < Posns.size(); ++j) {
-            VelE += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(h, 0., 0.) + Posns[Indices[i]]), Omegas[j]);
-            VelW += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(-h, 0., 0.) + Posns[Indices[i]]), Omegas[j]);
-            VelN += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(0., h, 0.) + Posns[Indices[i]]), Omegas[j]);
-            VelS += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(0., -h, 0.) + Posns[Indices[i]]), Omegas[j]);
-            VelT += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(0., 0., h) + Posns[Indices[i]]), Omegas[j]);
-            VelB += UTIL::globalCubicDirectVel(Posns[j] - (Vect3(0., 0., -h) + Posns[Indices[i]]), Omegas[j]);
+            VelE += UTIL::globalCubicDirectVel(Posns[Indices[i]] + Vect3(h, 0., 0.) - Posns[j], Omegas[j]);
+            VelW += UTIL::globalCubicDirectVel(Posns[Indices[i]] - Vect3(h, 0., 0.) - Posns[j], Omegas[j]);
+            VelN += UTIL::globalCubicDirectVel(Posns[Indices[i]] + Vect3(0., h, 0.) - Posns[j], Omegas[j]);
+            VelS += UTIL::globalCubicDirectVel(Posns[Indices[i]] - Vect3(0., h, 0.) - Posns[j], Omegas[j]);
+            VelT += UTIL::globalCubicDirectVel(Posns[Indices[i]] + Vect3(0., 0., h) - Posns[j], Omegas[j]);
+            VelB += UTIL::globalCubicDirectVel(Posns[Indices[i]] - Vect3(0., 0., h) - Posns[j], Omegas[j]);
         }
-
-
-
-        NumVelGradients[i][0] = (VelE - VelW) / (2 * h);
-        NumVelGradients[i][1] = (VelN - VelS) / (2 * h);
-        NumVelGradients[i][2] = (VelT - VelB) / (2 * h);
-
-        DirectVels[i] = (V);
+        NumVelGradients[i][0] = (VelE - VelW) / (2. * h);
+        NumVelGradients[i][1] = (VelN - VelS) / (2. * h);
+        NumVelGradients[i][2] = (VelT - VelB) / (2. * h);
+        DirectVels[i] = V;
     }
     REAL t3 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     cout << "Done. Time elapsed: " << t3 - t2 << endl << "Calculating error L2 norm";
@@ -1849,12 +1751,12 @@ void TestFMM(int argc, char *argv[]) {
 
     RunningStat AbsErrsStats, RelErrsStats;
 
-	REAL ErrorPercent = 0.0, MaxErr = 0.0;
+    REAL ErrorPercent = 0.0, MaxErr = 0.0;
     for (int i = 0; i < Indices.size(); ++i) {
-        cout << "---" << endl << "Vel error percent: " << 100*(DirectVels[i] - FMMVels[Indices[i]]).Mag()/FMMVels[Indices[i]].Mag() << "%. " <<DirectVels[i] << " " << FMMVels[Indices[i]] << endl;
-        cout << "xGrads: err \t" << 100*(DirectVelGrads[i][0] - globalOctree->AllCells[Indices[i]]->VelGrads[0]).Mag()/globalOctree->AllCells[Indices[i]]->VelGrads[0].Mag() << " " << globalOctree->AllCells[Indices[i]]->VelGrads[0] << " \t" << DirectVelGrads[i][0] << "\t" << NumVelGradients[i][0] << endl;
-        cout << "yGrads: err \t" << 100*(DirectVelGrads[i][1] - globalOctree->AllCells[Indices[i]]->VelGrads[1]).Mag()/globalOctree->AllCells[Indices[i]]->VelGrads[1].Mag() << " " << globalOctree->AllCells[Indices[i]]->VelGrads[1] << " \t" << DirectVelGrads[i][1] << "\t" << NumVelGradients[i][1] << endl;
-        cout << "zGrads: err \t" << 100*(DirectVelGrads[i][2] - globalOctree->AllCells[Indices[i]]->VelGrads[2]).Mag()/globalOctree->AllCells[Indices[i]]->VelGrads[2].Mag() << " " << globalOctree->AllCells[Indices[i]]->VelGrads[2] << " \t" << DirectVelGrads[i][2] << "\t" << NumVelGradients[i][2] << endl;
+        cout << std::scientific << std::setprecision(3) << "---" << endl << "Vel error percent: " << 100 * (DirectVels[i] - FMMVels[Indices[i]]).Mag() / FMMVels[Indices[i]].Mag() << "%. " << DirectVels[i] << " " << FMMVels[Indices[i]] << endl;
+        cout << "xGrads: err " << 100 * (DirectVelGrads[i][0] - globalOctree->AllCells[Indices[i]]->VelGrads[0]).Mag() / globalOctree->AllCells[Indices[i]]->VelGrads[0].Mag() << " " << globalOctree->AllCells[Indices[i]]->VelGrads[0] << " \t" << DirectVelGrads[i][0] << "\t" << NumVelGradients[i][0] << endl;
+        cout << "yGrads: err " << 100 * (DirectVelGrads[i][1] - globalOctree->AllCells[Indices[i]]->VelGrads[1]).Mag() / globalOctree->AllCells[Indices[i]]->VelGrads[1].Mag() << " " << globalOctree->AllCells[Indices[i]]->VelGrads[1] << " \t" << DirectVelGrads[i][1] << "\t" << NumVelGradients[i][1] << endl;
+        cout << "zGrads: err " << 100 * (DirectVelGrads[i][2] - globalOctree->AllCells[Indices[i]]->VelGrads[2]).Mag() / globalOctree->AllCells[Indices[i]]->VelGrads[2].Mag() << " " << globalOctree->AllCells[Indices[i]]->VelGrads[2] << " \t" << DirectVelGrads[i][2] << "\t" << NumVelGradients[i][2] << endl;
         //cout << "Cell " << i << "\tError L2 Norm " << (DirectVels[i] - FMMVels[Indices[i]]).Mag() << " \t " << DirectVels[i] << endl << "\t\t\t\t\t\t " << FMMVels[Indices[i]] << endl;
         l2 += (DirectVels[i] - FMMVels[Indices[i]]).Mag()*(DirectVels[i] - FMMVels[Indices[i]]).Mag();
         Vmean += DirectVels[i].Mag();
@@ -1873,9 +1775,9 @@ void TestFMM(int argc, char *argv[]) {
         AbsErrsMax = max(AbsErrsMax, AbsErrs[i]);
         RelErrsMax = max(RelErrsMax, RelErrs[i]);
 
-		ErrorPercent += 100*(DirectVels[i] - FMMVels[Indices[i]]).Mag()/FMMVels[Indices[i]].Mag();
-		
-		MaxErr = max(MaxErr,100*(DirectVels[i] - FMMVels[Indices[i]]).Mag()/FMMVels[Indices[i]].Mag());
+        ErrorPercent += 100 * (DirectVels[i] - FMMVels[Indices[i]]).Mag() / FMMVels[Indices[i]].Mag();
+
+        MaxErr = max(MaxErr, 100 * (DirectVels[i] - FMMVels[Indices[i]]).Mag() / FMMVels[Indices[i]].Mag());
 
 
     }

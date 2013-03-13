@@ -429,7 +429,7 @@ void FVMCell::UpdateGradsFromDeltaOmega() {
                         for (int be = 0; be < 2; ++be)
                             for (int ce = 0; ce < 2; ++ce)
                                 if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad) {
-                                    Vect3 PV = Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - Position;
+                                    Vect3 PV = Position - Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position;
 
                                     UTIL::globalCubicDirectVelGrads(PV, (Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Omega - OmegaHold), VelGrads);
                                 }
@@ -1040,7 +1040,7 @@ void FVMCell::CollapseToIP(OctreeCapsule &IP) {
                         for (int be = 0; be < 2; ++be)
                             for (int ce = 0; ce < 2; ++ce)
                                 if (Parent->ISA[ix][iy][iz]->Children[ay][be][ce] && Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->HasLoad)
-                                    IP.Velocity += UTIL::globalCubicDirectVel(Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position - IP.tPosition,
+                                    IP.Velocity += UTIL::globalCubicDirectVel(IP.tPosition - Parent->ISA[ix][iy][iz]->Children[ay][be][ce]->Position,
                                         static_cast<FVMCell*> (Parent->ISA[ix][iy][iz]->Children[ay][be][ce])->Omega);
 }
 

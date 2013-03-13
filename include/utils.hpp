@@ -53,6 +53,7 @@ class UTIL {
 public:
 
     static unsigned long int cpu_t;
+    static int NumCellGaussPts;
     static inline Array < Array <double> > zeros(int a, int b) {
         return Array < Array <double> > (a, Array <double> (b, 0.0));
     }
@@ -149,6 +150,7 @@ public:
     static void PostAmble(string);
     static void GetCellPans();
     static Array <REAL> QuadPts, QuadWts;
+    static void lgwt(int N, Array <REAL> &x, Array <REAL> &w);
 };
 /**************************************************************/
  

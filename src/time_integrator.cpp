@@ -138,7 +138,7 @@ void TIME_STEPPER::TimeAdvance() {
         for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
             Vect3 D = globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position;
             globalOctree->AllCells[i]->Velocity += UTIL::globalDirectVel(D, globalOctree->AllCells[j]->Omega);
-            UTIL::globalCubicDirectVelGrads(D, globalOctree->AllCells[j]->Omega, globalSystem->Del2, globalOctree->AllCells[i]->VelGrads);
+            UTIL::globalCubicDirectVelGrads(D, globalOctree->AllCells[j]->Omega, globalOctree->AllCells[i]->VelGrads);
         }
 
     }

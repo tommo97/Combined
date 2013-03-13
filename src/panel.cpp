@@ -1506,7 +1506,7 @@ Vect3 PANEL::SourcePanelVelocity(Vect3 XP) {
         beta[i] = atan2(RMag[i] * R[i].Dot(ZetaCrossEta[i]), (R[i].Cross(aZeta[i])).Dot(R[i].Cross(aEta[i])));
   
         Mult[i] = (R[i].Cross(CornerNormal[i])).Dot(n0)/CornerMult[i];
-        cout << CornerNormal[i] << " " << CornerMult[i] << endl;
+//        cout << CornerNormal[i] << " " << CornerMult[i] << endl;
         REAL C = CornerMult[i];
         REAL u = RMag[i] + RMag[j] + 2.0 * C;
         REAL v = RMag[i] + RMag[j] - 2.0 * C;
@@ -1528,7 +1528,7 @@ Vect3 PANEL::SourcePanelVelocity(Vect3 XP) {
  
 
     Vect3 V = -1.0*VS + r.Dot(n0)*VD + PhiD*n0;
-    return V/two_pi;
+    return -1.0*V/two_pi;
 }
 /**************************************************************/
 Vect3 PANEL::GetTriTesselatedSourceVel(Vect3 Target) {

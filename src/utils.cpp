@@ -25,6 +25,7 @@ unsigned long int LineVelCnt = 0;
 int NumThreads = 1;
 
 long unsigned int UTIL::cpu_t = 0;
+int UTIL::NumCellGaussPts;
 Array <REAL> UTIL::QuadPts, UTIL::QuadWts;
 Array <PANEL*> UTIL::Pans;
 /**************************************************************/
@@ -46,6 +47,90 @@ double UTIL::FastInverseSqrt( double number )
         return y;
 }
 
+/**************************************************************/
+void UTIL::lgwt(int N, Array <REAL> &x, Array <REAL> &w)
+{
+/*
+ * Translation of lgwt.m -- see original header below
+% lgwt.m
+%
+% This script is for computing definite integrals using Legendre-Gauss 
+% Quadrature. Computes the Legendre-Gauss nodes and weights  on an interval
+% [a,b] with truncation order N
+%
+% Suppose you have a continuous function f(x) which is defined on [a,b]
+% which you can evaluate at any x in [a,b]. Simply evaluate it at all of
+% the values contained in the x vector to obtain a vector f. Then compute
+% the definite integral using sum(f.*w);
+%
+% Written by Greg von Winckel - 02/25/2004
+*/
+
+    REAL a = -1.0, b = 1.0;
+    N = N - 1;
+    int N1 = N + 1, N2 = N + 2;
+    Array <REAL> xu = globalLinspace(-1.0, 1.0, N1);
+
+    // Initial guess
+    Array <REAL> y(N1);
+    x.allocate(N1);
+    w.allocate(N1);
+    for (int i = 0; i < N1; ++i)
+        y[i] = cos((2 * i + 1) * pi / (2 * N + 2))+(0.27 / N1) * sin(pi * xu[i] * N / N2);
+
+
+    // Legendre-Gauss Vandermonde Matrix
+    Array <Array <REAL> > L = UTIL::zeros(N1, N2);
+
+
+    // Derivative of LGVM
+     Array <REAL> Lp = Array <REAL> (N1,0.0);
+
+    // Compute the zeros of the N+1 Legendre Polynomial
+    // using the recursion relation and the Newton-Raphson method
+
+
+// Iterate until new points are uniformly within epsilon of old points
+    REAL Linf = 1.0e6;
+    while (Linf > 1e-10) {
+
+        for (int i = 0; i < N1; ++i) {
+            L[i][0] = 1.0;
+            Lp[i] = 0.0;
+            L[i][1] = y[i];
+        }
+
+        for (int i = 0; i < N1; ++i)
+            for (int k = 0; k < N; ++k)
+                L[i][k + 2] = (((2 * (k + 2)) - 1) * y[i] * L[i][k + 1]-(k + 1) * L[i][k]) / (k + 2);
+
+         
+        for (int i = 0; i < N1; ++i)
+            Lp[i] = N2 * (L[i][N] - y[i] * L[i][N1]) / (1.0 - y[i] * y[i]);
+
+
+        Array <REAL> y0 = y;
+        for (int i = 0; i < N1; ++i)
+            y[i] = y0[i] - L[i][N1] / Lp[i];
+
+        Linf = 0.0;
+        for (int i = 0; i < N1; ++i)
+            Linf = max(Linf, abs(y[i] - y0[i]));
+
+    }
+
+    x.allocate(N1);
+    w.allocate(N1);
+    for (int i = 0; i < N1; ++i) {
+        // Linear map from[-1, 1] to [a, b]
+        x[i] = (a * (1. - y[i]) + b * (1. + y[i])) / 2.0;
+
+        // Compute the weights
+        w[i] = (b-a)/((1.-y[i]*y[i])*Lp[i]*Lp[i])*(1.0*N2*N2)/(1.0*N1*N1);
+
+    }
+    
+}
 /**************************************************************/
 
 int UTIL::read_neu(string infname,
