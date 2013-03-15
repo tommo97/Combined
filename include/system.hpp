@@ -35,7 +35,7 @@ class SYSTEM
 {
 public:
   int MaxP, NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval, NumTransVars;
-  bool LiftingLineMode, ZeroBodyRelativeMotion, useBodies;
+  bool LiftingLineMode, ZeroBodyRelativeMotion, useBodies, useFMM;
   REAL dtInit, GambitScale, Del2, DS, h;
   REAL Mu,Nu,Rho,Temp,g;
   string NeuFile, CaseName, WorkingDir;

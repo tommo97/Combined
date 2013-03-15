@@ -39,6 +39,8 @@ public:
     static void SolveMatfileVels(string fname, int pmax, REAL del2);
     static void TestBiotSavart();
     static void TestBEM();
+    static void SimpleTestPanel();
+    static void TestBEMFVM();
 
     
 

@@ -129,7 +129,14 @@ void TIME_STEPPER::TimeAdvance() {
     TIME_STEPPER::RKStep = 0;
     //  t0: Calc FMM and get DT
 #ifndef NOFMM
+    if (globalSystem->useFMM)
         DoFMM();
+    else {
+        for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+            globalOctree->AllCells[i]->Velocity = globalSystem->unscaledVinf * globalSystem->GambitScale;
+        }
+    }
+        
 #else
 #pragma omp parallel for
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
@@ -184,13 +191,17 @@ void TIME_STEPPER::TimeAdvance() {
             globalOctree->AllCells[i]->TransVarsHold[q] = globalOctree->AllCells[i]->TransVars[q];
         globalOctree->AllCells[i]->OmegaHold = globalOctree->AllCells[i]->Omega;
     }
-    globalOctree->DiffuseZAndAdvance(dt); 
-    globalOctree->StretchAndAdvance(dt);
-    globalOctree->DiffuseYAndAdvance(dt);
+    if (globalSystem->useFMM) {
+        globalOctree->DiffuseZAndAdvance(dt);
+        globalOctree->StretchAndAdvance(dt);
+        globalOctree->DiffuseYAndAdvance(dt);
+    }
     globalOctree->O2UWxAndAdvance(dt);
     globalOctree->O2UWyAndAdvance(dt);
     globalOctree->O2UWzAndAdvance(dt);
-    globalOctree->DiffuseXAndAdvance(dt);
+    if (globalSystem->useFMM)
+        globalOctree->DiffuseXAndAdvance(dt);
+
     //  Second sweep
     //  Reset initial values -- VelHold is still unchanged - can be reused; same with its gradients
     //#ifdef _OPENMP
@@ -207,13 +218,17 @@ void TIME_STEPPER::TimeAdvance() {
 
 
     }
-    globalOctree->DiffuseXAndAdvance(dt);
+    if (globalSystem->useFMM)
+        globalOctree->DiffuseXAndAdvance(dt);
+
     globalOctree->O2UWzAndAdvance(dt);
     globalOctree->O2UWyAndAdvance(dt);
     globalOctree->O2UWxAndAdvance(dt);
-    globalOctree->DiffuseYAndAdvance(dt);
-    globalOctree->StretchAndAdvance(dt);
-    globalOctree->DiffuseZAndAdvance(dt);   
+    if (globalSystem->useFMM) {
+        globalOctree->DiffuseYAndAdvance(dt);
+        globalOctree->StretchAndAdvance(dt);
+        globalOctree->DiffuseZAndAdvance(dt);
+    }
 
 
     for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
@@ -305,50 +320,27 @@ void TIME_STEPPER::time_loop() {
         globalOctree->Reset();
         
 //        globalOctree->GetVels();
-          for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->Velocity = Vect3(0.0);
-#pragma omp parallel for
         for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-            for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-                globalOctree->AllCells[i]->Velocity += UTIL::globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega);
+            globalOctree->AllCells[i]->Velocity = Vect3(0.0);
+
+        if (globalSystem->useFMM) {
+#pragma omp parallel for
+            for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+                for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+                    globalOctree->AllCells[i]->Velocity += UTIL::globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega);
+        }
         first_step = false;
     } else {
 #ifdef TIME_STEPS
         long unsigned int t1 = ticks();
 #endif
-        //        
-        //        //      Bin panel wake into tree
-        //        globalSystem->PutWakesInTree();
-        //        //      Calculate FMM
-        //        
-        //        if (!fmod((REAL) n, 100.0))
-        //            PruneNow = true;
-        //        globalOctree->Reset();
-        //        globalOctree->InitVelsGetLaplacian();
-        //        globalOctree->GetVels();
+       
 
         TimeAdvance();
         //      Produce Output
         if (globalTimeStepper->dump_next) {
             globalSystem->WriteData();
         }
-        //        //      Calculate Panel contribution to FVM face fluxes
-        //        globalSystem->GetFaceVels(); //  What do we do if this pushes it over the CFL limit?
-        //        //      Get Timestep length
-        //        time_step();
-        //
-        //        //      Get FMM Vels on Panels @ t and t+dt
-        //        globalSystem->GetPanelFMMVelocities(dt); //  t = t1
-        //        //      Advance FVM to t + dt
-        //        globalOctree->FVM(); //  t = t0
-        //        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
-        //        
-        //        
-        //        //      Evolve dw/dt
-        //        globalOctree->Integrate(); //  t = t0 -> t1
-
-
-
 
 
 #ifdef TIME_STEPS

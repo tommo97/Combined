@@ -1464,6 +1464,8 @@ Vect3 PANEL::DoubletPanelVelocity(Vect3 XP) {
 /**************************************************************/
 Vect3 PANEL::SourcePanelVelocity(Vect3 XP) {
 
+    Vect3 r = XP - CollocationPoint;
+    
     Array <Vect3> betadash(4,Vect3(0,0,0)), lndash(4,Vect3(0,0,0));
     Array <REAL> beta(4, 0.0), RMag(4, 0.0), Mult(4,0.0), ln(4,0.0);
     Array <Vect3> R(4);
@@ -1524,7 +1526,7 @@ Vect3 PANEL::SourcePanelVelocity(Vect3 XP) {
     
     Vect3 VS = ((Mult1Dash * ln[0] + lndash[0] * Mult[0]) + (Mult2Dash * ln[1] + lndash[1] * Mult[1]) - 
             (Mult3Dash * ln[2] + lndash[2] * Mult[2]) - (Mult4Dash * ln[3] + lndash[3] * Mult[3]));
-    Vect3 r = XP - CollocationPoint;
+    
  
 
     Vect3 V = -1.0*VS + r.Dot(n0)*VD + PhiD*n0;

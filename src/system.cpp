@@ -75,6 +75,7 @@ SYSTEM::SYSTEM(int NT) {
 /**************************************************************/
 void SYSTEM::Initialise() {
 
+    useFMM = true;
     scaledVinf = unscaledVinf*GambitScale;
     Nu = GambitScale * GambitScale * Mu / Rho;
     globalTimeStepper = new TIME_STEPPER();
@@ -422,23 +423,22 @@ void SYSTEM::GetFaceVels() {
 #ifdef TIME_STEPS
     long unsigned int t6 = ticks();
 #endif
-    if (globalSystem->useBodies) {
-        //#ifdef _OPENMP
-        //#pragma omp parallel for
-        //#endif
-        //    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        //        globalOctree->AllCells[i]->Phi = 0.0;
-        //
-        //
-        //        //      The following are multiplied by a half since the alogrithm used for potentials assumes potential on surface
-        //        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j)
-        //            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllBodyFaces[j]->BodyPanelPotential(globalOctree->AllCells[i]->Position);
-        //
-        //        for (int j = 0; j < BODY::AllProtoWakes.size(); ++j)
-        //            globalOctree->AllCells[i]->Phi += 0.5 * BODY::AllProtoWakes[j]->WakePanelPotential(globalOctree->AllCells[i]->Position);
-        //    }
+//    if (globalSystem->useBodies) {
+        #ifdef _OPENMP
+        #pragma omp parallel for
+#endif
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        Vect3 Target = globalOctree->AllCells[i]->Position;
+        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
+            //      The following are divided by 2 since they are the free space rather than the surface velocities
+            Vect3 VelS = BODY::AllBodyFaces[j]->Sigma * BODY::AllBodyFaces[j]->SourcePanelVelocity(Target) / 2.0;
+            Vect3 VelD = BODY::AllBodyFaces[j]->Mu * BODY::AllBodyFaces[j]->DoubletPanelVelocity(Target) / 2.0;
+            globalOctree->AllCells[i]->Velocity += (VelS - VelD);
+        }
     }
-    
+//    }
+        
+      
     
     for (int i = 0; i < globalOctree->AllCells.size(); ++i)
         globalOctree->AllCells[i]->SetVelsEqual();

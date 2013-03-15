@@ -54,7 +54,9 @@ int main(int argc, char *argv[]) {
     }
 
     //TEST::TestFMM(argc, argv);
-    TEST::TestBEM();
+//    TEST::SimpleTestPanel();
+//    return 0;
+    TEST::TestBEMFVM();
     return 0;
 
     
@@ -612,17 +614,17 @@ void UTIL::PreAmble() {
                 BODY::RATES[i] = rt;
 
             if (defRates == 1)
-                BODY::RATES[i] = rt * 2 * pi;
+                BODY::RATES[i] = rt * two_pi;
 
             if (defRates == 0)
-                BODY::RATES[i] = rt * 2 * pi / 60;
+                BODY::RATES[i] = rt * two_pi / 60.;
         }
 
         BODY::VELOCITY[i] = globalSystem->GambitScale * BODY::VELOCITY[i];
 
         if (useRevs) {
             Vect3 Om(fabs(BODY::RATES[BodyDatum - 1].x), fabs(BODY::RATES[BodyDatum - 1].y), fabs(BODY::RATES[BodyDatum - 1].z));
-            maxT = 2 * pi * nRevs / (max(Om));
+            maxT = two_pi * nRevs / (max(Om));
         }
         BODY::ReadNeuGetBodies(infname[i], "tmp", Disp[i], BODY::CGS[i], BODY::VELOCITY[i], BODY::ATTITUDE[i], BODY::RATES[i], flip[i], plane[i]);
     }
@@ -672,7 +674,7 @@ void UTIL::PreAmble() {
 
     BODY::PollFaces();
 
-    BODY::SetUpProtoWakes(0.01);
+    BODY::SetUpProtoWakes(globalSystem->DS * globalSystem->dtInit);
     Array < Array <REAL> > TRANS1, TRANS2, TRANS3, TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
         for (int j = 0; j < BODY::Bodies[i]->ProtoWakes.size(); ++j)

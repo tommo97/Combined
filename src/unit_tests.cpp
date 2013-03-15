@@ -21,19 +21,159 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include "unit_tests.hpp"
 /**************************************************************/
+void TEST::SimpleTestPanel() {
+   
+    
+    Vect3 Target = Vect3(6.,7.,8.);
+    
+    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 1.), Vect3(-1., 1., 1.));
+
+    P.GetNormal();
+    
+    
+
+    
+    
+    PANEL *src = &P;
+    P.Sigma = 1.0;
+    P.Gamma = 1.0;
+    P.Mu = 1.0;
+    
+
+    REAL PhiDoubletDirect = 0.0;
+    REAL PhiSourceDirect = 0.0;
+    int npts = 500;
+    {
+        int n = npts;
+        Array < Array < Vect3 > > CP;
+        Array < Array < Vect3 > > N;
+        Array < Array < REAL > > A;
+        src->DivPanel(n, CP, N, A);
+
+
+
+        for (int i = 0; i < n; ++i)
+            for (int j = 0; j < n; ++j) {
+
+                Vect3 DX = (CP[i][j] - Target);
+                REAL DXMag = DX.Mag();
+                REAL DXMag2 = DXMag * DXMag;
+                REAL DXMag3 = DXMag2 * DXMag;
+
+                Vect3 MU = P.Mu * A[i][j] * N[i][j];
+
+                PhiSourceDirect += -A[i][j] / (two_pi * DXMag);
+                PhiDoubletDirect += -P.Mu * A[i][j] * N[i][j].Dot(DX) / (two_pi * DXMag3);
+            }
+    }
+    
+    PANEL::FarField = 1e32;
+    REAL PhidSDP = 0.0, PhisSDP = 0.0;
+    PANEL::SourceDoubletPotential(src, Target, PhidSDP, PhisSDP, 1, 2);
+    cout << setprecision(16) << two_pi*PhiDoubletDirect << " PhiDdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
+    cout << setprecision(16) << two_pi*src->GetTriTesselatedDoubletPhi(Target) <<  " GetTriTesselatedDoubletPhi(x,y,z),  using the Willis method" << endl;
+    cout << setprecision(16) << two_pi*src->CurvedDoubletPhi(Target) << " CurvedDoubletPhi(x,y,z),  using the Wang method" << endl;
+    cout << setprecision(16) << two_pi*src->HyperboloidDoubletPhi(Target) << " HyperboloidDoubletPhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl;
+    cout << two_pi*PhidSDP << " SourceDoubletPotential(x,y,z),  using the flat panel (e.g. Katz & Plotkin) method" << endl;
+
+    cout << setprecision(16) << two_pi*PhiSourceDirect << " PhiSdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
+    cout << setprecision(16) << two_pi*src->HyperboloidSourcePhi(Target) << " HyperboloidSourcePhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl; 
+    cout << setprecision(16) << two_pi*src->CurvedSourcePhi(Target) << " CurvedSourcePhi(x,y,z),  using the Wang method" << endl;
+    cout << two_pi*PhisSDP << " SourceDoubletPotential(x,y,z),  using the flat panel (e.g. Katz & Plotkin) method" << endl;
+    
+ 
+
+}
+/**************************************************************/
+void TEST::TestBEMFVM() {
+    /* This function performs a BEM/FVM calculation over single or multiple steps.
+     * Use to test influence matrix calculalation, subtime-stepping etc.
+     */
+    
+    SYSTEM System(0);
+
+    //  Some default values
+    globalSystem->GambitScale = 15;
+    globalSystem->MaxP = 5;
+    globalSystem->Del2 = 0.001;// * globalSystem->GambitScale*globalSystem->GambitScale;
+    globalSystem->DS = .3;
+    globalSystem->dtInit = 0.1;
+    globalSystem->h = 2;
+    globalSystem->unscaledVinf = Vect3(1.0,0.0,0.0);
+    globalSystem->NumSubSteps = 1;
+
+
+    UTIL::cpu_t = ticks();
+
+    UTIL::PreAmble();
+
+    BODY::BodySubStep(1.0e3, 1);
+    
+    TIME_STEPPER::MaxTime = 100.0;
+    globalSystem->useBodies = false;
+    globalSystem->useFMM = false;
+
+    globalSystem->NumTransVars = 1;
+
+
+    globalSystem->Initialise();
+    
+    
+    
+
+    //  Make a roughly spherical scalar blob
+
+    Array <REAL> Thetas = UTIL::globalLinspace(0.0, two_pi, 360);
+    Array <REAL> Phis = UTIL::globalLinspace(0.0, two_pi, 360);
+    Array <REAL> R = UTIL::globalLinspace(0.0, globalSystem->GambitScale * 2.0, 100);
+
+    for (int i = 0; i < Thetas.size(); ++i)
+        for (int j = 0; j < Phis.size(); ++j)
+            for (int k = 0; j < R.size(); ++k) {
+                REAL theta = Thetas[i];
+                REAL phi = Phis[j];
+                REAL r = R[k];
+                REAL x = r * cos(phi) * cos(theta);
+                REAL y = r * cos(phi) * sin(theta);
+                REAL z = r * sin(phi);
+                Vect3 OM = Vect3(1.,1.,1.);
+                Vect3 PX = Vect3(x, y, z);
+                OctreeCapsule C(PX, OM, true);
+                C.AssociatedBody = 0;
+                globalOctree->Root->EvalCapsule(C);
+            }
+                
+             
+    
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+        globalOctree->AllCells[i]->Omega = Vect3(1.,1.,1.);
+    
+
+    globalSystem->TimeStep();
+
+
+    UTIL::PostAmble(string("Output.mat"));
+
+#ifndef use_NCURSES
+    if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - UTIL::cpu_t) / 1000 << " seconds" << endl;
+#endif
+    
+    
+}
+/**************************************************************/
 void TEST::TestBEM() {
     /* This function performs a BEM calculation over single or multiple steps.
      * Use to test influence matrix calculalation, subtime-stepping etc.
      */
     
-     SYSTEM System(0);
+    SYSTEM System(0);
 
     //  Some default values
     globalSystem->GambitScale = 1.0;
     globalSystem->MaxP = 5;
     globalSystem->Del2 = 0.001;// * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
-    globalSystem->dtInit = 1e6;
+    globalSystem->dtInit = 1.e3;
     globalSystem->h = 2;
     globalSystem->unscaledVinf = Vect3(0.0);
     globalSystem->NumSubSteps = 1;
@@ -44,11 +184,55 @@ void TEST::TestBEM() {
     UTIL::PreAmble();
 
     BODY::BodySubStep(1.0e3, 1);
+    
+    
+    Array <Vect3> SeedPoints = UTIL::globalLinspace(Vect3(-2.0,-4.,0.2),Vect3(-2.0,4.,0.2),25);
+    SeedPoints.push_back(UTIL::globalLinspace(Vect3(-2.0,-4.,0.0),Vect3(-2.0,4.,0.0),25));
+    Array <Array <Vect3> > Positions;
+    Positions.push_back(SeedPoints);
+    
+    REAL dt = 0.05, dlta = 1e-6;
+    Array <Array <Array <REAL> > > PhiDs, PhiSs;
+
+    for (int i = 0; i < 200; ++i) {
+        Array <Vect3> Posns = Positions.back();
+        Array <Vect3> Vels(Posns.size(), Vect3(0.0));
+        for (int j = 0; j < Posns.size(); ++j) {
+            Vect3 Target = Posns[j];
+            PhiDs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+            PhiSs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+#pragma omp parallel for
+            for (int k = 0; k < BODY::Bodies[0]->Faces.size(); ++k) {
+                PANEL *src = &BODY::Bodies[0]->Faces[k];
+                //      The following are divided by 2 since they are the free space rather than the surface velocities
+                Vels[j] += src->Sigma * src->SourcePanelVelocity(Target) / 2.0;
+                Vels[j] -= src->Mu * src->DoubletPanelVelocity(Target) / 2.0;
+            }
+            #pragma omp parallel for
+            for (int k = 0; k < BODY::Bodies[0]->ProtoWakes[0].size(); ++k) {
+                PANEL *src = &BODY::Bodies[0]->ProtoWakes[0][k];
+                //      The following are divided by 2 since they are the free space rather than the surface velocities
+                Vels[j] -= src->Gamma * src->DoubletPanelVelocity(Target) / 2.0;
+            }
+            Posns[j] += (Vels[j] + Vect3(1.0,0.0,0.0)) * dt;
+        }
+        Positions.push_back(Posns);
+        cout << dt * i << endl; 
+    }
+    
+    
+    
+    
+    UTIL::WriteMATLABMatrix2DVect3("PointPositions","Output.mat",Positions);
+    
+    
+    
+    
 
     UTIL::PostAmble(string("Output.mat"));
 
 #ifndef use_NCURSES
-    if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
+    if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - UTIL::cpu_t) / 1000 << " seconds" << endl;
 #endif
     
     
@@ -204,7 +388,7 @@ void TEST::TestPanel() {
     cout << "--------------" << endl;
 //    PANEL P(Vect3(-2.1, -3.2, 4.0), Vect3(2.3, -1.4, 3.0), Vect3(1.5, 2.6, 1.0), Vect3(-1.7, 2.8, 0.0));
 //        PANEL P(Vect3(-1.2, -1.3, 0.2), Vect3(1.5, -1, 1), Vect3(1, 1, 0.12), Vect3(-1.23, 0.987, -0.3));
-    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 0.));
+    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 1.), Vect3(-1., 1., 1.));
 
     P.GetNormal();
     

@@ -604,19 +604,22 @@ void FVMCell::O1UW() {
 
 /**************************************************************/
 void FVMCell::GetISBVels() {
-    Velocity = VelHold;
-    for (int i = 0; i < 216; ++i)
-        if (LinISB[i]) {
-            Vect3 DeltaOmega = LinISB[i]->Omega - (static_cast<FVMCell*> (LinISB[i]))->OmegaHold;
-            Velocity += Node::ISBDirMultsX[indx][i] * DeltaOmega.x;
-            Velocity += Node::ISBDirMultsY[indx][i] * DeltaOmega.y;
-            Velocity += Node::ISBDirMultsZ[indx][i] * DeltaOmega.z;
-        }
+    if (globalSystem->useFMM) {
+        Velocity = VelHold;
+        for (int i = 0; i < 216; ++i)
+            if (LinISB[i]) {
+                Vect3 DeltaOmega = LinISB[i]->Omega - (static_cast<FVMCell*> (LinISB[i]))->OmegaHold;
+                Velocity += Node::ISBDirMultsX[indx][i] * DeltaOmega.x;
+                Velocity += Node::ISBDirMultsY[indx][i] * DeltaOmega.y;
+                Velocity += Node::ISBDirMultsZ[indx][i] * DeltaOmega.z;
+            }
+    }
 }
 
 /**************************************************************/
 void FVMCell::GetISAVels() {
-    Velocity = VelHold;
+    if (globalSystem->useFMM) {
+        Velocity = VelHold;
         for (int i = 0; i < 27; ++i)
             if (LinISA[i]) {
                 Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (LinISA[i]))->OmegaHold;
@@ -624,48 +627,52 @@ void FVMCell::GetISAVels() {
                 Velocity += Node::ISADirMultsY[i] * DeltaOmega.y;
                 Velocity += Node::ISADirMultsZ[i] * DeltaOmega.z;
             }
+    }
 }
 
 /**************************************************************/
 void FVMCell::GetISBGrads() {
-    VelGrads = VelGradsHold;
-    for (int i = 0; i < 216; ++i)
-        if (LinISB[i]) {
-            Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (LinISB[i]))->OmegaHold;
-            VelGrads[0] += Node::ISBGradMultsX[indx][i][0] * DeltaOmega.x;
-            VelGrads[0] += Node::ISBGradMultsY[indx][i][0] * DeltaOmega.y;
-            VelGrads[0] += Node::ISBGradMultsZ[indx][i][0] * DeltaOmega.z;
+    if (globalSystem->useFMM) {
+        VelGrads = VelGradsHold;
+        for (int i = 0; i < 216; ++i)
+            if (LinISB[i]) {
+                Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (LinISB[i]))->OmegaHold;
+                VelGrads[0] += Node::ISBGradMultsX[indx][i][0] * DeltaOmega.x;
+                VelGrads[0] += Node::ISBGradMultsY[indx][i][0] * DeltaOmega.y;
+                VelGrads[0] += Node::ISBGradMultsZ[indx][i][0] * DeltaOmega.z;
 
-            VelGrads[1] += Node::ISBGradMultsX[indx][i][1] * DeltaOmega.x;
-            VelGrads[1] += Node::ISBGradMultsY[indx][i][1] * DeltaOmega.y;
-            VelGrads[1] += Node::ISBGradMultsZ[indx][i][1] * DeltaOmega.z;
+                VelGrads[1] += Node::ISBGradMultsX[indx][i][1] * DeltaOmega.x;
+                VelGrads[1] += Node::ISBGradMultsY[indx][i][1] * DeltaOmega.y;
+                VelGrads[1] += Node::ISBGradMultsZ[indx][i][1] * DeltaOmega.z;
 
-            VelGrads[2] += Node::ISBGradMultsX[indx][i][2] * DeltaOmega.x;
-            VelGrads[2] += Node::ISBGradMultsY[indx][i][2] * DeltaOmega.y;
-            VelGrads[2] += Node::ISBGradMultsZ[indx][i][2] * DeltaOmega.z;
-        }
+                VelGrads[2] += Node::ISBGradMultsX[indx][i][2] * DeltaOmega.x;
+                VelGrads[2] += Node::ISBGradMultsY[indx][i][2] * DeltaOmega.y;
+                VelGrads[2] += Node::ISBGradMultsZ[indx][i][2] * DeltaOmega.z;
+            }
+    }
 }
 
 /**************************************************************/
 void FVMCell::GetISAGrads() {
-    VelGrads = VelGradsHold;
+    if (globalSystem->useFMM) {
+        VelGrads = VelGradsHold;
         for (int i = 0; i < 27; ++i)
             if (LinISA[i]) {
                 Vect3 DeltaOmega = LinISA[i]->Omega - (static_cast<FVMCell*> (LinISA[i]))->OmegaHold;
                 VelGrads[0] += Node::ISAGradMultsX[i][0] * DeltaOmega.x;
                 VelGrads[0] += Node::ISAGradMultsY[i][0] * DeltaOmega.y;
                 VelGrads[0] += Node::ISAGradMultsZ[i][0] * DeltaOmega.z;
-    
+
                 VelGrads[1] += Node::ISAGradMultsX[i][1] * DeltaOmega.x;
                 VelGrads[1] += Node::ISAGradMultsY[i][1] * DeltaOmega.y;
                 VelGrads[1] += Node::ISAGradMultsZ[i][1] * DeltaOmega.z;
-    
+
                 VelGrads[2] += Node::ISAGradMultsX[i][2] * DeltaOmega.x;
                 VelGrads[2] += Node::ISAGradMultsY[i][2] * DeltaOmega.y;
                 VelGrads[2] += Node::ISAGradMultsZ[i][2] * DeltaOmega.z;
             }
+    }
 }
-
 /**************************************************************/
 void FVMCell::Stretch() {
     Vect3 GradU(VelGrads[0].x, VelGrads[1].x, VelGrads[2].x);
