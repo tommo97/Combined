@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define TYPES_INCL
 
 //#define NOFMM
+#define MAXMEM 90
 
 #define STRINGIZE(X) #X
 #define StringFromMakefile(X) (STRINGIZE(X))
@@ -65,7 +66,7 @@ class Branch;
 class FVMCell;
 class Node;
 class OctreeCapsule;
-
+class OutOfMemory {};
 
 
 /**************************************************************/

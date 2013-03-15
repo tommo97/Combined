@@ -45,7 +45,6 @@ public:
 
 
 #ifdef ARRAY_NO_CHECK
-
     Array(int n, const T &t) : length(n), data_(new T[length]) {
 #else
 

@@ -1547,3 +1547,126 @@ Vect3 PANEL::GetTriTesselatedSourceVel(Vect3 Target) {
     PANEL::CornerCount = 4;
 
 }    
+
+/**************************************************************/
+REAL PANEL::PanelMaxTheta(PANEL &P)
+{
+    Vect3 N1 = ((P.C2-P.C1).Cross(P.C1-P.C4)).Normalise();
+    Vect3 N2 = ((P.C3-P.C2).Cross(P.C2-P.C1)).Normalise();
+    Vect3 N3 = ((P.C4-P.C3).Cross(P.C3-P.C2)).Normalise();
+    Vect3 N4 = ((P.C1-P.C4).Cross(P.C4-P.C3)).Normalise();
+    
+    
+    REAL MaxTheta = max(acosd(N1.Dot(N2)),acosd(N1.Dot(N3)));
+    MaxTheta = max(MaxTheta,acosd(N1.Dot(N4)));
+    MaxTheta = max(MaxTheta,acosd(N2.Dot(N3)));
+    MaxTheta = max(MaxTheta,acosd(N2.Dot(N4)));
+    MaxTheta = max(MaxTheta,acosd(N3.Dot(N4)));
+    
+    return MaxTheta;
+    
+}
+/**************************************************************/
+void PANEL::PanelTriangleDivide(PANEL &P, Array <PANEL> &Output)
+{
+    Array <PANEL>  tmp(4);
+    Vect3 C1 = P.C1, C2 = P.C2, C3 = P.C3, C4 = P.C4;
+    Vect3 CP = 0.25*(C1 + C2 + C3 + C4);
+   
+    //  Subdivide panel
+    
+
+    PANEL::NumPans += 4;
+    tmp[0] = PANEL(P.C1, P.C2, CP, P.C1);
+    tmp[0].GetNormal();
+    
+    tmp[1] = PANEL(P.C2, P.C3, CP, P.C2);
+    tmp[1].GetNormal();
+    
+    tmp[2] = PANEL(P.C3, P.C4, CP, P.C3);
+    tmp[2].GetNormal();
+    
+    tmp[3] = PANEL(P.C4, P.C1, CP, P.C4);
+    tmp[3].GetNormal();
+    
+    Output.push_back(tmp[0]);
+    Output.push_back(tmp[1]);
+    Output.push_back(tmp[2]);
+    Output.push_back(tmp[3]);
+
+}
+/**************************************************************/
+void PANEL::PanelRecursiveDivide(PANEL &P, Array <PANEL> &Output)
+{
+    
+    PANEL::RecurseLev += 1;
+    Array <PANEL>  tmp(4);
+    //  Get curvature of original panel
+    
+    Vect3 C1 = P.C1, C2 = P.C2, C3 = P.C3, C4 = P.C4;
+    Vect3 CP = 0.25*(C1 + C2 + C3 + C4);
+   
+    //  Subdivide panel
+    
+    Vect3 C12 = 0.5*(P.C1 + P.C2);
+    Vect3 C23 = 0.5*(P.C2 + P.C3);
+    Vect3 C34 = 0.5*(P.C3 + P.C4);
+    Vect3 C41 = 0.5*(P.C4 + P.C1);
+    PANEL::NumPans += 3;
+
+    tmp[0] = PANEL(P.C1, C12, CP, C41);
+    tmp[0].GetNormal();
+    REAL th1 = PanelMaxTheta(tmp[0]);
+    
+    tmp[1] = PANEL(C12, P.C2, C23, CP);
+    tmp[1].GetNormal();
+    REAL th2 = PanelMaxTheta(tmp[1]);
+    
+    tmp[2] = PANEL(CP, C23, P.C3, C34);
+    tmp[2].GetNormal();
+    REAL th3 = PanelMaxTheta(tmp[2]);
+    
+    tmp[3] = PANEL(C41, CP, C34, P.C4);
+    tmp[3].GetNormal();
+    REAL th4 = PanelMaxTheta(tmp[3]);
+    
+    
+    
+
+
+    //cout << th1 << " " << th2 << " " << th3 << " " << th4 << " " << PANEL::NumPans << endl;
+    if (th1 > PANEL::MaxTheta)
+        if (PANEL::RecurseLev > PANEL::MaxRecurse)
+            PanelTriangleDivide(tmp[0], Output);
+        else
+            PanelRecursiveDivide(tmp[0], Output);
+    else
+        Output.push_back(tmp[0]);
+
+    if (th2 > PANEL::MaxTheta)
+        if (PANEL::RecurseLev > PANEL::MaxRecurse)
+            PanelTriangleDivide(tmp[1], Output);
+        else
+            PanelRecursiveDivide(tmp[1], Output);
+    else
+        Output.push_back(tmp[1]);
+
+    if (th3 > PANEL::MaxTheta)
+        if (PANEL::RecurseLev > PANEL::MaxRecurse)
+            PanelTriangleDivide(tmp[2], Output);
+        else
+            PanelRecursiveDivide(tmp[2], Output);
+    else
+        Output.push_back(tmp[2]);
+
+    if (th4 > PANEL::MaxTheta)
+        if (PANEL::RecurseLev > PANEL::MaxRecurse)
+            PanelTriangleDivide(tmp[3], Output);
+        else
+            PanelRecursiveDivide(tmp[3], Output);
+    else
+        Output.push_back(tmp[3]);
+    
+    PANEL::RecurseLev -= 1;
+    
+}

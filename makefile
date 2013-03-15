@@ -92,7 +92,7 @@ endif
 
 CFLAGS = $(CC_COMMON_FLAGS)
 
-SRC = types.cpp utils.cpp pgesv.cpp panel.cpp body.cpp system.cpp io.cpp tree.cpp node.cpp branch.cpp cell.cpp time_integrator.cpp waves.cpp
+SRC = types.cpp utils.cpp pgesv.cpp panel.cpp body.cpp system.cpp io.cpp tree.cpp node.cpp branch.cpp cell.cpp time_integrator.cpp waves.cpp unit_tests.cpp
 HEADERS = $(SRC:.cpp=.hpp)
 SOURCES = $(SRC) main.cpp 
 
