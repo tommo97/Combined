@@ -129,6 +129,8 @@ void TIME_STEPPER::TimeAdvance() {
     TIME_STEPPER::RKStep = 0;
     //  t0: Calc FMM and get DT
 #ifndef NOFMM
+    
+    
     if (globalSystem->useFMM)
         DoFMM();
     else {
@@ -321,14 +323,14 @@ void TIME_STEPPER::time_loop() {
         
 //        globalOctree->GetVels();
         for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-            globalOctree->AllCells[i]->Velocity = Vect3(0.0);
+            globalOctree->AllCells[i]->Velocity = Vect3(globalSystem->GambitScale * globalSystem->unscaledVinf);
 
-        if (globalSystem->useFMM) {
-#pragma omp parallel for
-            for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-                for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-                    globalOctree->AllCells[i]->Velocity += UTIL::globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega);
-        }
+//        if (globalSystem->useFMM) {
+//#pragma omp parallel for
+//            for (int i = 0; i < globalOctree->AllCells.size(); ++i)
+//                for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+//                    globalOctree->AllCells[i]->Velocity += UTIL::globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega);
+//        }
         first_step = false;
     } else {
 #ifdef TIME_STEPS
@@ -359,7 +361,7 @@ void TIME_STEPPER::time_step() {
 #ifdef TIME_STEPS
     long unsigned int t7 = ticks();
 #endif
-    //  Need a sensible way to figure out how long to make the globla Eulerian time step
+    //  Need a sensible way to figure out how long to make the global Eulerian time step
     //  and then the number and length of the Lagrangian time steps
 
     //  First off calculate the Eulerian time-step length

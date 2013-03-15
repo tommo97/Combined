@@ -424,19 +424,19 @@ void SYSTEM::GetFaceVels() {
     long unsigned int t6 = ticks();
 #endif
 //    if (globalSystem->useBodies) {
-        #ifdef _OPENMP
+#ifdef _OPENMP
         #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        Vect3 Target = globalOctree->AllCells[i]->Position;
-        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
+    for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
+        for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+            Vect3 Target = globalOctree->AllCells[i]->Position;
             //      The following are divided by 2 since they are the free space rather than the surface velocities
             Vect3 VelS = BODY::AllBodyFaces[j]->Sigma * BODY::AllBodyFaces[j]->SourcePanelVelocity(Target) / 2.0;
             Vect3 VelD = BODY::AllBodyFaces[j]->Mu * BODY::AllBodyFaces[j]->DoubletPanelVelocity(Target) / 2.0;
             globalOctree->AllCells[i]->Velocity += (VelS - VelD);
         }
     }
-//    }
+    //    }
         
       
     

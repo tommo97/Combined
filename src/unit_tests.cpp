@@ -109,15 +109,17 @@ void TEST::TestBEMFVM() {
 
     BODY::BodySubStep(1.0e3, 1);
     
+    TIME_STEPPER::SimTime = BODY::Time = 0.0;
+    
     TIME_STEPPER::MaxTime = 100.0;
     globalSystem->useBodies = false;
-    globalSystem->useFMM = false;
+    
 
     globalSystem->NumTransVars = 1;
 
 
     globalSystem->Initialise();
-    
+    globalSystem->useFMM = false;
     
     
 
@@ -125,11 +127,11 @@ void TEST::TestBEMFVM() {
 
     Array <REAL> Thetas = UTIL::globalLinspace(0.0, two_pi, 360);
     Array <REAL> Phis = UTIL::globalLinspace(0.0, two_pi, 360);
-    Array <REAL> R = UTIL::globalLinspace(0.0, globalSystem->GambitScale * 2.0, 100);
+    Array <REAL> R = UTIL::globalLinspace(0.0, globalSystem->GambitScale * .50, 100);
 
     for (int i = 0; i < Thetas.size(); ++i)
         for (int j = 0; j < Phis.size(); ++j)
-            for (int k = 0; j < R.size(); ++k) {
+            for (int k = 0; k < R.size(); ++k) {
                 REAL theta = Thetas[i];
                 REAL phi = Phis[j];
                 REAL r = R[k];
