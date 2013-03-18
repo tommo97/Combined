@@ -1,11 +1,11 @@
 clear all; clear mex; clc; close all
 
-val = 50;
+val = .1;
 col(1) = 'r';
 col(2) = 'b';
 
 
-IDs = [8];
+IDs = [5];
 RANGE = 1:length(IDs);
 %matlabpool close force local
 %matlabpool(7)
@@ -42,7 +42,7 @@ for i = RANGE
     
     for j = 1:Data(i).NumTransVars
         Data(i).V(j).mag = zeros(max(Data(i).subs));
-        Data(i).V(j).mag(Data(i).inds) = sqrt(Data(i).TransVars_x(:,j) + Data(i).TransVars_y(:,j).^2 + Data(i).TransVars_z(:,j).^2);
+        Data(i).V(j).mag(Data(i).inds) = sqrt(Data(i).TransVars_x(:,j).^2 + Data(i).TransVars_y(:,j).^2 + Data(i).TransVars_z(:,j).^2);
         
     end
     disp(['Domain size: ' num2str(size(Data(i).VI.mag)) '; i.e. ' num2str(numel(Data(i).VI.mag)) ' cells' ]);
@@ -63,7 +63,7 @@ for i = RANGE
     
     figure
     for j = 1:Data(i).NumTransVars
-        Data(i).p(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,0.1));
+        Data(i).p(j) = patch(isosurface(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,val));
         isonormals(Data(i).XI,Data(i).YI,Data(i).ZI,Data(i).V(j).mag,Data(i).p(j));
         set(Data(i).p(j),'FaceColor',col(j),'EdgeColor','none');%,'faceAlpha',1)
         
@@ -97,6 +97,7 @@ for i = RANGE
     print(gcf,['normal-ring-' num2str(i) '.jpg'],'-r300','-djpeg')
 end
 
+axis tight
 
 
 
