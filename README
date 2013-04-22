@@ -31,6 +31,9 @@ some form of:
 * lapack: Linear Algebra PACKage
 * blas: Basic Linear Algebra Subprograms
 * ATLAS: Automatically Tuned Linear Algebra Software
+(To compile ATLAS, obtain ATLAS and Netlib Lapack source. The following configure command seems to work reasonably well 
+../configure -b 64 -Fa alg -fPIC --shared -D c -DPentiumCPS=3000 -Si latune 1 --prefix=/usr/local --with-netlib-lapack-tarfile=/path/to/lapack-3.4.2.tgz 
+)
 * gfortran libraries if Fortran varients of blas are used.
 
 # Obtaining the latest version of the code
