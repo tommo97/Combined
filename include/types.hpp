@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 //  Enable GNU Scientific Library linear algebra - uses GSL matrix/Array classes. Using LAPACK/ATLAS is faster...
 //#define USEGSL
-//#define RECURSE
+#define RECURSE
 using namespace std;
 #define MODE_3D
 //#define _PNGWRITER
@@ -48,16 +48,16 @@ using namespace std;
 #define LIMITER Koren
 
 //#define COLLAPSE_TO_FACES
-#define USE_SWSS
+//#define USE_SWSS
 #define NX 300
 #define NY 300
 //  Disables bounds checking in Array class... use with caution. Make sure code runs, and doesn't change...
-#define ARRAY_NO_CHECK
+//#define ARRAY_NO_CHECK
 //#define USE_ROLLED_LOOPS
 
 //  Some simulation parameters
 #define USE_ARRAY
-//#define TIME_STEPS
+#define TIME_STEPS
 
 
 /**************************************************************/
@@ -83,6 +83,7 @@ class OutOfMemory {};
 #define ARRAY11(type) ARRAY10(Array < type >)
 #define ARRAY12(type) ARRAY11(Array < type >)
 #define ARRAY13(type) ARRAY12(Array < type >)
+
 /**************************************************************/
 
 #define USE_MATRIX_INVERSE
@@ -299,6 +300,7 @@ class OctreeCapsule
 public:
     int S, AssociatedBody;
     Vect3 Position, Omega, tPosition, Velocity;
+    Vect3 *Ptr2CellVelocity, *Ptr2CellPosition;
 
     bool has_load, IP, toMonitor;
 

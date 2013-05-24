@@ -68,7 +68,7 @@ YEAR := -D'DATE_YEAR=$(shell date +"20%y")'
 CC_PNG_FLAGS = -DNO_FREETYPE
 LD_PNG_FLAGS = -DNO_FREETYPE
 CC_FLAGS = -m64 -g -I/usr/local/include -I include
-LD_COMMON_FLAGS = -m64 $(OMP_FLAG) -lmatio -lncurses -lm -lz  -lgfortran
+LD_COMMON_FLAGS = -m64 $(OMP_FLAG) -lmatio -lncurses -lm -lz
 LD_DEBUG_COMMON_FLAGS = -m64 $(OMP_DEBUG_FLAG) -lmatio -lncurses -lm -lz  -lgfortran
 
 CC_DEBUG_FLAGS =  -c $(VERDEF) $(DATETIME) $(YEAR) $(CC_PNG_FLAGS) $(CC_FLAGS) $(OMP_DEBUG_FLAG) $(DEBUG_FLAGS)
@@ -80,12 +80,12 @@ ifeq ($(platform), MacOS)
 else
     ifneq ($(CC),sunCC)
 	ifeq ($(OMP_FLAG),-fopenmp)
-	        LD_FLAGS = $(LD_PNG_FLAGS) -llapack -lgsl -lptf77blas -lptcblas -latlas  $(LD_COMMON_FLAGS)
+	        LD_FLAGS = $(LD_PNG_FLAGS)   -lgfortran -llapack -lgsl -lptf77blas -lptcblas -latlas  $(LD_COMMON_FLAGS)
 	    else
-		LD_FLAGS = $(LD_PNG_FLAGS) -llapack -lgsl -lf77blas -lcblas -latlas   $(LD_COMMON_FLAGS)
+		LD_FLAGS = $(LD_PNG_FLAGS)   -lgfortran -llapack -lgsl -lf77blas -lcblas -latlas   $(LD_COMMON_FLAGS)
 	endif
     else
-	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS)  $(OPT_FLAGS) -llapack -lgsl -lgslcblas
+	LD_FLAGS = $(LD_COMMON_FLAGS) $(LD_PNG_FLAGS)  $(OPT_FLAGS) -xlic_lib=sunperf -lgsl
     endif
 endif
 

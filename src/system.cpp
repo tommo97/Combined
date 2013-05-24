@@ -49,7 +49,7 @@ SYSTEM::SYSTEM(int NT) {
     unscaledVinf = scaledVinf;
     MaxP = 3;
     DS = .3;
-    g = 9.80665;    // m/s/s
+    g = 9.80665; // m/s/s
     Temp = 288.15; //  Kelvin
     Rho = 1027; //1.226; //1027; //  Kg/m3
     Mu = 1e-1; //(sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity kg/ms
@@ -68,7 +68,7 @@ SYSTEM::SYSTEM(int NT) {
 
     globalSystem = this;
     globalIO = new IO();
-    
+
 
 }
 
@@ -262,7 +262,7 @@ void SYSTEM::PutWakesInTree() {
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
     for (int i = 0; i < BODY::VortexPositions.size(); ++i)
-        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (0.25*GambitScale)) {
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (0.0625 * GambitScale)) {
             Num2Insert++;
             toInsert[i] = true;
         } else
@@ -362,7 +362,7 @@ void SYSTEM::PutWakesInTree() {
     Array <OctreeCapsule> Test(Xs.size());
 
     for (int i = 0; i < Test.size(); ++i) {
-        Test[i] = OctreeCapsule(Xs[i], -1.0 * Oms[i], true);
+        Test[i] = OctreeCapsule(Xs[i], 1.0 * Oms[i], true);
         Test[i].AssociatedBody = Owners[i];
     }
 
@@ -423,36 +423,36 @@ void SYSTEM::GetFaceVels() {
 #ifdef TIME_STEPS
     long unsigned int t6 = ticks();
 #endif
-//    if (globalSystem->useBodies) {
+    //    if (globalSystem->useBodies) {
 #ifdef _OPENMP
-        #pragma omp parallel for
+#pragma omp parallel for
 #endif
-    for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
-        for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-            Vect3 Target = globalOctree->AllCells[i]->Position;
-            //      The following are divided by 2 since they are the free space rather than the surface velocities
-            Vect3 VelS = BODY::AllBodyFaces[j]->Sigma * BODY::AllBodyFaces[j]->SourcePanelVelocity(Target) / 2.0;
-            Vect3 VelD = BODY::AllBodyFaces[j]->Mu * BODY::AllBodyFaces[j]->DoubletPanelVelocity(Target) / 2.0;
-            globalOctree->AllCells[i]->Velocity += (VelS - VelD);
-        }
-    }
+    //    for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
+    //        for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+    //            Vect3 Target = globalOctree->AllCells[i]->Position;
+    //            //      The following are divided by 2 since they are the free space rather than the surface velocities
+    //            Vect3 VelS = BODY::AllBodyFaces[j]->Sigma * BODY::AllBodyFaces[j]->SourcePanelVelocity(Target) / 2.0;
+    //            Vect3 VelD = BODY::AllBodyFaces[j]->Mu * BODY::AllBodyFaces[j]->DoubletPanelVelocity(Target) / 2.0;
+    //            globalOctree->AllCells[i]->Velocity += (VelS - VelD);
+    //        }
     //    }
-        
-      
-    
+    //    }
+
+
+
     for (int i = 0; i < globalOctree->AllCells.size(); ++i)
         globalOctree->AllCells[i]->SetVelsEqual();
 
 
-//    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-//        Vect3 Vel(0.,0.,0.);
-//
-//        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-//            globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega, Vel);
-//
-//        cout << Vel << " " << globalOctree->AllCells[i]->Velocity << endl;
-//
-//    }
+    //    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+    //        Vect3 Vel(0.,0.,0.);
+    //
+    //        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
+    //            globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega, Vel);
+    //
+    //        cout << Vel << " " << globalOctree->AllCells[i]->Velocity << endl;
+    //
+    //    }
 #ifdef TIME_STEPS
     long unsigned int t7 = ticks();
     stringstream tmp;
@@ -491,26 +491,41 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
     V1 = Vect3(0.0);
     V2 = V1;
-        #pragma omp parallel for
-            for (int i = 0; i < sz; ++i) {
-                for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
-                    V1[i] += UTIL::globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
-                            globalOctree->AllCells[j]->Omega);
-                    
-                    
-                    V2[i] += UTIL::globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
-                            globalOctree->AllCells[j]->Omega);
-                    
-                }
-                cout << "V1: " << V1[i] << " " << globalOctree->TreeVel(P1[i]) << " " << P1[i] << endl;
-                cout << "V2: " << V2[i] << " " << globalOctree->TreeVel(P2[i]) << " " << P2[i] << endl;
-            }
 
-//    for (int i = 0; i < sz; ++i)
-//        V1[i] = globalOctree->TreeVel(P1[i]);
-//
-//    for (int i = 0; i < sz; ++i)
-//        V2[i] = globalOctree->TreeVel(P2[i]);
+    for (int i = 0; i < sz; ++i)
+        V1[i] = -1.0 * globalOctree->TreeVel(P1[i]);
+
+    for (int i = 0; i < sz; ++i)
+        V2[i] = -1.0 * globalOctree->TreeVel(P2[i]);
+
+    //#pragma omp parallel for
+    //    for (int i = 0; i < sz; ++i) {
+    //        Vect3 V1ct, V2ct, V1t, V2t;
+    //        for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
+    //
+    //            //                    V1ct += UTIL::globalCubicDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
+    //            //                            globalOctree->AllCells[j]->Omega);
+    //            //                    
+    //            //                    
+    //            //                    V2ct += UTIL::globalCubicDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
+    //            //                            globalOctree->AllCells[j]->Omega);
+    //
+    //            V1t += UTIL::globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
+    //                    globalOctree->AllCells[j]->Omega);
+    //
+    //
+    //            //                    V2t += UTIL::globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
+    //            //                            globalOctree->AllCells[j]->Omega);         
+    //
+    //
+    //        }
+    //        V1[i] = V2[i] = V1t;
+    //        //                cout << "V1: " << V1t << " " << V1ct << " " << V1[i] << " " << endl << "V2: " <<  V2t << " " << V2ct << " " <<  V2[i] << endl;
+    //        //                cout << "V1: " << V1[i] << " " << globalOctree->TreeVel(P1[i]) << " " << P1[i] << endl;
+    //        //                cout << "V2: " << V2[i] << " " << globalOctree->TreeVel(P2[i]) << " " << P2[i] << endl;
+    //    }
+
+
 
 
 
@@ -526,22 +541,9 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 #endif
 
 
-    //      //  Calculate timestep length such that no body travels further than a single cell
-    //    REAL MaxX, MaxY, MaxZ; MaxX = MaxY = MaxZ = -1e32;
-    //    REAL MinX, MinY, MinZ; MinX = MinY = MinZ = 1e32;
-    //    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-    //        MaxX = max(MaxX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-    //        MinX = min(MinX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-    //        MaxY = max(MaxY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-    //        MinY = min(MinY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-    //        MaxZ = max(MaxZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
-    //        MinZ = min(MinZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
-    //    }
-    //    
-    //    
-    //    int DX = ceil(MaxX) - floor(MinX);
-    //    int DY = ceil(MaxY) - floor(MinY);
-    //    int DZ = ceil(MaxZ) - floor(MinZ);
+    
+
+
     //    cout << "--------------- Calcing Inerp Vels --------------" << endl;
     //    cout << globalOctree->AllCells.size()*BODY::AllBodyFaces.size() << " Interactions " << endl;
     //    Array < Array < Array < Vect3 > > > Posns, Vels;
@@ -558,11 +560,11 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     //                                    Vels[i][j][k] += UTIL::globalDirectVel(globalOctree->AllCells[l]->Position - XP, globalOctree->AllCells[l]->Omega, globalSystem->Del2);
     ////                Vels[i][j][k] = globalOctree->TreeVel(XP);
     //            }
-    //
-    //    long unsigned int t11 = ticks();
-    //
-    //    cout << "GetPanelFMMVelocities(.) : " << double(t10 - t9) / 1000.0 << " Direct/Interp : " << double(t11 - t10) / 1000.0 << endl;
 
+    //#ifdef TIME_STEPS
+    //        long unsigned int t11 = ticks();
+    //        cout << "GetPanelFMMVelocities(.) : " << double(t10 - t9) / 1000.0 << " Direct/Interp : " << double(t11 - t10) / 1000.0 << endl;
+    //#endif
 }
 
 /**************************************************************/
@@ -605,7 +607,7 @@ void SYSTEM::WriteDomain() {
 
 /**************************************************************/
 void SYSTEM::WriteData() {
-    unsigned long int t1;
+    unsigned long int t1 = ticks();
     MATLABOutputStruct Output;
 
     Vect3 Maxs, Mins;
@@ -881,15 +883,15 @@ void SYSTEM::WriteData() {
         Output.Double1DArrays.push_back(BODY::SubTIMES);
         Output.Double1DArrayStrings.push_back(string("SubTimes"));
 
-        
+
     };
     globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
 
     if (globalSystem->useBodies)
         BODY::SubTIMES.clear();
-    
+
 #ifdef TIME_STEPS
-    unsigned long int t2;
+    unsigned long int t2 = ticks();
     stringstream tmp;
     tmp << "Writedata()              : " << double(t2 - t1) / 1000.0 << endl;
     globalIO->step_data += tmp.str();

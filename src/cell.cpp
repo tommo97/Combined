@@ -237,6 +237,11 @@ void FVMCell::ImageToIO() {
 void FVMCell::vEvalCapsule(OctreeCapsule &C) {
     if (C.IP)
         CollapseToIP(C);
+    
+    if (C.toMonitor){
+        C.Ptr2CellVelocity = &Velocity;
+        C.Ptr2CellPosition = &Position;
+    }
 
     if (C.has_load) TransVars[C.AssociatedBody] += C.Omega;
 

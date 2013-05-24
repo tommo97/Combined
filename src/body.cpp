@@ -329,7 +329,7 @@ void BODY::GetPanelVels() {
     //            Faces[i].Vd += Faces[j].Sigma * localVS[i][j];
     //        }
     //    }
-};
+}
 
 /**************************************************************/
 void BODY::SplitUpLinearAlgebra() {
@@ -1004,18 +1004,17 @@ void BODY::UpdateGlobalInfluenceMatrices() {
 #pragma omp parallel for
 #endif
             for (int j = 0; j < n; ++j) {
-                REAL a = 0, b = 0, c = 0, vt1 = 0, vt2 = 0;
                 REAL PhiS = 0.0, PhiD = 0.0;
                 PANEL *src = &BODY::Bodies[I]->Faces[j];
                 PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
 
-                a = PhiD;
+                REAL a = PhiD;
 
 
-                b = PhiS;
+                REAL b = PhiS;
 
 
-                c = PhiD;
+//                REAL c = PhiD;
 
                 src->Mu = 1.0;
                 src->Sigma = 0.0;
@@ -1247,7 +1246,7 @@ void BODY::SetUpProtoWakes(REAL dt) {
         PWcnt = 0;
         for (int i = 0; i < PWtmp.size(); ++i)
             if (!PWtmp[i].Neighb.T) {
-
+                
                 PANEL *tmp = &PWtmp[i];
                 while (tmp) {
                     BODY::Bodies[I]->ProtoWakes[PWcnt].push_back(PANEL(*tmp));
@@ -1359,9 +1358,8 @@ void BODY::MoveBody() {
     SetEulerTrans();
 
 
-    for (int i = 0; i < Faces.size(); ++i) {
+    for (int i = 0; i < Faces.size(); ++i) 
         Faces[i].GetNewGlobalPosition();
-    }
 
     ProtoWakeLastC1 = ProtoWakeLastC2 = ProtoWakeLastC3 = ProtoWakeLastC4 = Array < Array < Vect3 > > (ProtoWakes.size());
     for (int i = 0; i < ProtoWakes.size(); ++i) {

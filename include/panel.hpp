@@ -124,7 +124,7 @@ public:
         BoundBC = ID = -1;
         TRANS.assign(3, Vect3(0.));
 
-        PhiPrev = Array <REAL > (4, 0.0);
+        PhiPrev = Array <REAL> (4, 0.0);
         Cloc = Rloc = 0.0;
         Vfmm = dVFMM_dt = VWakePrev = Vect3(0.);
         DoubletValidRange2 = ValidRange = 1e32;

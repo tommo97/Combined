@@ -1,10 +1,10 @@
 clear all
 figure
 
-load('RunData_000020.mat')
+load('RunData_000000.mat')
 
 
-c = 10;
+c = 1;
 try
     mins = min(CellPos);
 catch
@@ -32,7 +32,7 @@ isosurface(Domain,c);
 axis equal
 
 [X,Y,Z] = meshgrid(1:maxs(2),1:maxs(1),1:maxs(3));
-[F,V,col] = MarchingCubes(X,Y,Z,Domain,c);
+%[F,V,col] = MarchingCubes(X,Y,Z,Domain,c);
 
 tic
 

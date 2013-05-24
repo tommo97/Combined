@@ -251,8 +251,59 @@ void TIME_STEPPER::TimeAdvance() {
     
 
     TIME_STEPPER::RKStep = 0;
-    //  t0: Calc FMM and get DT
+    //  t0: Calc FMM and get 
+    //  ??? something like globalSystem->PutDummyPanelPointsInTree();
+    
+    REAL MaxX, MaxY, MaxZ;
+    MaxX = MaxY = MaxZ = -1e32;
+    REAL MinX, MinY, MinZ;
+    MinX = MinY = MinZ = 1e32;
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        MaxX = max(MaxX, BODY::AllBodyFaces[i]->CollocationPoint.x);
+        MinX = min(MinX, BODY::AllBodyFaces[i]->CollocationPoint.x);
+        MaxY = max(MaxY, BODY::AllBodyFaces[i]->CollocationPoint.y);
+        MinY = min(MinY, BODY::AllBodyFaces[i]->CollocationPoint.y);
+        MaxZ = max(MaxZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+        MinZ = min(MinZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+    }
+
+
+    int DX = ceil(MaxX) - floor(MinX);
+    int DY = ceil(MaxY) - floor(MinY);
+    int DZ = ceil(MaxZ) - floor(MinZ);
+
+    cout << DX << " " << DY << " " << DZ << " " << DX * DY * DZ << " " << BODY::AllBodyFaces.size() << endl;
+
+
+    Array <REAL> Xs = UTIL::globalLinspace(floor(MinX) - 0.5, ceil(MaxX) + 0.5, DX + 2);
+    Array <REAL> Ys = UTIL::globalLinspace(floor(MinY) - 0.5, ceil(MaxY) + 0.5, DY + 2);
+    Array <REAL> Zs = UTIL::globalLinspace(floor(MinZ) - 0.5, ceil(MaxZ) + 0.5, DZ + 2);
+
+
+
+    ARRAY3(Vect3) Xp = UTIL::zeros<Vect3> (DX + 2, DY + 2, DZ + 2);
+    ARRAY3(Vect3) Xv = UTIL::zeros<Vect3> (DX + 2, DY + 2, DZ + 2);
+    ARRAY3(Vect3*) CellV(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+    ARRAY3(Vect3*) CellP(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+    for (int i = 0; i < Xv.size(); ++i)
+        for (int j = 0; j < Xv[0].size(); ++j)
+            for (int k = 0; k < Xv[0][0].size(); ++k) {
+                Xp[i][j][k] = Vect3(Xs[i], Ys[j], Zs[k]);
+                OctreeCapsule C(Xp[i][j][k], Vect3(0, 0, 0), false);
+                C.toMonitor = true;
+                globalOctree->Root->EvalCapsule(C);
+                CellV[i][j][k] = C.Ptr2CellVelocity;
+                CellP[i][j][k] = C.Ptr2CellPosition;
+            }
+    
     DoFMM();
+    
+    for (int i = 0; i < Xv.size(); ++i)
+        for (int j = 0; j < 1 /*Xv[0].size()*/; ++j)
+            for (int k = 0; k < 1 /*Xv[0][0].size()*/; ++k) {
+                Xv[i][j][k] =  *CellV[i][j][k];
+                cout << *CellP[i][j][k] << " " << Xv[i][j][k] << endl;
+            }
     //  t0: calculate face velocities due to body
     globalSystem->GetFaceVels();
     time_step();
@@ -314,14 +365,29 @@ void TIME_STEPPER::TimeAdvance() {
 void TIME_STEPPER::time_loop() {
 
     if (first_step) {
-        dt = globalSystem->dtInit;
+        REAL OmRMax = 0.0, MaxRadius = 0.0;
+        if (globalSystem->useBodies) {
+            for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+                Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
+                // 	Get point kinematic velocity - rotational part first
+                Vect3 Vrot = BODY::AllBodyFaces[i]->Owner->BodyRates.Cross(Pos);
+                // 	Add to translational velocity....
+                Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
+                OmRMax = max(Vkin.Mag(), OmRMax);
+                MaxRadius = max(MaxRadius, Pos.Mag());
+            }
+        }
+
+        
+        dt = globalSystem->dtInit = cfl_lim/OmRMax;
+        
         if (globalSystem->useBodies) {
             BODY::BodySubStep(globalSystem->dtInit, globalSystem->NumSubSteps);
             globalSystem->PutWakesInTree();
         }
         globalOctree->Reset();
         
-//        globalOctree->GetVels();
+        globalOctree->GetVels();
         for (int i = 0; i < globalOctree->AllCells.size(); ++i)
             globalOctree->AllCells[i]->Velocity = Vect3(globalSystem->GambitScale * globalSystem->unscaledVinf);
 
@@ -429,7 +495,7 @@ void TIME_STEPPER::time_step() {
     //            }
 
 
-    //    dt = min(dt_euler,cfl_lim/OmRMax);
+//        dt = min(dt_euler,cfl_lim/OmRMax);
 
 
     //  Check to see if this takes us over a time when we should be writing some output

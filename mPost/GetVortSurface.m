@@ -1,5 +1,5 @@
 clear all; clear mex; clc;
-files = dir('RunData*5.mat');
+files = dir('RunData*0.mat');
 close all
 figure
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
@@ -9,7 +9,7 @@ load(fname,'GambitScale','Times','BodyRates0_x','BodyPointsX','BodyPointsY','Bod
 load(fname,'Time','XCG')
 
 scale = GambitScale;
-val = 5;
+val = 6;
 
 XCG = 0.0;%scale * Time * 10.0;
 THETA = Time * BodyRates0_x;

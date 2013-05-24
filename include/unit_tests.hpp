@@ -41,7 +41,7 @@ public:
     static void TestBEM();
     static void SimpleTestPanel();
     static void TestBEMFVM();
-
+    static void TestBulkLoader(int n);
     
 
     

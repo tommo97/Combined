@@ -35,9 +35,6 @@ using namespace std;
 
 void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude, REAL radius, REAL scale, REAL THETA);
 
-
-
-
 /**************************************************************/
 int main(int argc, char *argv[]) {
     system("clear");
@@ -45,185 +42,61 @@ int main(int argc, char *argv[]) {
     UTIL::GetCellPans();
 
     //  Get quadrature points and weights
-    UTIL::NumCellGaussPts = 8;
+    UTIL::NumCellGaussPts = 4;
     UTIL::lgwt(UTIL::NumCellGaussPts, UTIL::QuadPts, UTIL::QuadWts);
-    for (int i = 0; i < UTIL::QuadPts.size(); ++i)
-    {
+    //  This is to get the right multipliers for a cell, e.g. a range [-0.5,0.5] rather than [-1,1]
+    for (int i = 0; i < UTIL::QuadPts.size(); ++i) {
         UTIL::QuadPts[i] = UTIL::QuadPts[i] / 2.0;
         UTIL::QuadWts[i] = UTIL::QuadWts[i] / 2.0;
     }
 
-    //TEST::TestFMM(argc, argv);
-//    TEST::SimpleTestPanel();
-//    return 0;
-    TEST::TestBEMFVM();
-    return 0;
-
     
     
-    /*
-     *  This code has several "modes:"
-     *  1) It can be used as a BEM simulator with or without a BEM wake. If a BEM 
-     *     wake is included, it can take one of 2 forms:
-     *     a) Panel representation using constant vortex panels;
-     *     b) Vortex blob representation using point vortices.
-     *     Either way, a direct NxN calculation must be done for the wake rollup,
-     *     and this is not accelerated.
-     *  2) It can be used with a BEM source for a FVM vortex code. This is
-     *     accelerated using a FMM method for the Biot-Savart calculation.
-     *  3) It can be used to model vortex flows in the absence of a body, e.g.
-     *     a) The normal or 
-     *     b) oblique collision of two vortex rings.
-     *  4) It can be used to calculate the velocity due to a vorticity field, as
-     *     provided at runtime.
-     */
-
-//    {
-//        SYSTEM System(0);
-//        globalOctree->Root->SetUpISBIndices() ;
-//    }
-//    return 0;
-
-//
-//    TestFMM(argc, argv);
-//
-//    return 0;
-//
-
-
-//
-//    cout << "Enter filename:" << endl;
-//    string fname;
-//
-//
-//     SolveMatfileVels(fname, 8, 0.25);
-// 
-// 
-// 
-//     return 0;
-
-
-    //    WeeAmble();
-    //    return 1;
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //    TEST::TestBulkLoader(100000);
+    //    TEST::TestFMM(argc, argv);
+//        TEST::SimpleTestPanel();
+    //    TEST::TestBiotSavart();
+    //    return 0;
+    //    TEST::TestBEMFVM();
+//        return 0;
+   
 
     SYSTEM System(0);
-
     //  Some default values
-    globalSystem->GambitScale = 1.0;
+    globalSystem->GambitScale = 100.0;
     globalSystem->MaxP = 5;
-    globalSystem->Del2 = 0.001;// * globalSystem->GambitScale*globalSystem->GambitScale;
+    globalSystem->Del2 = 0.001; // * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
-    globalSystem->dtInit = 0.05;
+    globalSystem->dtInit = 0.05; //     This gets changed according to the maximum kinematic velocity of the body(s)
     globalSystem->h = 2;
     globalSystem->unscaledVinf = Vect3(0.0);
-    globalSystem->NumSubSteps = 0;
+    globalSystem->NumSubSteps = 10;
 
 
     UTIL::cpu_t = ticks();
 
-    //UTIL::PreAmble();
+    UTIL::PreAmble();
 
-
-    TIME_STEPPER::MaxTime = 100.0;
-    globalSystem->useBodies = false;
-
-    globalSystem->NumTransVars = 2;
-
-
+  
     globalSystem->Initialise();
+
     globalSystem->VortonsXs.clear();
     globalSystem->VortonOmegas.clear();
-
-
-
-    {
-        
-        
-        REAL Radius = 20.0;
-        REAL gamma = 5.0;
-        int n = 10000;
-        Array <REAL> thetas = globalLinspace(0.0,two_pi,n);
-        
-        Vect3 Centre(0.0,0.0,5);
-        
-        REAL arc_length = Radius * (thetas[1]-thetas[0]);
-        
-        Array <Vect3> Xs(n), Oms(n);
-        Array <int> IDs(n,0);
-        for (int i = 0; i < n; ++i)
-        {
-            Xs[i] = Centre + Radius * Vect3(cos(thetas[i]), sin(thetas[i]),0.0);
-            Oms[i] = gamma * arc_length * Radius * Vect3(-sin(thetas[i]), cos(thetas[i]), 0.0);
-        }
-        
-        
-        
-        globalSystem->AddVortonsToTree(Xs,Oms, IDs);
-        
-         for (int i = 0; i < n; ++i)
-        {
-            Xs[i].z *= -1;
-            Oms[i] = -Oms[i];
-            IDs[i] = 1;
-        }
-        
-        
-        globalSystem->AddVortonsToTree(Xs,Oms, IDs);
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    }
     
-    
-    
-    
-    
-           
-//        REAL radius = 1.0, amplitude = 1.0;
-//        Vect3 centre(1.,0,0);
-//        Array <Vect3> X, Omega;
-//        
-//    
-//        REAL THETA = 3*0.523598775598299;
-//    
-//        sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, THETA);
-//        
-//        cout << X.size() << " " << Omega.size() << endl;
-//        
-//        Array <int> IDs(X.size(),0);
-//        
-//        globalSystem->AddVortonsToTree(X,Omega, IDs);
-//    
-//        centre = Vect3(-1.,0,0);
-//     
-//        sheet(centre, X, Omega, -amplitude, radius, globalSystem->GambitScale, -THETA);
-//        IDs = 1;
-//        cout << X.size() << " " << Omega.size() << endl;    
-//        globalSystem->AddVortonsToTree(X,Omega, IDs);
-//    
-    #ifndef use_NCURSES
-        if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
-    #endif
-    
-        cout << "Number of cells: " << FVMCell::NumCells << endl;
+#ifndef use_NCURSES
+    if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
+#endif
+    cout << "Number of cells: " << FVMCell::NumCells << endl;
     globalSystem->TimeStep();
 
 
@@ -234,9 +107,6 @@ int main(int argc, char *argv[]) {
     if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
 #endif
 }
-
-
-
 
 /**************************************************************/
 void UTIL::PostAmble(string fname) {
@@ -626,7 +496,8 @@ void UTIL::PreAmble() {
             Vect3 Om(fabs(BODY::RATES[BodyDatum - 1].x), fabs(BODY::RATES[BodyDatum - 1].y), fabs(BODY::RATES[BodyDatum - 1].z));
             maxT = two_pi * nRevs / (max(Om));
         }
-        BODY::ReadNeuGetBodies(infname[i], "tmp", Disp[i], BODY::CGS[i], BODY::VELOCITY[i], BODY::ATTITUDE[i], BODY::RATES[i], flip[i], plane[i]);
+        string str_tmp = "tmp";
+        BODY::ReadNeuGetBodies(infname[i], str_tmp, Disp[i], BODY::CGS[i], BODY::VELOCITY[i], BODY::ATTITUDE[i], BODY::RATES[i], flip[i], plane[i]);
     }
 
     cout << setfill('=') << setw(80) << "=" << endl;
@@ -712,8 +583,6 @@ void UTIL::PreAmble() {
     //    BODY::BodySubStep(maxT, nSteps);
 
 }
-
-
 
 /**************************************************************/
 

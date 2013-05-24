@@ -388,18 +388,25 @@ void OCTREE::GetVels() {
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::PassMmnts2Prnt, &Node::PassMmnts2Prnt);
     Root->ApplyRecursivelyP(&Branch::GetVelField, &Node::DoNothing, &Node::DoNothing);
     Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::CollapseVField, &Node::DoNothing);
-    Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::SetVelsEqual, &Node::DoNothing);
+    Root->ApplyRecursivelyP(&Branch::InheritVField, &FVMCell::SetVelsEqual, &Node::DoNothing);
 #else
 
     //    cout << "Passing Moments to Parents" << endl;
+    #ifdef TIME_STEPS
+    long unsigned int tt1 = ticks();
+#endif
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < AllCells.size(); ++i)
+    for (int i = 0; i < AllCells.size(); ++i){
         AllCells[i]->PassMmnts2Prnt();
+    }
 
     //  Sweep moments up OCTREE (from cells at L12 -> root at L0)
     //    cout << "Sweeping Moments Up Tree" << endl;
+#ifdef TIME_STEPS
+    long unsigned int tt2 = ticks();
+#endif
     for (int mlev = AllBranches.size() - 1; mlev >= 0; --mlev) {
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -409,15 +416,26 @@ void OCTREE::GetVels() {
         }
     }
     //  Sweep velocity fields down OCTREE
-
+#ifdef TIME_STEPS
+    long unsigned int tt3 = ticks();
+    long unsigned int tL2L = 0, tM2L = 0;
+#endif
     for (int mlev = 0; mlev < AllBranches.size(); ++mlev) {
         //  Inherit vel fields from parent
         //        cout << "Sweeping Velocity Fields Level " << mlev <<  endl;
+#ifdef TIME_STEPS
+        long unsigned int ttL2L = ticks();
+#endif
 #ifdef _OPENMP
-#pragma omp parallel for
+        //#pragma omp parallel for
 #endif
         for (int i = 0; i < AllBranches[mlev].size(); ++i)
-            AllBranches[mlev][i]->InheritVField();
+            AllBranches[mlev][i]->GetVelField(); //  This seems not to like being paralellised
+
+#ifdef TIME_STEPS
+        tL2L += ticks() - ttL2L;
+        long unsigned int ttM2L = ticks();
+#endif
 
         //  Add influence from neighbours
         //        cout << "Adding Influence of Neighbours Level " << mlev <<  endl;
@@ -425,11 +443,18 @@ void OCTREE::GetVels() {
 #pragma omp parallel for
 #endif
         for (int i = 0; i < AllBranches[mlev].size(); ++i)
-            AllBranches[mlev][i]->GetVelField(); //  This seems not to like being paralellised
+            AllBranches[mlev][i]->InheritVField();
+
+#ifdef TIME_STEPS
+        tM2L += ticks() - ttM2L;
+#endif
     }
 
     //    cout << "Collapsing Velocity Fields Onto Cells" <<  endl;
     //  Collapse velocity fields onto children
+#ifdef TIME_STEPS
+    long unsigned int tt4 = ticks();
+#endif
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -442,7 +467,12 @@ void OCTREE::GetVels() {
 #ifdef TIME_STEPS
     long unsigned int t6 = ticks();
     stringstream tmp;
-    tmp << "GetVels()                : " << double(t6 - t5) / 1000.0 << endl;
+//    tmp << "GetVels()                : " << double(t6 - t5) / 1000.0 << endl;
+//    tmp << "ME:               " << double(tt2 - t5) / 1000.0 << endl;
+//    tmp << "M2M:              " << double(tt3 - tt2) / 1000.0 << endl;
+//    tmp << "M2L:              " << double(tM2L) / 1000.0 << endl;
+//    tmp << "L2L:              " << double(tL2L) / 1000.0 << endl;
+//    tmp << "Kernel Expansion: " << double(t6 - tt4) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
 #endif
 #endif
@@ -454,4 +484,45 @@ Vect3 OCTREE::TreeVel(Vect3 P) {
     C.IP = true;
     Root->EvalCapsule(C);
     return Vect3(C.Velocity);
+}
+/**************************************************************/
+void BulkLoader(Array <Vect3> &X, Array <Vect3> &OM, Array <int> &BodyID)
+{
+    
+    int S = OCTREE_SIZE / 2;
+    
+    Array <long unsigned int> IDs (X.size(),0);
+    Array <Vect3> XCopy = X;
+    while (S > 0) {
+        S /= 2;
+        for (int i = 0; i < X.size(); ++i) {
+            int I = (int) (XCopy[i].x > 0), J = (int) (XCopy[i].y > 0), K = (int) (XCopy[i].z > 0);
+            IDs[i] = ((((((IDs[i] << 1) + I) << 1) + J) << 1) + K);
+            XCopy[i].x -= S * (2 * I - 1);
+            XCopy[i].y -= S * (2 * J - 1);
+            XCopy[i].z -= S * (2 * K - 1);
+        }
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }

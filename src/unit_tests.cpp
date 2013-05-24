@@ -26,7 +26,7 @@ void TEST::SimpleTestPanel() {
     
     Vect3 Target = Vect3(6.,7.,8.);
     
-    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 1.), Vect3(-1., 1., 1.));
+    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 1.));
 
     P.GetNormal();
     
@@ -42,7 +42,7 @@ void TEST::SimpleTestPanel() {
 
     REAL PhiDoubletDirect = 0.0;
     REAL PhiSourceDirect = 0.0;
-    int npts = 500;
+    int npts = 1000;
     {
         int n = npts;
         Array < Array < Vect3 > > CP;
@@ -70,12 +70,13 @@ void TEST::SimpleTestPanel() {
     PANEL::FarField = 1e32;
     REAL PhidSDP = 0.0, PhisSDP = 0.0;
     PANEL::SourceDoubletPotential(src, Target, PhidSDP, PhisSDP, 1, 2);
+    cout << "=========== Dipole Influence at " << Target << endl;
     cout << setprecision(16) << two_pi*PhiDoubletDirect << " PhiDdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
     cout << setprecision(16) << two_pi*src->GetTriTesselatedDoubletPhi(Target) <<  " GetTriTesselatedDoubletPhi(x,y,z),  using the Willis method" << endl;
     cout << setprecision(16) << two_pi*src->CurvedDoubletPhi(Target) << " CurvedDoubletPhi(x,y,z),  using the Wang method" << endl;
     cout << setprecision(16) << two_pi*src->HyperboloidDoubletPhi(Target) << " HyperboloidDoubletPhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl;
     cout << two_pi*PhidSDP << " SourceDoubletPotential(x,y,z),  using the flat panel (e.g. Katz & Plotkin) method" << endl;
-
+        cout << "=========== Source Influence at " << Target << endl;
     cout << setprecision(16) << two_pi*PhiSourceDirect << " PhiSdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
     cout << setprecision(16) << two_pi*src->HyperboloidSourcePhi(Target) << " HyperboloidSourcePhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl; 
     cout << setprecision(16) << two_pi*src->CurvedSourcePhi(Target) << " CurvedSourcePhi(x,y,z),  using the Wang method" << endl;
@@ -798,85 +799,63 @@ void TEST::TestPanel() {
 void TEST::TestBiotSavart()
 {
     //    {
-//        SYSTEM System(0);
-//        globalSystem->Del2 = 0.001;//sqrt(2.)*0.5015;// * globalSystem->GambitScale*globalSystem->GambitScale;
-//
-//        WaveField::Depth = 25.0;
-//        WaveField Field0, Field1;
-//        Field0.SetPeakFreq(0.1/(2.*pi));
-//        Field0.SetHSig(1.0);
-//
-//        Field1.SetModalFreq(0.1/(2.*pi)); 
-//        Field1.SetHSig(1.0);
-//        
-//        Field0.getWaveFeld(&WaveField::JONSWAP,2.5,20.0,150);
-//        Field1.getWaveFeld(&WaveField::Bretschneider,2.5,20.0,150);
-//        Array <REAL> S0 = Field0.Spectrum(), S1 = Field1.Spectrum();
-//        
-////        for (int i = 0; i < S1.size(); ++i)
-////            cout << S0[i] << " " << S1[i] << endl;
-////        
-////        cout << TIME_STEPPER::SimTime << endl;
-//        
-//        
-//        
-//      
-//        int N = 1000;
-//        Array <REAL> xs = UTIL::globalLinspace(-3,3,N);
-//        
-//        Array <Vect3> Vels(N), Velps(N), Velqs(N), VelGrad0(N), VelCubicGrad0(N), VelGrad1(N), VelCubicGrad1(N), VelGrad2(N), VelCubicGrad2(N);
-//        for (int I = 0; I < N; ++I) {
-//
-//            Vect3 Target(xs[I], 0., 0.), Omega(1., 1.0, 1.0);
-//
-//            Vect3 VelP = UTIL::globalCubicDirectVel(Target,Omega);
-//            Array <Vect3> GradsC(3, Vect3(0.0,0.0,0.0));
-//            UTIL::globalCubicDirectVelGrads(Target, Omega, GradsC);
-//            VelCubicGrad0[I] = GradsC[0];
-//            VelCubicGrad1[I] = GradsC[1];
-//            VelCubicGrad2[I] = GradsC[2];
-//
-//            int n = 100;
-//            Array <REAL> pts = UTIL::globalLinspace(-0.5, 0.5, n);
-//            Vect3 Vel(0., 0., 0.);
-//            Array <Vect3> Grads(3, Vect3(0.0,0.0,0.0));
-//            for (int i = 0; i < n; ++i)
-//                for (int j = 0; j < n; ++j)
-//                    for (int k = 0; k < n; ++k){
-//                        Vel += UTIL::globalDirectVel(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)));
-//                        UTIL::globalDirectVelGrads(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)), Grads);
-//                    }
-//            Vels[I] = Vel;
-//            Velps[I] = VelP;
-//            VelGrad0[I] = Grads[0];
-//            VelGrad1[I] = Grads[1];
-//            VelGrad2[I] = Grads[2];
-//
-//            Vect3 VelQ(0., 0., 0.);
-//            for (int i = 0; i < UTIL::QuadPts.size(); ++i)
-//                for (int j = 0; j < UTIL::QuadPts.size(); ++j)
-//                    for (int k = 0; k < UTIL::QuadPts.size(); ++k)
-//                        VelQ += UTIL::QuadWts[i] * UTIL::QuadWts[j] * UTIL::QuadWts[k] *
-//                            UTIL::globalDirectVel(Target - Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]), Omega);
-//            Velqs[I] = VelQ;      // divided by 8 since the range of points is only -0.5->0.5 rather than -1->1
-//        }
-//        
-//        UTIL::WriteMATLABMatrix1DVect3("Vels","Vels.mat",Vels);
-//        UTIL::WriteMATLABMatrix1DVect3("VelPs","Vels.mat",Velps);
-//        UTIL::WriteMATLABMatrix1DVect3("VelQs","Vels.mat",Velqs);
-//        UTIL::WriteMATLABMatrix1D("xs","Vels.mat",xs);
-//        UTIL::WriteMATLABMatrix1DVect3("Grads0","Vels.mat",VelGrad0);
-//        UTIL::WriteMATLABMatrix1DVect3("Grads1","Vels.mat",VelGrad1);
-//        UTIL::WriteMATLABMatrix1DVect3("Grads2","Vels.mat",VelGrad2);
-//        UTIL::WriteMATLABMatrix1DVect3("GradsC0","Vels.mat",VelCubicGrad0);
-//        UTIL::WriteMATLABMatrix1DVect3("GradsC1","Vels.mat",VelCubicGrad1);
-//        UTIL::WriteMATLABMatrix1DVect3("GradsC2","Vels.mat",VelCubicGrad2);
-//        
-//        
-//        
-//        
-//    }
-//    
+        SYSTEM System(0);
+        globalSystem->Del2 = 0.001;
+        int N = 1000;
+        Array <REAL> xs = UTIL::globalLinspace(-3,3,N);
+        
+        Array <Vect3> Vels(N), Velps(N), Velqs(N), VelGrad0(N), VelCubicGrad0(N), VelGrad1(N), VelCubicGrad1(N), VelGrad2(N), VelCubicGrad2(N);
+        for (int I = 0; I < N; ++I) {
+
+            Vect3 Target(xs[I], 0., 0.), Omega(1., 1.0, 1.0);
+
+            Vect3 VelP = UTIL::globalCubicDirectVel(Target,Omega);
+            Array <Vect3> GradsC(3, Vect3(0.0,0.0,0.0));
+            UTIL::globalCubicDirectVelGrads(Target, Omega, GradsC);
+            VelCubicGrad0[I] = GradsC[0];
+            VelCubicGrad1[I] = GradsC[1];
+            VelCubicGrad2[I] = GradsC[2];
+
+            int n = 10;
+            Array <REAL> pts = UTIL::globalLinspace(-0.5, 0.5, n);
+            Vect3 Vel(0., 0., 0.);
+            Array <Vect3> Grads(3, Vect3(0.0,0.0,0.0));
+            for (int i = 0; i < n; ++i)
+                for (int j = 0; j < n; ++j)
+                    for (int k = 0; k < n; ++k){
+                        Vel += UTIL::globalDirectVel(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)));
+                        UTIL::globalDirectVelGrads(Target - Vect3(pts[i], pts[j], pts[k]), Omega / (REAL(n * n * n)), Grads);
+                    }
+            Vels[I] = Vel;
+            Velps[I] = VelP;
+            VelGrad0[I] = Grads[0];
+            VelGrad1[I] = Grads[1];
+            VelGrad2[I] = Grads[2];
+
+            Vect3 VelQ(0., 0., 0.);
+            for (int i = 0; i < UTIL::QuadPts.size(); ++i)
+                for (int j = 0; j < UTIL::QuadPts.size(); ++j)
+                    for (int k = 0; k < UTIL::QuadPts.size(); ++k)
+                        VelQ += UTIL::QuadWts[i] * UTIL::QuadWts[j] * UTIL::QuadWts[k] *
+                            UTIL::globalDirectVel(Target - Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]), Omega);
+            Velqs[I] = VelQ;      // divided by 8 since the range of points is only -0.5->0.5 rather than -1->1
+        }
+        
+        UTIL::WriteMATLABMatrix1DVect3("Vels","Vels.mat",Vels);
+        UTIL::WriteMATLABMatrix1DVect3("VelPs","Vels.mat",Velps);
+        UTIL::WriteMATLABMatrix1DVect3("VelQs","Vels.mat",Velqs);
+        UTIL::WriteMATLABMatrix1D("xs","Vels.mat",xs);
+        UTIL::WriteMATLABMatrix1DVect3("Grads0","Vels.mat",VelGrad0);
+        UTIL::WriteMATLABMatrix1DVect3("Grads1","Vels.mat",VelGrad1);
+        UTIL::WriteMATLABMatrix1DVect3("Grads2","Vels.mat",VelGrad2);
+        UTIL::WriteMATLABMatrix1DVect3("GradsC0","Vels.mat",VelCubicGrad0);
+        UTIL::WriteMATLABMatrix1DVect3("GradsC1","Vels.mat",VelCubicGrad1);
+        UTIL::WriteMATLABMatrix1DVect3("GradsC2","Vels.mat",VelCubicGrad2);
+        
+        
+        
+        
+    
 }
 void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
 
@@ -1291,6 +1270,8 @@ void TEST::TestFMM(int argc, char *argv[]) {
 
     Posns.allocate(n);
     Omegas.allocate(n);
+    
+    Vect3 *XX, *VV;
     cout << "Generating " << n << " points Preparing ";
 
     if (geometry.compare(cube) == 0) {
@@ -1348,6 +1329,22 @@ void TEST::TestFMM(int argc, char *argv[]) {
 
 
                     }
+            
+            //  Insert a random block of points just intersecting the cube
+            
+            
+            Vect3 X(mins - 2.0, mins - 5.0, mins + 5.0);
+
+            OctreeCapsule C(X, Vect3(0,0,0), false);
+            C.toMonitor = true;
+
+            C.AssociatedBody = 0;
+            globalOctree->Root->EvalCapsule(C);
+            XX = C.Ptr2CellPosition;
+            VV = C.Ptr2CellVelocity;
+            cout << "---------- " << *XX << " " << *VV << endl;
+
+            
         }
         
             
@@ -1581,7 +1578,8 @@ void TEST::TestFMM(int argc, char *argv[]) {
 //    globalOctree->Root->ApplyRecursivelyP(&Branch::GetVelField, &Node::DoNothing, &Node::DoNothing);
 //    globalOctree->Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::CollapseVField, &Node::DoNothing);
 //    //globalOctree->Root->ApplyRecursivelyP(&Branch::InheritVField, &Node::SetVelsEqual, &Node::DoNothing);
-    
+    cout << *XX << " " << *VV << endl;
+
     REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation (including velocity gradients)" << endl;
     Posns.clear();
@@ -1730,5 +1728,115 @@ void TEST::TestFMM(int argc, char *argv[]) {
     cout << "p_max FVMCell::NumCells FVMCell::NumNodes nthreads t_fmm (ms)  t_dir (ms) TreeLevs TreeSize AbsErrsMax AbsErrsMean AbsErrsStd RelErrsMax RelErrsMean RelErrsStd sparse/dense sphere/cube;" << endl;
 #endif
 
+
+}
+
+void TEST::TestBulkLoader(int n)
+{
+    SYSTEM System(0);
+
+    //  Some default values
+    globalSystem->GambitScale = 1;
+    globalSystem->MaxP = 3;
+    globalSystem->Del2 = 0.001;
+    globalSystem->Initialise();
+
+    Array <Vect3> Posns, Omegas;
+            //  Get the side length of the cube
+            REAL l = pow(REAL(n),1./3.);
+            int nl = ceil(l);
+            cout << "Number of cells in cube " << nl << "^3 = " << nl*nl*nl << endl;
+            
+            if (round((REAL)nl/2.0)!=(REAL)nl/2.0){
+                cout << "Odd number - increasing by 1" << endl;
+                nl+=1;
+            }
+            else
+                cout << "Even number" << endl;
+
+    REAL mins = -(REAL) nl / 2;
+    int count = 0;
+    for (REAL x = mins; x < -mins; x += 1.)
+        for (REAL y = mins; y < -mins; y += 1.)
+            for (REAL z = mins; z < -mins; z += 1.)
+                count++;
+
+    Posns.allocate(count);
+    Omegas.allocate(count);
+    count = 0;
+    for (REAL x = mins; x < -mins; x += 1.)
+        for (REAL y = mins; y < -mins; y += 1.)
+            for (REAL z = mins; z < -mins; z += 1.) {
+                Vect3 OM = Vect3((0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX), (0.5 - REAL(rand()) / RAND_MAX));
+                Vect3 PX = Vect3(x, y, z);
+                Posns[count] = PX;
+                Omegas[count] = OM;
+                OctreeCapsule C(PX, 1 * OM, true);
+                C.AssociatedBody = 0;
+                globalOctree->Root->EvalCapsule(C);
+                count++;
+            }
+    
+     int S = OCTREE_SIZE / 2;
+    
+    Array <long unsigned int> IDs (Posns.size(),0);
+    Array <Vect3> XCopy = Posns;
+    Array <Array <int> > TRANS(Posns.size());
+    while (S > 0) {
+        S /= 2;
+        for (int i = 0; i < Posns.size(); ++i) {
+            int I = (int) (XCopy[i].x > 0), J = (int) (XCopy[i].y > 0), K = (int) (XCopy[i].z > 0);
+            IDs[i] = ((((((IDs[i] << 1) + I) << 1) + J) << 1) + K);
+            XCopy[i].x -= S * (2 * I - 1);
+            XCopy[i].y -= S * (2 * J - 1);
+            XCopy[i].z -= S * (2 * K - 1);
+            
+            TRANS[i].push_back(Node::REF[I][J][K]);
+        }
+    }
+    
+   
+    
+    
+    
+    for (int i = 0; i < IDs.size(); ++i)
+        cout << IDs[i] << endl;
+    
+    cout << "--------" << endl;
+    cout << FVMCell::NumCells << endl;
+    cout << IDs.size() << endl;
+    
+    globalOctree->AllCells.clear();
+    globalOctree->AllBranches.allocate(OCTREE_LEVS);
+    globalOctree->BranchCount.assign(OCTREE_LEVS - 1, 0);
+    globalOctree->Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
+
+    for (int i = 0; i < globalOctree->BranchCount.size(); ++i) {
+        if (globalOctree->BranchCount[i] > 0)
+            globalOctree->AllBranches[i].assign(globalOctree->BranchCount[i], NULL);
+        globalOctree->BranchCount[i] = 0; //  Recycle for use as a pseudo iterator
+    }
+
+    globalOctree->CellCount = 0; //  This is used as a pseudo iterator for assigning into AllCells
+    globalOctree->AllCells.assign(FVMCell::NumCells, NULL);
+    Node::AllNodes.allocate(Node::NumNodes);
+    Node::NodeCount = 0;
+    Node::UpList.clear();
+    Node::DownList.clear();
+    globalOctree->Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
+    
+    cout << globalOctree->AllCells.size() << endl;
+
+    UTIL::WriteMATLABMatrix1D("TmpIDS", "tmp.mat", IDs);
+    UTIL::WriteMATLABMatrix2D("TmpTRANS", "tmp.mat", TRANS);
+
+
+    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
+        IDs[i] = globalOctree->AllCells[i]->ID;
+        TRANS[i] = globalOctree->AllCells[i]->Trans;
+    }
+    UTIL::WriteMATLABMatrix1D("TreeIDS", "tmp.mat", IDs);
+    UTIL::WriteMATLABMatrix2D("TreeTRANS", "tmp.mat", TRANS);
+    
 
 }

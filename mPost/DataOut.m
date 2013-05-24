@@ -7,7 +7,7 @@ files = dir('R*.mat');
 
 
 %   Find out the interpolation weights
-load(files(1).name);
+load(files(end).name);
 r = 0.5;
 Rads = Rloc;
 Chrd = Cloc;

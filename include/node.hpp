@@ -171,7 +171,6 @@ public:
             }
 
 
-
     }
     void vPruneChild(int i, int j, int k) {
         delete Children[i][j][k];

@@ -50,6 +50,7 @@ public:
     void GetSRad();
     void Prune();
     void ResetAllVelsAndFields();
+    void BulkLoader(Array <Vect3> &, Array <Vect3> &, Array <int> &);
     
     
     void StretchAndAdvance(REAL);

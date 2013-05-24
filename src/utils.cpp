@@ -28,7 +28,7 @@ int NumThreads = 1;
 long unsigned int UTIL::cpu_t = 0;
 int UTIL::NumCellGaussPts;
 Array <REAL> UTIL::QuadPts, UTIL::QuadWts;
-Array <PANEL*> UTIL::Pans;
+Array <PANEL> UTIL::Pans;
 /**************************************************************/
 /*      This piece of code is for fast reciprocal square root approximation as used in Quake*/
 double UTIL::FastInverseSqrt( double number )
@@ -60,16 +60,16 @@ void UTIL::GetCellPans() {
     Verts[7] = 0.5 * Vect3(1, 1, -1);
     
 
-    UTIL::Pans.push_back(new PANEL(Verts[0], Verts[1], Verts[2], Verts[3]));
-    UTIL::Pans.push_back(new PANEL(Verts[3], Verts[2], Verts[6], Verts[7]));
-    UTIL::Pans.push_back(new PANEL(Verts[7], Verts[6], Verts[5], Verts[4]));
-    UTIL::Pans.push_back(new PANEL(Verts[4], Verts[5], Verts[1], Verts[0]));
-    UTIL::Pans.push_back(new PANEL(Verts[1], Verts[5], Verts[6], Verts[2]));
-    UTIL::Pans.push_back(new PANEL(Verts[4], Verts[0], Verts[3], Verts[7]));
+    UTIL::Pans.push_back(PANEL(Verts[0], Verts[1], Verts[2], Verts[3]));
+    UTIL::Pans.push_back(PANEL(Verts[3], Verts[2], Verts[6], Verts[7]));
+    UTIL::Pans.push_back(PANEL(Verts[7], Verts[6], Verts[5], Verts[4]));
+    UTIL::Pans.push_back(PANEL(Verts[4], Verts[5], Verts[1], Verts[0]));
+    UTIL::Pans.push_back(PANEL(Verts[1], Verts[5], Verts[6], Verts[2]));
+    UTIL::Pans.push_back(PANEL(Verts[4], Verts[0], Verts[3], Verts[7]));
 
     for (int i = 0; i < 6; ++i) {
-        UTIL::Pans[i]->GetNormal();
-        UTIL::Pans[i]->Sigma = UTIL::Pans[i]->Gamma = UTIL::Pans[i]->Mu = 1.0;
+        UTIL::Pans[i].GetNormal();
+        UTIL::Pans[i].Sigma = UTIL::Pans[i].Gamma = UTIL::Pans[i].Mu = 1.0;
     }
 }
 /**************************************************************/
@@ -93,8 +93,8 @@ Vect3 UTIL::globalCubicDirectVel(Vect3 diff, Vect3 omega) {
     } else {
         Vect3 VelP(0., 0., 0.);
         for (int i = 0; i < 6; ++i) {
-            REAL Phi = UTIL::Pans[i]->HyperboloidSourcePhi(diff);
-            VelP -= UTIL::Pans[i]->TRANS[2].Cross(omega) * Phi / 2.0;
+            REAL Phi = UTIL::Pans[i].HyperboloidSourcePhi(diff);
+            VelP -= UTIL::Pans[i].TRANS[2].Cross(omega) * Phi / 2.0;
         }
         return VelP;
     }
@@ -133,8 +133,8 @@ void UTIL::globalCubicDirectVelGrads(Vect3 diff, Vect3 Omega, Array <Vect3> &Gra
                     UTIL::globalDirectVelGrads(diff - Vect3(UTIL::QuadPts[i], UTIL::QuadPts[j], UTIL::QuadPts[k]), UTIL::QuadWts[i] * UTIL::QuadWts[j] * UTIL::QuadWts[k] * Omega, Grads);
     } else {
         for (int i = 0; i < 6; ++i) {
-            Vect3 V = UTIL::Pans[i]->SourcePanelVelocity(diff) * two_pi / four_pi;
-            Vect3 C = UTIL::Pans[i]->TRANS[2].Cross(Omega);
+            Vect3 V = UTIL::Pans[i].SourcePanelVelocity(diff) * two_pi / four_pi;
+            Vect3 C = UTIL::Pans[i].TRANS[2].Cross(Omega);
             Grads[0] += V.x*C;
             Grads[1] += V.y*C;  // NB this is -ve because the return value for V.y in SourceVel is -ve (why?)
             Grads[2] += V.z*C;
@@ -765,6 +765,28 @@ void UTIL::write1D(string varname, string fname, Array<int> &input, int m) {
     delete[] d;
 }
 
+void UTIL::write1D(string varname, string fname, Array<long unsigned int> &input, int m) {
+    size_t dims[2] = {m, 1};
+    //double d[m];
+    long unsigned int *d = new long unsigned int [m];
+
+    mat_t *mat;
+    matvar_t *matvar;
+
+    for (int i = 0; i < m; i++)
+        d[i] = input[i];
+
+    mat = Mat_Open(fname.c_str(), MAT_ACC_RDWR);
+    if (mat) {
+        matvar = Mat_VarCreate(varname.c_str(), MAT_C_UINT64, MAT_T_UINT64, 2,
+                dims, d, 0);
+        Mat_VarWrite(mat, matvar, (matio_compression) 0);
+        Mat_VarFree(matvar);
+        Mat_Close(mat);
+    }
+    delete[] d;
+}
+
 int UTIL::readmat(string fname, string varname, Array <REAL> &data, Array <int> &dims, bool verbose) {
     data.clear();
     dims.clear();
@@ -916,6 +938,13 @@ void UTIL::WriteMATLABMatrix1D(string vname, string fname, Array<int> &data) {
 
 }
 
+void UTIL::WriteMATLABMatrix1D(string vname, string fname, Array<long unsigned int> &data) {
+    int m = data.size();
+    if (m == 0)
+        return;
+    UTIL::write1D(vname, fname, data, m);
+
+}
 
 void UTIL::ReadBinaryVect3(Array <Vect3> &tmp, string fname) {
 
@@ -1016,4 +1045,57 @@ double UTIL::interp2(Array<Array<double> > &X, Array<Array<double> > &Y, Array<A
 
     return est;
 }
+/**************************************************************/
+template <typename T> T UTIL::interp3(ARRAY3(Vect3) &X, ARRAY3(T) &U, Vect3 Xi){
+  
+  //	Find dx, dy, dz
+  Vect3 DX(X[1][0][0].x - X[0][0][0].x,X[0][1][0].y - X[0][0][0].y,X[0][0][1].z - X[0][0][0].z);
+ 
+  
+  //	Find nx, ny, nz
+  Vect3 Nx = (Xi - X[0][0][0])/DX;
+  
+  //	Lower index
+  int x0 = floor(Nx.x);
+  int y0 = floor(Nx.y);
+  int z0 = floor(Nx.z);
+  
+  //	Upper index
+  int x1 = x0 + 1;
+  int y1 = y0 + 1;
+  int z1 = z0 + 1;
 
+  //	Position between indices
+  Vect3 DeltaX = Nx - floor(Nx);  
+
+  //	Corner values
+  T u000 = U[x0][y0][z0];
+  T u010 = U[x0][y1][z0];
+  T u100 = U[x1][y0][z0];
+  T u110 = U[x1][y1][z0];
+  
+  T u001 = U[x0][y0][z1];
+  T u011 = U[x0][y1][z1];
+  T u101 = U[x1][y0][z1];
+  T u111 = U[x1][y1][z1];
+  
+ 
+  
+  //   Get 4 corner z gradients and interpolate for corner values
+  T u00 = u000 + DeltaX.z * (u001 - u000) / (z1 - z0);
+  T u01 = u010 + DeltaX.z * (u011 - u010) / (z1 - z0);
+  T u10 = u100 + DeltaX.z * (u101 - u100) / (z1 - z0);
+  T u11 = u110 + DeltaX.z * (u111 - u110) / (z1 - z0);
+  
+  
+
+  //	Get 2 edge y gradients and interpolate for corner values
+  T u0 = u00 + DeltaX.y * (u01 - u00) / (y1 - y0);
+  T u1 = u10 + DeltaX.y * (u11 - u10) / (y1 - y0);
+ 
+  
+  //	Get 1 x gradient and interpolate for p values
+  return u0 + DeltaX.x * (u1 - u0) / (x1 - x0);
+ 
+  
+}

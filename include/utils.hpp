@@ -65,7 +65,12 @@ public:
     static inline Array < Array <Vect3> > zerosv(int a, int b) {
         return Array < Array <Vect3> > (a, Array <Vect3 > (b, 0.0));
     }
-    
+
+
+    template <typename T> static ARRAY3(T) zeros(int a, int b, int c) {
+        return ARRAY3(T) (a, ARRAY2(T) (b, Array <T> (c, 0.0)));
+    }
+
     static inline Array < Array < Array <Vect3> > > zerosv(int a, int b, int c) {
         return Array < Array <Array <Vect3> > > (a, Array <Array <Vect3> > (b, Array <Vect3> (c, Vect3(0.0))));
     }
@@ -104,6 +109,8 @@ public:
             int n);
     static void write1D(string varname, string fname, Array<double> &input, int m);
     static void write1D(string varname, string fname, Array<int> &input, int m);
+    static void write1D(string varname, string fname, Array<long unsigned > &input, int m);
+
     static int readmat(string fname, string varname, Array <REAL> &data, Array <int> &dims, bool verbose);
     static void WriteMATLABMatrix2D(string vname, string fname,
             Array<Array<int> > &data);
@@ -114,6 +121,8 @@ public:
     static void WriteMATLABMatrix1D(string vname, string fname, double data);
     static void WriteMATLABMatrix1D(string vname, string fname, Array<double> &data);
     static void WriteMATLABMatrix1D(string vname, string fname, Array<int> &data);
+    static void WriteMATLABMatrix1D(string vname, string fname, Array<long unsigned int> &data);
+
     static void WriteMATLABMatrix1DVect3(string vname, string fname,
             Array<Vect3> &data);
     static void WriteMATLABMatrix1DVect3(string vname, string fname,
@@ -140,7 +149,7 @@ public:
             double> > > &Z, double Xi, double Yi, double Zi);
     
     static Array <REAL> globalLinspace(REAL start, REAL end, int n);
-    static Array <PANEL*> Pans;
+    static Array <PANEL> Pans;
     static Array <Vect3> globalLinspace(Vect3 start, Vect3 end, int n);
     static Vect3 globalDirectVel(Vect3 diff, Vect3 omega);
     static Vect3 globalCubicDirectVel(Vect3 diff, Vect3 omega);
@@ -151,6 +160,10 @@ public:
     static void GetCellPans();
     static Array <REAL> QuadPts, QuadWts;
     static void lgwt(int N, Array <REAL> &x, Array <REAL> &w);
+    template <typename T> static T interp3(ARRAY3(Vect3) &X, ARRAY3(T) &U, Vect3 Xi);
+    
+    
+    
 };
 /**************************************************************/
  

@@ -183,8 +183,8 @@ void pgesv(double **A, double *b, int n, double *x) {
 #endif
     // Clean up the memory before returning to the calling program
 
-    delete a;
-    delete ipiv;
+    delete[] a;
+    delete[] ipiv;
 }
 /**************************************************************/
 double* pgesv_ctof(double **in, int rows, int cols) {

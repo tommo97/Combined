@@ -417,7 +417,8 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
     REAL del2 = globalSystem->Del2;
     int MAX_P = globalSystem->MaxP;
     int p = MAX_P;
-  REAL cff1[MAX_P + 1], cff2[MAX_P + 1], x12, x22, x32, mult;
+    Array <REAL> cff1(p + 1), cff2(p + 1);
+    REAL x12, x22, x32, mult;
    int i, j, k;
 
    for (i = 1; i <= p; i++) {
@@ -883,9 +884,9 @@ void Node::UpdateMomentMults() {
                                                         //TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].x = pow(-1,k1+k2+k3) * (k1 + 1) * coeffts[k1 + 1][k2][k3];
                                                         //TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].y = pow(-1,k1+k2+k3) * (k2 + 1) * coeffts[k1][k2 + 1][k3];
                                                         //TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].z = pow(-1,k1+k2+k3) * (k3 + 1) * coeffts[k1][k2][k3 + 1];
-                                                        LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2][k3].x  = pow(-1,k1+k2+k3) * (k1 + 1) * coeffts[k1 + 1][k2][k3];
-                                                        LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2][k3].y  = pow(-1,k1+k2+k3) * (k2 + 1) * coeffts[k1][k2 + 1][k3];
-                                                        LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2][k3].z  = pow(-1,k1+k2+k3) * (k3 + 1) * coeffts[k1][k2][k3 + 1];
+                                                        LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2][k3].x  = pow(-1.,k1+k2+k3) * (k1 + 1) * coeffts[k1 + 1][k2][k3];
+                                                        LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2][k3].y  = pow(-1.,k1+k2+k3) * (k2 + 1) * coeffts[k1][k2 + 1][k3];
+                                                        LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2][k3].z  = pow(-1.,k1+k2+k3) * (k3 + 1) * coeffts[k1][k2][k3 + 1];
                                                     }
                                                 }
                                             }

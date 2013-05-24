@@ -236,9 +236,6 @@ void Branch::GetVelField() {
 #ifdef _OPENMP
     tid = omp_get_thread_num();
 #endif
-    if (m > 0) {
-
-
         for (int i = 0; i < 216; ++i)
             if (LinISB[i]) {
                 for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
@@ -250,9 +247,6 @@ void Branch::GetVelField() {
                                         VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * LinTlrCffts[m][indx][i][k1][k2][k3].Cross((static_cast<Branch*> (LinISB[i]))->Moments[k1 - n1][k2 - n2][k3 - n3]);
                                     }
             }
-        
-    }
-
 }
 /**************************************************************/
 void Branch::InheritVField() {

@@ -54,7 +54,7 @@ end
 
 
 if Blade.isNREL || Blade.isSOTON
-    RootBlendCoefft = repmat(Blade.TransitionPiece', [1 Blade.NChord]);
+    %RootBlendCoefft = repmat(Blade.TransitionPiece', [1 Blade.NChord]);
     if isempty(RootBlendCoefft)
         RootBlendCoefft = repmat(linspace(1,0,Blade.NSpan)', [1 Blade.NChord]);
     end
