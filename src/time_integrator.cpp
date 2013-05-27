@@ -271,8 +271,8 @@ void TIME_STEPPER::TimeAdvance() {
             FuturePoints[nt] = FuturePoints[nt-1] + dt * PanelVel;
             
             Vect3 FlooredPoint = floor(FuturePoints[nt]) - 0.5;
-            
-            if (FlooredPoint.Dot(RoundedPoints.back()) > 0.0)
+            Vect3 DX = FlooredPoint - RoundedPoints.back();
+            if (DX.Dot(DX) > 0.0)
                 RoundedPoints.push_back(FlooredPoint);
             
         }
