@@ -255,47 +255,58 @@ void TIME_STEPPER::TimeAdvance() {
     //  t0: Calc FMM and get 
     //  ??? something like globalSystem->PutDummyPanelPointsInTree();
     
-    REAL MaxX, MaxY, MaxZ;
-    MaxX = MaxY = MaxZ = -1e32;
-    REAL MinX, MinY, MinZ;
-    MinX = MinY = MinZ = 1e32;
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        MaxX = max(MaxX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-        MinX = min(MinX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-        MaxY = max(MaxY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-        MinY = min(MinY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-        MaxZ = max(MaxZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
-        MinZ = min(MinZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
+    
+    for (int iBody = 0; iBody = BODY::NumBodies; ++iBody) {
+
+
+        BODY::Bodies[iBody]->CellP.clear();
+        BODY::Bodies[iBody]->CellV.clear();
+        
+        
+        REAL MaxX, MaxY, MaxZ;
+        MaxX = MaxY = MaxZ = -1e32;
+        REAL MinX, MinY, MinZ;
+        MinX = MinY = MinZ = 1e32;
+        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+            MaxX = max(MaxX, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.x);
+            MinX = min(MinX, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.x);
+            MaxY = max(MaxY, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.y);
+            MinY = min(MinY, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.y);
+            MaxZ = max(MaxZ, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.z);
+            MinZ = min(MinZ, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.z);
+        }
+
+
+        int DX = ceil(MaxX) - floor(MinX);
+        int DY = ceil(MaxY) - floor(MinY);
+        int DZ = ceil(MaxZ) - floor(MinZ);
+
+        cout << DX << " " << DY << " " << DZ << " " << DX * DY * DZ << " " << BODY::Bodies[iBody]->Faces.size() << endl;
+
+
+        Array <REAL> Xs = UTIL::globalLinspace(floor(MinX) - 0.5, ceil(MaxX) + 0.5, DX + 2);
+        Array <REAL> Ys = UTIL::globalLinspace(floor(MinY) - 0.5, ceil(MaxY) + 0.5, DY + 2);
+        Array <REAL> Zs = UTIL::globalLinspace(floor(MinZ) - 0.5, ceil(MaxZ) + 0.5, DZ + 2);
+
+
+
+        ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
+        ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
+        ARRAY3(Vect3*) CellV(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+        ARRAY3(Vect3*) CellP(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+        for (int i = 0; i < Xv.size(); ++i)
+            for (int j = 0; j < Xv[0].size(); ++j)
+                for (int k = 0; k < Xv[0][0].size(); ++k) {
+                    Xp[i][j][k] = Vect3(Xs[i], Ys[j], Zs[k]);
+                    OctreeCapsule C(Xp[i][j][k], Vect3(0, 0, 0), false);
+                    C.toMonitor = true;
+                    globalOctree->Root->EvalCapsule(C);
+                    BODY::Bodies[iBody]->CellV[i][j][k] = C.Ptr2CellVelocity;
+                    BODY::Bodies[iBody]->CellP[i][j][k] = C.Ptr2CellPosition;
+                }
+
+
     }
-
-
-    int DX = ceil(MaxX) - floor(MinX);
-    int DY = ceil(MaxY) - floor(MinY);
-    int DZ = ceil(MaxZ) - floor(MinZ);
-
-    cout << DX << " " << DY << " " << DZ << " " << DX * DY * DZ << " " << BODY::AllBodyFaces.size() << endl;
-
-
-    Array <REAL> Xs = UTIL::globalLinspace(floor(MinX) - 0.5, ceil(MaxX) + 0.5, DX + 2);
-    Array <REAL> Ys = UTIL::globalLinspace(floor(MinY) - 0.5, ceil(MaxY) + 0.5, DY + 2);
-    Array <REAL> Zs = UTIL::globalLinspace(floor(MinZ) - 0.5, ceil(MaxZ) + 0.5, DZ + 2);
-
-
-
-    ARRAY3(Vect3) Xp = UTIL::zeros<Vect3> (DX + 2, DY + 2, DZ + 2);
-    ARRAY3(Vect3) Xv = UTIL::zeros<Vect3> (DX + 2, DY + 2, DZ + 2);
-    ARRAY3(Vect3*) CellV(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-    ARRAY3(Vect3*) CellP(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-    for (int i = 0; i < Xv.size(); ++i)
-        for (int j = 0; j < Xv[0].size(); ++j)
-            for (int k = 0; k < Xv[0][0].size(); ++k) {
-                Xp[i][j][k] = Vect3(Xs[i], Ys[j], Zs[k]);
-                OctreeCapsule C(Xp[i][j][k], Vect3(0, 0, 0), false);
-                C.toMonitor = true;
-                globalOctree->Root->EvalCapsule(C);
-                CellV[i][j][k] = C.Ptr2CellVelocity;
-                CellP[i][j][k] = C.Ptr2CellPosition;
-            }
     
     DoFMM();
     

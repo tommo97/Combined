@@ -49,6 +49,8 @@ public:
     static Array <REAL> dDeltaCp_dDeltaPhi;
     static Array <REAL> LiftHist;
     static Array <PANEL*> AllProtoWakes;
+    ARRAY3(Vect3*) CellV;
+    ARRAY3(Vect3*) CellP;
     static REAL Radius, TSR, RHO;
     string Name;
     int ID;
