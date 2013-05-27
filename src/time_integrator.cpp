@@ -277,7 +277,7 @@ void TIME_STEPPER::TimeAdvance() {
         REAL Buffer = 5.0;
         
         MaxX += Buffer; MaxY += Buffer; MaxZ += Buffer;
-        MinX -= Buffer; MinY -+ Buffer; MinZ -= Buffer;
+        MinX -= Buffer; MinY -= Buffer; MinZ -= Buffer;
         
         int DX = ceil(MaxX) - floor(MinX);
         int DY = ceil(MaxY) - floor(MinY);
