@@ -501,6 +501,16 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
         ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
         ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
+        
+        for (int i = 0; i < XP.size(); ++i)
+            for (int j = 0; j < XP[0].size(); ++j)
+                for (int k = 0; k < XP[0][0].size(); ++k)
+                {
+                    XP[i][j][k] = *(BODY::Bodies[iBody]->CellP[i][j][k]);
+                    VP[i][j][k] = *(BODY::Bodies[iBody]->CellV[i][j][k]);
+                    
+                }
+        
         Vect3 Test = UTIL::interp3 <Vect3> (Xp, Xv, P1[0]);
         
         cout << V1[0] << " " << Test << endl;

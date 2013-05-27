@@ -161,7 +161,11 @@ public:
     static Array <REAL> QuadPts, QuadWts;
     static void lgwt(int N, Array <REAL> &x, Array <REAL> &w);
 
-    template <typename T> static T interp3(ARRAY3(Vect3) & X, ARRAY3(T) & U, Vect3 Xi) {
+    template <typename T> static T interp3(ARRAY3(Vect3) & X, ARRAY3(T) & U, Vect3 Xi) 
+    /*  interp3 source needs to live inside the header rather than in the source file otherwise it won't get #included into any translation units: it will only be available to the translation unit it's defined in.
+        Hence interp3 must be defined in the header, as this is the only way the compiler can text-substitute the template arguments, hence instantiating the template, producing an usable class. (text modified from stackexchange)
+     */
+    {
 
         //	Find dx, dy, dz
         Vect3 DX(X[1][0][0].x - X[0][0][0].x, X[0][1][0].y - X[0][0][0].y, X[0][0][1].z - X[0][0][0].z);
