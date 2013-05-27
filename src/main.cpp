@@ -52,16 +52,6 @@ int main(int argc, char *argv[]) {
 
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     //    TEST::TestBulkLoader(100000);
 //        TEST::TestFMM(argc, argv);
 //        TEST::SimpleTestPanel();
