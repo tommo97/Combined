@@ -498,7 +498,7 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 //
 
 
-
+    cout << BODY::AllBodyFaces[0]->Vfmm0 << " " << UTIL::interp3Pointer <Vect3 > (BODY::AllBodyFaces[0]->Xp, BODY::AllBodyFaces[0]->Vp, BODY::AllBodyFaces[0]->CollocationPoint) << endl;
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->dVFMM_dt = (1.0 / dt) * (BODY::AllBodyFaces[i]->Vfmm1 - BODY::AllBodyFaces[i]->Vfmm0);
