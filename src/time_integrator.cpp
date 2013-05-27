@@ -274,7 +274,11 @@ void TIME_STEPPER::TimeAdvance() {
             MinZ = min(MinZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
         }
 
-
+        REAL Buffer = 4.0;
+        
+        MaxX += Buffer; MaxY += Buffer; MaxZ += Buffer;
+        MinX -= Buffer; MinY -+ Buffer; MinZ -= Buffer;
+        
         int DX = ceil(MaxX) - floor(MinX);
         int DY = ceil(MaxY) - floor(MinY);
         int DZ = ceil(MaxZ) - floor(MinZ);
@@ -505,8 +509,8 @@ void TIME_STEPPER::time_step() {
     //            }
 
 
-//        dt = min(dt_euler,cfl_lim/OmRMax);
-
+    dt = min(dt_euler,4./OmRMax);       // the maximum distance allowable by any body part is 4 cells...
+//  dt = min(dt_euler,cfl_lim/OmRMax);      
 
     //  Check to see if this takes us over a time when we should be writing some output
     dump_next = false;
