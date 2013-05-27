@@ -161,6 +161,64 @@ public:
     static Array <REAL> QuadPts, QuadWts;
     static void lgwt(int N, Array <REAL> &x, Array <REAL> &w);
 
+    template <typename T> static T interp3Pointer(ARRAY3(Vect3*) & X, ARRAY3(T*) & U, Vect3 Xi) 
+    /*  interp3 source needs to live inside the header rather than in the source file otherwise it won't get #included into any translation units: it will only be available to the translation unit it's defined in.
+        Hence interp3 must be defined in the header, as this is the only way the compiler can text-substitute the template arguments, hence instantiating the template, producing an usable class. (text modified from stackexchange)
+     */
+    {
+
+        //	Find dx, dy, dz
+        Vect3 DX(X[1][0][0]->x - X[0][0][0]->x, X[0][1][0]->y - X[0][0][0]->y, X[0][0][1]->z - X[0][0][0]->z);
+
+
+        //	Find nx, ny, nz
+        Vect3 Nx = (Xi - *(X[0][0][0])) / DX;
+
+        //	Lower index
+        int x0 = int(floor(Nx.x));
+        int y0 = int(floor(Nx.y));
+        int z0 = int(floor(Nx.z));
+
+        //	Upper index
+        int x1 = x0 + 1;
+        int y1 = y0 + 1;
+        int z1 = z0 + 1;
+
+        //	Position between indices
+        Vect3 DeltaX = Nx - floor(Nx);
+
+        //	Corner values
+        T u000 = (*U[x0][y0][z0]);
+        T u010 = (*U[x0][y1][z0]);
+        T u100 = (*U[x1][y0][z0]);
+        T u110 = (*U[x1][y1][z0]);
+
+        T u001 = (*U[x0][y0][z1]);
+        T u011 = (*U[x0][y1][z1]);
+        T u101 = (*U[x1][y0][z1]);
+        T u111 = (*U[x1][y1][z1]);
+
+
+
+        //   Get 4 corner z gradients and interpolate for corner values
+        T u00 = u000 + DeltaX.z * (u001 - u000) / (z1 - z0);
+        T u01 = u010 + DeltaX.z * (u011 - u010) / (z1 - z0);
+        T u10 = u100 + DeltaX.z * (u101 - u100) / (z1 - z0);
+        T u11 = u110 + DeltaX.z * (u111 - u110) / (z1 - z0);
+
+
+
+        //	Get 2 edge y gradients and interpolate for corner values
+        T u0 = u00 + DeltaX.y * (u01 - u00) / (y1 - y0);
+        T u1 = u10 + DeltaX.y * (u11 - u10) / (y1 - y0);
+
+
+        //	Get 1 x gradient and interpolate for p values
+        return u0 + DeltaX.x * (u1 - u0) / (x1 - x0);
+
+
+    }
+    
     template <typename T> static T interp3(ARRAY3(Vect3) & X, ARRAY3(T) & U, Vect3 Xi) 
     /*  interp3 source needs to live inside the header rather than in the source file otherwise it won't get #included into any translation units: it will only be available to the translation unit it's defined in.
         Hence interp3 must be defined in the header, as this is the only way the compiler can text-substitute the template arguments, hence instantiating the template, producing an usable class. (text modified from stackexchange)

@@ -45,7 +45,9 @@ public:
     Array <Vect3> aZeta, aEta, ZetaCrossEta, CornerNodes, CornerNormal;
     Array <REAL> aZetaMag, aEtaMag, CornerMult;
     Vect3 n0, Mult1Dash, Mult2Dash, Mult3Dash, Mult4Dash;
-
+    
+    ARRAY3(Vect3*) Xp, Vp;
+    
     Array <Vect3> Xcb, TRANS;
     Vect4 DX, DY, M, D;
     Vect3 C1o, C2o, C3o, C4o;

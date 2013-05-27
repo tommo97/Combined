@@ -252,6 +252,25 @@ void TIME_STEPPER::TimeAdvance() {
 
 
     TIME_STEPPER::RKStep = 0;
+    
+    for (int i = 0; i < 1; ++i) {
+        BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (3, Array < Array < Vect3*> > (3, Array <Vect3*> (3, NULL)));
+        BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (3, Array < Array < Vect3*> > (3, Array <Vect3*> (3, NULL)));
+
+        Vect3 Xp = BODY::AllBodyFaces[i]->CollocationPoint;
+        Vect3 Xpmin = floor(Xp) - 1.0;
+        cout << Xp << endl;
+        Array < Array < Array <Vect3> > > temp(3, Array < Array < Vect3> > (3, Array <Vect3> (3, Vect3(0.0))));
+        for (int a = 0; a < 3; ++a)
+            for (int b = 0; b < 3; ++b)
+                for (int c = 0; c < 3; ++c){
+                    temp[a][b][c] = Xpmin + Vect3(1.0*a,1.0*b,1.0*c);
+                    cout << temp[a][b][c] << endl;
+    }
+
+        
+        
+    }
 
     for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
 
