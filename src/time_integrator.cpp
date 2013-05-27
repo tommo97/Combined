@@ -252,11 +252,6 @@ void TIME_STEPPER::TimeAdvance() {
 
 
     TIME_STEPPER::RKStep = 0;
-    //  t0: Calc FMM and get 
-    //  ??? something like globalSystem->PutDummyPanelPointsInTree();
-
-    ARRAY3(Vect3) Xp;
-    ARRAY3(Vect3) Xv;
 
     for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
 
@@ -283,7 +278,7 @@ void TIME_STEPPER::TimeAdvance() {
         int DY = ceil(MaxY) - floor(MinY);
         int DZ = ceil(MaxZ) - floor(MinZ);
 
-        cout << DX << " " << DY << " " << DZ << " " << DX * DY * DZ << " " << BODY::Bodies[iBody]->Faces.size() << endl;
+//        cout << DX << " " << DY << " " << DZ << " " << DX * DY * DZ << " " << BODY::Bodies[iBody]->Faces.size() << endl;
 
 
         Array <REAL> Xs = UTIL::globalLinspace(floor(MinX) - 0.5, ceil(MaxX) + 0.5, DX + 2);
@@ -292,8 +287,8 @@ void TIME_STEPPER::TimeAdvance() {
 
 
 
-        Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2); 
-        Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
+        ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2); 
+        ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
         BODY::Bodies[iBody]->CellV = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
         BODY::Bodies[iBody]->CellP = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
         for (int i = 0; i < Xv.size(); ++i)
@@ -312,12 +307,6 @@ void TIME_STEPPER::TimeAdvance() {
     
     DoFMM();
     
-    for (int i = 0; i < Xv.size(); ++i)
-        for (int j = 0; j < 1 /*Xv[0].size()*/; ++j)
-            for (int k = 0; k < 1 /*Xv[0][0].size()*/; ++k) {
-                Xv[i][j][k] =  *(BODY::Bodies[0]->CellV[i][j][k]);
-                cout << *(BODY::Bodies[0]->CellP[i][j][k]) << " " << Xv[i][j][k] << endl;
-            }
     //  t0: calculate face velocities due to body
     globalSystem->GetFaceVels();
     time_step();
