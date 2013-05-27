@@ -506,8 +506,8 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
             for (int j = 0; j < XP[0].size(); ++j)
                 for (int k = 0; k < XP[0][0].size(); ++k)
                 {
-                    XP[i][j][k] = *(BODY::Bodies[iBody]->CellP[i][j][k]);
-                    VP[i][j][k] = *(BODY::Bodies[iBody]->CellV[i][j][k]);
+                    Xp[i][j][k] = *(BODY::Bodies[iBody]->CellP[i][j][k]);
+                    Xv[i][j][k] = *(BODY::Bodies[iBody]->CellV[i][j][k]);
                     
                 }
         
