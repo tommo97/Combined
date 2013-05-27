@@ -497,6 +497,14 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
     for (int i = 0; i < sz; ++i)
         V2[i] = -1.0 * globalOctree->TreeVel(P2[i]);
+    
+    
+    
+    
+    
+    
+    
+    
 
     //#pragma omp parallel for
     //    for (int i = 0; i < sz; ++i) {

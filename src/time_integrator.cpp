@@ -255,7 +255,9 @@ void TIME_STEPPER::TimeAdvance() {
     //  t0: Calc FMM and get 
     //  ??? something like globalSystem->PutDummyPanelPointsInTree();
     
-    
+            ARRAY3(Vect3) Xp;
+        ARRAY3(Vect3) Xv;
+        
     for (int iBody = 0; iBody = BODY::NumBodies; ++iBody) {
 
 
@@ -268,12 +270,12 @@ void TIME_STEPPER::TimeAdvance() {
         REAL MinX, MinY, MinZ;
         MinX = MinY = MinZ = 1e32;
         for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-            MaxX = max(MaxX, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.x);
-            MinX = min(MinX, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.x);
-            MaxY = max(MaxY, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.y);
-            MinY = min(MinY, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.y);
-            MaxZ = max(MaxZ, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.z);
-            MinZ = min(MinZ, BODY::Bodies[iBody]->Faces[i]->CollocationPoint.z);
+            MaxX = max(MaxX, BODY::Bodies[iBody]->Faces[i].CollocationPoint.x);
+            MinX = min(MinX, BODY::Bodies[iBody]->Faces[i].CollocationPoint.x);
+            MaxY = max(MaxY, BODY::Bodies[iBody]->Faces[i].CollocationPoint.y);
+            MinY = min(MinY, BODY::Bodies[iBody]->Faces[i].CollocationPoint.y);
+            MaxZ = max(MaxZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
+            MinZ = min(MinZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
         }
 
 
@@ -290,10 +292,10 @@ void TIME_STEPPER::TimeAdvance() {
 
 
 
-        ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
-        ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
-        ARRAY3(Vect3*) CellV(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-        ARRAY3(Vect3*) CellP(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+        Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
+        Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
+        ARRAY3(Vect3*) BODY::Bodies[iBody]->CellV(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+        ARRAY3(Vect3*) BODY::Bodies[iBody]->CellP(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
         for (int i = 0; i < Xv.size(); ++i)
             for (int j = 0; j < Xv[0].size(); ++j)
                 for (int k = 0; k < Xv[0][0].size(); ++k) {
@@ -313,8 +315,8 @@ void TIME_STEPPER::TimeAdvance() {
     for (int i = 0; i < Xv.size(); ++i)
         for (int j = 0; j < 1 /*Xv[0].size()*/; ++j)
             for (int k = 0; k < 1 /*Xv[0][0].size()*/; ++k) {
-                Xv[i][j][k] =  *CellV[i][j][k];
-                cout << *CellP[i][j][k] << " " << Xv[i][j][k] << endl;
+                Xv[i][j][k] =  BODY::Bodies[0]->CellV[i][j][k];
+                cout << BODY::Bodies[0]->CellP[i][j][k] << " " << Xv[i][j][k] << endl;
             }
     //  t0: calculate face velocities due to body
     globalSystem->GetFaceVels();
