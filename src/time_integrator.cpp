@@ -259,7 +259,7 @@ void TIME_STEPPER::TimeAdvance() {
 
         Vect3 Xp = BODY::AllBodyFaces[i]->CollocationPoint;
         cout << Xp << endl;
-        Vect3 Xpmin = round(Xp) - 1.0;
+        Vect3 Xpmin = floor(Xp) - 0.5;
         cout << Xpmin << endl;
         Array < Array < Array <Vect3> > > temp(3, Array < Array < Vect3> > (3, Array <Vect3> (3, Vect3(0.0))));
         for (int a = 0; a < 3; ++a)
