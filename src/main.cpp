@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
     SYSTEM System(0);
     //  Some default values
     globalSystem->GambitScale = 100.0;
-    globalSystem->MaxP = 5;
+    globalSystem->MaxP = 3;
     globalSystem->Del2 = 0.001; // * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05; //     This gets changed according to the maximum kinematic velocity of the body(s)
