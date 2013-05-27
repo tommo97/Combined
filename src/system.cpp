@@ -497,9 +497,14 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
     for (int i = 0; i < sz; ++i)
         V2[i] = -1.0 * globalOctree->TreeVel(P2[i]);
-    
-    
-    
+
+    for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
+        ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
+        ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
+        Vect3 Test = UTIL::interp3 <Vect3> (Xp, Xv, P1[0]);
+        
+        cout << V1[0] << " " << Test << endl;
+    }
     
     
     
