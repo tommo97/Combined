@@ -325,7 +325,7 @@ void TIME_STEPPER::TimeAdvance() {
             BODY::BodySubStep(dt, globalSystem->NumSubSteps);
 
     }
-    globalOctree->Root->ApplyRecursively(&Node::PruneReportingNode, &Node::DoNothing, &Node::DoNothing);
+     
     globalSystem->GetFaceVels();
     globalOctree->FVM(); //  dom_dt(t0)
     //  t0: advance outer wake to t*
