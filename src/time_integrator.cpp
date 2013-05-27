@@ -254,6 +254,29 @@ void TIME_STEPPER::TimeAdvance() {
     TIME_STEPPER::RKStep = 0;
     
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+
+        Array <Vect3> FuturePoints(1000, Vect3(0.0));
+
+        FuturePoints[0] = BODY::AllBodyFaces[i]->CollocationPoint;
+        Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
+        Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
+        REAL dt = 0.001;
+        for (int nt = 1; nt < 1000; ++nt)
+        {
+            OwnerCG += OwnerVel*dt;
+            Vect3 PanelVel = OwnerVel + BODY::AllBodyFaces[i]->Owner->BodyRates.Cross(FuturePoints[nt-1] - OwnerCG);
+            FuturePoints[nt] = FuturePoints[nt-1] + nt * dt * PanelVel;
+        }
+        
+        //      Find unique future points after rounding
+        for (int nt = 0; nt < 1000; ++nt)
+            FuturePoints[nt] = floor(FuturePoints[nt]) - 0.5;
+        
+        
+        
+        
+        
+        
         BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (3, Array < Array < Vect3*> > (3, Array <Vect3*> (3, NULL)));
         BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (3, Array < Array < Vect3*> > (3, Array <Vect3*> (3, NULL)));
 
