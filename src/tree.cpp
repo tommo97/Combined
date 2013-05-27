@@ -108,6 +108,20 @@ void OCTREE::Reset() {
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
 
 
+    UpdateLists()
+#ifdef TIME_STEPS
+    long unsigned int t4 = ticks();
+    stringstream tmp;
+    tmp << "Calculate FMM: reset()   : " << double(t4 - t3) / 1000.0 << endl;
+    globalIO->step_data += tmp.str();
+#endif
+}
+/**************************************************************/
+
+void OCTREE::UpdateLists() {
+    #ifdef TIME_STEPS
+    long unsigned int t3 = ticks();
+#endif
     AllCells.clear();
     AllBranches.allocate(OCTREE_LEVS);
     BranchCount.assign(OCTREE_LEVS - 1, 0);
@@ -126,10 +140,11 @@ void OCTREE::Reset() {
     Node::UpList.clear();
     Node::DownList.clear();
     Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
-#ifdef TIME_STEPS
+    
+    #ifdef TIME_STEPS
     long unsigned int t4 = ticks();
     stringstream tmp;
-    tmp << "Calculate FMM: reset()   : " << double(t4 - t3) / 1000.0 << endl;
+    tmp << "Updating Lists           : " << double(t4 - t3) / 1000.0 << endl;
     globalIO->step_data += tmp.str();
 #endif
 }
@@ -468,6 +483,7 @@ string OCTREE::GetNonRecursiveFMMVels() {
 #pragma omp parallel for
 #endif
     for (int i = 0; i < AllCells.size(); ++i){
+        AllCells[i]->SetVelsZero();
         AllCells[i]->PassMmnts2Prnt();
     }
 

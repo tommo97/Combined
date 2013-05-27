@@ -116,6 +116,7 @@ void lamb_dipole(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL ampl
 
 void TIME_STEPPER::DoFMM() {
     globalOctree->ResetAllVelsAndFields();
+    globalOctree->UpdateLists();
     globalOctree->GetVels();
 }
 

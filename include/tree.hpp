@@ -46,6 +46,7 @@ public:
     void ClearNodes();
     void AddToTree();
     void Reset();
+    void UpdateLists();
     void FVM();
     void Integrate();
     void GetVels();
