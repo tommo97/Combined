@@ -509,7 +509,7 @@ void TIME_STEPPER::time_step() {
     //            }
 
 
-    dt = min(dt_euler,4./OmRMax);       // the maximum distance allowable by any body part is 4 cells...
+    dt = min(dt_euler,4.*cfl_lim/OmRMax);       // the maximum distance allowable by any body part is 4 cells...
 //  dt = min(dt_euler,cfl_lim/OmRMax);      
 
     //  Check to see if this takes us over a time when we should be writing some output
