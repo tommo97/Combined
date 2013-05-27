@@ -409,12 +409,9 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     long unsigned int t9 = ticks();
 #endif
 
-    int sz = BODY::AllBodyFaces.size();
-    Array <Vect3> P1(sz), P2(sz), V2(sz), V1(sz);
 
 #pragma omp parallel for
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        P1[i] = BODY::AllBodyFaces[i]->CollocationPoint;
         BODY::AllBodyFaces[i]->Xfmm0 = BODY::AllBodyFaces[i]->CollocationPoint;
     }
 
@@ -425,7 +422,6 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
 #pragma omp parallel for
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        P2[i] = BODY::AllBodyFaces[i]->CollocationPoint;
         BODY::AllBodyFaces[i]->Xfmm1 = BODY::AllBodyFaces[i]->CollocationPoint;
     }
 
@@ -444,26 +440,26 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 //    for (int i = 0; i < sz; ++i)
 //        V2[i] = -1.0 * globalOctree->TreeVel(P2[i]);
 
-    ARRAY3(Vect3) Xp;
-    ARRAY3(Vect3) Xv;
-    for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
-        Xp = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
-        Xv = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
-
-        for (int i = 0; i < Xp.size(); ++i)
-            for (int j = 0; j < Xp[0].size(); ++j)
-                for (int k = 0; k < Xp[0][0].size(); ++k) {
-                    Xp[i][j][k] = *(BODY::Bodies[iBody]->CellP[i][j][k]);
-                    Xv[i][j][k] = *(BODY::Bodies[iBody]->CellV[i][j][k]);
-
-                }
-
-        for (int i = 0; i < BODY::Bodies[iBody]->Faces.size(); ++i) {
-            BODY::Bodies[iBody]->Faces[i].Vfmm0 = UTIL::interp3 <Vect3 > (Xp, Xv, BODY::Bodies[iBody]->Faces[i].Xfmm0);
-//            BODY::Bodies[iBody]->Faces[i].Vfmm1 = BODY::Bodies[iBody]->Faces[i].Vfmm0;
-            BODY::Bodies[iBody]->Faces[i].Vfmm1 = UTIL::interp3 <Vect3 > (Xp, Xv, BODY::Bodies[iBody]->Faces[i].Xfmm1);
-        }
-    }
+//    ARRAY3(Vect3) Xp;
+//    ARRAY3(Vect3) Xv;
+//    for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
+//        Xp = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
+//        Xv = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
+//
+//        for (int i = 0; i < Xp.size(); ++i)
+//            for (int j = 0; j < Xp[0].size(); ++j)
+//                for (int k = 0; k < Xp[0][0].size(); ++k) {
+//                    Xp[i][j][k] = *(BODY::Bodies[iBody]->CellP[i][j][k]);
+//                    Xv[i][j][k] = *(BODY::Bodies[iBody]->CellV[i][j][k]);
+//
+//                }
+//
+//        for (int i = 0; i < BODY::Bodies[iBody]->Faces.size(); ++i) {
+//            BODY::Bodies[iBody]->Faces[i].Vfmm0 = UTIL::interp3 <Vect3 > (Xp, Xv, BODY::Bodies[iBody]->Faces[i].Xfmm0);
+////            BODY::Bodies[iBody]->Faces[i].Vfmm1 = BODY::Bodies[iBody]->Faces[i].Vfmm0;
+//            BODY::Bodies[iBody]->Faces[i].Vfmm1 = UTIL::interp3 <Vect3 > (Xp, Xv, BODY::Bodies[iBody]->Faces[i].Xfmm1);
+//        }
+//    }
 
     
     
@@ -497,8 +493,11 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 //        }
 //
 
-
-    cout << BODY::AllBodyFaces[0]->Vfmm0 << " " << UTIL::interp3Pointer <Vect3 > (BODY::AllBodyFaces[0]->Xp, BODY::AllBodyFaces[0]->Vp, BODY::AllBodyFaces[0]->CollocationPoint) << endl;
+    #pragma omp parallel for
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        BODY::AllBodyFaces[i]->Vfmm0 = UTIL::interp3Pointer <Vect3 > (BODY::AllBodyFaces[0]->Xp, BODY::AllBodyFaces[0]->Vp, BODY::AllBodyFaces[i]->Xfmm0);
+        BODY::AllBodyFaces[i]->Vfmm1 = UTIL::interp3Pointer <Vect3 > (BODY::AllBodyFaces[0]->Xp, BODY::AllBodyFaces[0]->Vp, BODY::AllBodyFaces[i]->Xfmm1);
+    }
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->dVFMM_dt = (1.0 / dt) * (BODY::AllBodyFaces[i]->Vfmm1 - BODY::AllBodyFaces[i]->Vfmm0);

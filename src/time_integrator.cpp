@@ -253,14 +253,12 @@ void TIME_STEPPER::TimeAdvance() {
 
     TIME_STEPPER::RKStep = 0;
     
-    for (int i = 0; i < 1; ++i) {
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (3, Array < Array < Vect3*> > (3, Array <Vect3*> (3, NULL)));
         BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (3, Array < Array < Vect3*> > (3, Array <Vect3*> (3, NULL)));
 
         Vect3 Xp = BODY::AllBodyFaces[i]->CollocationPoint;
-        cout << Xp << endl;
         Vect3 Xpmin = floor(Xp) - 0.5;
-        cout << Xpmin << endl;
         Array < Array < Array <Vect3> > > temp(3, Array < Array < Vect3> > (3, Array <Vect3> (3, Vect3(0.0))));
         for (int a = 0; a < 3; ++a)
             for (int b = 0; b < 3; ++b)
@@ -274,65 +272,64 @@ void TIME_STEPPER::TimeAdvance() {
                     //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
                     BODY::AllBodyFaces[i]->Vp[a][b][c] = C.Ptr2CellVelocity;
                     BODY::AllBodyFaces[i]->Xp[a][b][c] = C.Ptr2CellPosition;
-                    cout << *(BODY::AllBodyFaces[i]->Xp[a][b][c]) << endl;
     }
 
         
         
     }
 
-    for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
-
-
-        REAL MaxX, MaxY, MaxZ;
-        MaxX = MaxY = MaxZ = -1e32;
-        REAL MinX, MinY, MinZ;
-        MinX = MinY = MinZ = 1e32;
-        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-            MaxX = max(MaxX, BODY::Bodies[iBody]->Faces[i].CollocationPoint.x);
-            MinX = min(MinX, BODY::Bodies[iBody]->Faces[i].CollocationPoint.x);
-            MaxY = max(MaxY, BODY::Bodies[iBody]->Faces[i].CollocationPoint.y);
-            MinY = min(MinY, BODY::Bodies[iBody]->Faces[i].CollocationPoint.y);
-            MaxZ = max(MaxZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
-            MinZ = min(MinZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
-        }
-
-        REAL Buffer = 3.0;
-        
-        MaxX += Buffer; MaxY += Buffer; MaxZ += Buffer;
-        MinX -= Buffer; MinY -= Buffer; MinZ -= Buffer;
-        
-        int DX = ceil(MaxX) - floor(MinX);
-        int DY = ceil(MaxY) - floor(MinY);
-        int DZ = ceil(MaxZ) - floor(MinZ);
-
-//        cout << DX << " " << DY << " " << DZ << " " << DX * DY * DZ << " " << BODY::Bodies[iBody]->Faces.size() << endl;
-
-
-        Array <REAL> Xs = UTIL::globalLinspace(floor(MinX) - 0.5, ceil(MaxX) + 0.5, DX + 2);
-        Array <REAL> Ys = UTIL::globalLinspace(floor(MinY) - 0.5, ceil(MaxY) + 0.5, DY + 2);
-        Array <REAL> Zs = UTIL::globalLinspace(floor(MinZ) - 0.5, ceil(MaxZ) + 0.5, DZ + 2);
-
-
-
-        ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2); 
-        ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
-        BODY::Bodies[iBody]->CellV = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-        BODY::Bodies[iBody]->CellP = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-        for (int i = 0; i < Xv.size(); ++i)
-            for (int j = 0; j < Xv[0].size(); ++j)
-                for (int k = 0; k < Xv[0][0].size(); ++k) {
-                    Xp[i][j][k] = Vect3(Xs[i], Ys[j], Zs[k]);
-                    OctreeCapsule C(Xp[i][j][k], Vect3(0, 0, 0), false);
-                    C.toMonitor = true;
-                    globalOctree->Root->EvalCapsule(C);
-                    //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
-                    BODY::Bodies[iBody]->CellV[i][j][k] = C.Ptr2CellVelocity;
-                    BODY::Bodies[iBody]->CellP[i][j][k] = C.Ptr2CellPosition;
-                }
-
-
-    }
+//    for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
+//
+//
+//        REAL MaxX, MaxY, MaxZ;
+//        MaxX = MaxY = MaxZ = -1e32;
+//        REAL MinX, MinY, MinZ;
+//        MinX = MinY = MinZ = 1e32;
+//        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+//            MaxX = max(MaxX, BODY::Bodies[iBody]->Faces[i].CollocationPoint.x);
+//            MinX = min(MinX, BODY::Bodies[iBody]->Faces[i].CollocationPoint.x);
+//            MaxY = max(MaxY, BODY::Bodies[iBody]->Faces[i].CollocationPoint.y);
+//            MinY = min(MinY, BODY::Bodies[iBody]->Faces[i].CollocationPoint.y);
+//            MaxZ = max(MaxZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
+//            MinZ = min(MinZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
+//        }
+//
+//        REAL Buffer = 3.0;
+//        
+//        MaxX += Buffer; MaxY += Buffer; MaxZ += Buffer;
+//        MinX -= Buffer; MinY -= Buffer; MinZ -= Buffer;
+//        
+//        int DX = ceil(MaxX) - floor(MinX);
+//        int DY = ceil(MaxY) - floor(MinY);
+//        int DZ = ceil(MaxZ) - floor(MinZ);
+//
+////        cout << DX << " " << DY << " " << DZ << " " << DX * DY * DZ << " " << BODY::Bodies[iBody]->Faces.size() << endl;
+//
+//
+//        Array <REAL> Xs = UTIL::globalLinspace(floor(MinX) - 0.5, ceil(MaxX) + 0.5, DX + 2);
+//        Array <REAL> Ys = UTIL::globalLinspace(floor(MinY) - 0.5, ceil(MaxY) + 0.5, DY + 2);
+//        Array <REAL> Zs = UTIL::globalLinspace(floor(MinZ) - 0.5, ceil(MaxZ) + 0.5, DZ + 2);
+//
+//
+//
+//        ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2); 
+//        ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
+//        BODY::Bodies[iBody]->CellV = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+//        BODY::Bodies[iBody]->CellP = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+//        for (int i = 0; i < Xv.size(); ++i)
+//            for (int j = 0; j < Xv[0].size(); ++j)
+//                for (int k = 0; k < Xv[0][0].size(); ++k) {
+//                    Xp[i][j][k] = Vect3(Xs[i], Ys[j], Zs[k]);
+//                    OctreeCapsule C(Xp[i][j][k], Vect3(0, 0, 0), false);
+//                    C.toMonitor = true;
+//                    globalOctree->Root->EvalCapsule(C);
+//                    //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
+//                    BODY::Bodies[iBody]->CellV[i][j][k] = C.Ptr2CellVelocity;
+//                    BODY::Bodies[iBody]->CellP[i][j][k] = C.Ptr2CellPosition;
+//                }
+//
+//
+//    }
     
     DoFMM();
     
