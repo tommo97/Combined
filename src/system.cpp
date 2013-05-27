@@ -502,9 +502,9 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
         ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
         ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
         
-        for (int i = 0; i < XP.size(); ++i)
-            for (int j = 0; j < XP[0].size(); ++j)
-                for (int k = 0; k < XP[0][0].size(); ++k)
+        for (int i = 0; i < Xp.size(); ++i)
+            for (int j = 0; j < Xp[0].size(); ++j)
+                for (int k = 0; k < Xp[0][0].size(); ++k)
                 {
                     Xp[i][j][k] = *(BODY::Bodies[iBody]->CellP[i][j][k]);
                     Xv[i][j][k] = *(BODY::Bodies[iBody]->CellV[i][j][k]);
