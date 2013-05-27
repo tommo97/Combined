@@ -255,16 +255,16 @@ void TIME_STEPPER::TimeAdvance() {
     
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
 
-        Array <Vect3> FuturePoints(1000, Vect3(0.0));
+        Array <Vect3> FuturePoints(100, Vect3(0.0));
 
         FuturePoints[0] = BODY::AllBodyFaces[i]->CollocationPoint;
         Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
         Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
         Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
-        REAL dt = 0.001;
+        REAL dt = 0.0001;
         Array <Vect3> RoundedPoints;
         RoundedPoints.push_back(floor(FuturePoints[0]) - 0.5);
-        for (int nt = 1; nt < 1000; ++nt)
+        for (int nt = 1; nt < 100; ++nt)
         {
             Vect3 PanelVel = OwnerVel + OwnerRates.Cross(FuturePoints[nt-1] - OwnerCG);
             OwnerCG += OwnerVel*dt;
