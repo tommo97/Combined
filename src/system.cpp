@@ -518,8 +518,8 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
         for (int i = 0; i < BODY::Bodies[iBody]->Faces.size(); ++i) {
             BODY::Bodies[iBody]->Faces[i].Vfmm0 = UTIL::interp3 <Vect3 > (Xp, Xv, BODY::Bodies[iBody]->Faces[i].Xfmm0);
-            BODY::Bodies[iBody]->Faces[i].Vfmm1 = BODY::Bodies[iBody]->Faces[i].Vfmm0;
-//            BODY::Bodies[iBody]->Faces[i].Vfmm1 = UTIL::interp3 <Vect3 > (Xp, Xv, BODY::Bodies[iBody]->Faces[i].Xfmm1);
+//            BODY::Bodies[iBody]->Faces[i].Vfmm1 = BODY::Bodies[iBody]->Faces[i].Vfmm0;
+            BODY::Bodies[iBody]->Faces[i].Vfmm1 = UTIL::interp3 <Vect3 > (Xp, Xv, BODY::Bodies[iBody]->Faces[i].Xfmm1);
         }
     }
 

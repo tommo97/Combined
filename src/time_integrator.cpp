@@ -274,7 +274,7 @@ void TIME_STEPPER::TimeAdvance() {
             MinZ = min(MinZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
         }
 
-        REAL Buffer = 4.0;
+        REAL Buffer = 5.0;
         
         MaxX += Buffer; MaxY += Buffer; MaxZ += Buffer;
         MinX -= Buffer; MinY -+ Buffer; MinZ -= Buffer;
