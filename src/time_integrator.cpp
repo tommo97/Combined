@@ -260,10 +260,6 @@ void TIME_STEPPER::TimeAdvance() {
         
     for (int iBody = 0; iBody = BODY::NumBodies; ++iBody) {
 
-
-        BODY::Bodies[iBody]->CellV = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-        BODY::Bodies[iBody]->CellP = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-        
         
         REAL MaxX, MaxY, MaxZ;
         MaxX = MaxY = MaxZ = -1e32;
