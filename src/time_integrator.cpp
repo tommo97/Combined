@@ -286,7 +286,7 @@ void TIME_STEPPER::TimeAdvance() {
         MaxX = MaxY = MaxZ = -1e32;
         REAL MinX, MinY, MinZ;
         MinX = MinY = MinZ = 1e32;
-        for (int nt = 0; nt < 1000; ++nt) {
+        for (int nt = 0; nt < 100; ++nt) {
             FuturePoints[nt] = floor(FuturePoints[nt]) - 0.5;
             MaxX = max(MaxX, FuturePoints[nt].x);
             MinX = min(MinX, FuturePoints[nt].x);
