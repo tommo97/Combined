@@ -262,13 +262,23 @@ void TIME_STEPPER::TimeAdvance() {
         Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
         Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
         REAL dt = 0.001;
+        Array <Vect3> RoundedPoints();
+        RoundedPoints.push_back(floor(FuturePoints[0]) - 0.5);
         for (int nt = 1; nt < 1000; ++nt)
         {
             Vect3 PanelVel = OwnerVel + OwnerRates.Cross(FuturePoints[nt-1] - OwnerCG);
             OwnerCG += OwnerVel*dt;
             FuturePoints[nt] = FuturePoints[nt-1] + dt * PanelVel;
+            
+            Vect3 FlooredPoint = floor(FuturePoints[nt]) - 0.5;
+            
+            if (FlooredPoint.Dot(RoundedPoints.back()) > 0.0)
+                RoundedPoints.push_back(FlooredPoint);
+            
         }
         
+        
+        cout << RoundedPoints.size() << endl;
         //      Find unique future points after rounding
         
 
