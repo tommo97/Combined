@@ -528,8 +528,8 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     
     
 
-        for (int i = 0; i < sz; ++i) {
-            Vect3 V1ct, V2ct, V1t, V2t;
+        for (int i = 50; i < 75; ++i) {
+            Vect3 V1ct, V2ct, V1t = Vect3(0.0), V2t = Vect3(0.0);
                 #pragma omp parallel for
             for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
     
