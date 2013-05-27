@@ -40,7 +40,7 @@ public:
     static void PanelTriangleDivide(PANEL &, Array <PANEL> &);
     static REAL  PanelMaxTheta(PANEL &);
     Vect3 C1, C2, C3, C4, Vd, Centroid, CollocationPoint, Normal, Eta, Epsilon;
-    Vect3 edgeX1, edgeX2, Vfmm, Vfmm0, Vfmm1, VWakePrev, Vkin, VWake, VCentroid, dF;
+    Vect3 edgeX1, edgeX2, Xfmm0, Xfmm1, Vfmm, Vfmm0, Vfmm1, VWakePrev, Vkin, VWake, VCentroid, dF;
     
     Array <Vect3> aZeta, aEta, ZetaCrossEta, CornerNodes, CornerNormal;
     Array <REAL> aZetaMag, aEtaMag, CornerMult;

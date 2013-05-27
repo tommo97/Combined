@@ -471,17 +471,21 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     Array <Vect3> P1(sz), P2(sz), V2(sz), V1(sz);
 
 #pragma omp parallel for
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         P1[i] = BODY::AllBodyFaces[i]->CollocationPoint;
-
+        BODY::AllBodyFaces[i]->Xfmm0 = BODY::AllBodyFaces[i]->CollocationPoint;
+    }
 
     BODY::Time += dt;
-    for (int i = 0; i < BODY::Bodies.size(); ++i)
+    for (int i = 0; i < BODY::Bodies.size(); ++i) 
         BODY::Bodies[i]->MoveBody();
 
+
 #pragma omp parallel for
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         P2[i] = BODY::AllBodyFaces[i]->CollocationPoint;
+        BODY::AllBodyFaces[i]->Xfmm1 = BODY::AllBodyFaces[i]->CollocationPoint;
+    }
 
 
     BODY::Time -= dt;
@@ -498,63 +502,64 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     for (int i = 0; i < sz; ++i)
         V2[i] = -1.0 * globalOctree->TreeVel(P2[i]);
 
+    ARRAY3(Vect3) Xp;
+    ARRAY3(Vect3) Xv;
     for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
-        ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
-        ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
-        
+        Xp = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
+        Xv = UTIL::zeros<Vect3 > (BODY::Bodies[iBody]->CellV.size(), BODY::Bodies[iBody]->CellV[0].size(), BODY::Bodies[iBody]->CellV[0][0].size());
+
         for (int i = 0; i < Xp.size(); ++i)
             for (int j = 0; j < Xp[0].size(); ++j)
-                for (int k = 0; k < Xp[0][0].size(); ++k)
-                {
+                for (int k = 0; k < Xp[0][0].size(); ++k) {
                     Xp[i][j][k] = *(BODY::Bodies[iBody]->CellP[i][j][k]);
                     Xv[i][j][k] = *(BODY::Bodies[iBody]->CellV[i][j][k]);
-                    
+
                 }
-        
-        Vect3 Test = UTIL::interp3 <Vect3> (Xp, Xv, P1[0]);
-        
-        cout << V1[0] << " " << Test << endl;
+
+        for (int i = 0; i < BODY::Bodies[iBody]->Faces.size(); ++i) {
+            BODY::Bodies[iBody]->Faces[i].Vfmm0 = UTIL::interp3 <Vect3 > (Xp, Xv, BODY::Bodies[iBody]->Faces[i].Xfmm0);
+            BODY::Bodies[iBody]->Faces[i].Vfmm1 = UTIL::interp3 <Vect3 > (Xp, Xv, BODY::Bodies[iBody]->Faces[i].Xfmm1);
+        }
     }
-    
+
     
     
     
     
 
-    //#pragma omp parallel for
-    //    for (int i = 0; i < sz; ++i) {
-    //        Vect3 V1ct, V2ct, V1t, V2t;
-    //        for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
-    //
-    //            //                    V1ct += UTIL::globalCubicDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
-    //            //                            globalOctree->AllCells[j]->Omega);
-    //            //                    
-    //            //                    
-    //            //                    V2ct += UTIL::globalCubicDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
-    //            //                            globalOctree->AllCells[j]->Omega);
-    //
-    //            V1t += UTIL::globalDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
-    //                    globalOctree->AllCells[j]->Omega);
-    //
-    //
-    //            //                    V2t += UTIL::globalDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
-    //            //                            globalOctree->AllCells[j]->Omega);         
-    //
-    //
-    //        }
-    //        V1[i] = V2[i] = V1t;
-    //        //                cout << "V1: " << V1t << " " << V1ct << " " << V1[i] << " " << endl << "V2: " <<  V2t << " " << V2ct << " " <<  V2[i] << endl;
-    //        //                cout << "V1: " << V1[i] << " " << globalOctree->TreeVel(P1[i]) << " " << P1[i] << endl;
-    //        //                cout << "V2: " << V2[i] << " " << globalOctree->TreeVel(P2[i]) << " " << P2[i] << endl;
-    //    }
+    #pragma omp parallel for
+        for (int i = 0; i < sz; ++i) {
+            Vect3 V1ct, V2ct, V1t, V2t;
+            for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
+    
+                //                    V1ct += UTIL::globalCubicDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
+                //                            globalOctree->AllCells[j]->Omega);
+                //                    
+                //                    
+                //                    V2ct += UTIL::globalCubicDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
+                //                            globalOctree->AllCells[j]->Omega);
+
+            V1t += UTIL::globalDirectVel(BODY::AllBodyFaces[i]->Xfmm0 - globalOctree->AllCells[j]->Position,
+                    globalOctree->AllCells[j]->Omega);
+
+
+            V2t += UTIL::globalDirectVel(BODY::AllBodyFaces[i]->Xfmm1 - globalOctree->AllCells[j]->Position,
+                    globalOctree->AllCells[j]->Omega);
+            
+    
+            }
+            //                cout << "V1: " << V1t << " " << V1ct << " " << V1[i] << " " << endl << "V2: " <<  V2t << " " << V2ct << " " <<  V2[i] << endl;
+                            cout << "V1: " << V1t[i] << " " << globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm0) << " " << UTIL::interp3 <Vect3> (Xp, Xv, BODY::AllBodyFaces[i]->Xfmm0) << endl;
+                            cout << "V2: " << V2t[i] << " " << globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm1) << " " << UTIL::interp3 <Vect3> (Xp, Xv, BODY::AllBodyFaces[i]->Xfmm1) << endl;
+        }
 
 
 
 
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        BODY::AllBodyFaces[i]->dVFMM_dt = (1.0 / dt) * (V2[i] - V1[i]);
-        BODY::AllBodyFaces[i]->Vfmm = V1[i];
+        BODY::AllBodyFaces[i]->dVFMM_dt = (1.0 / dt) * (BODY::AllBodyFaces[i]->Vfmm1 - BODY::AllBodyFaces[i]->Vfmm0);
+        BODY::AllBodyFaces[i]->Vfmm = BODY::AllBodyFaces[i]->Vfmm0;
     }
 #ifdef TIME_STEPS
     long unsigned int t10 = ticks();
