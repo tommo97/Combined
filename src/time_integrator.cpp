@@ -260,11 +260,13 @@ void TIME_STEPPER::TimeAdvance() {
         FuturePoints[0] = BODY::AllBodyFaces[i]->CollocationPoint;
         Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
         Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
+        Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
         REAL dt = 0.001;
         for (int nt = 1; nt < 1000; ++nt)
         {
-            OwnerCG += OwnerVel*dt;
-            Vect3 PanelVel = OwnerVel + BODY::AllBodyFaces[i]->Owner->BodyRates.Cross(FuturePoints[nt-1] - OwnerCG);
+            Vect3 PanelVel = OwnerVel + OwnerRates.Cross(FuturePoints[nt-1] - OwnerCG);
+                        OwnerCG += OwnerVel*dt;
+
             FuturePoints[nt] = FuturePoints[nt-1] + nt * dt * PanelVel;
             cout << FuturePoints[nt] << endl;
         }
