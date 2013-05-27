@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 //  Enable GNU Scientific Library linear algebra - uses GSL matrix/Array classes. Using LAPACK/ATLAS is faster...
 //#define USEGSL
-#define RECURSE
+//#define RECURSE
 using namespace std;
 #define MODE_3D
 //#define _PNGWRITER
@@ -57,7 +57,7 @@ using namespace std;
 
 //  Some simulation parameters
 #define USE_ARRAY
-#define TIME_STEPS
+//#define TIME_STEPS
 
 
 /**************************************************************/

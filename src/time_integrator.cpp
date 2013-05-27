@@ -352,8 +352,8 @@ void TIME_STEPPER::TimeAdvance() {
     } else
         TIME_STEPPER::SimTime += dt;
     //  Clean up
-    //if (!fmod((REAL) n, 100.0))
-    //    PruneNow = true;
+    if (!fmod((REAL) n, 25.0))
+        PruneNow = true;
     
 
     
