@@ -261,8 +261,8 @@ void TIME_STEPPER::TimeAdvance() {
     for (int iBody = 0; iBody = BODY::NumBodies; ++iBody) {
 
 
-        BODY::Bodies[iBody]->CellP.clear();
-        BODY::Bodies[iBody]->CellV.clear();
+        BODY::Bodies[iBody]->CellV = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+        BODY::Bodies[iBody]->CellP = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
         
         
         REAL MaxX, MaxY, MaxZ;
@@ -294,8 +294,7 @@ void TIME_STEPPER::TimeAdvance() {
 
         Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
         Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
-        BODY::Bodies[iBody]->CellV = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-        BODY::Bodies[iBody]->CellP = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+
         for (int i = 0; i < Xv.size(); ++i)
             for (int j = 0; j < Xv[0].size(); ++j)
                 for (int k = 0; k < Xv[0][0].size(); ++k) {
