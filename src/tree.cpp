@@ -105,7 +105,7 @@ void OCTREE::Reset() {
         globalTimeStepper->PruneNow = false;
     }
 
-    Root->ApplyRecursively(&Node::PruneReportingNode, &Node::DoNothing, &Node::DoNothing);
+    //Root->ApplyRecursively(&Node::PruneReportingNode, &Node::DoNothing, &Node::DoNothing);
 
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
 
