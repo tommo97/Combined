@@ -265,10 +265,8 @@ void TIME_STEPPER::TimeAdvance() {
         for (int nt = 1; nt < 1000; ++nt)
         {
             Vect3 PanelVel = OwnerVel + OwnerRates.Cross(FuturePoints[nt-1] - OwnerCG);
-                        OwnerCG += OwnerVel*dt;
-
-            FuturePoints[nt] = FuturePoints[nt-1] + nt * dt * PanelVel;
-            cout << FuturePoints[nt] << endl;
+            OwnerCG += OwnerVel*dt;
+            FuturePoints[nt] = FuturePoints[nt-1] + dt * PanelVel;
         }
         
         //      Find unique future points after rounding
