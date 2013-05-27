@@ -628,7 +628,7 @@ int UTIL::read_neu(string infname,
 /**************************************************************/
 void UTIL::write2D(string varname, string fname, Array<Array<double> > &input, int m,
         int n) {
-    size_t dims[2] = {m, n};
+    size_t dims[2] = { size_t(m), size_t(n)};
     //double d[m * n];
 
     double *d = new double[m * n];
@@ -658,7 +658,7 @@ void UTIL::write2D(string varname, string fname, Array<Array<double> > &input, i
 /**************************************************************/
 void UTIL::write2D(string varname, string fname, Array<Array<int> > &input, int m,
         int n) {
-    size_t dims[2] = {m, n};
+    size_t dims[2] = { size_t(m), size_t(n)};
     //double d[m * n];
 
     int *d = new int[m * n];
@@ -721,7 +721,7 @@ void UTIL::write1D(string varname, string fname, string &input, int m) {
 }
 
 void UTIL::write1D(string varname, string fname, Array<double> &input, int m) {
-    size_t dims[2] = {m, 1};
+    size_t dims[2] = {size_t(m), 1};
     //double d[m];
     double *d = new double[m];
 
@@ -744,7 +744,7 @@ void UTIL::write1D(string varname, string fname, Array<double> &input, int m) {
 
 
 void UTIL::write1D(string varname, string fname, Array<int> &input, int m) {
-    size_t dims[2] = {m, 1};
+    size_t dims[2] = {size_t(m), 1};
     //double d[m];
     int *d = new int[m];
 
@@ -766,7 +766,7 @@ void UTIL::write1D(string varname, string fname, Array<int> &input, int m) {
 }
 
 void UTIL::write1D(string varname, string fname, Array<long unsigned int> &input, int m) {
-    size_t dims[2] = {m, 1};
+    size_t dims[2] = {size_t(m), 1};
     //double d[m];
     long unsigned int *d = new long unsigned int [m];
 
@@ -801,11 +801,11 @@ int UTIL::readmat(string fname, string varname, Array <REAL> &data, Array <int> 
         if (matvar == NULL) {
             err = 1;
         } else {
-            int numel = matvar->dims[0];
+            int numel = int(matvar->dims[0]);
             for (int i = 0; i < matvar->rank; ++i) {
                 if (i > 0)
-                    numel *= matvar->dims[i];
-                dims.push_back(matvar->dims[i]);
+                    numel *= int(matvar->dims[i]);
+                dims.push_back(int(matvar->dims[i]));
             }
             
             data.allocate(numel);
@@ -958,7 +958,7 @@ void UTIL::ReadBinaryVect3(Array <Vect3> &tmp, string fname) {
     if (infile.is_open()) {
         // get length of file:
         infile.seekg(0, ios::end);
-        length = infile.tellg();
+        length = int(infile.tellg());
         infile.seekg(0, ios::beg);
 
         // allocate memory:
@@ -967,7 +967,7 @@ void UTIL::ReadBinaryVect3(Array <Vect3> &tmp, string fname) {
         // read data as a block:
         infile.read((char *) buffer, length);
         infile.close();
-        int sz = length / (3 * sizeof (double));
+        int sz = int(length / (3 * sizeof (double)));
         cout << "Reading " << length << " bytes, equiv to " << length / (sizeof (double)) << " doubles or " << length / (3 * sizeof (double)) << " Vect3 " << endl;
 
         tmp.allocate(sz);

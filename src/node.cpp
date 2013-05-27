@@ -66,7 +66,7 @@ Node::~Node() {
 
 /**************************************************************/
 Node::Node() : Parent(NULL), x(-1), y(-1), z(-1), m(0), indx(-1), ID(00), size(OCTREE_SIZE),
-SkipAdd2List(false), Neighb(NULL), HasLoad(false) {
+SkipAdd2List(false), Neighb(NULL), HasLoad(false), toMonitor(false) {
     Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
     Neighb_Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
     TransVars.assign(globalSystem->NumTransVars, Vect3());
@@ -82,7 +82,7 @@ SkipAdd2List(false), Neighb(NULL), HasLoad(false) {
 /**************************************************************/
 Node::Node(Node *parent, int i, int j, int k) : Parent(parent), x(i), y(j), z(k), m(parent->m + 1),indx(Indxs[i][j][k]),
 ID(((((((parent->ID << 1) + i) << 1) + j) << 1) + k)), size(.5 * parent->size), SkipAdd2List(false),
-Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(NULL), HasLoad(false) {
+Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(NULL), HasLoad(false), toMonitor(false) {
     Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
     Neighb_Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
     TransVars.assign(globalSystem->NumTransVars, Vect3());

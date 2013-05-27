@@ -112,64 +112,6 @@ void SYSTEM::TimeStep() {
 }
 
 /**************************************************************/
-void SYSTEM::SetupGlobalInfluenceMatrices() {
-}
-
-/**************************************************************/
-void SYSTEM::UpdateGlobalInfluenceMatrices() {
-}
-
-/**************************************************************/
-void SYSTEM::GetPressures(REAL dt) {
-}
-
-/**************************************************************/
-void SYSTEM::GetGlobalRHS() {
-}
-
-/**************************************************************/
-void SYSTEM::LinAlg() {
-
-}
-
-/**************************************************************/
-void SYSTEM::BodySubStep(REAL delta_t, int n_steps) {
-
-    unsigned long int t0 = ticks();
-    REAL dt = delta_t / n_steps;
-
-    for (int SubStep = 1; SubStep <= n_steps; ++SubStep) {
-
-
-    }
-
-}
-
-/**************************************************************/
-void SYSTEM::ReadNeuGetBodies() {
-
-}
-
-/**************************************************************/
-void SYSTEM::PrintInfluenceMatrices() {
-
-}
-
-/**************************************************************/
-void SYSTEM::PrintBodiesVels() {
-
-}
-
-/**************************************************************/
-void SYSTEM::PrintBodiesAndWakes() {
-
-}
-
-/**************************************************************/
-void SYSTEM::WriteBodiesAndWakes(ostream& out_stream) {
-}
-
-/**************************************************************/
 void SYSTEM::AddVortonsToTree(Array <Vect3> &XtoInsert, Array <Vect3> &OMtoInsert, Array <int> &IDtoInsert) {
 
     int Num2Insert = XtoInsert.size();
@@ -596,14 +538,6 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     //#endif
 }
 
-/**************************************************************/
-void SYSTEM::MoveBodies(REAL dt, bool update) {
-    //    for (int j = 0; j < NumBodies; ++j)
-    //        Bodies[j]->MoveBody(dt);
-    //
-    //    if (update && NumBodies > 1)
-    //        UpdateGlobalInfluenceMatrices();
-}
 
 /**************************************************************/
 void SYSTEM::WriteDomain() {
@@ -636,7 +570,9 @@ void SYSTEM::WriteDomain() {
 
 /**************************************************************/
 void SYSTEM::WriteData() {
+#ifdef TIME_STEPS
     unsigned long int t1 = ticks();
+#endif
     MATLABOutputStruct Output;
 
     Vect3 Maxs, Mins;
@@ -653,9 +589,9 @@ void SYSTEM::WriteData() {
 
     }
 
-    int sx = (Maxs.x - Mins.x) + 1;
-    int sy = (Maxs.y - Mins.y) + 1;
-    int sz = (Maxs.z - Mins.z) + 1;
+//    int sx = (Maxs.x - Mins.x) + 1;
+//    int sy = (Maxs.y - Mins.y) + 1;
+//    int sz = (Maxs.z - Mins.z) + 1;
 
 
     //    cout << sx << " " << sy << " " << sz << " " << Maxs << " " << Mins << endl;
@@ -914,7 +850,7 @@ void SYSTEM::WriteData() {
 
 
     };
-    globalIO->writeMATLABOutputStruct(Output, string("RunData"), true);
+    globalIO->writeMATLABOutputStruct(Output, string("RunData"));
 
     if (globalSystem->useBodies)
         BODY::SubTIMES.clear();

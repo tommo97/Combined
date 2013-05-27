@@ -298,6 +298,7 @@ void TIME_STEPPER::TimeAdvance() {
                     OctreeCapsule C(Xp[i][j][k], Vect3(0, 0, 0), false);
                     C.toMonitor = true;
                     globalOctree->Root->EvalCapsule(C);
+                    //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
                     BODY::Bodies[iBody]->CellV[i][j][k] = C.Ptr2CellVelocity;
                     BODY::Bodies[iBody]->CellP[i][j][k] = C.Ptr2CellPosition;
                 }
@@ -324,6 +325,7 @@ void TIME_STEPPER::TimeAdvance() {
             BODY::BodySubStep(dt, globalSystem->NumSubSteps);
 
     }
+    globalOctree->Root->ApplyRecursively(&Node::PruneReportingNode, &Node::DoNothing, &Node::DoNothing);
     globalSystem->GetFaceVels();
     globalOctree->FVM(); //  dom_dt(t0)
     //  t0: advance outer wake to t*

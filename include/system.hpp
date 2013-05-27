@@ -77,21 +77,10 @@ public:
 #endif
 	
   void Initialise();
-  void ReadNeuGetBodies();
-  void SetupGlobalInfluenceMatrices();
-  void UpdateGlobalInfluenceMatrices();
-  void BodySubStep(REAL, int);
-  void GetGlobalRHS();
-  void PrintInfluenceMatrices();
-  void LinAlg();
-  void PrintBodiesAndWakes();
   void DecomposePanelsIntoTree();
   void InitialiseMembers();
   void TimeStep();
-  void PrintBodiesVels();
-  void WriteBodiesAndWakes(ostream& out_stream);
   void GetCellsCalcCurlV();
-  void GetPressures(REAL);
   void PutWakesInTree();
   void AddVortonsToTree(Array <Vect3> &, Array <Vect3> &, Array <int> &);
   void GetFaceVels();

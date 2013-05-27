@@ -43,11 +43,10 @@ public:
     int num_m;
     int num_msh;
     int num_images;
-    int ID;
 //    vector <REAL> x, y, z;
 //    Array < Array <REAL> > domain;
 //    Gnuplot *Plot;
-    string pad, filename, directory, image_type, file_type, out_name, suffix, OS, Home, latest_file;
+    string filename, directory, image_type, file_type, out_name, suffix, OS, Home, latest_file;
     string top_header, top_data, top_command;
     string ProcessID, header, step_data, step_header;
     ofstream currentOfstream;
@@ -88,13 +87,13 @@ public:
 
     void write_file(stringstream &, string outfname, string ext, bool);
     
-    void writeMATLABOutputStruct(MATLABOutputStruct &, string , bool );
+    void writeMATLABOutputStruct(MATLABOutputStruct &, string );
 
     void write_dat();
 
     void write_vels_and_pressures();
 
-    void read_input(string infname);
+//    void read_input(string infname);
 
     void write_m();
 

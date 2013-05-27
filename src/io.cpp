@@ -33,7 +33,6 @@ IO::IO() {
     num_msh = 0;
     num_forces = 0;
     num_images = 0;
-    int i = 0, j = 0;
     //    Plot = NULL;
     //    domain.assign(NX,Array<REAL> (NY,0.));
 
@@ -320,9 +319,8 @@ void IO::read_neu(string infname, Array<Vect3> &X, Array<Array<int> > &PNLS,
         }
     }
 }
-
+/**************************************************************/
 static Array<Vect3> ReadVectorsFromLine(string);
-
 Array<Vect3> ReadVectorsFromLine(string line) {
     Array<Vect3> output;
     size_t open = line.find_first_of("[");
@@ -330,7 +328,7 @@ Array<Vect3> ReadVectorsFromLine(string line) {
         //  Read to first closing bracket
         string vect;
         size_t close = line.find_first_of("]", open + 1);
-        for (int i = open + 1; i < close; ++i)
+        for (int i = int(open) + 1; i < int(close); ++i)
             vect.push_back(line[i]);
 
         line.erase(0, close + 1);
@@ -350,9 +348,8 @@ string ChopLine(string line) {
     line.erase(line.find_first_of(";"), line.length());
     return line;
 }
-
+/**************************************************************/
 void IO::PrepOutputDir() {
-    int i = 0, j = 0;
     stringstream out_stream;
 
     directory = globalSystem->WorkingDir + "output/";
@@ -367,7 +364,7 @@ void IO::PrepOutputDir() {
     image_type = ".png";
 
     string check = "touch -c " + directory + "test";
-    j = system(check.c_str());
+    int j = system(check.c_str());
     if (j == 0) {
 #ifndef use_NCURSES
         if (WRITE_TO_FILE)
@@ -380,8 +377,8 @@ void IO::PrepOutputDir() {
         throw NO_FILE;
     }
 }
-
-void IO::read_input(string infname) {
+/**************************************************************/
+//void IO::read_input(string infname) {
 //    ifstream input;
 //    input.open(infname.c_str());
 //    if (!input) {
@@ -445,7 +442,7 @@ void IO::read_input(string infname) {
 //            }
 //        }
 //    }
-}
+//}
 
 /**************************************************************/
 void IO::read_dat(char* infname, Array<Vect3> &x, Array<Vect3> &omega) {
@@ -642,7 +639,7 @@ void IO::write_file(stringstream &outstream, string OutName, string ext,
     stringstream num;
     num << NumFiles[ID];
 
-    int pad = 6 - num.str().length();
+    int pad = 6 - int(num.str().length());
     fname += "_" + globalSystem->CaseName + string(pad, '0') + num.str() + "."
             + ext;
     num_file++;
@@ -663,7 +660,7 @@ void IO::write_file(stringstream &outstream, string OutName, string ext,
     filestr.close();
 }
 /**************************************************************/
-void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName, bool disp) {
+void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName) {
 
     int ID = -1;
     for (int i = 0; i < NumFiles.size(); ++i)
@@ -680,12 +677,11 @@ void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName, bo
     stringstream num;
     num << NumFiles[ID];
 
-    int pad = 6 - num.str().length();
+    int pad = 6 - int(num.str().length());
     fname += "_" + globalSystem->CaseName + string(pad, '0') + num.str() + ".mat";
     num_file++;
     latest_file = "<-W " + fname;
-//    if (WRITE_TO_SCREEN && disp)
-//        cout << fname << endl;
+
     fstream filestr;
 
     for (int i = 0; i < outdata.Int1DArrays.size(); ++i)
@@ -748,37 +744,37 @@ void IO::write_image() {
 
 /**************************************************************/
 void IO::write_m() {
-    ofstream out_stream;
-    stringstream temp;
-    temp << num_m;
-    string filename_padding, prefix = temp.str();
-    if (num_m < 100000)
-        filename_padding = "dump_0";
-    if (num_m < 10000)
-        filename_padding = "dump_00";
-    if (num_m < 1000)
-        filename_padding = "dump_000";
-    if (num_m < 100)
-        filename_padding = "dump_0000";
-    if (num_m < 10)
-        filename_padding = "dump_00000";
-    num_m++;
-    string f_type = ".m";
-    filename = directory + filename_padding + prefix + f_type;
-    out_stream.open(filename.c_str());
-    if (!out_stream) {
-        if (WRITE_TO_SCREEN)
-            cout << "Unable to open output file: " << filename << endl;
-        throw NO_FILE;
-    }
-    if (!setlocale(LC_CTYPE, "")) {
-        fprintf(stderr, "Can't set the specified locale! "
-                "Check LANG, LC_CTYPE, LC_ALL.\n");
-    }
-
-    globalSystem->WriteBodiesAndWakes(out_stream);
-
-    out_stream.close();
+//    ofstream out_stream;
+//    stringstream temp;
+//    temp << num_m;
+//    string filename_padding, prefix = temp.str();
+//    if (num_m < 100000)
+//        filename_padding = "dump_0";
+//    if (num_m < 10000)
+//        filename_padding = "dump_00";
+//    if (num_m < 1000)
+//        filename_padding = "dump_000";
+//    if (num_m < 100)
+//        filename_padding = "dump_0000";
+//    if (num_m < 10)
+//        filename_padding = "dump_00000";
+//    num_m++;
+//    string f_type = ".m";
+//    filename = directory + filename_padding + prefix + f_type;
+//    out_stream.open(filename.c_str());
+//    if (!out_stream) {
+//        if (WRITE_TO_SCREEN)
+//            cout << "Unable to open output file: " << filename << endl;
+//        throw NO_FILE;
+//    }
+//    if (!setlocale(LC_CTYPE, "")) {
+//        fprintf(stderr, "Can't set the specified locale! "
+//                "Check LANG, LC_CTYPE, LC_ALL.\n");
+//    }
+//
+//    globalSystem->WriteBodiesAndWakes(out_stream);
+//
+//    out_stream.close();
 }
 
 /**************************************************************/

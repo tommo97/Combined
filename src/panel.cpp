@@ -407,7 +407,7 @@ Vect3 PANEL::BodyPanelVelocity(Vect3 pTarget) {
 Vect3 PANEL::SourceVel(Vect3 pTarget) {
     //      PV from panel centre to POI in local frame
     Vect3 P = VectMultMatrix(TRANS, pTarget - Centroid);
-    REAL MagP = P.Mag(), Mult = Sigma / two_pi;
+    REAL Mult = Sigma / two_pi; // MagP = P.Mag();
 
     //if (MagP < PANEL::FarField * MaxDiagonal)
     {
@@ -554,11 +554,11 @@ REAL PANEL::WakePanelPotential(Vect3 target) {
             REAL xy3 = (XP.x - X3.x)*(XP.y - X3.y);
             REAL xy4 = (XP.x - X4.x)*(XP.y - X4.y);
 
-            REAL Dt1, Dt2, Dt3, Dt4, St1, St2, St3, St4;
+            REAL Dt1, Dt2, Dt3, Dt4;//, St1, St2, St3, St4;
 
             if (sd1 < 1e-12) {
                 Dt1 = 0.;
-                St1 = 0.;
+                //St1 = 0.;
             } else {
                 REAL s11 = dy1 * xz1 - dx1*xy1;
                 REAL c11 = r1 * z*dx1;
@@ -571,7 +571,7 @@ REAL PANEL::WakePanelPotential(Vect3 target) {
 
             if (sd2 < 1e-12) {
                 Dt2 = 0.;
-                St2 = 0.;
+                //St2 = 0.;
             } else {
                 REAL s21 = dy2 * xz2 - dx2*xy2;
                 REAL c21 = r2 * z*dx2;
@@ -584,7 +584,7 @@ REAL PANEL::WakePanelPotential(Vect3 target) {
 
             if (sd3 < 1e-12) {
                 Dt3 = 0.;
-                St3 = 0.;
+                //St3 = 0.;
 
             } else {
                 REAL s31 = dy3 * xz3 - dx3*xy3;
@@ -598,7 +598,7 @@ REAL PANEL::WakePanelPotential(Vect3 target) {
 
             if (sd4 < 1e-12) {
                 Dt4 = 0.;
-                St4 = 0.;
+                //St4 = 0.;
             } else {
                 REAL s41 = dy4 * xz4 - dx4*xy4;
                 REAL c41 = r4 * z*dx4;
@@ -1120,21 +1120,21 @@ void PANEL::CheckNeighb(PANEL *Face) {
 REAL PANEL::GetTriTesselatedDoubletPhi(Vect3 P) {
 
     if ((P - CollocationPoint).Dot(TRANS[2]) < 0.0)
-        return TriDoubletPhi(C1, C2, C3, P) + TriDoubletPhi(C3, C4, C1, P);
+        return Mu*(PANEL::TriDoubletPhi(C1, C2, C3, P) + PANEL::TriDoubletPhi(C3, C4, C1, P));
     else
-        return TriDoubletPhi(C1, C2, C4, P) + TriDoubletPhi(C2, C3, C4, P);
+        return Mu*(PANEL::TriDoubletPhi(C1, C2, C4, P) + PANEL::TriDoubletPhi(C2, C3, C4, P));
 
 }
 /**************************************************************/
-REAL PANEL::TriDoubletPhi(Vect3 &C1, Vect3 &C2, Vect3 &C3, Vect3& XP) {
+REAL PANEL::TriDoubletPhi(Vect3 &c1, Vect3 &c2, Vect3 &c3, Vect3& XP) {
 
-    Vect3 CP = (C1 + C2 + C3) / 3.0;
+    Vect3 CP = (c1 + c2 + c3) / 3.0;
     
     //  Project onto unit sphere centered at XP and get PVs to corners from P
     
-    Vect3 R1 = (C1 - XP).Normalise();
-    Vect3 R2 = (C2 - XP).Normalise();
-    Vect3 R3 = (C3 - XP).Normalise();
+    Vect3 R1 = (c1 - XP).Normalise();
+    Vect3 R2 = (c2 - XP).Normalise();
+    Vect3 R3 = (c3 - XP).Normalise();
     
     //  Angles between points
     REAL cosa = R1.Dot(R2);
@@ -1152,12 +1152,12 @@ REAL PANEL::TriDoubletPhi(Vect3 &C1, Vect3 &C2, Vect3 &C3, Vect3& XP) {
     REAL Area = alfa + beta + gama - pi;
 
     //  Check if XP is above or below the collocation point...
-    REAL dz = (XP-CP).Dot((C2 - C1).Cross(C1 - C3)); // don't really need to normalise the normal, only need direction.
+    REAL dz = (XP-CP).Dot((c2 - c1).Cross(c1 - c3)); // don't really need to normalise the normal, only need direction.
 
     if (dz>0.0)
-        return -Mu * Area/(two_pi);
+        return -1.0*Area/(two_pi);
     else
-        return Mu * Area/(two_pi);
+        return 1.0 * Area/(two_pi);
 
 }
 ///**************************************************************/
@@ -1206,7 +1206,7 @@ REAL PANEL::TriDoubletPhi(Vect3 &C1, Vect3 &C2, Vect3 &C3, Vect3& XP) {
 //}
 /**************************************************************/
 REAL PANEL::CurvedSourcePhi(Vect3& XP) {
-    REAL Phi = 0.0;
+    REAL outPhi = 0.0;
     //   Define a local coordinate system on the curved panel
     Array <Vect3> Trans(3);
     Trans[0] = (0.5 * (C1 + C2) - CollocationPoint).Normalise(); // Xdash
@@ -1273,18 +1273,18 @@ REAL PANEL::CurvedSourcePhi(Vect3& XP) {
             REAL RF = (XP - XpF).Mag();
             REAL ratio = RF/RC;
 
-            Phi -= UTIL::QuadWts[i] * UTIL::QuadWts[j] * Sigma *  Jdet * ratio / RF;
+            outPhi -= UTIL::QuadWts[i] * UTIL::QuadWts[j] * Sigma *  Jdet * ratio / RF;
 
             //cout << "scatter3([" << XpC.x << " " << XpF.x << "],[" << XpC.y << " " << XpF.y << "],["<< XpC.z << " " << XpF.z << "]);" << endl;
             
 
         }
     }
-    return Phi/two_pi;
+    return outPhi/two_pi;
 }
 /**************************************************************/
 REAL PANEL::CurvedDoubletPhi(Vect3& XP) {
-    REAL Phi = 0.0;
+    REAL outPhi = 0.0;
     //   Define a local coordinate system on the curved panel
     Array <Vect3> Trans(3);
     Trans[0] = (0.5 * (C1 + C2) - CollocationPoint).Normalise(); // Xdash
@@ -1361,14 +1361,14 @@ REAL PANEL::CurvedDoubletPhi(Vect3& XP) {
             REAL RF = DXF.Mag();
 
             REAL dRC = DXC.Dot(NormC) / (RF * RF * RC);
-            REAL dRF = DXF.Dot(Trans[2]) / (RF * RF * RF);
+            // REAL dRF = DXF.Dot(Trans[2]) / (RF * RF * RF);
 
-            REAL ratio = (RF) / (RC);
+            // REAL ratio = (RF) / (RC);
 
-            Phi -= UTIL::QuadWts[i] * UTIL::QuadWts[j] * Mu * dRC * Jdet;
+            outPhi -= UTIL::QuadWts[i] * UTIL::QuadWts[j] * Mu * dRC * Jdet;
         }
     }
-    return Phi / two_pi;
+    return outPhi / two_pi;
 }
 
 /**************************************************************/

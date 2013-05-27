@@ -191,7 +191,7 @@ public:
     void GetEdgeInfo();
 
     REAL GetTriTesselatedDoubletPhi(Vect3 P);
-    REAL TriDoubletPhi(Vect3 &C1, Vect3 &C2, Vect3 &C3, Vect3& XP);
+    static REAL TriDoubletPhi(Vect3 &C1, Vect3 &C2, Vect3 &C3, Vect3& XP);
     REAL CurvedSourcePhi(Vect3& XP);
     REAL CurvedDoubletPhi(Vect3& XP);
     REAL HyperboloidDoubletPhi(Vect3& XP);

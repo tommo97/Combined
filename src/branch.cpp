@@ -205,7 +205,6 @@ void Branch::vPassMmnts2Prnt() {
     }
 
 }
-
 /**************************************************************/
 void Branch::vEvalCapsule(OctreeCapsule &C) {
 
@@ -234,6 +233,9 @@ void Branch::vEvalCapsule(OctreeCapsule &C) {
         }
         Children[i][j][k]->GetISA();
         Children[i][j][k]->GetISB();
+        if (C.toMonitor)
+            Children[i][j][k]->toMonitor = true;
+        // the above line means that if the branch/cell is being made by a monitoring OctreeCapsule, then it can safely be deleted without affecting the FVM/FMM calcs....
     }
 
     Children[i][j][k]->EvalCapsule(C);

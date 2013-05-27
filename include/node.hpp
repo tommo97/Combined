@@ -97,7 +97,7 @@ public:
     bool SkipAdd2List;
 
     bool HasLoad;
-    bool to_report;
+    bool toMonitor;
     Node *Children[2][2][2];
     Node *ISA[3][3][3]; // this should replace Neighb?
     Array <Node*> LinISB, LinISA;
@@ -139,6 +139,18 @@ public:
                             HasLoad = true;
                             Omega += Children[i][j][k]->Omega;
                         }
+                    }
+    }
+    
+    void PruneReportingNode() {
+        for (int i = 0; i < 2; ++i)
+            for (int j = 0; j < 2; ++j)
+                for (int k = 0; k < 2; ++k)
+                    if (Children[i][j][k]) {
+                        if (Children[i][j][k]->toMonitor) {
+                            delete Children[i][j][k];
+                            Children[i][j][k] = NULL;
+                        } 
                     }
     }
     

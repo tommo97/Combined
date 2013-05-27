@@ -1077,7 +1077,6 @@ void BODY::SetUpProtoWakes(REAL dt) {
 
 
     for (int I = 0; I < BODY::Bodies.size(); ++I) {
-        int count = 0;
         Array <PANEL> PWtmp;
         Array <Vect3> ProtoWakePoint1, ProtoWakePoint2;
         Array <REAL> LL, LR;

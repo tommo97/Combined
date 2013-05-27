@@ -175,9 +175,9 @@ public:
         Vect3 Nx = (Xi - X[0][0][0]) / DX;
 
         //	Lower index
-        int x0 = floor(Nx.x);
-        int y0 = floor(Nx.y);
-        int z0 = floor(Nx.z);
+        int x0 = int(floor(Nx.x));
+        int y0 = int(floor(Nx.y));
+        int z0 = int(floor(Nx.z));
 
         //	Upper index
         int x1 = x0 + 1;
@@ -217,7 +217,7 @@ public:
         return u0 + DeltaX.x * (u1 - u0) / (x1 - x0);
 
 
-    };
+    }
 
 };
 /**************************************************************/
