@@ -425,7 +425,7 @@ string OCTREE::GetPseudoRecursiveFMMVels() {
     OCTREE::BranchesInDownOrder.clear();
     OCTREE::BranchesInUpOrder.clear();
     OCTREE::CellsInOrder.clear();
-    Root->ApplyRecursivelyP(&Branch::PutInOctreeDownList, &FVMCell::PutInOctreeCellList, &Branch::PutInOctreeUpList);
+    Root->ApplyRecursively(&Branch::PutInOctreeDownList, &FVMCell::PutInOctreeCellList, &Branch::PutInOctreeUpList);
     cout << "here! " << OCTREE::CellsInOrder.size() << " " << AllCells.size() << endl;
 #ifdef TIME_STEPS
     long unsigned int tt2 = ticks();
