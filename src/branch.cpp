@@ -138,7 +138,16 @@ void Branch::InitMomsInds(int MaxP) {
 void Branch::BranchCount() {
     globalOctree->BranchCount[m]++;
 }
-
+/**************************************************************/
+void Branch::PutInOctreeUpList()
+{
+    OCTREE::BranchesInUpOrder.push_back(this);
+}
+/**************************************************************/
+void Branch::PutInOctreeDownList()
+{
+    OCTREE::BranchesInDownOrder.push_back(this);
+}
 /**************************************************************/
 void Branch::vReList() {
     globalOctree->AllBranches[m][globalOctree->BranchCount[m]] = this;

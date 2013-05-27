@@ -1333,7 +1333,7 @@ void TEST::TestFMM(int argc, char *argv[]) {
             //  Insert a random block of points just intersecting the cube
             
             
-            Vect3 X(mins - 2.0, mins - 5.0, mins + 5.0);
+            Vect3 X(mins - 25.0, mins - 25.0, mins - 25.0);
 
             OctreeCapsule C(X, Vect3(0,0,0), false);
             C.toMonitor = true;

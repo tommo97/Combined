@@ -333,7 +333,11 @@ void FVMCell::SetVelsZero() {
     FaceVels = Velocity = Vect3(globalSystem->scaledVinf.x, globalSystem->scaledVinf.y, globalSystem->scaledVinf.z);
     VelGrads[0] = VelGrads[1] = VelGrads[2] = Vect3(0.0);
 }
-
+/**************************************************************/
+void FVMCell::PutInOctreeCellList()
+{
+    OCTREE::CellsInOrder.push_back(this);
+}
 /**************************************************************/
 FVMCell::~FVMCell() {
     FVMCell::NumCells--;

@@ -40,13 +40,19 @@ public:
     Array <int> BranchCount;    //  ditto
 
     Array <FVMCell*> AllCells;
+    static Array <FVMCell*> CellsInOrder;
     Array <Array <Branch*> > AllBranches;
+    static Array <Branch*> BranchesInDownOrder, BranchesInUpOrder;
     void ClearNodes();
     void AddToTree();
     void Reset();
     void FVM();
     void Integrate();
     void GetVels();
+    string GetDirectVels();
+    string GetRecursiveFMMVels();
+    string GetPseudoRecursiveFMMVels();
+    string GetNonRecursiveFMMVels();
     void GetSRad();
     void Prune();
     void ResetAllVelsAndFields();

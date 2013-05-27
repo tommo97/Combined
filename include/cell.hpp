@@ -100,6 +100,8 @@ public:
     void TolDown();
 
     void SetVelsZero();
+    
+    void PutInOctreeCellList();
 
     void Integrate();
     

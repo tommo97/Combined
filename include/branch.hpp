@@ -48,6 +48,10 @@ public:
     
     static void InitMomsInds(int MaxP);
     
+    void PutInOctreeDownList();
+    
+    void PutInOctreeUpList();
+    
     void vRemoveFromNeighbs() {};
 
     void vCheckNeighbs() {};
