@@ -248,19 +248,19 @@ void TIME_STEPPER::TimeAdvance() {
     
     
       
-    
-    
+
+
 
     TIME_STEPPER::RKStep = 0;
     //  t0: Calc FMM and get 
     //  ??? something like globalSystem->PutDummyPanelPointsInTree();
-    
-            ARRAY3(Vect3) Xp;
-        ARRAY3(Vect3) Xv;
-        
-    for (int iBody = 0; iBody = BODY::NumBodies; ++iBody) {
 
-        
+    ARRAY3(Vect3) Xp;
+    ARRAY3(Vect3) Xv;
+
+    for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
+
+
         REAL MaxX, MaxY, MaxZ;
         MaxX = MaxY = MaxZ = -1e32;
         REAL MinX, MinY, MinZ;
