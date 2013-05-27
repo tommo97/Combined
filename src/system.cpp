@@ -527,33 +527,33 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     
     
     
-
-        for (int i = 50; i < 75; ++i) {
-            Vect3 V1ct, V2ct, V1t = Vect3(0.0), V2t = Vect3(0.0);
-                #pragma omp parallel for
-            for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
-    
-                //                    V1ct += UTIL::globalCubicDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
-                //                            globalOctree->AllCells[j]->Omega);
-                //                    
-                //                    
-                //                    V2ct += UTIL::globalCubicDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
-                //                            globalOctree->AllCells[j]->Omega);
-
-            V1t += UTIL::globalCubicDirectVel(BODY::AllBodyFaces[i]->Xfmm0 - globalOctree->AllCells[j]->Position,
-                    globalOctree->AllCells[j]->Omega);
-
-
-            V2t += UTIL::globalCubicDirectVel(BODY::AllBodyFaces[i]->Xfmm1 - globalOctree->AllCells[j]->Position,
-                    globalOctree->AllCells[j]->Omega);
-            
-    
-            }
-            //                cout << "V1: " << V1t << " " << V1ct << " " << V1[i] << " " << endl << "V2: " <<  V2t << " " << V2ct << " " <<  V2[i] << endl;
-                            cout << "V1: " << V1t << " " << -1.0*globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm0) << " " << BODY::AllBodyFaces[i]->Vfmm0 << endl;
-                            cout << "V2: " << V2t << " " << -1.0*globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm1) << " " << BODY::AllBodyFaces[i]->Vfmm1 << endl;
-        }
-
+//
+//        for (int i = 50; i < 75; ++i) {
+//            Vect3 V1ct, V2ct, V1t = Vect3(0.0), V2t = Vect3(0.0);
+//                #pragma omp parallel for
+//            for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
+//    
+//                //                    V1ct += UTIL::globalCubicDirectVel(P1[i] - globalOctree->AllCells[j]->Position,
+//                //                            globalOctree->AllCells[j]->Omega);
+//                //                    
+//                //                    
+//                //                    V2ct += UTIL::globalCubicDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
+//                //                            globalOctree->AllCells[j]->Omega);
+//
+//            V1t += UTIL::globalCubicDirectVel(BODY::AllBodyFaces[i]->Xfmm0 - globalOctree->AllCells[j]->Position,
+//                    globalOctree->AllCells[j]->Omega);
+//
+//
+//            V2t += UTIL::globalCubicDirectVel(BODY::AllBodyFaces[i]->Xfmm1 - globalOctree->AllCells[j]->Position,
+//                    globalOctree->AllCells[j]->Omega);
+//            
+//    
+//            }
+//            //                cout << "V1: " << V1t << " " << V1ct << " " << V1[i] << " " << endl << "V2: " <<  V2t << " " << V2ct << " " <<  V2[i] << endl;
+//                            cout << "V1: " << V1t << " " << -1.0*globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm0) << " " << BODY::AllBodyFaces[i]->Vfmm0 << endl;
+//                            cout << "V2: " << V2t << " " << -1.0*globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm1) << " " << BODY::AllBodyFaces[i]->Vfmm1 << endl;
+//        }
+//
 
 
 
