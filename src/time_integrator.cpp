@@ -294,8 +294,8 @@ void TIME_STEPPER::TimeAdvance() {
 
         Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
         Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
-        ARRAY3(Vect3*) BODY::Bodies[iBody]->CellV = ARRAY3(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-        ARRAY3(Vect3*) BODY::Bodies[iBody]->CellP = ARRAY3(DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+        BODY::Bodies[iBody]->CellV = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
+        BODY::Bodies[iBody]->CellP = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
         for (int i = 0; i < Xv.size(); ++i)
             for (int j = 0; j < Xv[0].size(); ++j)
                 for (int k = 0; k < Xv[0][0].size(); ++k) {
