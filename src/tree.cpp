@@ -474,6 +474,7 @@ string OCTREE::GetPseudoRecursiveFMMVels() {
 }
 /**************************************************************/
 string OCTREE::GetNonRecursiveFMMVels() {
+        stringstream tmp;
 //      Pass moments to parents
 #ifdef TIME_STEPS
     long unsigned int tt1 = ticks();
@@ -544,7 +545,6 @@ string OCTREE::GetNonRecursiveFMMVels() {
 
 #ifdef TIME_STEPS
     long unsigned int tt5 = ticks();
-    stringstream tmp;
     tmp << "ME:               " << double(tt2 - tt1) / 1000.0 << endl;
     tmp << "M2M:              " << double(tt3 - tt2) / 1000.0 << endl;
     tmp << "M2L:              " << double(tM2L) / 1000.0 << endl;
