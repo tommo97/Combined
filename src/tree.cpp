@@ -551,7 +551,7 @@ void OCTREE::GetVels() {
 #ifdef RECURSE
     string time_info = GetRecursiveFMMVels();
 #else
-    string time_info = GetPseudoRecursiveFMMVels();
+    string time_info = GetNonRecursiveFMMVels();
 #endif
 #endif
 #ifdef TIME_STEPS
