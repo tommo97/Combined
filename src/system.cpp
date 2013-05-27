@@ -549,8 +549,8 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     
             }
             //                cout << "V1: " << V1t << " " << V1ct << " " << V1[i] << " " << endl << "V2: " <<  V2t << " " << V2ct << " " <<  V2[i] << endl;
-                            cout << "V1: " << V1t[i] << " " << globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm0) << " " << UTIL::interp3 <Vect3> (Xp, Xv, BODY::AllBodyFaces[i]->Xfmm0) << endl;
-                            cout << "V2: " << V2t[i] << " " << globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm1) << " " << UTIL::interp3 <Vect3> (Xp, Xv, BODY::AllBodyFaces[i]->Xfmm1) << endl;
+                            cout << "V1: " << V1t << " " << globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm0) << " " << UTIL::interp3 <Vect3> (Xp, Xv, BODY::AllBodyFaces[i]->Xfmm0) << endl;
+                            cout << "V2: " << V2t << " " << globalOctree->TreeVel(BODY::AllBodyFaces[i]->Xfmm1) << " " << UTIL::interp3 <Vect3> (Xp, Xv, BODY::AllBodyFaces[i]->Xfmm1) << endl;
         }
 
 
