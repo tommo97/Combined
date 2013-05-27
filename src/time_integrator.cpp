@@ -285,7 +285,7 @@ void TIME_STEPPER::TimeAdvance() {
             MaxZ = max(MaxZ, FuturePoints[nt].z);
             MinZ = min(MinZ, FuturePoints[nt].z);
         }
-        REAL Buffer = 3.0;
+        REAL Buffer = 1.0;
         MaxX += Buffer;
         MaxY += Buffer;
         MaxZ += Buffer;
