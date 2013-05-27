@@ -266,6 +266,7 @@ void TIME_STEPPER::TimeAdvance() {
             OwnerCG += OwnerVel*dt;
             Vect3 PanelVel = OwnerVel + BODY::AllBodyFaces[i]->Owner->BodyRates.Cross(FuturePoints[nt-1] - OwnerCG);
             FuturePoints[nt] = FuturePoints[nt-1] + nt * dt * PanelVel;
+            cout << FuturePoints[nt] << endl;
         }
         
         //      Find unique future points after rounding
