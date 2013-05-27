@@ -261,7 +261,7 @@ void TIME_STEPPER::TimeAdvance() {
         Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
         Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
         Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
-        REAL dt = 0.0001;
+        REAL dt = 0.001;
         Array <Vect3> RoundedPoints;
         RoundedPoints.push_back(floor(FuturePoints[0]) - 0.5);
         for (int nt = 1; nt < 100; ++nt)
