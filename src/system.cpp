@@ -540,11 +540,11 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
                 //                    V2ct += UTIL::globalCubicDirectVel(P2[i] - globalOctree->AllCells[j]->Position,
                 //                            globalOctree->AllCells[j]->Omega);
 
-            V1t += UTIL::globalDirectVel(BODY::AllBodyFaces[i]->Xfmm0 - globalOctree->AllCells[j]->Position,
+            V1t += UTIL::globalCubicDirectVel(BODY::AllBodyFaces[i]->Xfmm0 - globalOctree->AllCells[j]->Position,
                     globalOctree->AllCells[j]->Omega);
 
 
-            V2t += UTIL::globalDirectVel(BODY::AllBodyFaces[i]->Xfmm1 - globalOctree->AllCells[j]->Position,
+            V2t += UTIL::globalCubicDirectVel(BODY::AllBodyFaces[i]->Xfmm1 - globalOctree->AllCells[j]->Position,
                     globalOctree->AllCells[j]->Omega);
             
     
