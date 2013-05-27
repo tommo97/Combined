@@ -108,7 +108,7 @@ void OCTREE::Reset() {
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::CheckNeighbs, &Node::DoNothing);
 
 
-    UpdateLists()
+    UpdateLists();
 #ifdef TIME_STEPS
     long unsigned int t4 = ticks();
     stringstream tmp;
