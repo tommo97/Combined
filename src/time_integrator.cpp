@@ -269,11 +269,33 @@ void TIME_STEPPER::TimeAdvance() {
         }
         
         //      Find unique future points after rounding
-        for (int nt = 0; nt < 1000; ++nt)
+        
+
+        REAL MaxX, MaxY, MaxZ;
+        MaxX = MaxY = MaxZ = -1e32;
+        REAL MinX, MinY, MinZ;
+        MinX = MinY = MinZ = 1e32;
+        for (int nt = 0; nt < 1000; ++nt) {
             FuturePoints[nt] = floor(FuturePoints[nt]) - 0.5;
+            MaxX = max(MaxX, FuturePoints[nt].x);
+            MinX = min(MinX, FuturePoints[nt].x);
+            MaxY = max(MaxY, FuturePoints[nt].y);
+            MinY = min(MinY, FuturePoints[nt].y);
+            MaxZ = max(MaxZ, FuturePoints[nt].z);
+            MinZ = min(MinZ, FuturePoints[nt].z);
+        }
+        REAL Buffer = 3.0;
+        MaxX += Buffer;
+        MaxY += Buffer;
+        MaxZ += Buffer;
+        MinX -= Buffer;
+        MinY -= Buffer;
+        MinZ -= Buffer;
+        int DX = ceil(MaxX) - floor(MinX);
+        int DY = ceil(MaxY) - floor(MinY);
+        int DZ = ceil(MaxZ) - floor(MinZ);
         
-        
-        
+        cout << DX << " " << DY << " " << DZ << " " << DX*DY*DZ << endl;
         
         
         
