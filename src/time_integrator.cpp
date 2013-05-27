@@ -265,7 +265,12 @@ void TIME_STEPPER::TimeAdvance() {
             for (int b = 0; b < 3; ++b)
                 for (int c = 0; c < 3; ++c){
                     temp[a][b][c] = Xpmin + Vect3(1.0*a,1.0*b,1.0*c);
-                    cout << temp[a][b][c] << endl;
+                    OctreeCapsule C(Xpmin + Vect3(1.0*a,1.0*b,1.0*c), Vect3(0, 0, 0), false);
+                    C.toMonitor = true;
+                    globalOctree->Root->EvalCapsule(C);
+                    //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
+                    BODY::AllBodyFaces[i]->Vp[a][b][c] = C.Ptr2CellVelocity;
+                    BODY::AllBodyFaces[i]->Xp[a][b][c] = C.Ptr2CellPosition;
     }
 
         
