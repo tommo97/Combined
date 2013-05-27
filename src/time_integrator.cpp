@@ -264,6 +264,7 @@ void TIME_STEPPER::TimeAdvance() {
             for (int b = 0; b < 3; ++b)
                 for (int c = 0; c < 3; ++c){
                     temp[a][b][c] = Xpmin + Vect3(1.0*a,1.0*b,1.0*c);
+                    cout << Xpmin + Vect3(1.0*a,1.0*b,1.0*c) << endl;
                     OctreeCapsule C(Xpmin + Vect3(1.0*a,1.0*b,1.0*c), Vect3(0, 0, 0), false);
                     C.toMonitor = true;
                     globalOctree->Root->EvalCapsule(C);
