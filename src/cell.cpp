@@ -122,15 +122,18 @@ void FVMCell::Integrate() {
 
 
         Vect3 ViscDeriv = globalSystem->Nu * ((de - dw) + (dn - ds) + (dt - db));
-        //TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
+        TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
 
     }
 
 
 
     globalTimeStepper->Integrate(this);
+
+    
     Vect3 OmegaPrev = Omega;
 
+    
     Omega = Vect3(0., 0., 0.);
 
 

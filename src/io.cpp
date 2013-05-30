@@ -56,7 +56,7 @@ IO::IO() {
             + ProcessID;
     top_data = " ";
     step_header
-            = "\rstep   s/steps\t  dt /sim t  \tWC t /CPU t\t\tCFL\t\t# cells";
+            = "\rstep   s/steps\t  dt /sim t  \tWC t /CPU t\tCFL\t# cells";
 
     string out = out_stream.str();
     suffix = "";
@@ -532,7 +532,7 @@ void IO::stat_step() {
     out_stream << "/" << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     globalTimeStepper->cpu_t = ticks();
 
-    out_stream << "\t" << globalTimeStepper->CFL;
+    out_stream << "\t" << globalTimeStepper->CFL.Mag();
 
     out_stream << "\t" << FVMCell::NumCells;
     if (globalTimeStepper->dump_next) {

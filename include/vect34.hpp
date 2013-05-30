@@ -196,8 +196,8 @@ public:
         return bool ((x > B.x) || ((x == B.x) && (y > B.y)) || ((x == B.x) && (y == B.y) && (z > B.z)));
     }
 
-    inline bool operator<(const Vect3 B) {
-        return bool ((x < B.x) || ((x == B.x) && (y < B.y)) || ((x == B.x) && (y == B.y) && (z < B.z)));
+    inline bool operator<(const Vect3& B) const {
+        return ((x < B.x) || ((x == B.x) && (y < B.y)) || ((x == B.x) && (y == B.y) && (z < B.z)));
     }
 
     inline bool operator >=(const Vect3 B) {

@@ -8,7 +8,7 @@ files = dir('R*.mat');
 
 %   Find out the interpolation weights
 load(files(end).name);
-r = 0.5;
+r = 0.9;
 Rads = Rloc;
 Chrd = Cloc;
 R0 = Rads(BodySurface0);
@@ -111,7 +111,7 @@ for i = 1:length(files)
         plot(PressChord,CPress);
         hold all
         plot(PressChord,CPressD);
-        scatter(FDC0015_0211_8pt5(:,1),FDC0015_0211_8pt5(:,2));
+        scatter(BTZSOTONpt9(:,1),BTZSOTONpt9(:,2));
         disp([i j Cl(count)])
         drawnow
     end

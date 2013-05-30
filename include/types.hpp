@@ -45,7 +45,7 @@ using namespace std;
 
 #define OCTREE_SIZE 4096
 #define OCTREE_LEVS 13
-#define LIMITER Koren
+#define LIMITER VANLEER
 
 //#define COLLAPSE_TO_FACES
 //#define USE_SWSS

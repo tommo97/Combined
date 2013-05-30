@@ -34,13 +34,13 @@ bool TIME_STEPPER::RK2Mode = false;
 
 /**************************************************************/
 TIME_STEPPER::TIME_STEPPER() {
-    dt_prev = 1e16;
+    dt_prev = 0.0;
     dx = dy = dz = 1.0;
     ChangeOver = last_step = PruneNow = false;
     n = -1;
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
-    cfl_lim = 0.45;
+    cfl_lim = 0.4;
     dt_out = 1.0;
     t_out = dt_out;
     lambda = mu = nu = 0.0;
@@ -247,145 +247,67 @@ void TIME_STEPPER::TimeAdvance() {
     
     
     
-      
+
 
 
 
     TIME_STEPPER::RKStep = 0;
     
+    
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-
-        Array <Vect3> FuturePoints(100, Vect3(0.0));
-
-        FuturePoints[0] = BODY::AllBodyFaces[i]->CollocationPoint;
-        Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
-        Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
-        Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
-        REAL dt = 0.001;
-        Array <Vect3> RoundedPoints;
-        RoundedPoints.push_back(floor(FuturePoints[0]) - 0.5);
-        for (int nt = 1; nt < 100; ++nt)
-        {
-            Vect3 PanelVel = OwnerVel + OwnerRates.Cross(FuturePoints[nt-1] - OwnerCG);
-            OwnerCG += OwnerVel*dt;
-            FuturePoints[nt] = FuturePoints[nt-1] + dt * PanelVel;
-            
-            Vect3 FlooredPoint = floor(FuturePoints[nt]) - 0.5;
-            Vect3 DX = FlooredPoint - RoundedPoints.back();
-            if (DX.Dot(DX) > 0.5)
-                RoundedPoints.push_back(FlooredPoint);
-            
-        }
-        
-        
-        cout << RoundedPoints.size() << endl;
-        //      Find unique future points after rounding
-        
-
-        REAL MaxX, MaxY, MaxZ;
-        MaxX = MaxY = MaxZ = -1e32;
-        REAL MinX, MinY, MinZ;
-        MinX = MinY = MinZ = 1e32;
-        for (int nt = 0; nt < 100; ++nt) {
-            FuturePoints[nt] = floor(FuturePoints[nt]) - 0.5;
-            MaxX = max(MaxX, FuturePoints[nt].x);
-            MinX = min(MinX, FuturePoints[nt].x);
-            MaxY = max(MaxY, FuturePoints[nt].y);
-            MinY = min(MinY, FuturePoints[nt].y);
-            MaxZ = max(MaxZ, FuturePoints[nt].z);
-            MinZ = min(MinZ, FuturePoints[nt].z);
-        }
-        REAL Buffer = 1.0;
-        MaxX += Buffer;
-        MaxY += Buffer;
-        MaxZ += Buffer;
-        MinX -= Buffer;
-        MinY -= Buffer;
-        MinZ -= Buffer;
-        int DX = ceil(MaxX) - floor(MinX);
-        int DY = ceil(MaxY) - floor(MinY);
-        int DZ = ceil(MaxZ) - floor(MinZ);
-        
-        cout << DX << " " << DY << " " << DZ << " " << DX*DY*DZ << endl;
-        
-        
-        
-        BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (3, Array < Array < Vect3*> > (3, Array <Vect3*> (3, NULL)));
-        BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (3, Array < Array < Vect3*> > (3, Array <Vect3*> (3, NULL)));
-
         Vect3 Xp = BODY::AllBodyFaces[i]->CollocationPoint;
-        Vect3 Xpmin = floor(Xp) - 0.5;
-        Array < Array < Array <Vect3> > > temp(3, Array < Array < Vect3> > (3, Array <Vect3> (3, Vect3(0.0))));
-        for (int a = 0; a < 3; ++a)
-            for (int b = 0; b < 3; ++b)
-                for (int c = 0; c < 3; ++c){
-                    temp[a][b][c] = Xpmin + Vect3(1.0*a,1.0*b,1.0*c);
-                    
-                    
-                    OctreeCapsule C(Xpmin + Vect3(1.0*a,1.0*b,1.0*c), Vect3(0, 0, 0), false);
-                    C.toMonitor = true;
-                    globalOctree->Root->EvalCapsule(C);
-                    //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
-                    BODY::AllBodyFaces[i]->Vp[a][b][c] = C.Ptr2CellVelocity;
-                    BODY::AllBodyFaces[i]->Xp[a][b][c] = C.Ptr2CellPosition;
+        {
+            Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
+            Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
+            Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
+
+            Vect3 MinX = Xp, MaxX = Xp;
+
+            for (int nt = 1; nt < 100; ++nt) {
+                Vect3 PanelVel = OwnerVel + OwnerRates.Cross(Xp - OwnerCG);
+
+                OwnerCG += OwnerVel * dt / 100;
+
+                Xp += dt * PanelVel / 100;
+
+                MinX = min(MinX, Xp);
+                MaxX = max(MaxX, Xp);
+            }
+
+
+
+
+            REAL Buffer = 1.0;
+            MaxX += Vect3(Buffer,Buffer,Buffer);
+            MinX -= Vect3(Buffer,Buffer,Buffer);
+
+            MinX = floor(MinX) - 0.5;
+            MaxX = ceil(MaxX) + 0.5;
+
+            int DX = (MaxX.x) - (MinX.x);
+            int DY = (MaxX.y) - (MinX.y);
+            int DZ = (MaxX.z) - (MinX.z);
+
+            BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
+            BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
+
+            for (int a = 0; a < DX; ++a)
+                for (int b = 0; b < DY; ++b)
+                    for (int c = 0; c < DZ; ++c) {
+                        OctreeCapsule C(MinX + Vect3(1.0 * a, 1.0 * b, 1.0 * c), Vect3(0, 0, 0), false);
+                        C.toMonitor = true;
+                        globalOctree->Root->EvalCapsule(C);
+                        //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
+                        BODY::AllBodyFaces[i]->Vp[a][b][c] = C.Ptr2CellVelocity;
+                        BODY::AllBodyFaces[i]->Xp[a][b][c] = C.Ptr2CellPosition;
+                    }
+        
+            
+            
+        }
+        
     }
 
-        
-        
-    }
-
-//    for (int iBody = 0; iBody < BODY::NumBodies; ++iBody) {
-//
-//
-//        REAL MaxX, MaxY, MaxZ;
-//        MaxX = MaxY = MaxZ = -1e32;
-//        REAL MinX, MinY, MinZ;
-//        MinX = MinY = MinZ = 1e32;
-//        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-//            MaxX = max(MaxX, BODY::Bodies[iBody]->Faces[i].CollocationPoint.x);
-//            MinX = min(MinX, BODY::Bodies[iBody]->Faces[i].CollocationPoint.x);
-//            MaxY = max(MaxY, BODY::Bodies[iBody]->Faces[i].CollocationPoint.y);
-//            MinY = min(MinY, BODY::Bodies[iBody]->Faces[i].CollocationPoint.y);
-//            MaxZ = max(MaxZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
-//            MinZ = min(MinZ, BODY::Bodies[iBody]->Faces[i].CollocationPoint.z);
-//        }
-//
-//        REAL Buffer = 3.0;
-//        
-//        MaxX += Buffer; MaxY += Buffer; MaxZ += Buffer;
-//        MinX -= Buffer; MinY -= Buffer; MinZ -= Buffer;
-//        
-//        int DX = ceil(MaxX) - floor(MinX);
-//        int DY = ceil(MaxY) - floor(MinY);
-//        int DZ = ceil(MaxZ) - floor(MinZ);
-//
-////        cout << DX << " " << DY << " " << DZ << " " << DX * DY * DZ << " " << BODY::Bodies[iBody]->Faces.size() << endl;
-//
-//
-//        Array <REAL> Xs = UTIL::globalLinspace(floor(MinX) - 0.5, ceil(MaxX) + 0.5, DX + 2);
-//        Array <REAL> Ys = UTIL::globalLinspace(floor(MinY) - 0.5, ceil(MaxY) + 0.5, DY + 2);
-//        Array <REAL> Zs = UTIL::globalLinspace(floor(MinZ) - 0.5, ceil(MaxZ) + 0.5, DZ + 2);
-//
-//
-//
-//        ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2); 
-//        ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (DX + 2, DY + 2, DZ + 2);
-//        BODY::Bodies[iBody]->CellV = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-//        BODY::Bodies[iBody]->CellP = ARRAY3(Vect3*) (DX + 2, ARRAY2(Vect3*) (DY + 2, Array <Vect3*> (DZ + 2, NULL)));
-//        for (int i = 0; i < Xv.size(); ++i)
-//            for (int j = 0; j < Xv[0].size(); ++j)
-//                for (int k = 0; k < Xv[0][0].size(); ++k) {
-//                    Xp[i][j][k] = Vect3(Xs[i], Ys[j], Zs[k]);
-//                    OctreeCapsule C(Xp[i][j][k], Vect3(0, 0, 0), false);
-//                    C.toMonitor = true;
-//                    globalOctree->Root->EvalCapsule(C);
-//                    //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
-//                    BODY::Bodies[iBody]->CellV[i][j][k] = C.Ptr2CellVelocity;
-//                    BODY::Bodies[iBody]->CellP[i][j][k] = C.Ptr2CellPosition;
-//                }
-//
-//
-//    }
     
     DoFMM();
     
@@ -408,10 +330,14 @@ void TIME_STEPPER::TimeAdvance() {
     }
      
     globalSystem->GetFaceVels();
+    
+
     globalOctree->FVM(); //  dom_dt(t0)
     //  t0: advance outer wake to t*
     globalOctree->Integrate(); //  t = t0 -> t*
 
+
+        
     if (TIME_STEPPER::RK2Mode) {
         TIME_STEPPER::RKStep = 1;
         //  t*: Do the FMM again
@@ -465,7 +391,7 @@ void TIME_STEPPER::time_loop() {
         }
 
         
-        dt = globalSystem->dtInit = cfl_lim/OmRMax;
+        dt = dt_prev = globalSystem->dtInit = cfl_lim/OmRMax;
         
         if (globalSystem->useBodies) {
             BODY::BodySubStep(globalSystem->dtInit, globalSystem->NumSubSteps);
@@ -520,6 +446,7 @@ void TIME_STEPPER::time_step() {
     srad = 0.0;
 
     globalOctree->GetSRad();
+    
 
     REAL dt_euler = cfl_lim / srad.Mag(); //(srad.x + srad.y + srad.z);
     if (srad.Mag() == 0.0) dt_euler = globalSystem->dtInit;
@@ -581,7 +508,18 @@ void TIME_STEPPER::time_step() {
     //            }
 
 
-    dt = min(dt_euler,4.*cfl_lim/OmRMax);       // the maximum distance allowable by any body part is 4 cells...
+    
+    
+    if (fabs((dt - dt_prev)/dt_prev) > 0.05)
+    {
+        if ((dt - dt_prev) > 0.)
+            dt = 1.05 * dt_prev;
+    }
+        
+    
+    
+    
+//    dt = min(dt_euler,4.*cfl_lim/OmRMax);       // the maximum distance allowable by any body part is 4 cells...
 //  dt = min(dt_euler,cfl_lim/OmRMax);      
 
     //  Check to see if this takes us over a time when we should be writing some output

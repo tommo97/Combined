@@ -322,10 +322,10 @@ switch blade.type;
     0.3962
     0.4000];
         blade.THICKNESS = [ 24 24 22.5 20.7 19.5 18.7 18.1 17.6 17.1 16.6 16.1 15.6 15.1 14.6 14.1 13.6 13.1 12.6];
-        c = [     0.0375
-    0.0375
-    0.0375
-    0.0377
+        c = [     0.03
+    0.03
+    0.03
+    0.03
     0.0403
     0.0453
     0.0522
@@ -422,6 +422,7 @@ switch blade.type;
     0.0518
     0.0509
     0.0500];
+c(4:17) = linspace(0.03,0.125,14);
         blade.THETA = [   15.0000
    15.0000
    15.0000
@@ -608,17 +609,18 @@ if blade.isNREL && ~isempty(blade.y) && (blade.Cutout.Root < 1.257) && (blade.Cu
     end
 end
 
-if blade.isSOTON && ~isempty(blade.y) && (blade.Cutout.Root < 0.08) && (blade.Cutout.Root >= 0.02)
-    if (blade.Cutout.Root < 0.08)
-        
-        blade.n2 = interp1(blade.y,1:length(blade.y),0.08,'nearest');
+if blade.isSOTON && ~isempty(blade.y) && (blade.Cutout.Root < 0.0814) && (blade.Cutout.Root >= 0.02)
+    if (blade.Cutout.Root < 0.0814)
+        blade.n1 = interp1(blade.y,1:length(blade.y),0.0315,'nearest');
+        blade.n2 = interp1(blade.y,1:length(blade.y),0.0814,'nearest');
         
         %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
-        blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,0.02),0.08,blade.n2+1);
+        blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,0.02),0.0814,blade.n2+1);
         
-        blade.y(blade.n2+1:end) = linspace(0.08,0.4,numel(blade.y(blade.n2+1:end)));
+        blade.y(blade.n2+1:end) = linspace(0.0814,0.4,numel(blade.y(blade.n2+1:end)));
         blade.TransitionPiece = zeros(size(blade.y));
         blade.TransitionPiece(1:blade.n2) = 1;
+        blade.CircTrans = 1:blade.n2;
         %     if (blade.n2-blade.n1) > 1
         %     blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
         %     end

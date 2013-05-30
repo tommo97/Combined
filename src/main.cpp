@@ -34,7 +34,17 @@ using namespace std;
 /**************************************************************/
 
 void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude, REAL radius, REAL scale, REAL THETA);
-
+inline bool srt_vect3 (Vect3 A, Vect3 B) { 
+    if (A.x == B.x)
+    {
+        if (A.y == B.y)
+            return (A.z < B.z);
+        else
+            return (A.y < B.y);
+    }
+    else
+        return (A.x < B.x); 
+}
 /**************************************************************/
 int main(int argc, char *argv[]) {
     system("clear");
@@ -50,6 +60,60 @@ int main(int argc, char *argv[]) {
         UTIL::QuadWts[i] = UTIL::QuadWts[i] / 2.0;
     }
 
+
+    std::vector <Vect3> srtlist;
+
+    srtlist.push_back(Vect3(-1.23, 2.34, -0.125));
+    srtlist.push_back(Vect3(1.243, 2.34, -0.125));
+    srtlist.push_back(Vect3(2.23, 4.34, -0.125));
+    srtlist.push_back(Vect3(-5.23, -2.34, 0.125));
+    srtlist.push_back(Vect3(-0.23, 2.34, -0.125));
+    srtlist.push_back(Vect3(2.23, 2.34, -0.125));
+    srtlist.push_back(Vect3(-1.23, 2.34, -0.125));
+    srtlist.push_back(Vect3(3.23, 2.34, 0.125));
+    srtlist.push_back(Vect3(4.23, -2.34, 0.125));
+    srtlist.push_back(Vect3(5.23, 12.34, -0.125));
+    srtlist.push_back(Vect3(-5.23, -2.34, 0.125));
+    srtlist.push_back(Vect3(0.23, -22.34, -0.125));
+    srtlist.push_back(Vect3(2.23, 2.34, -0.125));
+
+    std::sort(srtlist.begin(), srtlist.end());
+
+
+    std::cout << "myvector contains:";
+    for (std::vector<Vect3>::iterator it = srtlist.begin(); it != srtlist.end(); ++it)
+        std::cout << ' ' << *it << '\n';
+    std::cout << '\n';
+
+    std::vector<Vect3>::iterator it;
+    it = std::unique(srtlist.begin(), srtlist.end());
+
+    srtlist.resize(std::distance(srtlist.begin(), it));
+
+
+    for (int i = 0; i < srtlist.size(); ++i)
+        cout << srtlist[i] << endl;
+
+
+
+
+    std::cout << "myvector contains:";
+    for (std::vector<Vect3>::iterator it = srtlist.begin(); it != srtlist.end(); ++it)
+        std::cout << ' ' << *it << '\n';
+    std::cout << '\n';
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     //    TEST::TestBulkLoader(100000);
@@ -103,7 +167,7 @@ int main(int argc, char *argv[]) {
     
     SYSTEM System(0);
     //  Some default values
-    globalSystem->GambitScale = 100.0;
+    globalSystem->GambitScale = 50.0;
     globalSystem->MaxP = 3;
     globalSystem->Del2 = 0.001; // * globalSystem->GambitScale*globalSystem->GambitScale;
     globalSystem->DS = .3;

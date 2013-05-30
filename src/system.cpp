@@ -90,7 +90,7 @@ void SYSTEM::Initialise() {
     if (WRITE_TO_SCREEN) cout << "FVM mesh scale Factor: " << GambitScale << endl;
 
     int nss = globalSystem->NumSubSteps;
-
+    globalTimeStepper->dt_prev = globalSystem->dtInit;
     globalTimeStepper->time_step();
 
     globalSystem->NumSubSteps = nss;
@@ -496,7 +496,7 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
     #pragma omp parallel for
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->Vfmm0 = UTIL::interp3Pointer <Vect3 > (BODY::AllBodyFaces[i]->Xp, BODY::AllBodyFaces[i]->Vp, BODY::AllBodyFaces[i]->Xfmm0);
-        BODY::AllBodyFaces[i]->Vfmm1 = BODY::AllBodyFaces[i]->Vfmm0;//UTIL::interp3Pointer <Vect3 > (BODY::AllBodyFaces[0]->Xp, BODY::AllBodyFaces[0]->Vp, BODY::AllBodyFaces[i]->Xfmm1);
+        BODY::AllBodyFaces[i]->Vfmm1 = UTIL::interp3Pointer <Vect3 > (BODY::AllBodyFaces[i]->Xp, BODY::AllBodyFaces[i]->Vp, BODY::AllBodyFaces[i]->Xfmm1);
     }
 
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
