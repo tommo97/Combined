@@ -146,9 +146,9 @@ void TIME_STEPPER::DoFMM() {
             MinX = floor(MinX) - 0.5;
             MaxX = ceil(MaxX) + 0.5;
 
-            int DX = (MaxX.x) - (MinX.x);
-            int DY = (MaxX.y) - (MinX.y);
-            int DZ = (MaxX.z) - (MinX.z);
+            int DX = int((MaxX.x) - (MinX.x));
+            int DY = int((MaxX.y) - (MinX.y));
+            int DZ = int((MaxX.z) - (MinX.z));
 
             BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
             BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
@@ -316,7 +316,7 @@ void TIME_STEPPER::TimeAdvance() {
     //  
     globalSystem->GetFaceVels();
 
-
+ 
     FVMCell::CellDerivs.allocate(SYSTEM::NumTransVars);
     for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
         FVMCell::CellDerivs[q] = Array <Vect3> (FVMCell::AllCells.size());
@@ -475,8 +475,6 @@ void TIME_STEPPER::time_step() {
 
     //  Calculate timestep length such that no body travels further than a single cell
     REAL OmRMax = 0.0, MaxRadius = 0.0;
-    //    REAL MaxX, MaxY, MaxZ; MaxX = MaxY = MaxZ = -1e32;
-    //    REAL MinX, MinY, MinZ; MinX = MinY = MinZ = 1e32;
     if (globalSystem->useBodies) {
         for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
             Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;

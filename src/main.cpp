@@ -61,60 +61,6 @@ int main(int argc, char *argv[]) {
     }
 
 
-    std::vector <Vect3> srtlist;
-
-    srtlist.push_back(Vect3(-1.23, 2.34, -0.125));
-    srtlist.push_back(Vect3(1.243, 2.34, -0.125));
-    srtlist.push_back(Vect3(2.23, 4.34, -0.125));
-    srtlist.push_back(Vect3(-5.23, -2.34, 0.125));
-    srtlist.push_back(Vect3(-0.23, 2.34, -0.125));
-    srtlist.push_back(Vect3(2.23, 2.34, -0.125));
-    srtlist.push_back(Vect3(-1.23, 2.34, -0.125));
-    srtlist.push_back(Vect3(3.23, 2.34, 0.125));
-    srtlist.push_back(Vect3(4.23, -2.34, 0.125));
-    srtlist.push_back(Vect3(5.23, 12.34, -0.125));
-    srtlist.push_back(Vect3(-5.23, -2.34, 0.125));
-    srtlist.push_back(Vect3(0.23, -22.34, -0.125));
-    srtlist.push_back(Vect3(2.23, 2.34, -0.125));
-
-    std::sort(srtlist.begin(), srtlist.end());
-
-
-    std::cout << "myvector contains:";
-    for (std::vector<Vect3>::iterator it = srtlist.begin(); it != srtlist.end(); ++it)
-        std::cout << ' ' << *it << '\n';
-    std::cout << '\n';
-
-    std::vector<Vect3>::iterator it;
-    it = std::unique(srtlist.begin(), srtlist.end());
-
-    srtlist.resize(std::distance(srtlist.begin(), it));
-
-
-    for (int i = 0; i < srtlist.size(); ++i)
-        cout << srtlist[i] << endl;
-
-
-
-
-    std::cout << "myvector contains:";
-    for (std::vector<Vect3>::iterator it = srtlist.begin(); it != srtlist.end(); ++it)
-        std::cout << ' ' << *it << '\n';
-    std::cout << '\n';
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     //    TEST::TestBulkLoader(100000);
 //        TEST::TestFMM(argc, argv);
@@ -129,8 +75,8 @@ int main(int argc, char *argv[]) {
     
     SYSTEM System(0);
     //  Some default values
-    SYSTEM::GambitScale = 100.0;
-    SYSTEM::MaxP = 5;
+    SYSTEM::GambitScale = 50.0;
+    SYSTEM::MaxP = 3;
     globalSystem->Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05; //     This gets changed according to the maximum kinematic velocity of the body(s)
