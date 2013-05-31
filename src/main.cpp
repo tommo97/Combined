@@ -127,44 +127,6 @@ int main(int argc, char *argv[]) {
 
     
     
-    
-    ARRAY3(Vect3) Xp = UTIL::zeros<Vect3 > (2,2,2);
-    ARRAY3(Vect3) Xv = UTIL::zeros<Vect3 > (2,2,2);
-    
-    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 1.));
-    
-    P.Xp =  Array < Array < Array <Vect3*> > > (2, Array < Array < Vect3*> > (2, Array <Vect3*> (2, NULL)));
-    P.Vp =  Array < Array < Array <Vect3*> > > (2, Array < Array < Vect3*> > (2, Array <Vect3*> (2, NULL)));
-    
-    
-    cout << P.Xp.size() << endl;
-    for (int i = 0; i < 2; ++i)
-        for (int j = 0; j < 2; ++j)
-            for (int k = 0; k < 2; ++k){
-                Xp[i][j][k] = Vect3(56.5 + i, 72.5 + j, -14.5 + k);
-                Xv[i][j][k] = Vect3(i,j,k);
-                P.Xp[i][j][k] = &Xp[i][j][k];
-                P.Vp[i][j][k] = &Xv[i][j][k];
-            }
-    
-    
-    
-    cout << UTIL::interp3 <Vect3 > (Xp, Xv, Vect3(57,73,-14)) << endl;
-    cout << UTIL::interp3Pointer <Vect3 > (P.Xp, P.Vp, Vect3(57,73,-14)) << endl;
-    cout << *(P.Xp[0][0][1]) << endl;
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     SYSTEM System(0);
     //  Some default values
     globalSystem->GambitScale = 50.0;

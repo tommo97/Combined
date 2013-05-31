@@ -513,7 +513,7 @@ string OCTREE::GetNonRecursiveFMMVels() {
         long unsigned int ttL2L = ticks();
 #endif
 #ifdef _OPENMP
-//#pragma omp parallel for
+#pragma omp parallel for
 #endif
         for (int i = 0; i < AllBranches[mlev].size(); ++i)
             AllBranches[mlev][i]->GetVelField(); //  This seems not to like being paralellised
