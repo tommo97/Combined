@@ -98,33 +98,33 @@ void FVMCell::InitMomsInds(int MaxP) {
 void FVMCell::Integrate() {
     HasLoad = false;
     cfl = globalTimeStepper->dt * srad;
-    Vect3 GradU(VelGrads[0].x, VelGrads[1].x, VelGrads[2].x);
-    Vect3 GradV(VelGrads[0].y, VelGrads[1].y, VelGrads[2].y);
-    Vect3 GradW(VelGrads[0].z, VelGrads[1].z, VelGrads[2].z);
-    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-
-
-        Vect3 StretchDeriv = Vect3(TransVars[q].Dot(GradU), TransVars[q].Dot(GradV), TransVars[q].Dot(GradW));
-        TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
-
-        REAL h = 1.;
-
-        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
-        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
-
-        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12;
-        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12;
-
-        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
-        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
-
-
-
-
-        Vect3 ViscDeriv = globalSystem->Nu * ((de - dw) + (dn - ds) + (dt - db));
-        TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
-
-    }
+//    Vect3 GradU(VelGrads[0].x, VelGrads[1].x, VelGrads[2].x);
+//    Vect3 GradV(VelGrads[0].y, VelGrads[1].y, VelGrads[2].y);
+//    Vect3 GradW(VelGrads[0].z, VelGrads[1].z, VelGrads[2].z);
+//    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+//
+//
+//        Vect3 StretchDeriv = Vect3(TransVars[q].Dot(GradU), TransVars[q].Dot(GradV), TransVars[q].Dot(GradW));
+//        TransDerivs[TIME_STEPPER::RKStep][q] += StretchDeriv;
+//
+//        REAL h = 1.;
+//
+//        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
+//        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
+//
+//        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12;
+//        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12;
+//
+//        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
+//        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
+//
+//
+//
+//
+//        Vect3 ViscDeriv = globalSystem->Nu * ((de - dw) + (dn - ds) + (dt - db));
+//        TransDerivs[TIME_STEPPER::RKStep][q] += ViscDeriv;
+//
+//    }
 
 
 

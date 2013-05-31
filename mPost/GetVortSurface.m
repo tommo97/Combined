@@ -1,5 +1,5 @@
 clear all; clear mex; clc;
-files = dir('RunData*2.mat');
+files = dir('RunData*3.mat');
 close all
 figure
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
