@@ -94,12 +94,12 @@ void TEST::TestBEMFVM() {
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 15;
-    globalSystem->MaxP = 5;
-    globalSystem->Del2 = 0.001;// * globalSystem->GambitScale*globalSystem->GambitScale;
+    SYSTEM::GambitScale = 15;
+    SYSTEM::MaxP = 5;
+    globalSystem->Del2 = 0.001;// * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.1;
-    globalSystem->h = 2;
+    SYSTEM::M4Radius_in_cells = 2;
     globalSystem->unscaledVinf = Vect3(1.0,0.0,0.0);
     globalSystem->NumSubSteps = 1;
 
@@ -116,7 +116,7 @@ void TEST::TestBEMFVM() {
     globalSystem->useBodies = false;
     
 
-    globalSystem->NumTransVars = 1;
+    SYSTEM::NumTransVars = 1;
 
 
     globalSystem->Initialise();
@@ -128,7 +128,7 @@ void TEST::TestBEMFVM() {
 
     Array <REAL> Thetas = UTIL::globalLinspace(0.0, two_pi, 360);
     Array <REAL> Phis = UTIL::globalLinspace(0.0, two_pi, 360);
-    Array <REAL> R = UTIL::globalLinspace(0.0, globalSystem->GambitScale * .50, 100);
+    Array <REAL> R = UTIL::globalLinspace(0.0, SYSTEM::GambitScale * .50, 100);
 
     for (int i = 0; i < Thetas.size(); ++i)
         for (int j = 0; j < Phis.size(); ++j)
@@ -148,8 +148,8 @@ void TEST::TestBEMFVM() {
                 
              
     
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->Omega = Vect3(1.,1.,1.);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->Omega = Vect3(1.,1.,1.);
     
 
     globalSystem->TimeStep();
@@ -172,12 +172,12 @@ void TEST::TestBEM() {
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 1.0;
-    globalSystem->MaxP = 5;
-    globalSystem->Del2 = 0.001;// * globalSystem->GambitScale*globalSystem->GambitScale;
+    SYSTEM::GambitScale = 1.0;
+    SYSTEM::MaxP = 5;
+    globalSystem->Del2 = 0.001;// * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 1.e3;
-    globalSystem->h = 2;
+    SYSTEM::M4Radius_in_cells = 2;
     globalSystem->unscaledVinf = Vect3(0.0);
     globalSystem->NumSubSteps = 1;
 
@@ -929,7 +929,7 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
         }
     //        else
     //        {
-    //            Vect3 Pos = globalSystem->GambitScale*Posns[i];
+    //            Vect3 Pos = SYSTEM::GambitScale*Posns[i];
     //            Vect3 ParentPos = floor(Pos) + 1.0;
     //        }
 
@@ -974,10 +974,10 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
 
         SYSTEM System(0);
 
-    cout << "Enter GambitScale" << endl;
-    cin >> globalSystem->GambitScale;
-    cout << "Enter MaxP" << endl;
-    cin >> globalSystem->MaxP;
+    cout << "Enter SYSTEM::GambitScale" << endl;
+    cin >> SYSTEM::GambitScale;
+    cout << "Enter SYSTEM::MaxP" << endl;
+    cin >> SYSTEM::MaxP;
     cout << "Enter Del2" << endl;
     cin >> globalSystem->Del2;
 
@@ -990,7 +990,7 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
 
     for (int i = 0; i < Posns.size(); ++i) {
 //        if (isActive[i]) {
-            OctreeCapsule C(globalSystem->GambitScale * Posns[i], globalSystem->GambitScale * globalSystem->GambitScale * Omegas[i], true);
+            OctreeCapsule C(SYSTEM::GambitScale * Posns[i], SYSTEM::GambitScale * SYSTEM::GambitScale * Omegas[i], true);
             C.AssociatedBody = 0;
             globalOctree->Root->EvalCapsule(C);
 
@@ -1023,9 +1023,9 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
     Mins = 1e32;
     Maxs = -1e32;
 
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        Mins = min(globalOctree->AllCells[i]->Position, Mins);
-        Maxs = max(globalOctree->AllCells[i]->Position, Maxs);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+        Mins = min(FVMCell::AllCells[i]->Position, Mins);
+        Maxs = max(FVMCell::AllCells[i]->Position, Maxs);
     }
     cout << "Scaled domain bounds: [" << Mins.x << " " << Maxs.x << "][" << Mins.y << " " << Maxs.y << "][" << Mins.z << " " << Maxs.z << "]" << endl;
     cout << "Calculating velocities" << endl;
@@ -1034,7 +1034,7 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
     REAL t1 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
     cout << "Done. Time elapsed: " << t1 - t0 << endl;
 //
-    int n = globalOctree->AllCells.size();
+    int n = FVMCell::AllCells.size();
     Posns.allocate(n);
     Omegas.allocate(n);
     Array <Vect3> FMMVels(n);
@@ -1045,9 +1045,9 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
 
 
     for (int i = 0; i < n; ++i) {
-        Posns[i] = (globalOctree->AllCells[i]->Position);
-        Omegas[i] = (globalOctree->AllCells[i]->Omega);
-        FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
+        Posns[i] = (FVMCell::AllCells[i]->Position);
+        Omegas[i] = (FVMCell::AllCells[i]->Omega);
+        FMMVels[i] = (FVMCell::AllCells[i]->Velocity);
     }
     
     
@@ -1101,7 +1101,7 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
 ////    cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation" << endl;
 ////    Posns.clear();
 ////    Omegas.clear();
-////    int n = globalOctree->AllCells.size();
+////    int n = FVMCell::AllCells.size();
 ////    Posns.allocate(n);
 ////    Omegas.allocate(n);
 ////    Array <Vect3> FMMVels(n);
@@ -1110,10 +1110,10 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
 ////
 ////
 ////
-////    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-////        Posns[i] = (globalOctree->AllCells[i]->Position);
-////        Omegas[i] = (globalOctree->AllCells[i]->Omega);
-////        FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
+////    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+////        Posns[i] = (FVMCell::AllCells[i]->Position);
+////        Omegas[i] = (FVMCell::AllCells[i]->Omega);
+////        FMMVels[i] = (FVMCell::AllCells[i]->Velocity);
 ////    }
 //
 //
@@ -1205,8 +1205,8 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
 ////
 ////    ofstream myfile;
 ////    myfile.open("output.dat", ios::out | ios::app);
-////    myfile << globalSystem->MaxP << " " << FVMCell::NumCells << " " << FVMCell::NumNodes << " " << globalSystem->NumThreads << " " << (t1 - t0)*1000 << " " << Mult * (t3 - t2)*1000 << " " << TreeLevs << " " << TreeSize << " " << AbsErrsStats.Max() << " " << AbsErrsStats.Mean() << " " << AbsErrsStats.StandardDeviation() << " " << RelErrsStats.Max() << " " << RelErrsStats.Mean() << " " << RelErrsStats.StandardDeviation() << endl;
-////    //    myfile << n << " " << globalSystem->MaxP << " " << Vmean << " " << sqrt(l2 / Posns.size()) << " " << sqrt(l2 / Posns.size())/Vmean << " " << (t1 - t0)*1000 << " " << (t3 - t2)*1000 << endl;
+////    myfile << SYSTEM::MaxP << " " << FVMCell::NumCells << " " << FVMCell::NumNodes << " " << globalSystem->NumThreads << " " << (t1 - t0)*1000 << " " << Mult * (t3 - t2)*1000 << " " << TreeLevs << " " << TreeSize << " " << AbsErrsStats.Max() << " " << AbsErrsStats.Mean() << " " << AbsErrsStats.StandardDeviation() << " " << RelErrsStats.Max() << " " << RelErrsStats.Mean() << " " << RelErrsStats.StandardDeviation() << endl;
+////    //    myfile << n << " " << SYSTEM::MaxP << " " << Vmean << " " << sqrt(l2 / Posns.size()) << " " << sqrt(l2 / Posns.size())/Vmean << " " << (t1 - t0)*1000 << " " << (t3 - t2)*1000 << endl;
 ////    myfile.close();
 ////
 ////#ifndef use_NCURSES
@@ -1224,7 +1224,7 @@ void TEST::TestFMM(int argc, char *argv[]) {
     system("clear");
 
     if (argc < 5) {
-        cout << "FMM Test Mode. Expects argument: Nvortices maxP numThreads sparse/dense cube/sphere" << endl;
+        cout << "FMM Test Mode. Expects argument: Nvortices SYSTEM::MaxP numThreads sparse/dense cube/sphere" << endl;
         //cout << "Returns velocities at these points as calculated via FMM and directly." << endl;
         return;
     }
@@ -1241,8 +1241,8 @@ void TEST::TestFMM(int argc, char *argv[]) {
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 1;
-    globalSystem->MaxP = atoi(argv[2]);
+    SYSTEM::GambitScale = 1;
+    SYSTEM::MaxP = atoi(argv[2]);
     globalSystem->Del2 = 0.001;
 
 
@@ -1251,7 +1251,7 @@ void TEST::TestFMM(int argc, char *argv[]) {
     //    globalIO->PrepOutputDir();
     //    globalIO->WriteBinary();
 #ifndef use_NCURSES
-    if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
+    if (WRITE_TO_SCREEN) cout << "SYSTEM::MaxP set to " << SYSTEM::MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
 
     globalSystem->Initialise();
@@ -1548,7 +1548,7 @@ void TEST::TestFMM(int argc, char *argv[]) {
      
 
 
-    globalOctree->AllCells.clear();
+    FVMCell::AllCells.clear();
     globalOctree->AllBranches.allocate(OCTREE_LEVS);
     globalOctree->BranchCount.assign(OCTREE_LEVS - 1, 0);
     globalOctree->Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
@@ -1559,8 +1559,8 @@ void TEST::TestFMM(int argc, char *argv[]) {
         globalOctree->BranchCount[i] = 0; //  Recycle for use as a pseudo iterator
     }
 
-    globalOctree->CellCount = 0; //  This is used as a pseudo iterator for assigning into AllCells
-    globalOctree->AllCells.assign(FVMCell::NumCells, NULL);
+    globalOctree->CellCount = 0; //  This is used as a pseudo iterator for assigning into FVMCell::AllCells
+    FVMCell::AllCells.assign(FVMCell::NumCells, NULL);
     Node::AllNodes.allocate(Node::NumNodes);
     Node::NodeCount = 0;
     Node::UpList.clear();
@@ -1584,7 +1584,7 @@ void TEST::TestFMM(int argc, char *argv[]) {
     cout << "Done. Time elapsed: " << t1 - t0 << endl << "Performing Direct Calculation (including velocity gradients)" << endl;
     Posns.clear();
     Omegas.clear();
-    n = globalOctree->AllCells.size();
+    n = FVMCell::AllCells.size();
     Posns.allocate(n);
     Omegas.allocate(n);
     Array <Vect3> FMMVels(n);
@@ -1593,10 +1593,10 @@ void TEST::TestFMM(int argc, char *argv[]) {
 
 
 
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        Posns[i] = (globalOctree->AllCells[i]->Position);
-        Omegas[i] = (globalOctree->AllCells[i]->Omega);
-        FMMVels[i] = (globalOctree->AllCells[i]->Velocity);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+        Posns[i] = (FVMCell::AllCells[i]->Position);
+        Omegas[i] = (FVMCell::AllCells[i]->Omega);
+        FMMVels[i] = (FVMCell::AllCells[i]->Velocity);
     }
 
 
@@ -1677,9 +1677,9 @@ void TEST::TestFMM(int argc, char *argv[]) {
     REAL ErrorPercent = 0.0, MaxErr = 0.0;
     for (int i = 0; i < Indices.size(); ++i) {
         cout << "---" << endl << "Vel error percent: " << 100 * (DirectVels[i] - FMMVels[Indices[i]]).Mag() / FMMVels[Indices[i]].Mag() << "%. " << DirectVels[i] << " " << FMMVels[Indices[i]] << endl;
-        cout << "xGrads: err " << 100 * (DirectVelGrads[i][0] - globalOctree->AllCells[Indices[i]]->VelGrads[0]).Mag() / globalOctree->AllCells[Indices[i]]->VelGrads[0].Mag() << "%. " << globalOctree->AllCells[Indices[i]]->VelGrads[0] << " \t" << DirectVelGrads[i][0] << "\t" << NumVelGradients[i][0] << endl;
-        cout << "yGrads: err " << 100 * (DirectVelGrads[i][1] - globalOctree->AllCells[Indices[i]]->VelGrads[1]).Mag() / globalOctree->AllCells[Indices[i]]->VelGrads[1].Mag() << "%. " << globalOctree->AllCells[Indices[i]]->VelGrads[1] << " \t" << DirectVelGrads[i][1] << "\t" << NumVelGradients[i][1] << endl;
-        cout << "zGrads: err " << 100 * (DirectVelGrads[i][2] - globalOctree->AllCells[Indices[i]]->VelGrads[2]).Mag() / globalOctree->AllCells[Indices[i]]->VelGrads[2].Mag() << "%. " << globalOctree->AllCells[Indices[i]]->VelGrads[2] << " \t" << DirectVelGrads[i][2] << "\t" << NumVelGradients[i][2] << endl;
+        cout << "xGrads: err " << 100 * (DirectVelGrads[i][0] - FVMCell::AllCells[Indices[i]]->VelGrads[0]).Mag() / FVMCell::AllCells[Indices[i]]->VelGrads[0].Mag() << "%. " << FVMCell::AllCells[Indices[i]]->VelGrads[0] << " \t" << DirectVelGrads[i][0] << "\t" << NumVelGradients[i][0] << endl;
+        cout << "yGrads: err " << 100 * (DirectVelGrads[i][1] - FVMCell::AllCells[Indices[i]]->VelGrads[1]).Mag() / FVMCell::AllCells[Indices[i]]->VelGrads[1].Mag() << "%. " << FVMCell::AllCells[Indices[i]]->VelGrads[1] << " \t" << DirectVelGrads[i][1] << "\t" << NumVelGradients[i][1] << endl;
+        cout << "zGrads: err " << 100 * (DirectVelGrads[i][2] - FVMCell::AllCells[Indices[i]]->VelGrads[2]).Mag() / FVMCell::AllCells[Indices[i]]->VelGrads[2].Mag() << "%. " << FVMCell::AllCells[Indices[i]]->VelGrads[2] << " \t" << DirectVelGrads[i][2] << "\t" << NumVelGradients[i][2] << endl;
         //cout << "Cell " << i << "\tError L2 Norm " << (DirectVels[i] - FMMVels[Indices[i]]).Mag() << " \t " << DirectVels[i] << endl << "\t\t\t\t\t\t " << FMMVels[Indices[i]] << endl;
         l2 += (DirectVels[i] - FMMVels[Indices[i]]).Mag()*(DirectVels[i] - FMMVels[Indices[i]]).Mag();
         Vmean += DirectVels[i].Mag();
@@ -1718,8 +1718,8 @@ void TEST::TestFMM(int argc, char *argv[]) {
 
     ofstream myfile;
     myfile.open("output.dat", ios::out | ios::app);
-    myfile << globalSystem->MaxP << " " << FVMCell::NumCells << " " << FVMCell::NumNodes << " " << globalSystem->NumThreads << " " << (t1 - t0)*1000 << " " << Mult * (t3 - t2)*1000 << " " << TreeLevs << " " << TreeSize << " " << AbsErrsStats.Max() << " " << AbsErrsStats.Mean() << " " << AbsErrsStats.StandardDeviation() << " " << RelErrsStats.Max() << " " << RelErrsStats.Mean() << " " << RelErrsStats.StandardDeviation() << " " << sparsity << " " << geometry << endl;
-    //    myfile << n << " " << globalSystem->MaxP << " " << Vmean << " " << sqrt(l2 / Posns.size()) << " " << sqrt(l2 / Posns.size())/Vmean << " " << (t1 - t0)*1000 << " " << (t3 - t2)*1000 << endl;
+    myfile << SYSTEM::MaxP << " " << FVMCell::NumCells << " " << FVMCell::NumNodes << " " << globalSystem->NumThreads << " " << (t1 - t0)*1000 << " " << Mult * (t3 - t2)*1000 << " " << TreeLevs << " " << TreeSize << " " << AbsErrsStats.Max() << " " << AbsErrsStats.Mean() << " " << AbsErrsStats.StandardDeviation() << " " << RelErrsStats.Max() << " " << RelErrsStats.Mean() << " " << RelErrsStats.StandardDeviation() << " " << sparsity << " " << geometry << endl;
+    //    myfile << n << " " << SYSTEM::MaxP << " " << Vmean << " " << sqrt(l2 / Posns.size()) << " " << sqrt(l2 / Posns.size())/Vmean << " " << (t1 - t0)*1000 << " " << (t3 - t2)*1000 << endl;
     myfile.close();
 
 #ifndef use_NCURSES
@@ -1736,8 +1736,8 @@ void TEST::TestBulkLoader(int n)
     SYSTEM System(0);
 
     //  Some default values
-    globalSystem->GambitScale = 1;
-    globalSystem->MaxP = 3;
+    SYSTEM::GambitScale = 1;
+    SYSTEM::MaxP = 3;
     globalSystem->Del2 = 0.001;
     globalSystem->Initialise();
 
@@ -1806,7 +1806,7 @@ void TEST::TestBulkLoader(int n)
     cout << FVMCell::NumCells << endl;
     cout << IDs.size() << endl;
     
-    globalOctree->AllCells.clear();
+    FVMCell::AllCells.clear();
     globalOctree->AllBranches.allocate(OCTREE_LEVS);
     globalOctree->BranchCount.assign(OCTREE_LEVS - 1, 0);
     globalOctree->Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
@@ -1817,23 +1817,23 @@ void TEST::TestBulkLoader(int n)
         globalOctree->BranchCount[i] = 0; //  Recycle for use as a pseudo iterator
     }
 
-    globalOctree->CellCount = 0; //  This is used as a pseudo iterator for assigning into AllCells
-    globalOctree->AllCells.assign(FVMCell::NumCells, NULL);
+    globalOctree->CellCount = 0; //  This is used as a pseudo iterator for assigning into FVMCell::AllCells
+    FVMCell::AllCells.assign(FVMCell::NumCells, NULL);
     Node::AllNodes.allocate(Node::NumNodes);
     Node::NodeCount = 0;
     Node::UpList.clear();
     Node::DownList.clear();
     globalOctree->Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
     
-    cout << globalOctree->AllCells.size() << endl;
+    cout << FVMCell::AllCells.size() << endl;
 
     UTIL::WriteMATLABMatrix1D("TmpIDS", "tmp.mat", IDs);
     UTIL::WriteMATLABMatrix2D("TmpTRANS", "tmp.mat", TRANS);
 
 
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        IDs[i] = globalOctree->AllCells[i]->ID;
-        TRANS[i] = globalOctree->AllCells[i]->Trans;
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+        IDs[i] = FVMCell::AllCells[i]->ID;
+        TRANS[i] = FVMCell::AllCells[i]->Trans;
     }
     UTIL::WriteMATLABMatrix1D("TreeIDS", "tmp.mat", IDs);
     UTIL::WriteMATLABMatrix2D("TreeTRANS", "tmp.mat", TRANS);

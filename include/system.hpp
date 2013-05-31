@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 
 
 #ifndef SYSTEM_HPP
@@ -30,67 +30,69 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "tree.hpp"
 #include "body.hpp"
 
-
-class SYSTEM
-{
+class SYSTEM {
 public:
-  int MaxP, NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval, NumTransVars;
-  bool LiftingLineMode, ZeroBodyRelativeMotion, useBodies, useFMM;
-  REAL dtInit, GambitScale, Del2, DS, h;
-  REAL Mu,Nu,Rho,Temp,g;
-  string NeuFile, CaseName, WorkingDir;
-  Vect3 scaledVinf, unscaledVinf;
-  SYSTEM(int);
-  ~SYSTEM();
-  bool PanelMode;
-  int num_out;
-  string InputStr;
-  static Array <REAL> QuadPts, QuadWts;
+    static int MaxP, NumTransVars, M4Radius_in_cells;
+    static REAL GambitScale;
+    int NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval;
 
-  Array <Vect3> ATTITUDE, VELOCITY, ORIGIN, RATES;
-  Array <Vect3> VortonsXs, VortonOmegas;
+    bool LiftingLineMode, ZeroBodyRelativeMotion, useBodies, useFMM;
+    REAL dtInit, Del2, DS;
+    REAL Mu, Nu, Rho, Temp, g;
+    string NeuFile, CaseName, WorkingDir;
+    Vect3 scaledVinf, unscaledVinf;
+    SYSTEM(int);
+    ~SYSTEM();
+    bool PanelMode;
+    int num_out;
+    string InputStr;
+    static Array <REAL> QuadPts, QuadWts;
+
+    Array <Vect3> ATTITUDE, VELOCITY, ORIGIN, RATES;
+    Array <Vect3> VortonsXs, VortonOmegas;
 
 #ifdef USEGSL
-  gsl_matrix * globalA;     //  A (doublet) influence coefficient matrix for this body
-  gsl_matrix * globalB;     //  B (source) influence coefficient matrix for this body
-  gsl_matrix * panelU;
-  gsl_matrix * panelV;
-  gsl_matrix * panelW;
-  gsl_permutation * globalP;
-  gsl_vector * globalMu;
-  gsl_vector * globalSigma;
-  gsl_vector * globalRHS;
+    gsl_matrix * globalA; //  A (doublet) influence coefficient matrix for this body
+    gsl_matrix * globalB; //  B (source) influence coefficient matrix for this body
+    gsl_matrix * panelU;
+    gsl_matrix * panelV;
+    gsl_matrix * panelW;
+    gsl_permutation * globalP;
+    gsl_vector * globalMu;
+    gsl_vector * globalSigma;
+    gsl_vector * globalRHS;
 #else
-  REAL **A;
-  REAL **panelU;
-  REAL **panelV;
-  REAL **panelW;
-  REAL *rhs;
-  REAL *mu;
-  REAL *sigma;
+    REAL **A;
+    REAL **panelU;
+    REAL **panelV;
+    REAL **panelW;
+    REAL *rhs;
+    REAL *mu;
+    REAL *sigma;
 
-  REAL **B;
-  REAL **B_x_axis;
-  REAL **B_y_axis;
-  REAL **B_z_axis;
-  int *ipiv;
+    REAL **B;
+    REAL **B_x_axis;
+    REAL **B_y_axis;
+    REAL **B_z_axis;
+    int *ipiv;
 #endif
-	
-  void Initialise();
-  void DecomposePanelsIntoTree();
-  void InitialiseMembers();
-  void TimeStep();
-  void GetCellsCalcCurlV();
-  void PutWakesInTree();
-  void AddVortonsToTree(Array <Vect3> &, Array <Vect3> &, Array <int> &);
-  void GetFaceVels();
-  void GetPanelFMMVelocities(REAL);
-  void LinearWaves();
-  void MoveBodies(REAL, bool);
-  void WriteDomain();
-  void WriteData();
-  void WritePanelVels();
-  void WriteBodies();
+
+    void Initialise();
+    void DecomposePanelsIntoTree();
+    void InitialiseMembers();
+    void TimeStep();
+    void GetCellsCalcCurlV();
+    void PutWakesInTree();
+    void AddVortonsToTree(Array <Vect3> &, Array <Vect3> &, Array <int> &);
+    void GetFaceVels();
+    void GetPanelFMMVelocities(REAL);
+    void LinearWaves();
+    void MoveBodies(REAL, bool);
+    void WriteDomain();
+    void WriteData();
+    void WritePanelVels();
+    void WriteBodies();
+
     enum exception {
         GENERAL_ERROR
     };

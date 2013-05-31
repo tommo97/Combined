@@ -42,7 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <locale.h> // for greek symbols
 #include <stdlib.h> // system
 #include <unistd.h> // getcwd
-#include <sys/param.h> // globalSystem->MaxPATHLEN
+#include <sys/param.h> // MaxPATHLEN
 #include <memory.h> // memcpy
 #include <math.h>
 #include <time.h>

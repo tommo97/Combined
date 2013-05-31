@@ -67,12 +67,12 @@ Node::~Node() {
 /**************************************************************/
 Node::Node() : Parent(NULL), x(-1), y(-1), z(-1), m(0), indx(-1), ID(00), size(OCTREE_SIZE),
 SkipAdd2List(false), Neighb(NULL), HasLoad(false), toMonitor(false) {
-    Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
-    Neighb_Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
-    TransVars.assign(globalSystem->NumTransVars, Vect3());
-    TransVarsHold.assign(globalSystem->NumTransVars, Vect3());
-    TransVars0.assign(globalSystem->NumTransVars, Vect3());
-    TransDerivs.assign(2, Array <Vect3> (globalSystem->NumTransVars, Vect3()));
+    Neighb_Val.assign(SYSTEM::NumTransVars, &ZERO);
+    Neighb_Neighb_Val.assign(SYSTEM::NumTransVars, &ZERO);
+    TransVars.assign(SYSTEM::NumTransVars, Vect3());
+    TransVarsHold.assign(SYSTEM::NumTransVars, Vect3());
+    TransVars0.assign(SYSTEM::NumTransVars, Vect3());
+    TransDerivs.assign(SYSTEM::NumTransVars, Vect3());
     SetISANull();
     SetKidsNull();
     Node::NumNodes++;
@@ -83,12 +83,12 @@ SkipAdd2List(false), Neighb(NULL), HasLoad(false), toMonitor(false) {
 Node::Node(Node *parent, int i, int j, int k) : Parent(parent), x(i), y(j), z(k), m(parent->m + 1),indx(Indxs[i][j][k]),
 ID(((((((parent->ID << 1) + i) << 1) + j) << 1) + k)), size(.5 * parent->size), SkipAdd2List(false),
 Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(NULL), HasLoad(false), toMonitor(false) {
-    Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
-    Neighb_Neighb_Val.assign(globalSystem->NumTransVars, &ZERO);
-    TransVars.assign(globalSystem->NumTransVars, Vect3());
-    TransVarsHold.assign(globalSystem->NumTransVars, Vect3());
-    TransVars0.assign(globalSystem->NumTransVars, Vect3());
-    TransDerivs.assign(2, Array <Vect3> (globalSystem->NumTransVars, Vect3()));
+    Neighb_Val.assign(SYSTEM::NumTransVars, &ZERO);
+    Neighb_Neighb_Val.assign(SYSTEM::NumTransVars, &ZERO);
+    TransVars.assign(SYSTEM::NumTransVars, Vect3());
+    TransVarsHold.assign(SYSTEM::NumTransVars, Vect3());
+    TransVars0.assign(SYSTEM::NumTransVars, Vect3());
+    TransDerivs.assign(SYSTEM::NumTransVars, Vect3());
     Trans = parent->Trans;
     Trans.push_back(REF[i][j][k]);
     SetISANull();
@@ -173,7 +173,7 @@ int Node::Op[6] = {1, 0, 3, 2, 5, 4};
 void Node::RemoveFromNeighbs() {
     for (int i = 0; i < 6; ++i) {
         if (Neighb[i]) {
-            for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+            for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
                 Neighb[i]->Neighb_Val[q][Op[i]] = &ZERO;
                 if (Neighb[i]->Neighb[i]) {
                     Neighb[i]->Neighb[i]->Neighb_Neighb_Val[q][Op[i]] = &ZERO;
@@ -359,7 +359,7 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
     Recurrance(coeffts, 0, 0, 1, diff, R2);
     Recurrance(coeffts, 0, 1, 0, diff, R2);
     Recurrance(coeffts, 1, 0, 0, diff, R2);
-    for (int i = 2; i <= globalSystem->MaxP; ++i) {
+    for (int i = 2; i <= SYSTEM::MaxP; ++i) {
         Recurrance(coeffts, 0, 0, i, diff, R2);
         Recurrance(coeffts, 0, i, 0, diff, R2);
         Recurrance(coeffts, i, 0, 0, diff, R2);
@@ -369,7 +369,7 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
     Recurrance(coeffts, 0, 1, 1, diff, R2);
     Recurrance(coeffts, 1, 0, 1, diff, R2);
     Recurrance(coeffts, 1, 1, 0, diff, R2);
-    for (int i = 2; i < globalSystem->MaxP; ++i) {
+    for (int i = 2; i < SYSTEM::MaxP; ++i) {
         Recurrance(coeffts, 0, 1, i, diff, R2);
         Recurrance(coeffts, 1, 0, i, diff, R2);
         Recurrance(coeffts, 0, i, 1, diff, R2);
@@ -379,8 +379,8 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
     }
 
     /* one index = 0, other indices >= 2 */
-    for (int i = 2; i <= globalSystem->MaxP - 2; ++i)
-        for (int j = 2; i + j <= globalSystem->MaxP; ++j) {
+    for (int i = 2; i <= SYSTEM::MaxP - 2; ++i)
+        for (int j = 2; i + j <= SYSTEM::MaxP; ++j) {
             Recurrance(coeffts, 0, i, j, diff, R2);
             Recurrance(coeffts, i, 0, j, diff, R2);
             Recurrance(coeffts, i, j, 0, diff, R2);
@@ -388,15 +388,15 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 
     /* two indices = 1, other index >= 1 */
     Recurrance(coeffts, 1, 1, 1, diff, R2);
-    for (int i = 2; i <= globalSystem->MaxP - 2; ++i) {
+    for (int i = 2; i <= SYSTEM::MaxP - 2; ++i) {
         Recurrance(coeffts, 1, 1, i, diff, R2);
         Recurrance(coeffts, 1, i, 1, diff, R2);
         Recurrance(coeffts, i, 1, 1, diff, R2);
     }
 
     /* one index = 1, other indices >= 2 */
-    for (int i = 2; i <= globalSystem->MaxP - 3; ++i)
-        for (int j = 2; i + j < globalSystem->MaxP; ++j) {
+    for (int i = 2; i <= SYSTEM::MaxP - 3; ++i)
+        for (int j = 2; i + j < SYSTEM::MaxP; ++j) {
             Recurrance(coeffts, 1, i, j, diff, R2);
             Recurrance(coeffts, i, 1, j, diff, R2);
             Recurrance(coeffts, i, j, 1, diff, R2);
@@ -404,9 +404,9 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 
 
     /* all indices >= 2 */
-    for (int i = 2; i <= globalSystem->MaxP - 4; ++i)
-        for (int j = 2; i + j <= globalSystem->MaxP - 2; ++j)
-            for (int k = 2; i + j + k <= globalSystem->MaxP; ++k)
+    for (int i = 2; i <= SYSTEM::MaxP - 4; ++i)
+        for (int j = 2; i + j <= SYSTEM::MaxP - 2; ++j)
+            for (int k = 2; i + j + k <= SYSTEM::MaxP; ++k)
                 Recurrance(coeffts, i, j, k, diff, R2);
 
 
@@ -415,7 +415,7 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
     // use this instead
 			Vect3 Diff = -1.0*diff;
     REAL del2 = globalSystem->Del2;
-    int MAX_P = globalSystem->MaxP;
+    int MAX_P = SYSTEM::MaxP;
     int p = MAX_P;
     Array <REAL> cff1(p + 1), cff2(p + 1);
     REAL x12, x22, x32, mult;
@@ -552,7 +552,7 @@ void Node::GetISA() {
     for (int i = 0; i < 6; ++i) {
         if (Neighb[i]) {
             Neighb[i]->Neighb[Op[i]] = this;
-            for (int q = 0; q < globalSystem->NumTransVars; ++q) {
+            for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
                 Neighb_Val[q][i] = &(Neighb[i]->TransVars[q]);
                 Neighb[i]->Neighb_Val[q][Op[i]] = &TransVars[q];
                 if (Neighb[i]->Neighb[i]) {
@@ -659,9 +659,9 @@ void Node::EvalCapsule(OctreeCapsule &c) {
 /**************************************************************/
 void Node::UpdateMomentMults() {
     
-    for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
-        for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
-            for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
+    for (int k1 = 0; k1 < SYSTEM::MaxP; ++k1)
+        for (int k2 = 0; k2 + k1 < SYSTEM::MaxP; ++k2)
+            for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3)
             {
                 Node::MomentSize++;
                 Node::CellMomentIndex[0].push_back(k1);
@@ -776,7 +776,7 @@ void Node::UpdateMomentMults() {
         
     
     REAL Size = Node::RootSize;
-    Node::VlFldMlt = ARRAY6(REAL) (globalSystem->MaxP);
+    Node::VlFldMlt = ARRAY6(REAL) (SYSTEM::MaxP);
     //	Go down OCTREE and do a test run on each level
 
     for (int mlev = 1; mlev < OCTREE_LEVS; ++mlev) {
@@ -796,16 +796,16 @@ void Node::UpdateMomentMults() {
                 BinomMlt[mlev][ix][iy] = InhrtMlt[mlev][ix][iy] = ARRAY7(REAL) (2);
 
                 for (int iz = 0; iz < 2; ++iz) {
-                    BinomMlt[mlev][ix][iy][iz] = InhrtMlt[mlev][ix][iy][iz] = ARRAY6(REAL) (globalSystem->MaxP);
+                    BinomMlt[mlev][ix][iy][iz] = InhrtMlt[mlev][ix][iy][iz] = ARRAY6(REAL) (SYSTEM::MaxP);
                     Vect3 Dx = .5 * Offset[ix][iy][iz] * Size;
 
-                    for (int n1 = 0; n1 < globalSystem->MaxP; ++n1) {
-                        BinomMlt[mlev][ix][iy][iz][n1] = InhrtMlt[mlev][ix][iy][iz][n1] = ARRAY5(REAL) (globalSystem->MaxP);
+                    for (int n1 = 0; n1 < SYSTEM::MaxP; ++n1) {
+                        BinomMlt[mlev][ix][iy][iz][n1] = InhrtMlt[mlev][ix][iy][iz][n1] = ARRAY5(REAL) (SYSTEM::MaxP);
 
-                        for (int n2 = 0; n2 + n1 < globalSystem->MaxP; ++n2) {
-                            BinomMlt[mlev][ix][iy][iz][n1][n2] = InhrtMlt[mlev][ix][iy][iz][n1][n2] = ARRAY4(REAL) (globalSystem->MaxP);
+                        for (int n2 = 0; n2 + n1 < SYSTEM::MaxP; ++n2) {
+                            BinomMlt[mlev][ix][iy][iz][n1][n2] = InhrtMlt[mlev][ix][iy][iz][n1][n2] = ARRAY4(REAL) (SYSTEM::MaxP);
 
-                            for (int n3 = 0; n3 + n2 + n1 < globalSystem->MaxP; ++n3) {
+                            for (int n3 = 0; n3 + n2 + n1 < SYSTEM::MaxP; ++n3) {
                                 BinomMlt[mlev][ix][iy][iz][n1][n2][n3] = ARRAY3(REAL) (n1 + 1);
 
                                 for (int k1 = 0; k1 <= n1; ++k1) {
@@ -820,15 +820,15 @@ void Node::UpdateMomentMults() {
                                         }
                                     }
                                 }
-                                InhrtMlt[mlev][ix][iy][iz][n1][n2][n3] = ARRAY3(REAL) (globalSystem->MaxP);
+                                InhrtMlt[mlev][ix][iy][iz][n1][n2][n3] = ARRAY3(REAL) (SYSTEM::MaxP);
 
-                                for (int k1 = n1; k1 < globalSystem->MaxP; ++k1) {
-                                    InhrtMlt[mlev][ix][iy][iz][n1][n2][n3][k1] = ARRAY2(REAL) (globalSystem->MaxP);
+                                for (int k1 = n1; k1 < SYSTEM::MaxP; ++k1) {
+                                    InhrtMlt[mlev][ix][iy][iz][n1][n2][n3][k1] = ARRAY2(REAL) (SYSTEM::MaxP);
 
-                                    for (int k2 = n2; k2 + k1 < globalSystem->MaxP; ++k2) {
-                                        InhrtMlt[mlev][ix][iy][iz][n1][n2][n3][k1][k2] = Array <REAL > (globalSystem->MaxP, 0.);
+                                    for (int k2 = n2; k2 + k1 < SYSTEM::MaxP; ++k2) {
+                                        InhrtMlt[mlev][ix][iy][iz][n1][n2][n3][k1][k2] = Array <REAL > (SYSTEM::MaxP, 0.);
 
-                                        for (int k3 = n3; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
+                                        for (int k3 = n3; k3 + k2 + k1 < SYSTEM::MaxP; ++k3) {
                                             unsigned long int k_nfactorial = globalFactorial[k1 - n1] * globalFactorial[k2 - n2] * globalFactorial[k3 - n3];
                                             //  Velocity Field Inheritance Multipliers
                                             InhrtMlt[mlev][ix][iy][iz][n1][n2][n3][k1][k2][k3] = pow(Dx, (k1 - n1), (k2 - n2), (k3 - n3)) / REAL(k_nfactorial);
@@ -868,19 +868,19 @@ void Node::UpdateMomentMults() {
                                         for (int jz = 0; jz < 2; ++jz) {
                                             Vect3 diff = Dx - Size * Vect3(REAL(i), REAL(j), REAL(k)) - 0.5 * Offset[jx][jy][jz] * Size; // check signs here
                                             diff = -1.0*diff;
-                                            JaggedArray <REAL> coeffts(globalSystem->MaxP + 1);
+                                            JaggedArray <REAL> coeffts(SYSTEM::MaxP + 1);
                                             coeffts = 0.0;
                                             CompCoeffts(diff, coeffts);
                                             TlrCfftsdx[mlev][ix][iy][iz][I][J][K][jx][jy][jz] = diff;
-                                            TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz] = ARRAY3(Vect3) (globalSystem->MaxP);
-                                            LinTlrCffts[mlev][Indxs[ix][iy][iz]][count] = ARRAY3(Vect3) (globalSystem->MaxP);
-                                            for (int k1 = 0; k1 < globalSystem->MaxP; ++k1) {
-                                                TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1] = ARRAY2(Vect3) (globalSystem->MaxP);
-                                                LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1] = ARRAY2(Vect3) (globalSystem->MaxP);
-                                                for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2) {
-                                                    TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2] = Array <Vect3 > (globalSystem->MaxP);
-                                                    LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2] = Array <Vect3 > (globalSystem->MaxP);
-                                                    for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
+                                            TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz] = ARRAY3(Vect3) (SYSTEM::MaxP);
+                                            LinTlrCffts[mlev][Indxs[ix][iy][iz]][count] = ARRAY3(Vect3) (SYSTEM::MaxP);
+                                            for (int k1 = 0; k1 < SYSTEM::MaxP; ++k1) {
+                                                TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1] = ARRAY2(Vect3) (SYSTEM::MaxP);
+                                                LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1] = ARRAY2(Vect3) (SYSTEM::MaxP);
+                                                for (int k2 = 0; k2 + k1 < SYSTEM::MaxP; ++k2) {
+                                                    TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2] = Array <Vect3 > (SYSTEM::MaxP);
+                                                    LinTlrCffts[mlev][Indxs[ix][iy][iz]][count][k1][k2] = Array <Vect3 > (SYSTEM::MaxP);
+                                                    for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3) {
                                                         //TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].x = pow(-1,k1+k2+k3) * (k1 + 1) * coeffts[k1 + 1][k2][k3];
                                                         //TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].y = pow(-1,k1+k2+k3) * (k2 + 1) * coeffts[k1][k2 + 1][k3];
                                                         //TlrCffts[mlev][ix][iy][iz][I][J][K][jx][jy][jz][k1][k2][k3].z = pow(-1,k1+k2+k3) * (k3 + 1) * coeffts[k1][k2][k3 + 1];
@@ -914,18 +914,18 @@ void Node::UpdateMomentMults() {
             FaceCllpsMlt[ix][iy] = ARRAY4(NeighbSet <REAL>) (2);
 
             for (int iz = 0; iz < 2; ++iz) {
-                CllpsMlt[ix][iy][iz] = ARRAY3(REAL) (globalSystem->MaxP);
-                FaceCllpsMlt[ix][iy][iz] = ARRAY3(NeighbSet <REAL>) (globalSystem->MaxP);
+                CllpsMlt[ix][iy][iz] = ARRAY3(REAL) (SYSTEM::MaxP);
+                FaceCllpsMlt[ix][iy][iz] = ARRAY3(NeighbSet <REAL>) (SYSTEM::MaxP);
 
-                for (int k1 = 0; k1 < globalSystem->MaxP; ++k1) {
-                    CllpsMlt[ix][iy][iz][k1] = ARRAY2(REAL) (globalSystem->MaxP);
-                    FaceCllpsMlt[ix][iy][iz][k1] = ARRAY2(NeighbSet <REAL>) (globalSystem->MaxP);
+                for (int k1 = 0; k1 < SYSTEM::MaxP; ++k1) {
+                    CllpsMlt[ix][iy][iz][k1] = ARRAY2(REAL) (SYSTEM::MaxP);
+                    FaceCllpsMlt[ix][iy][iz][k1] = ARRAY2(NeighbSet <REAL>) (SYSTEM::MaxP);
 
-                    for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2) {
-                        CllpsMlt[ix][iy][iz][k1][k2] = Array <REAL > (globalSystem->MaxP);
-                        FaceCllpsMlt[ix][iy][iz][k1][k2] = Array < NeighbSet <REAL> > (globalSystem->MaxP);
+                    for (int k2 = 0; k2 + k1 < SYSTEM::MaxP; ++k2) {
+                        CllpsMlt[ix][iy][iz][k1][k2] = Array <REAL > (SYSTEM::MaxP);
+                        FaceCllpsMlt[ix][iy][iz][k1][k2] = Array < NeighbSet <REAL> > (SYSTEM::MaxP);
 
-                        for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
+                        for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3) {
                             CllpsMlt[ix][iy][iz][k1][k2][k3] = pow(Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
                             FaceCllpsMlt[ix][iy][iz][k1][k2][k3].N = pow(Vect3(0., 0.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
                             FaceCllpsMlt[ix][iy][iz][k1][k2][k3].S = pow(Vect3(0., -.5, .0) + Offset[ix][iy][iz], k1, k2, k3) / (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]);
@@ -941,18 +941,18 @@ void Node::UpdateMomentMults() {
     }
 
 
-    for (int n1 = 0; n1 < globalSystem->MaxP; ++n1) {
-        VlFldMlt[n1] = ARRAY5(REAL) (globalSystem->MaxP);
-        for (int n2 = 0; n2 + n1 < globalSystem->MaxP; ++n2) {
-            VlFldMlt[n1][n2] = ARRAY4(REAL) (globalSystem->MaxP);
-            for (int n3 = 0; n3 + n2 + n1 < globalSystem->MaxP; ++n3) {
+    for (int n1 = 0; n1 < SYSTEM::MaxP; ++n1) {
+        VlFldMlt[n1] = ARRAY5(REAL) (SYSTEM::MaxP);
+        for (int n2 = 0; n2 + n1 < SYSTEM::MaxP; ++n2) {
+            VlFldMlt[n1][n2] = ARRAY4(REAL) (SYSTEM::MaxP);
+            for (int n3 = 0; n3 + n2 + n1 < SYSTEM::MaxP; ++n3) {
                 REAL mult = pow(-1.0, n1) * pow(-1.0, n2) * pow(-1.0, n3);
-                VlFldMlt[n1][n2][n3] = ARRAY3(REAL) (globalSystem->MaxP);
-                for (int k1 = n1; k1 < globalSystem->MaxP; ++k1) {
-                    VlFldMlt[n1][n2][n3][k1] = ARRAY2(REAL) (globalSystem->MaxP);
-                    for (int k2 = n2; k2 + k1 < globalSystem->MaxP; ++k2) {
-                        VlFldMlt[n1][n2][n3][k1][k2] = Array <REAL > (globalSystem->MaxP);
-                        for (int k3 = n3; k3 + k2 + k1 < globalSystem->MaxP; ++k3) {
+                VlFldMlt[n1][n2][n3] = ARRAY3(REAL) (SYSTEM::MaxP);
+                for (int k1 = n1; k1 < SYSTEM::MaxP; ++k1) {
+                    VlFldMlt[n1][n2][n3][k1] = ARRAY2(REAL) (SYSTEM::MaxP);
+                    for (int k2 = n2; k2 + k1 < SYSTEM::MaxP; ++k2) {
+                        VlFldMlt[n1][n2][n3][k1][k2] = Array <REAL > (SYSTEM::MaxP);
+                        for (int k3 = n3; k3 + k2 + k1 < SYSTEM::MaxP; ++k3) {
                             REAL k_nfactorial = (REAL) (globalFactorial[k1 - n1] * globalFactorial[k2 - n2] * globalFactorial[k3 - n3]);
                             //  Velocity Field Multipliers
                             VlFldMlt[n1][n2][n3][k1][k2][k3] = mult * (REAL) (globalFactorial[k1] * globalFactorial[k2] * globalFactorial[k3]) / k_nfactorial;

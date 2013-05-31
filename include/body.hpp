@@ -77,7 +77,6 @@ public:
     static Array <Vect3> ForceHist;
     static Array < Array < Array < int > > > Surfaces;
     static Array < Array < Array < PANEL*> > > ptSurfaces;
-    static REAL GambitScale;
     static Array < Array <Array <int> > > PtIDS;
     static Array < Array <Array <int> > > TipInboardUSIDS;
     static Array < Array <Array <int> > > TipInboardLSIDS;

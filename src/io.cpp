@@ -405,10 +405,10 @@ void IO::PrepOutputDir() {
 //                    if (line.compare(0,found,"Input Neu File") == 0)
 //                        strm >> globalSystem->NeuFile;
 //                    if (line.compare(0,found,"max P") == 0) {
-//                        strm >> globalSystem->MaxP;
+//                        strm >> SYSTEM::MaxP;
 //                    }
 //                    if (line.compare(0,found,"Scale") == 0)
-//                        strm >> globalSystem->GambitScale;
+//                        strm >> SYSTEM::GambitScale;
 //                    if (line.compare(0,found,"dt Init") == 0)
 //                        strm >> globalSystem->dtInit;
 //                    if (line.compare(0,found,"ds") == 0){
@@ -715,9 +715,9 @@ void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName) {
         UTIL::PostAmble(fname);
     }
     UTIL::WriteMATLABMatrix1D("Del2", fname, globalSystem->Del2);
-    UTIL::WriteMATLABMatrix1D("h", fname, globalSystem->h);
-    UTIL::WriteMATLABMatrix1D("GambitScale", fname, globalSystem->GambitScale);
-    UTIL::WriteMATLABMatrix1D("MaxP", fname, globalSystem->MaxP);
+    UTIL::WriteMATLABMatrix1D("h", fname, SYSTEM::M4Radius_in_cells);
+    UTIL::WriteMATLABMatrix1D("SYSTEM::GambitScale", fname, SYSTEM::GambitScale);
+    UTIL::WriteMATLABMatrix1D("MaxP", fname, SYSTEM::MaxP);
     UTIL::WriteMATLABMatrix1D("KinematicViscosity", fname, globalSystem->Nu);
     UTIL::WriteMATLABMatrix1D("LastFVMDeltaT", fname, globalTimeStepper->dt);
     NumFiles[ID]++;

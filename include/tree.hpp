@@ -39,7 +39,7 @@ public:
     int CellCount;              //  These are used for bookkeeping
     Array <int> BranchCount;    //  ditto
 
-    Array <FVMCell*> AllCells;
+    
     static Array <FVMCell*> CellsInOrder;
     Array <Array <Branch*> > AllBranches;
     static Array <Branch*> BranchesInDownOrder, BranchesInUpOrder;

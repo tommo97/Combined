@@ -113,10 +113,12 @@ public:
     //   possibly devolve the following members solely to cells
     Vect3 Position, Omega, Velocity, PanelVel;
     NeighbSet<Node*> Neighb;
+#ifdef USE_MUSCL
     Array<NeighbSet<Vect3> > BEV;
+#endif
     Array<NeighbSet<Vect3*> > Neighb_Val, Neighb_Neighb_Val;
-    Array<Vect3> TransVars, TransVarsHold, TransVars0;
-    Array <Array<Vect3> > TransDerivs;
+    Array <Vect3> TransVars, TransVarsHold, TransVars0;
+    Array <Vect3> TransDerivs;
     
     
     void UpdateMomentMults();

@@ -26,13 +26,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Array <FVMCell*> OCTREE::CellsInOrder;
 Array <Branch*> OCTREE::BranchesInDownOrder;
 Array <Branch*> OCTREE::BranchesInUpOrder;
+
 /**************************************************************/
 OCTREE::OCTREE() {
     Root = new Branch();
     Node::Root = Root;
     Root->UpdateMomentMults();
-    FVMCell::InitMomsInds(globalSystem->MaxP);
-    Branch::InitMomsInds(globalSystem->MaxP);
+    FVMCell::InitMomsInds();
+    Branch::InitMomsInds();
     Root->SetUpISBIndices();
 }
 
@@ -64,8 +65,8 @@ void OCTREE::Prune() {
 
 /**************************************************************/
 void OCTREE::GetSRad() {
-    for (int i = 0; i < AllCells.size(); ++i)
-        AllCells[i]->ReportSpectralRadius();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->ReportSpectralRadius();
     //Root->ApplyRecursively(&Node::DoNothing, &FVMCell::ReportSpectralRadius, &Node::DoNothing);
 }
 
@@ -83,8 +84,8 @@ void OCTREE::Reset() {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < AllCells.size(); ++i)
-        globalOctree->AllCells[i]->CheckActive();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->CheckActive();
 
     for (int mlev = 0; mlev < globalOctree->AllBranches.size(); ++mlev)
 #ifndef NOFMM
@@ -124,7 +125,7 @@ void OCTREE::UpdateLists() {
     #ifdef TIME_STEPS
     long unsigned int t3 = ticks();
 #endif
-    AllCells.clear();
+    FVMCell::AllCells.clear();
     AllBranches.allocate(OCTREE_LEVS);
     BranchCount.assign(OCTREE_LEVS - 1, 0);
     Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
@@ -135,8 +136,8 @@ void OCTREE::UpdateLists() {
         BranchCount[i] = 0; //  Recycle for use as a pseudo iterator
     }
 
-    CellCount = 0; //  This is used as a pseudo iterator for assigning into AllCells
-    AllCells.assign(FVMCell::NumCells, NULL);
+    CellCount = 0; //  This is used as a pseudo iterator for assigning into FVMCell::AllCells
+    FVMCell::AllCells.assign(FVMCell::NumCells, NULL);
     Node::AllNodes.allocate(Node::NumNodes);
     Node::NodeCount = 0;
     Node::UpList.clear();
@@ -160,19 +161,21 @@ void OCTREE::FVM() {
     Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::O2UW, &Node::DoNothing);
 #else
 
+#ifdef USE_MUSCL
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < AllCells.size(); ++i) {
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
 
-        AllCells[i]->GetBEV();
+        FVMCell::AllCells[i]->GetBEV();
     }
-
+#endif
+    
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < AllCells.size(); ++i)
-        AllCells[i]->O2UW();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->O2UW();
    
 #endif
 #ifdef TIME_STEPS
@@ -187,93 +190,93 @@ void OCTREE::DiffuseAndAdvance(REAL dt) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->Diffuse();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->Diffuse();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->AdvanceDt(dt);
 }
 /**************************************************************/
 void OCTREE::DiffuseXAndAdvance(REAL dt) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->DiffuseX();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->DiffuseX();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->AdvanceDt(dt);
 }
 /**************************************************************/
 void OCTREE::DiffuseYAndAdvance(REAL dt) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->DiffuseY();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->DiffuseY();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->AdvanceDt(dt);
 }
 /**************************************************************/
 void OCTREE::DiffuseZAndAdvance(REAL dt) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->DiffuseZ();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->DiffuseZ();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->AdvanceDt(dt);
 }
 /**************************************************************/
 void OCTREE::StretchAndAdvance(REAL dt) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->GetISAGrads();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->GetISAGrads();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->Stretch();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->Stretch();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->AdvanceDt(dt);
 }
 /**************************************************************/
 void OCTREE::O2UWxAndAdvance(REAL dt) {
     #ifdef _OPENMP
 #pragma omp parallel for
 #endif   
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->GetISAVels();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif   
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->SetVelsEqual();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->SetVelsEqual();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->O2UWx();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->O2UWx();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->AdvanceDt(dt);
 }
 
 /**************************************************************/
@@ -281,23 +284,23 @@ void OCTREE::O2UWyAndAdvance(REAL dt) {
     #ifdef _OPENMP
 #pragma omp parallel for
 #endif   
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->GetISAVels();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif   
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->SetVelsEqual();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->SetVelsEqual();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->O2UWy();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->O2UWy();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->AdvanceDt(dt);
 }
 
 /**************************************************************/
@@ -305,46 +308,46 @@ void OCTREE::O2UWzAndAdvance(REAL dt) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif   
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->GetISAVels();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif   
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->SetVelsEqual();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->SetVelsEqual();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->O2UWz();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->O2UWz();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->AdvanceDt(dt);
 }
 /**************************************************************/
 void OCTREE::O2UWAndAdvance(REAL dt) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif   
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->GetISAVels();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->GetISAVels();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif   
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->SetVelsEqual();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->SetVelsEqual();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->O2UW();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->O2UW();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-        globalOctree->AllCells[i]->AdvanceDt(dt);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->AdvanceDt(dt);
 }
 /**************************************************************/
 void OCTREE::Integrate() {
@@ -353,22 +356,21 @@ void OCTREE::Integrate() {
 #endif
 
 #ifdef RECURSE
-    Root->ApplyRecursivelyP(&Node::DoNothing, &FVMCell::GetBEV, &Node::DoNothing);
     Root->ApplyRecursively(&Node::DoNothing, &FVMCell::Integrate, &Node::DoNothing); // <- this doesn't work in parallel
     Root->ApplyRecursivelyP(&Node::DoNothing, &Node::DoNothing, &Branch::SetFieldsZero);
 #else
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < AllCells.size(); ++i) {
-//        AllCells[i]->GetVelTensor();
-        AllCells[i]->Integrate();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+//        FVMCell::AllCells[i]->GetVelTensor();
+        FVMCell::AllCells[i]->Integrate();
     }
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < AllCells.size(); ++i)
-        AllCells[i]->CheckActive();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->CheckActive();
 
     for (int mlev = 0; mlev < AllBranches.size(); ++mlev)
 #ifdef _OPENMP
@@ -386,13 +388,13 @@ void OCTREE::Integrate() {
 }
 /**************************************************************/
 string OCTREE::GetDirectVels() {
-    for (int i = 0; i < AllCells.size(); ++i)
-        AllCells[i]->Velocity = Vect3(0.0);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->Velocity = Vect3(0.0);
 
 #pragma omp parallel for
-    for (int i = 0; i < AllCells.size(); ++i)
-        for (int j = 0; j < AllCells.size(); ++j)
-            AllCells[i]->Velocity += UTIL::globalDirectVel(AllCells[i]->Position - AllCells[j]->Position, AllCells[j]->Omega);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        for (int j = 0; j < FVMCell::AllCells.size(); ++j)
+            FVMCell::AllCells[i]->Velocity += UTIL::globalDirectVel(FVMCell::AllCells[i]->Position - FVMCell::AllCells[j]->Position, FVMCell::AllCells[j]->Omega);
     
     string tmp("");
     return tmp;
@@ -443,7 +445,7 @@ string OCTREE::GetPseudoRecursiveFMMVels() {
     OCTREE::BranchesInUpOrder.clear();
     OCTREE::CellsInOrder.clear();
     Root->ApplyRecursively(&Branch::PutInOctreeDownList, &FVMCell::PutInOctreeCellList, &Branch::PutInOctreeUpList);
-    cout << "here! " << OCTREE::CellsInOrder.size() << " " << AllCells.size() << endl;
+    cout << "here! " << OCTREE::CellsInOrder.size() << " " << FVMCell::AllCells.size() << endl;
 #ifdef TIME_STEPS
     long unsigned int tt2 = ticks();
 #endif
@@ -485,9 +487,9 @@ string OCTREE::GetNonRecursiveFMMVels() {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < AllCells.size(); ++i){
-        AllCells[i]->SetVelsZero();
-        AllCells[i]->PassMmnts2Prnt();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i){
+        FVMCell::AllCells[i]->SetVelsZero();
+        FVMCell::AllCells[i]->PassMmnts2Prnt();
     }
 
     //  Sweep moments up OCTREE (from cells at L12 -> root at L0)
@@ -542,8 +544,8 @@ string OCTREE::GetNonRecursiveFMMVels() {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int i = 0; i < AllCells.size(); ++i)
-        AllCells[i]->CollapseVField();
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->CollapseVField();
 
 #ifdef TIME_STEPS
     long unsigned int tt5 = ticks();

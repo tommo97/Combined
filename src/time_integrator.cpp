@@ -115,6 +115,62 @@ void lamb_dipole(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL ampl
 /**************************************************************/
 
 void TIME_STEPPER::DoFMM() {
+
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        Vect3 Xp = BODY::AllBodyFaces[i]->CollocationPoint;
+        {
+            Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
+            Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
+            Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
+
+            Vect3 MinX = Xp, MaxX = Xp;
+
+            for (int nt = 1; nt < 100; ++nt) {
+                Vect3 PanelVel = OwnerVel + OwnerRates.Cross(Xp - OwnerCG);
+
+                OwnerCG += OwnerVel * dt / 100;
+
+                Xp += dt * PanelVel / 100;
+
+                MinX = min(MinX, Xp);
+                MaxX = max(MaxX, Xp);
+            }
+
+
+
+
+            REAL Buffer = 1.0;
+            MaxX += Vect3(Buffer, Buffer, Buffer);
+            MinX -= Vect3(Buffer, Buffer, Buffer);
+
+            MinX = floor(MinX) - 0.5;
+            MaxX = ceil(MaxX) + 0.5;
+
+            int DX = (MaxX.x) - (MinX.x);
+            int DY = (MaxX.y) - (MinX.y);
+            int DZ = (MaxX.z) - (MinX.z);
+
+            BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
+            BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
+
+            for (int a = 0; a < DX; ++a)
+                for (int b = 0; b < DY; ++b)
+                    for (int c = 0; c < DZ; ++c) {
+                        OctreeCapsule C(MinX + Vect3(1.0 * a, 1.0 * b, 1.0 * c), Vect3(0, 0, 0), false);
+                        C.toMonitor = true;
+                        globalOctree->Root->EvalCapsule(C);
+                        //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
+                        BODY::AllBodyFaces[i]->Vp[a][b][c] = C.Ptr2CellVelocity;
+                        BODY::AllBodyFaces[i]->Xp[a][b][c] = C.Ptr2CellPosition;
+                    }
+
+
+
+        }
+    }
+
+
+
     globalOctree->ResetAllVelsAndFields();
     globalOctree->UpdateLists();
     globalOctree->GetVels();
@@ -135,20 +191,20 @@ void TIME_STEPPER::TimeAdvance() {
     if (globalSystem->useFMM)
         DoFMM();
     else {
-        for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-            globalOctree->AllCells[i]->Velocity = globalSystem->unscaledVinf * globalSystem->GambitScale;
+        for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+            FVMCell::AllCells[i]->Velocity = globalSystem->unscaledVinf * SYSTEM::GambitScale;
         }
     }
         
 #else
 #pragma omp parallel for
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        globalOctree->AllCells[i]->Velocity = 0.0;
-        globalOctree->AllCells[i]->VelGrads[0] = globalOctree->AllCells[i]->VelGrads[1] = globalOctree->AllCells[i]->VelGrads[2] = Vect3(0.0);
-        for (int j = 0; j < globalOctree->AllCells.size(); ++j) {
-            Vect3 D = globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position;
-            globalOctree->AllCells[i]->Velocity += UTIL::globalDirectVel(D, globalOctree->AllCells[j]->Omega);
-            UTIL::globalCubicDirectVelGrads(D, globalOctree->AllCells[j]->Omega, globalOctree->AllCells[i]->VelGrads);
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+        FVMCell::AllCells[i]->Velocity = 0.0;
+        FVMCell::AllCells[i]->VelGrads[0] = FVMCell::AllCells[i]->VelGrads[1] = FVMCell::AllCells[i]->VelGrads[2] = Vect3(0.0);
+        for (int j = 0; j < FVMCell::AllCells.size(); ++j) {
+            Vect3 D = FVMCell::AllCells[j]->Position - FVMCell::AllCells[i]->Position;
+            FVMCell::AllCells[i]->Velocity += UTIL::globalDirectVel(D, FVMCell::AllCells[j]->Omega);
+            UTIL::globalCubicDirectVelGrads(D, FVMCell::AllCells[j]->Omega, FVMCell::AllCells[i]->VelGrads);
         }
 
     }
@@ -187,12 +243,12 @@ void TIME_STEPPER::TimeAdvance() {
      */
     
     //  Record initial vals
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        globalOctree->AllCells[i]->VelHold = globalOctree->AllCells[i]->Velocity; //      this is done in vCollapseVelField
-        globalOctree->AllCells[i]->VelGradsHold = globalOctree->AllCells[i]->VelGrads; //      this is done in vCollapseVelField
-        for (int q = 0; q < globalSystem->NumTransVars; ++q)
-            globalOctree->AllCells[i]->TransVarsHold[q] = globalOctree->AllCells[i]->TransVars[q];
-        globalOctree->AllCells[i]->OmegaHold = globalOctree->AllCells[i]->Omega;
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+        FVMCell::AllCells[i]->VelHold = FVMCell::AllCells[i]->Velocity; //      this is done in vCollapseVelField
+        FVMCell::AllCells[i]->VelGradsHold = FVMCell::AllCells[i]->VelGrads; //      this is done in vCollapseVelField
+        for (int q = 0; q < SYSTEM::NumTransVars; ++q)
+            FVMCell::AllCells[i]->TransVarsHold[q] = FVMCell::AllCells[i]->TransVars[q];
+        FVMCell::AllCells[i]->OmegaHold = FVMCell::AllCells[i]->Omega;
     }
     if (globalSystem->useFMM) {
         globalOctree->DiffuseZAndAdvance(dt);
@@ -207,17 +263,17 @@ void TIME_STEPPER::TimeAdvance() {
 
     //  Second sweep
     //  Reset initial values -- VelHold is still unchanged - can be reused; same with its gradients
-    //#ifdef _OPENMP
-    //#pragma omp parallel for
-    //#endif
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-            globalOctree->AllCells[i]->TransVars0[q] = globalOctree->AllCells[i]->TransVars[q];
-            globalOctree->AllCells[i]->TransVars[q] = globalOctree->AllCells[i]->TransVarsHold[q];
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+        for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
+            FVMCell::AllCells[i]->TransVars0[q] = FVMCell::AllCells[i]->TransVars[q];
+            FVMCell::AllCells[i]->TransVars[q] = FVMCell::AllCells[i]->TransVarsHold[q];
         }
-        globalOctree->AllCells[i]->Velocity = globalOctree->AllCells[i]->VelHold;
-        globalOctree->AllCells[i]->VelGrads = globalOctree->AllCells[i]->VelGradsHold;
-        globalOctree->AllCells[i]->Omega = globalOctree->AllCells[i]->OmegaHold;
+        FVMCell::AllCells[i]->Velocity = FVMCell::AllCells[i]->VelHold;
+        FVMCell::AllCells[i]->VelGrads = FVMCell::AllCells[i]->VelGradsHold;
+        FVMCell::AllCells[i]->Omega = FVMCell::AllCells[i]->OmegaHold;
 
 
     }
@@ -234,125 +290,89 @@ void TIME_STEPPER::TimeAdvance() {
     }
 
 
-    for (int i = 0; i < globalOctree->AllCells.size(); ++i) {
-        globalOctree->AllCells[i]->Omega = Vect3(0.0);
-        for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-            Vect3 VarTmp = globalOctree->AllCells[i]->TransVars[q];
-            globalOctree->AllCells[i]->TransVars [q] = 0.5 * (globalOctree->AllCells[i]->TransVars0[q] + VarTmp);
-            globalOctree->AllCells[i]->Omega += globalOctree->AllCells[i]->TransVars[q];
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+        FVMCell::AllCells[i]->Omega = Vect3(0.0);
+        for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
+            Vect3 VarTmp = FVMCell::AllCells[i]->TransVars[q];
+            FVMCell::AllCells[i]->TransVars [q] = 0.5 * (FVMCell::AllCells[i]->TransVars0[q] + VarTmp);
+            FVMCell::AllCells[i]->Omega += FVMCell::AllCells[i]->TransVars[q];
         }
     }
     
 #else
     
-    
-    
-
-
-
-
-    TIME_STEPPER::RKStep = 0;
-    
-    
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        Vect3 Xp = BODY::AllBodyFaces[i]->CollocationPoint;
-        {
-            Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
-            Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
-            Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
-
-            Vect3 MinX = Xp, MaxX = Xp;
-
-            for (int nt = 1; nt < 100; ++nt) {
-                Vect3 PanelVel = OwnerVel + OwnerRates.Cross(Xp - OwnerCG);
-
-                OwnerCG += OwnerVel * dt / 100;
-
-                Xp += dt * PanelVel / 100;
-
-                MinX = min(MinX, Xp);
-                MaxX = max(MaxX, Xp);
-            }
-
-
-
-
-            REAL Buffer = 1.0;
-            MaxX += Vect3(Buffer,Buffer,Buffer);
-            MinX -= Vect3(Buffer,Buffer,Buffer);
-
-            MinX = floor(MinX) - 0.5;
-            MaxX = ceil(MaxX) + 0.5;
-
-            int DX = (MaxX.x) - (MinX.x);
-            int DY = (MaxX.y) - (MinX.y);
-            int DZ = (MaxX.z) - (MinX.z);
-
-            BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
-            BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
-
-            for (int a = 0; a < DX; ++a)
-                for (int b = 0; b < DY; ++b)
-                    for (int c = 0; c < DZ; ++c) {
-                        OctreeCapsule C(MinX + Vect3(1.0 * a, 1.0 * b, 1.0 * c), Vect3(0, 0, 0), false);
-                        C.toMonitor = true;
-                        globalOctree->Root->EvalCapsule(C);
-                        //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
-                        BODY::AllBodyFaces[i]->Vp[a][b][c] = C.Ptr2CellVelocity;
-                        BODY::AllBodyFaces[i]->Xp[a][b][c] = C.Ptr2CellPosition;
-                    }
-        
-            
-            
-        }
-        
-    }
-
-    
+    //  t0: get cell velocities/gradients etc.
     DoFMM();
-    
+
     //  t0: calculate face velocities due to body
     globalSystem->GetFaceVels();
+    
+    //  t0: calculate timestep length (use last values of panel singularity strengths for body influence)
     time_step();
     //  t0: get panel FMM Vels
+    if (globalSystem->useBodies)
+        globalSystem->GetPanelFMMVelocities(0.0);
+
+    //  
+    globalSystem->GetFaceVels();
+
+
+    FVMCell::CellDerivs.allocate(SYSTEM::NumTransVars);
+    for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
+        FVMCell::CellDerivs[q] = Array <Vect3> (FVMCell::AllCells.size());
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+            FVMCell::CellDerivs[q][i] = FVMCell::AllCells[i]->O2UW(q);
+            FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Stretch(q);
+            FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Diffuse(q);
+        }
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+            FVMCell::AllCells[i]->TransVars[q] += dt * FVMCell::CellDerivs[q][i];
+    }
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->NormaliseObliterate();
+
+    //      Update cell velocities to reflect new cell omegas
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif   
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->GetISAVels();
+    
+    
+    //      Now update Panel FMM Vels to reflect new velocities then advance over timestep
     if (globalSystem->useBodies) {
         globalSystem->GetPanelFMMVelocities(dt);
-
-        //  t0: get time derivatives at t0
-
-        //  t0: advance innter (body) timestep
-
-        if (TIME_STEPPER::RK2Mode)
-            BODY::BodySubStep(dt / 2.0, globalSystem->NumSubSteps);
-        else
-            BODY::BodySubStep(dt, globalSystem->NumSubSteps);
-
+        BODY::BodySubStep(dt, globalSystem->NumSubSteps);
     }
-     
-    globalSystem->GetFaceVels();
+
+
     
-
-    globalOctree->FVM(); //  dom_dt(t0)
-    //  t0: advance outer wake to t*
-    globalOctree->Integrate(); //  t = t0 -> t*
-
-
-        
-    if (TIME_STEPPER::RK2Mode) {
-        TIME_STEPPER::RKStep = 1;
-        //  t*: Do the FMM again
-        DoFMM();
-        if (globalSystem->useBodies) {
-            globalSystem->GetPanelFMMVelocities(dt / 2);
-            BODY::BodySubStep(dt / 2.0, globalSystem->NumSubSteps); //  t = t0 -> t*
-            //  t*: calculate face velocities due to body
-        }
-        globalSystem->GetFaceVels();
-        //  t*: calculate gradients at t*
-        globalOctree->FVM(); //  dom_dt(t*)
-        //  t*: advance to t1
-        globalOctree->Integrate(); //  t = t0 -> t1
-    }
+    
+    
+    //    if (TIME_STEPPER::RK2Mode) {
+//        TIME_STEPPER::RKStep = 1;
+//        //  t*: Do the FMM again
+//        DoFMM();
+//        if (globalSystem->useBodies) {
+//            globalSystem->GetPanelFMMVelocities(dt / 2);
+//            BODY::BodySubStep(dt / 2.0, globalSystem->NumSubSteps); //  t = t0 -> t*
+//            //  t*: calculate face velocities due to body
+//        }
+//        globalSystem->GetFaceVels();
+//        //  t*: calculate gradients at t*
+//        globalOctree->FVM(); //  dom_dt(t*)
+//        //  t*: advance to t1
+//        globalOctree->Integrate(); //  t = t0 -> t1
+//    }
 
 #endif
     //  Put the wake in the tree from the bodytimestep
@@ -400,14 +420,14 @@ void TIME_STEPPER::time_loop() {
         globalOctree->Reset();
         
         globalOctree->GetVels();
-        for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-            globalOctree->AllCells[i]->Velocity = Vect3(globalSystem->GambitScale * globalSystem->unscaledVinf);
+        for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+            FVMCell::AllCells[i]->Velocity = Vect3(SYSTEM::GambitScale * globalSystem->unscaledVinf);
 
 //        if (globalSystem->useFMM) {
 //#pragma omp parallel for
-//            for (int i = 0; i < globalOctree->AllCells.size(); ++i)
-//                for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-//                    globalOctree->AllCells[i]->Velocity += UTIL::globalDirectVel(globalOctree->AllCells[j]->Position - globalOctree->AllCells[i]->Position, globalOctree->AllCells[j]->Omega);
+//            for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+//                for (int j = 0; j < FVMCell::AllCells.size(); ++j)
+//                    FVMCell::AllCells[i]->Velocity += UTIL::globalDirectVel(FVMCell::AllCells[j]->Position - FVMCell::AllCells[i]->Position, FVMCell::AllCells[j]->Omega);
 //        }
         first_step = false;
     } else {
@@ -470,54 +490,17 @@ void TIME_STEPPER::time_step() {
 
             MaxRadius = max(MaxRadius, Pos.Mag());
 
-            //
-            //        MaxX = max(MaxX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-            //        MinX = min(MinX, BODY::AllBodyFaces[i]->CollocationPoint.x);
-            //        MaxY = max(MaxY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-            //        MinY = min(MinY, BODY::AllBodyFaces[i]->CollocationPoint.y);
-            //        MaxZ = max(MaxZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
-            //        MinZ = min(MinZ, BODY::AllBodyFaces[i]->CollocationPoint.z);
-
-
-
+     
         }
     }
 
-
-    //    int DX = ceil(MaxX) - floor(MinX);
-    //    int DY = ceil(MaxY) - floor(MinY);
-    //    int DZ = ceil(MaxZ) - floor(MinZ);
-    //    cout << "Maximum Radius " << MaxRadius << " Enclosing Box size: " << DX;
-    //    cout << " " << DY << " " << DZ << " " << DX*DY*DZ << endl;
-    //    cout << "--------------- Calcing Inerp Vels --------------" << endl;
-    //    cout << globalOctree->AllCells.size()*BODY::AllBodyFaces.size() << " Interactions " << endl;
-    //    Array < Array < Array < Vect3 > > > Posns, Vels;
-    //            
-    //    Posns = Array < Array < Array <Vect3> > > (DX, Array < Array < Vect3 > > (DY, Array < Vect3 > (DZ, Vect3(0.0))));
-    //    Vels = Posns;
-    //    
-    //    for (int i = 0; i < DX; ++i)
-    //        for (int j = 0; j < DY; ++j)
-    //            for (int k = 0; k < DZ; ++k)
-    //            {
-    //                Vect3 XP(MinX + i, MinY + j, MinZ + k);
-    //                Posns[i][j][k] = XP;
-    //                for (int l = 0; l < globalOctree->AllCells.size(); ++l)
-    //                    Vels[i][j][k] += UTIL::globalDirectVel(globalOctree->AllCells[l]->Position - XP, globalOctree->AllCells[l]->Omega, globalSystem->Del2);
-    //                    
-    //            }
-
-
-    
-    
     if (fabs((dt - dt_prev)/dt_prev) > 0.05)
     {
         if ((dt - dt_prev) > 0.)
             dt = 1.05 * dt_prev;
     }
         
-    
-    
+       
     
 //    dt = min(dt_euler,4.*cfl_lim/OmRMax);       // the maximum distance allowable by any body part is 4 cells...
 //  dt = min(dt_euler,cfl_lim/OmRMax);      
@@ -586,87 +569,20 @@ void TIME_STEPPER::Integrate(FVMCell * cell) {
 /**************************************************************/
 void TIME_STEPPER::Euler(FVMCell * cell) {
 
-    for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-        cell->TransVars[q] += dt * cell->TransDerivs[TIME_STEPPER::RKStep][q];
-        cell->TransDerivs[TIME_STEPPER::RKStep][q] = Vect3(0.);
+    for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
+        cell->TransVars[q] += dt * cell->TransDerivs[q];
+        cell->TransDerivs[q] = Vect3(0.);
     }
 }
 
 /**************************************************************/
 void TIME_STEPPER::RK2(FVMCell * cell) {
-    //  Heun's Method for RK2
-    if (RKStep == 0) { //  Predictor - an Euler step
-        for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-            cell->TransVars[q] += dt * cell->TransDerivs[TIME_STEPPER::RKStep][q];
-        }
-    } else { //  Corrector - trapezoidal step
-        for (int q = 0; q < globalSystem->NumTransVars; ++q) {
-            cell->TransVars[q] += 0.5 * dt * (cell->TransDerivs[1][q] - cell->TransDerivs[0][q]);
-            cell->TransDerivs[0][q] = Vect3(0.);
-            cell->TransDerivs[1][q] = Vect3(0.);
-        }
-    }
 }
 
 /**************************************************************/
 void TIME_STEPPER::RK4(FVMCell * cell) {
-    switch (RKStep) {
-        case 0:
-        {
-            cell->Omega += dt * .5 * cell->Deriv[0];
-            break;
-        }
-
-        case 1:
-        {
-            cell->Omega += .5 * dt * (cell->Deriv[1] - cell->Deriv[0]);
-            break;
-        }
-        case 2:
-        {
-            cell->Omega += dt * (cell->Deriv[2] - .5 * cell->Deriv[1]);
-            break;
-        }
-        case 3:
-        {
-            cell->Omega += dt * ((cell->Deriv[0] + 2 * (cell->Deriv[1] + cell->Deriv[2]) + cell->Deriv[3]) / 6 - cell->Deriv[2]);
-            cell->Deriv.clear();
-            break;
-        }
-    }
 }
 
 /**************************************************************/
 void TIME_STEPPER::ABM4(FVMCell * cell) {
-    if (cell->age < 3) {
-        if (RKStep == 0)
-            cell->Omega += dt * cell->Deriv[cell->age];
-        else {
-            cell->Omega += .5 * dt * (cell->Deriv[cell->age + 1] - cell->Deriv[cell->age]);
-            cell->Deriv[cell->age] = .5 * (cell->Deriv[cell->age] + cell->Deriv[cell->age + 1]);
-            cell->Deriv.pop_back();
-            cell->age++;
-        }
-    } else {
-        if (RKStep == 0) //  Predictor
-        {
-            cell->Omega += (dt / 24) * (55 * cell->Deriv[3] - 59 * cell->Deriv[2] + 37 * cell->Deriv[1] - 9 * cell->Deriv[0]);
-        } else //  Corrector
-        {
-            cell->Omega += (dt / 24) * (9 * cell->Deriv[4] + 19 * cell->Deriv[3] - 5 * cell->Deriv[2] + cell->Deriv[1]);
-            cell->Omega -= (dt / 24) * (55 * cell->Deriv[3] - 59 * cell->Deriv[2] + 37 * cell->Deriv[1] - 9 * cell->Deriv[0]);
-            // Trim of oldest derivative and also derivative of the predictor
-
-
-#ifndef USE_ARRAY
-            Array <Vect3> temp;
-            for (int i = 1; i < cell->Deriv.size() - 1; ++i) temp.push_back(cell->Deriv[i]);
-            cell->Deriv = temp;
-#else
-            cell->Deriv.pop_front();
-            cell->Deriv.pop_back();
-#endif
-            cell->age++;
-        }
-    }
 }

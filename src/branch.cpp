@@ -38,14 +38,14 @@ Branch::~Branch() {
 #ifdef NOFMM
 Branch::Branch() : Node() {
 #else
-Branch::Branch() : Node(), Moments(globalSystem->MaxP), VelField(globalSystem->MaxP) {
+Branch::Branch() : Node(), Moments(SYSTEM::MaxP), VelField(SYSTEM::MaxP) {
 #endif
     Branch::NumBranches++;
 }
 
 /**************************************************************/
 #ifndef NOFMM
-Branch::Branch(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Moments(globalSystem->MaxP), VelField(globalSystem->MaxP) {
+Branch::Branch(Node *parent, int i, int j, int k) : Node(parent, i, j, k), Moments(SYSTEM::MaxP), VelField(SYSTEM::MaxP) {
 #else
 Branch::Branch(Node *parent, int i, int j, int k) : Node(parent, i, j, k) {
 #endif
@@ -53,7 +53,7 @@ Branch::Branch(Node *parent, int i, int j, int k) : Node(parent, i, j, k) {
 }
 
 /**************************************************************/
-void Branch::InitMomsInds(int MaxP) {
+void Branch::InitMomsInds() {
 
     Branch::BinomMults.allocate(OCTREE_LEVS);
     Branch::srcMomentInds.clear();
@@ -63,12 +63,12 @@ void Branch::InitMomsInds(int MaxP) {
     Branch::srcInheritInds.clear();
     Branch::trgInheritInds.clear();
 
-    for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
-        for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
-            for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
-                for (int n1 = k1; n1 < globalSystem->MaxP; n1++)
-                    for (int n2 = k2; n1 + n2 < globalSystem->MaxP; n2++)
-                        for (int n3 = k3; n1 + n2 + n3 < globalSystem->MaxP; n3++) {
+    for (int k1 = 0; k1 < SYSTEM::MaxP; ++k1)
+        for (int k2 = 0; k2 + k1 < SYSTEM::MaxP; ++k2)
+            for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3)
+                for (int n1 = k1; n1 < SYSTEM::MaxP; n1++)
+                    for (int n2 = k2; n1 + n2 < SYSTEM::MaxP; n2++)
+                        for (int n3 = k3; n1 + n2 + n3 < SYSTEM::MaxP; n3++) {
                             Array <int> inds(3);
                             inds[0] = k1;
                             inds[1] = k2;
@@ -87,19 +87,19 @@ void Branch::InitMomsInds(int MaxP) {
         for (int i = 0; i < 2; ++i)
             for (int j = 0; j < 2; ++j)
                 for (int k = 0; k < 2; ++k)
-                    for (int k1 = 0; k1 < MaxP; ++k1)
-                        for (int k2 = 0; k2 + k1 < MaxP; ++k2)
-                            for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
-                                for (int n1 = k1; n1 < globalSystem->MaxP; n1++)
-                                    for (int n2 = k2; n1 + n2 < globalSystem->MaxP; n2++)
-                                        for (int n3 = k3; n1 + n2 + n3 < globalSystem->MaxP; n3++) {
+                    for (int k1 = 0; k1 < SYSTEM::MaxP; ++k1)
+                        for (int k2 = 0; k2 + k1 < SYSTEM::MaxP; ++k2)
+                            for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3)
+                                for (int n1 = k1; n1 < SYSTEM::MaxP; n1++)
+                                    for (int n2 = k2; n1 + n2 < SYSTEM::MaxP; n2++)
+                                        for (int n3 = k3; n1 + n2 + n3 < SYSTEM::MaxP; n3++) {
                                             Branch::InheritMults[mlev][Node::Indxs[i][j][k]].push_back(Node::InhrtMlt[mlev][i][j][k][k1][k2][k3][n1][n2][n3]);
                                         }
     }
 
-    for (int k1 = 0; k1 < MaxP; ++k1)
-        for (int k2 = 0; k2 + k1 < MaxP; ++k2)
-            for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
+    for (int k1 = 0; k1 < SYSTEM::MaxP; ++k1)
+        for (int k2 = 0; k2 + k1 < SYSTEM::MaxP; ++k2)
+            for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3)
                 for (int n1 = 0; n1 <= k1; n1++)
                     for (int n2 = 0; n2 <= k2; n2++)
                         for (int n3 = 0; n3 <= k3; n3++) {
@@ -122,9 +122,9 @@ void Branch::InitMomsInds(int MaxP) {
         for (int i = 0; i < 2; ++i)
             for (int j = 0; j < 2; ++j)
                 for (int k = 0; k < 2; ++k)
-                    for (int k1 = 0; k1 < MaxP; ++k1)
-                        for (int k2 = 0; k2 + k1 < MaxP; ++k2)
-                            for (int k3 = 0; k3 + k2 + k1 < MaxP; ++k3)
+                    for (int k1 = 0; k1 < SYSTEM::MaxP; ++k1)
+                        for (int k2 = 0; k2 + k1 < SYSTEM::MaxP; ++k2)
+                            for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3)
                                 for (int n1 = 0; n1 <= k1; n1++)
                                     for (int n2 = 0; n2 <= k2; n2++)
                                         for (int n3 = 0; n3 <= k3; n3++) {
@@ -185,9 +185,9 @@ void Branch::vPassMmnts2Prnt() {
     if ((m > 0) && (HasLoad)) {
 #ifdef USE_ROLLED_LOOPS
 
-        for (int k1 = 0; k1 < globalSystem->MaxP; ++k1)
-            for (int k2 = 0; k2 + k1 < globalSystem->MaxP; ++k2)
-                for (int k3 = 0; k3 + k2 + k1 < globalSystem->MaxP; ++k3)
+        for (int k1 = 0; k1 < SYSTEM::MaxP; ++k1)
+            for (int k2 = 0; k2 + k1 < SYSTEM::MaxP; ++k2)
+                for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3)
                     for (int n1 = 0; n1 <= k1; n1++)
                         for (int n2 = 0; n2 <= k2; n2++)
                             for (int n3 = 0; n3 <= k3; n3++)
@@ -249,12 +249,12 @@ void Branch::GetVelField() {
 #endif
         for (int i = 0; i < 216; ++i)
             if (LinISB[i]) {
-                for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
-                    for (int n2 = 0; n1 + n2 < globalSystem->MaxP; ++n2)
-                        for (int n3 = 0; n1 + n2 + n3 < globalSystem->MaxP; ++n3)
-                            for (int k1 = n1; k1 < globalSystem->MaxP; ++k1)
-                                for (int k2 = n2; k1 + k2 < globalSystem->MaxP; ++k2)
-                                    for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; ++k3) {
+                for (int n1 = 0; n1 < SYSTEM::MaxP; ++n1)
+                    for (int n2 = 0; n1 + n2 < SYSTEM::MaxP; ++n2)
+                        for (int n3 = 0; n1 + n2 + n3 < SYSTEM::MaxP; ++n3)
+                            for (int k1 = n1; k1 < SYSTEM::MaxP; ++k1)
+                                for (int k2 = n2; k1 + k2 < SYSTEM::MaxP; ++k2)
+                                    for (int k3 = n3; k1 + k2 + k3 < SYSTEM::MaxP; ++k3) {
                                         VelField[n1][n2][n3] += VlFldMlt[n1][n2][n3][k1][k2][k3] * LinTlrCffts[m][indx][i][k1][k2][k3].Cross((static_cast<Branch*> (LinISB[i]))->Moments[k1 - n1][k2 - n2][k3 - n3]);
                                     }
             }
@@ -267,12 +267,12 @@ void Branch::InheritVField() {
 
 #ifdef USE_ROLLED_LOOPS
 
-        for (int n1 = 0; n1 < globalSystem->MaxP; ++n1)
-            for (int n2 = 0; n2 + n1 < globalSystem->MaxP; ++n2)
-                for (int n3 = 0; n3 + n2 + n1 < globalSystem->MaxP; ++n3)
-                    for (int k1 = n1; k1 < globalSystem->MaxP; k1++)
-                        for (int k2 = n2; k1 + k2 < globalSystem->MaxP; k2++) 
-                            for (int k3 = n3; k1 + k2 + k3 < globalSystem->MaxP; k3++) 
+        for (int n1 = 0; n1 < SYSTEM::MaxP; ++n1)
+            for (int n2 = 0; n2 + n1 < SYSTEM::MaxP; ++n2)
+                for (int n3 = 0; n3 + n2 + n1 < SYSTEM::MaxP; ++n3)
+                    for (int k1 = n1; k1 < SYSTEM::MaxP; k1++)
+                        for (int k2 = n2; k1 + k2 < SYSTEM::MaxP; k2++) 
+                            for (int k3 = n3; k1 + k2 + k3 < SYSTEM::MaxP; k3++) 
                                 VelField[n1][n2][n3] += Node::InhrtMlt[m][x][y][z][n1][n2][n3][k1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
 
 

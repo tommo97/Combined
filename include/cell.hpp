@@ -40,6 +40,10 @@ public:
 
     FVMCell(Node *parent, int i, int j, int k);
     
+    static Array <FVMCell*> AllCells;
+    
+    static Array < Array <Vect3> > CellDerivs0, CellDerivs1, CellDerivs;
+    
     static Array < Array <int> > MomentInds;
     
     static int MomentIndsSize;
@@ -50,9 +54,7 @@ public:
 
     NeighbSet <Vect3> FaceVels;
 
-    Array <Vect3> Deriv;
-
-    Vect3 srad, cfl, VelHold, OmegaHold;
+    Vect3  VelHold, OmegaHold;
     
     void AdvanceDt(REAL);
     
@@ -64,15 +66,15 @@ public:
 
     void GetISBGrads();
     
-    int age;
-    
 //    REAL Phi;                         // unused?
 
     Array <Vect3> VelGrads, VelGradsHold;
 
-    static void InitMomsInds(int MaxP);
+    static void InitMomsInds();
 
     void CheckActive();
+    
+    void NormaliseObliterate();
     
     void Reset(){};
 
@@ -107,7 +109,11 @@ public:
     
     void Stretch();
     
+    Vect3 Stretch(int);
+    
     void Diffuse();
+    
+    Vect3 Diffuse(int);
     
     void DiffuseX();
     
@@ -116,10 +122,6 @@ public:
     void DiffuseZ();
     
     Vect3 ReturnSpectralRadius();
-
-    void GetLaplacian();
-
-//    void GetVelTensor();
 
     void ReportSpectralRadius();
     
@@ -140,16 +142,16 @@ public:
     void ReList();
 
     void O1UW();
-
+    Vect3 O1UW(int);
     void O2UW();
+    Vect3 O2UW(int);
     void O2UWx();
     void O2UWy();
     void O2UWz();
-
+#ifdef USE_MUSCL
     void GetBEV();
-
     void MUSCL();
-
+#endif
 protected:
     virtual ~FVMCell();
 };

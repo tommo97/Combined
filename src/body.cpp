@@ -380,9 +380,9 @@ void BODY::SplitUpLinearAlgebra() {
         for (int j = 0; j < BODY::VortexPositions.size(); ++j)
             VWake += 1.0 * UTIL::globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
 
-        /*        for (int j = 0; j < globalOctree->AllCells.size(); ++j)
-                    VWake += 2.0*globalDirectVel(trg->CollocationPoint - globalOctree->AllCells[j]->Position,
-                        globalOctree->AllCells[j]->Omega);
+        /*        for (int j = 0; j < FVMCell::AllCells.size(); ++j)
+                    VWake += 2.0*globalDirectVel(trg->CollocationPoint - FVMCell::AllCells[j]->Position,
+                        FVMCell::AllCells[j]->Omega);
          */
         VWake += 1.0 * trg->Vfmm;
 
@@ -1471,7 +1471,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
 
 
     for (int i = 0; i < X.size(); ++i)
-        X[i] = globalSystem->GambitScale * X[i];
+        X[i] = SYSTEM::GambitScale * X[i];
 
     BODY::PointsAsRead = X;
     BODY::PanelsAsRead = PNLS;
@@ -1626,7 +1626,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
     cout << "%\t------------|" << endl;
     for (int i = 0; i < GROUPS.size(); ++i) {
 
-        //        ORIGIN *= GambitScale;
+        //        ORIGIN *= SYSTEM::GambitScale;
         cout << "%\t" << name << " " << rates << " " << cg << endl;
         cout << "%\tmaking body " << endl;
 

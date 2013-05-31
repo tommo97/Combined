@@ -9,7 +9,7 @@ load(fname,'GambitScale','Times','BodyRates0_x','BodyPointsX','BodyPointsY','Bod
 load(fname,'Time','XCG')
 
 scale = GambitScale;
-val = 6;
+val = 10;
 
 XCG = 0.0;%scale * Time * 10.0;
 THETA = Time * BodyRates0_x;

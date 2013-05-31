@@ -129,12 +129,12 @@ int main(int argc, char *argv[]) {
     
     SYSTEM System(0);
     //  Some default values
-    globalSystem->GambitScale = 50.0;
-    globalSystem->MaxP = 3;
-    globalSystem->Del2 = 0.001; // * globalSystem->GambitScale*globalSystem->GambitScale;
+    SYSTEM::GambitScale = 100.0;
+    SYSTEM::MaxP = 5;
+    globalSystem->Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.05; //     This gets changed according to the maximum kinematic velocity of the body(s)
-    globalSystem->h = 2;
+    SYSTEM::M4Radius_in_cells = 2;
     globalSystem->unscaledVinf = Vect3(0.0);
     globalSystem->NumSubSteps = 10;
 
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
     globalSystem->VortonOmegas.clear();
     
 #ifndef use_NCURSES
-    if (WRITE_TO_SCREEN) cout << "globalSystem->MaxP set to " << globalSystem->MaxP << "; dtInit " << globalSystem->dtInit << endl;
+    if (WRITE_TO_SCREEN) cout << "SYSTEM::MaxP set to " << SYSTEM::MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
     cout << "Number of cells: " << FVMCell::NumCells << endl;
     globalSystem->TimeStep();
@@ -497,11 +497,11 @@ void UTIL::PreAmble() {
         cout << "Enter displacement of neutral file origin in global frame as [3 x real]:" << endl;
         cin >> Disp[i].x >> Disp[i].y >> Disp[i].z;
         outstream << Disp[i] << endl;
-        Disp[i] = globalSystem->GambitScale * Disp[i];
+        Disp[i] = SYSTEM::GambitScale * Disp[i];
         cout << "Enter body CG position (i.e. centre of rotation) xcg ycg zcg as [3 x real]:" << endl;
         cin >> BODY::CGS[i].x >> BODY::CGS[i].y >> BODY::CGS[i].z;
         outstream << BODY::CGS[i] << endl;
-        BODY::CGS[i] = globalSystem->GambitScale * BODY::CGS[i];
+        BODY::CGS[i] = SYSTEM::GambitScale * BODY::CGS[i];
         cout << "Enter body CG translational velocity Vx Vy Vz as [3 x real]:" << endl;
         cin >> BODY::VELOCITY[i].x >> BODY::VELOCITY[i].y >> BODY::VELOCITY[i].z;
 
@@ -546,7 +546,7 @@ void UTIL::PreAmble() {
                 BODY::RATES[i] = rt * two_pi / 60.;
         }
 
-        BODY::VELOCITY[i] = globalSystem->GambitScale * BODY::VELOCITY[i];
+        BODY::VELOCITY[i] = SYSTEM::GambitScale * BODY::VELOCITY[i];
 
         if (useRevs) {
             Vect3 Om(fabs(BODY::RATES[BodyDatum - 1].x), fabs(BODY::RATES[BodyDatum - 1].y), fabs(BODY::RATES[BodyDatum - 1].z));

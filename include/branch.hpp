@@ -46,7 +46,7 @@ public:
     
     static Array < Array < Array <REAL> > > BinomMults, InheritMults;
     
-    static void InitMomsInds(int MaxP);
+    static void InitMomsInds();
     
     void PutInOctreeDownList();
     
