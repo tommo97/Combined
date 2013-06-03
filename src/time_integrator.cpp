@@ -326,7 +326,7 @@ void TIME_STEPPER::TimeAdvance() {
         for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
             FVMCell::CellDerivs[q][i] = FVMCell::AllCells[i]->O2UW(q);
             FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Stretch(q);
-            //FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Diffuse(q);
+            FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Diffuse(q);
         }
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -411,14 +411,15 @@ void TIME_STEPPER::time_loop() {
         }
 
         
-        dt = dt_prev = globalSystem->dtInit = cfl_lim/OmRMax;
-        
+        dt =  globalSystem->dtInit;// = cfl_lim/OmRMax;
+        dt_prev = cfl_lim/OmRMax;
         if (globalSystem->useBodies) {
             BODY::BodySubStep(globalSystem->dtInit, globalSystem->NumSubSteps);
             globalSystem->PutWakesInTree();
+            
         }
-        globalOctree->Reset();
         
+        globalOctree->Reset();
         globalOctree->GetVels();
         for (int i = 0; i < FVMCell::AllCells.size(); ++i)
             FVMCell::AllCells[i]->Velocity = Vect3(SYSTEM::GambitScale * globalSystem->unscaledVinf);
@@ -518,7 +519,7 @@ void TIME_STEPPER::time_step() {
         //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
         REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (OmRMax)); //
 
-        int nss = ceil(dt_euler / dt_lagrange);
+        int nss = (int) ceil(dt_euler / dt_lagrange);
 
 
         globalSystem->NumSubSteps = nss;
@@ -573,14 +574,3 @@ void TIME_STEPPER::Euler(FVMCell * cell) {
     }
 }
 
-/**************************************************************/
-void TIME_STEPPER::RK2(FVMCell * cell) {
-}
-
-/**************************************************************/
-void TIME_STEPPER::RK4(FVMCell * cell) {
-}
-
-/**************************************************************/
-void TIME_STEPPER::ABM4(FVMCell * cell) {
-}

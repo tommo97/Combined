@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "node.hpp"
 #include "types.hpp"
 #include "cell.hpp"
-unsigned long int FVMCell::NumCells = 0;
+int FVMCell::NumCells = 0;
 Array < Array <int> > FVMCell::MomentInds;
 int FVMCell::MomentIndsSize;
 Array < Array <REAL> > FVMCell::OffsetPows;
@@ -92,8 +92,7 @@ void FVMCell::InitMomsInds() {
 //    
 //    
     
-};
-
+}
 /**************************************************************/
 void FVMCell::Integrate() {
     globalTimeStepper->Integrate(this);   
@@ -286,17 +285,19 @@ void FVMCell::Report() {
 }
 
 /**************************************************************/
+// following prevents errors about unused parameters which are required to allow inheritance
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void FVMCell::vApplyRecursively(BranchFuncPtr down, FVMCellFuncPtr bottom, BranchFuncPtr up) {
     (this->*bottom)();
-    down = up = NULL;
 }
-
+ #pragma GCC diagnostic pop
 /**************************************************************/
+// following prevents errors about unused parameters which are required to allow inheritance
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void FVMCell::vApplyRecursivelyP(BranchFuncPtr down, FVMCellFuncPtr bottom, BranchFuncPtr up) {
     (this->*bottom)();
-    down = up = NULL;
 }
-
+ #pragma GCC diagnostic pop
 /**************************************************************/
 void FVMCell::SetVelsZero() {
     FaceVels = Velocity = Vect3(globalSystem->scaledVinf.x, globalSystem->scaledVinf.y, globalSystem->scaledVinf.z);
@@ -448,7 +449,6 @@ void FVMCell::vCollapseVField() {
                     for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3)
                         Velocity += Node::CllpsMlt[x][y][z][k1][k2][k3] * (static_cast<Branch*> (Parent))->VelField[k1][k2][k3];
 
-                REAL dxkn = 1;
                 for (k1 = 1; k1 < SYSTEM::MaxP; ++k1) {
                     for (int k2 = 0; k2 + k1 < SYSTEM::MaxP; ++k2) {
                         for (int k3 = 0; k3 + k2 + k1 < SYSTEM::MaxP; ++k3) {

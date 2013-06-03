@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "node.hpp"
 #include "cell.hpp"
 #include "vect34.hpp"
-unsigned long int Node::NumNodes = 0;
-unsigned long int Node::NodeCount = 0; 
+int Node::NumNodes = 0;
+int Node::NodeCount = 0; 
 int Node::MomentSize = 0;
 Array <Array <int> > Node::CellMomentIndex(3, Array <int> ());
 Array <Array <Array < Array < Array < Array < Array < Array <Array < Vect3 > > > > > > > > > Node::DirVelMultsX;
@@ -62,11 +62,12 @@ Node::~Node() {
         Parent->Children[x][y][z] = NULL;
     Node::NumNodes--;
     Trans.clear();
+    HasBeenDeleted = true;
 }
 
 /**************************************************************/
 Node::Node() : Parent(NULL), x(-1), y(-1), z(-1), m(0), indx(-1), ID(00), size(OCTREE_SIZE),
-SkipAdd2List(false), Neighb(NULL), HasLoad(false), toMonitor(false) {
+SkipAdd2List(false), HasLoad(false),  toMonitor(false), Neighb(NULL) {
     Neighb_Val.assign(SYSTEM::NumTransVars, &ZERO);
     Neighb_Neighb_Val.assign(SYSTEM::NumTransVars, &ZERO);
     TransVars.assign(SYSTEM::NumTransVars, Vect3());
@@ -77,12 +78,13 @@ SkipAdd2List(false), Neighb(NULL), HasLoad(false), toMonitor(false) {
     SetKidsNull();
     Node::NumNodes++;
     Trans.push_back(-1);
+    HasBeenDeleted = false;
 }
 
 /**************************************************************/
 Node::Node(Node *parent, int i, int j, int k) : Parent(parent), x(i), y(j), z(k), m(parent->m + 1),indx(Indxs[i][j][k]),
-ID(((((((parent->ID << 1) + i) << 1) + j) << 1) + k)), size(.5 * parent->size), SkipAdd2List(false),
-Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(NULL), HasLoad(false), toMonitor(false) {
+ID(((((((parent->ID << 1) + i) << 1) + j) << 1) + k)), size(.5 * parent->size), 
+Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), SkipAdd2List(false), HasLoad(false), toMonitor(false), Neighb(NULL) {
     Neighb_Val.assign(SYSTEM::NumTransVars, &ZERO);
     Neighb_Neighb_Val.assign(SYSTEM::NumTransVars, &ZERO);
     TransVars.assign(SYSTEM::NumTransVars, Vect3());
@@ -96,7 +98,7 @@ Position(parent->Position + .5 * Node::Offset[i][j][k] * parent->size), Neighb(N
 //    GetISA();
     Node::NumNodes++;
     skip_here.assign(globalSystem->NumThreads, false);
-
+    HasBeenDeleted = false;
 
 }
 /**************************************************************/
@@ -195,7 +197,7 @@ void Node::RemoveFromNeighbs() {
 
     for (int i = 0; i < 27; ++i)
         if (LinISA[i])
-            LinISA[i]->LinISA[ISARecipInds[i]] = NULL;
+            LinISA[i]->LinISA[Node::ISARecipInds[i]] = NULL;
 }
 
 /**************************************************************/
@@ -506,21 +508,15 @@ void Node::GetISA() {
             for (int j = 0, J = 2; j < 3; ++j, --J)
                 for (int k = 0, K = 2; k < 3; ++k, --K) {
                     if (!ISA[i][j][k]) {
-                        Vect3 tP = this->Position + Vect3((i - 1) * this->size, (j - 1) * this->size, (k - 1) * this->size);
-
-                        OctreeCapsule C(tP, Vect3(0, 0, 0), false);
-                        C.ptr2Node = NULL;
-                        C.checkExist = true;
-                        C.mLevForNodeCheck = this->m;
-                        globalOctree->Root->EvalCapsule(C);
-                        ISA[i][j][k] = LinISA[count] = C.ptr2Node; //ReturnNeighb(i, j, k);
-                    }
-                    if (LinISA[count]) {
-                        ISA[i][j][k]->ISA[I][J][K] = LinISA[count]->LinISA[Node::ISARecipInds[count]] = this;
+                        ISA[i][j][k] = ReturnNeighb(i, j, k);
+                        if (ISA[i][j][k]) {
+                            ISA[i][j][k]->ISA[I][J][K] = this;
+                            LinISA[count] = ISA[i][j][k];
+                            LinISA[count]->LinISA[Node::ISARecipInds[count]] = this;
+                        }
                     }
                     count++;
                 }
-
         Neighb.E = ISA[2][1][1];
         Neighb.W = ISA[0][1][1];
         Neighb.N = ISA[1][2][1];

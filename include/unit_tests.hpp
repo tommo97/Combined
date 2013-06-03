@@ -36,7 +36,7 @@ class TEST {
 public:
     static void TestFMM(int argc, char *argv[]);
     static void TestPanel();
-    static void SolveMatfileVels(string fname, int pmax, REAL del2);
+    static void SolveMatfileVels(string fname);
     static void TestBiotSavart();
     static void TestBEM();
     static void SimpleTestPanel();

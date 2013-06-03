@@ -700,6 +700,8 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 #endif
     REAL dt = delta_t / n_steps;
 
+    
+    
     BODY::CpHistoryAll.push_back(BODY::CpHistory);
     BODY::CpHistory = UTIL::zeros(n_steps, BODY::AllBodyFaces.size());
 
@@ -752,7 +754,6 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         }
 
         //  Sort Wake Convection
-
 
 
 
@@ -879,6 +880,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         BODY::AllBodyFaces[i]->PhiWakePrev = 0.0; //BODY::AllBodyFaces[i]->Phi;
         //        BODY::AllBodyFaces[i]->VWakePrev = BODY::AllBodyFaces[i]->VWake;
     }
+    
 #ifdef TIME_STEPS
     long unsigned int t12 = ticks();
     stringstream tmp;

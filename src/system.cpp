@@ -51,6 +51,8 @@ SYSTEM::SYSTEM(int NT) {
     unscaledVinf = scaledVinf;
     SYSTEM::MaxP = 3;
     DS = .3;
+    dtInit = 0.0;
+    NumSubSteps = 0;
     g = 9.80665; // m/s/s
     Temp = 288.15; //  Kelvin
     Rho = 1027; //1.226; //1027; //  Kg/m3

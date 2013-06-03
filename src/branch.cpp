@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 #include "branch.hpp"
-unsigned long int Branch::NumBranches = 0;
+int Branch::NumBranches = 0;
 Array < Array <int> > Branch::srcMomentInds, Branch::trgMomentInds;
 Array < Array < Array <REAL> > > Branch::BinomMults(OCTREE_LEVS);
 Array < Array <int> > Branch::srcInheritInds, Branch::trgInheritInds;
@@ -131,9 +131,7 @@ void Branch::InitMomsInds() {
                                             Branch::BinomMults[mlev][Node::Indxs[i][j][k]].push_back(Node::BinomMlt[mlev][i][j][k][k1][k2][k3][n1][n2][n3]);
                                         }
     }
-
-};
-
+}
 /**************************************************************/
 void Branch::BranchCount() {
     globalOctree->BranchCount[m]++;
@@ -241,10 +239,6 @@ void Branch::vEvalCapsule(OctreeCapsule &C) {
 
 /**************************************************************/
 void Branch::GetVelField() {
-    int tid = 0;
-#ifdef _OPENMP
-    tid = omp_get_thread_num();
-#endif
         for (int i = 0; i < 216; ++i)
             if (LinISB[i]) {
                 for (int n1 = 0; n1 < SYSTEM::MaxP; ++n1)

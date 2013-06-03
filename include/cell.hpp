@@ -50,7 +50,7 @@ public:
     
     static Array < Array <REAL> > OffsetPows;
     
-    static unsigned long int NumCells;
+    static int NumCells;
 
     NeighbSet <Vect3> FaceVels;
 

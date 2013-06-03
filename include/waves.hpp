@@ -67,7 +67,7 @@ public:
     
     void PiersonMoskowitz();
     
-    REAL getPhi2D(Vect3);
+//    REAL getPhi2D(Vect3);
     
     void SetPeakFreq(REAL in)
     {

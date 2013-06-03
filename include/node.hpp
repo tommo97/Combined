@@ -39,7 +39,7 @@ public:
 
     Node(Node *parent, int i, int j, int k);
     static Node *Root;
-    static unsigned long int NumNodes, NodeCount;
+    static int NumNodes, NodeCount;
     static int MomentSize;
     static Array <Array <int> > CellMomentIndex;
     static Array < Array <Array <REAL> > > CellMomentDisplacementPowers;
@@ -90,12 +90,13 @@ public:
     
     //  Node class definately needs
     Node *Parent;
-    int m, indx;
+    int x, y, z, m, indx;
     long unsigned int ID;
     REAL size;
+    Vect3 Position, Omega, Velocity, PanelVel;
     Array<bool> skip_here;
     bool SkipAdd2List;
-
+    bool HasBeenDeleted;
     bool HasLoad;
     bool toMonitor;
     Node *Children[2][2][2];
@@ -106,12 +107,9 @@ public:
     
     
     
-    //  Not really needed any more
-    int x, y, z;
     
     
     //   possibly devolve the following members solely to cells
-    Vect3 Position, Omega, Velocity, PanelVel;
     NeighbSet<Node*> Neighb;
 #ifdef USE_MUSCL
     Array<NeighbSet<Vect3> > BEV;

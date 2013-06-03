@@ -70,9 +70,6 @@ class TIME_STEPPER
         void boundary();
         void boundary_init(int);
         void Euler(FVMCell *);
-        void RK2(FVMCell *);
-        void RK4(FVMCell *);
-        void ABM4(FVMCell *);
         void Integrate(FVMCell *);
         void DoFMM();
         void TimeAdvance();

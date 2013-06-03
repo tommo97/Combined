@@ -38,7 +38,7 @@ public:
 
     Branch(Node *parent, int i, int j, int k);
     
-    static unsigned long int NumBranches;
+    static int NumBranches;
 
     static Array < Array <int> > srcMomentInds, trgMomentInds, srcInheritInds, trgInheritInds;
     

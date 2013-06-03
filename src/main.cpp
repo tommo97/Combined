@@ -48,6 +48,7 @@ inline bool srt_vect3 (Vect3 A, Vect3 B) {
 /**************************************************************/
 int main(int argc, char *argv[]) {
     system("clear");
+
     PANEL::Initialise();
     UTIL::GetCellPans();
 
@@ -79,10 +80,10 @@ int main(int argc, char *argv[]) {
     SYSTEM::MaxP = 3;
     globalSystem->Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
-    globalSystem->dtInit = 0.05; //     This gets changed according to the maximum kinematic velocity of the body(s)
+    globalSystem->dtInit = 0.01; //     This *maybe* gets changed according to the maximum kinematic velocity of the body(s)
     SYSTEM::M4Radius_in_cells = 2;
     globalSystem->unscaledVinf = Vect3(0.0);
-    globalSystem->NumSubSteps = 10;
+    globalSystem->NumSubSteps = 25;
 
 
     UTIL::cpu_t = ticks();
@@ -339,7 +340,7 @@ void UTIL::PreAmble() {
 
     stringstream outstream;
     int nSteps, nBodies, BodyDatum, IPKC, makeLog;
-    REAL nRevs, maxT, uinf, vinf, winf, rho;
+    REAL nRevs, maxT, rho;
     bool useRevs = false;
 
 

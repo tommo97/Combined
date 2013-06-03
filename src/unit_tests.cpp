@@ -194,7 +194,7 @@ void TEST::TestBEM() {
     Array <Array <Vect3> > Positions;
     Positions.push_back(SeedPoints);
     
-    REAL dt = 0.05, dlta = 1e-6;
+    REAL dt = 0.05;
     Array <Array <Array <REAL> > > PhiDs, PhiSs;
 
     for (int i = 0; i < 200; ++i) {
@@ -204,14 +204,18 @@ void TEST::TestBEM() {
             Vect3 Target = Posns[j];
             PhiDs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
             PhiSs.assign(3, Array < Array <REAL> > (3, Array < REAL > (3, 0.0)));
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
             for (int k = 0; k < BODY::Bodies[0]->Faces.size(); ++k) {
                 PANEL *src = &BODY::Bodies[0]->Faces[k];
                 //      The following are divided by 2 since they are the free space rather than the surface velocities
                 Vels[j] += src->Sigma * src->SourcePanelVelocity(Target) / 2.0;
                 Vels[j] -= src->Mu * src->DoubletPanelVelocity(Target) / 2.0;
             }
-            #pragma omp parallel for
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
             for (int k = 0; k < BODY::Bodies[0]->ProtoWakes[0].size(); ++k) {
                 PANEL *src = &BODY::Bodies[0]->ProtoWakes[0][k];
                 //      The following are divided by 2 since they are the free space rather than the surface velocities
@@ -440,15 +444,6 @@ void TEST::TestPanel() {
     REAL PhiSourceDirect = 0.0;
     int npts = 500;
     {
-        REAL Us = 0;
-        REAL Vs = 0;
-        REAL Ws = 0;
-        
-        REAL Ud = 0;
-        REAL Vd = 0;
-        REAL Wd = 0;
-        
-        
         int n = npts;
         Array < Array < Vect3 > > CP;
         Array < Array < Vect3 > > N;
@@ -456,7 +451,6 @@ void TEST::TestPanel() {
         src->DivPanel(n, CP, N, A);
 
 
-        REAL PhiSource = 0.0;
 
         for (int i = 0; i < n; ++i)
             for (int j = 0; j < n; ++j) {
@@ -521,18 +515,18 @@ void TEST::TestPanel() {
 
     for (int i = 0; i < daPans.size(); ++i) {
 
-        PANEL *src = &daPans[i];
-        src->GetNormal();
-        src->GetEdgeInfo();
-        src->Gamma = src->Mu = src->Sigma = 1.0;
+        PANEL *tmp = &daPans[i];
+        tmp->GetNormal();
+        tmp->GetEdgeInfo();
+        tmp->Gamma = tmp->Mu = tmp->Sigma = 1.0;
 
-        VDTarget += src->VortexPanelVelocity(Target);
-        VSTarget += src->SourceVel(Target);
+        VDTarget += tmp->VortexPanelVelocity(Target);
+        VSTarget += tmp->SourceVel(Target);
 
         for (int I = -1; I < 2; ++I)
             for (int J = -1; J < 2; ++J)
                 for (int K = -1; K < 2; ++K)
-                    PANEL::SourceDoubletPotential(src, Target + Vect3(I * dlta, J * dlta, K * dlta), PhiDs[I + 1][J + 1][K + 1], PhiSs[I + 1][J + 1][K + 1], 1, 2);
+                    PANEL::SourceDoubletPotential(tmp, Target + Vect3(I * dlta, J * dlta, K * dlta), PhiDs[I + 1][J + 1][K + 1], PhiSs[I + 1][J + 1][K + 1], 1, 2);
 
     }
 
@@ -601,10 +595,6 @@ void TEST::TestPanel() {
         REAL z = 100.0 * (0.5 - REAL(rand()) / REAL(RAND_MAX));
         Targets[i] = Vect3(x, y, z);
     }
-
-    REAL tmp;
-
-
 
 
     // Test to see if it is quicker to calculate velocities or potentials at what would be cell centroids
@@ -857,7 +847,7 @@ void TEST::TestBiotSavart()
         
     
 }
-void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
+void TEST::SolveMatfileVels(string fname) {
 
     system("clear");
 
@@ -873,6 +863,7 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
     getline(cin, fname);
     string varname = "Posns";
     int err = UTIL::readmat(fname, varname, data, dims, true);
+    cout << "return flag - " << err << endl;
     int numel = dims[0], count = 0;
     Posns.allocate(numel);
     Vect3 Mins(1e32), Maxs(-1e32);
@@ -919,7 +910,7 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
 
 
 
-    Array <Vect3> ActiveP(activeCount), ActiveO(activeCount);
+    Array <Vect3> ActiveP((int) activeCount), ActiveO((int) activeCount);
     count = 0;
     for (int i = 0; i < Posns.size(); ++i)
         if (isActive[i]) {
@@ -1052,7 +1043,9 @@ void TEST::SolveMatfileVels(string fname, int pmax, REAL del2) {
     
     
 //    
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i = 0; i < n; ++i){
         for (int j = 0; j < n; ++j)
             DirVels[i] += UTIL::globalDirectVel(Posns[j] - Posns[i], Omegas[j]) ;
@@ -1282,7 +1275,7 @@ void TEST::TestFMM(int argc, char *argv[]) {
             
             //  Get the side length of the cube
             REAL l = pow(REAL(n),1./3.);
-            int nl = ceil(l);
+            int nl = (int) ceil(l);
             cout << "Number of cells in cube " << nl << "^3 = " << nl*nl*nl << endl;
             
             if (round((REAL)nl/2.0)!=(REAL)nl/2.0){
@@ -1383,8 +1376,8 @@ void TEST::TestFMM(int argc, char *argv[]) {
             cout << "sparse ";
             int S = 1;
             while (FVMCell::NumCells < n) {
-                REAL phi = asin(2 * REAL(rand()) / RAND_MAX - 1);
-                REAL theta = 2 * pi * REAL(rand()) / RAND_MAX;
+                //REAL phi = asin(2 * REAL(rand()) / RAND_MAX - 1);
+                //REAL theta = 2 * pi * REAL(rand()) / RAND_MAX;
                 REAL x = rho * (0.5 - REAL(rand()) / RAND_MAX);
                 REAL y = rho * (0.5 - REAL(rand()) / RAND_MAX);
                 REAL z = rho * (0.5 - REAL(rand()) / RAND_MAX);
@@ -1634,7 +1627,9 @@ void TEST::TestFMM(int argc, char *argv[]) {
     Array < Array <Vect3> > DirectVelGrads(Indices.size(), Array <Vect3> (3, Vect3(0.0))), NumVelGradients(Indices.size(), Array <Vect3> (3, Vect3(0.0)));;
 
     REAL t2 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i = 0; i < Indices.size(); ++i) {
         Vect3 V(0, 0, 0);
 
@@ -1705,12 +1700,12 @@ void TEST::TestFMM(int argc, char *argv[]) {
 
     }
 
-
+    /*
     REAL AbsErrsStd = sqrt(AbsErrsSum2 / (Posns.size() - 1));
     REAL RelErrsStd = sqrt(RelErrsSum2 / (Posns.size() - 1));
     REAL AbsErrsMean = AbsErrsSum / Posns.size();
     REAL RelErrsMean = RelErrsSum / Posns.size();
-
+    */
     int TreeSize = OCTREE_SIZE;
     int TreeLevs = OCTREE_LEVS;
     Vmean = Vmean / n;
@@ -1744,7 +1739,7 @@ void TEST::TestBulkLoader(int n)
     Array <Vect3> Posns, Omegas;
             //  Get the side length of the cube
             REAL l = pow(REAL(n),1./3.);
-            int nl = ceil(l);
+            int nl = (int) ceil(l);
             cout << "Number of cells in cube " << nl << "^3 = " << nl*nl*nl << endl;
             
             if (round((REAL)nl/2.0)!=(REAL)nl/2.0){
