@@ -52,7 +52,7 @@ using namespace std;
 #define NX 300
 #define NY 300
 //  Disables bounds checking in Array class... use with caution. Make sure code runs, and doesn't change...
-//#define ARRAY_NO_CHECK
+#define ARRAY_NO_CHECK
 //#define USE_ROLLED_LOOPS
 
 //  Some simulation parameters
@@ -298,19 +298,21 @@ class POINT
 class OctreeCapsule
 {
 public:
-    int S, AssociatedBody;
+    int S, AssociatedBody, mLevForNodeCheck;
     Vect3 Position, Omega, tPosition, Velocity;
     Vect3 *Ptr2CellVelocity, *Ptr2CellPosition;
 
-    bool has_load, IP, toMonitor;
+    bool has_load, IP, toMonitor, checkExist;
+    
+    Node* ptr2Node;
 
-    OctreeCapsule() : S(OCTREE_SIZE / 2), has_load(false), IP(false), toMonitor(false) {
+    OctreeCapsule() : S(OCTREE_SIZE / 2), mLevForNodeCheck (-1), has_load(false), IP(false), toMonitor(false), checkExist(false), ptr2Node(NULL) {
     };
 
-    OctreeCapsule(Vect3 P, Vect3 O, bool t) : S(OCTREE_SIZE / 2), Position(P), Omega(O), tPosition(P), has_load(t), IP(false), toMonitor(false) {
+    OctreeCapsule(Vect3 P, Vect3 O, bool t) : S(OCTREE_SIZE / 2), mLevForNodeCheck (-1),  Position(P), Omega(O), tPosition(P), has_load(t), IP(false), toMonitor(false), checkExist(false), ptr2Node(NULL) {
     };
 
-    OctreeCapsule(const OctreeCapsule &A) : S(A.S), Position(A.Position), Omega(A.Omega), tPosition(A.tPosition), has_load(A.has_load), IP(A.IP), toMonitor(A.toMonitor) {
+    OctreeCapsule(const OctreeCapsule &A) : S(A.S), mLevForNodeCheck (A.mLevForNodeCheck),  Position(A.Position), Omega(A.Omega), tPosition(A.tPosition), has_load(A.has_load), IP(A.IP), toMonitor(A.toMonitor), checkExist(A.checkExist),  ptr2Node(A.ptr2Node) {
     }
     inline bool operator>(const OctreeCapsule B) {
         return Position > B.Position;

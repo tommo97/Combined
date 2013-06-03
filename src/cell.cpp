@@ -205,16 +205,15 @@ void FVMCell::ImageToIO() {
 
 /**************************************************************/
 void FVMCell::vEvalCapsule(OctreeCapsule &C) {
-    if (C.IP)
-        CollapseToIP(C);
-    
-    if (C.toMonitor){
-        C.Ptr2CellVelocity = &Velocity;
-        C.Ptr2CellPosition = &Position;
-    }
+        if (C.IP)
+            CollapseToIP(C);
 
-    if (C.has_load) TransVars[C.AssociatedBody] += C.Omega;
+        if (C.toMonitor) {
+            C.Ptr2CellVelocity = &Velocity;
+            C.Ptr2CellPosition = &Position;
+        }
 
+        if (C.has_load) TransVars[C.AssociatedBody] += C.Omega;
 }
 
 /**************************************************************/
@@ -701,36 +700,36 @@ Vect3 FVMCell::Stretch(int q) {
 void FVMCell::Diffuse() {
 
     for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
-        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
-        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
+        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12.;
+        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12.;
 
-        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12;
-        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12;
+        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12.;
+        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12.;
 
-        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
-        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
+        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12.;
+        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12.;
         Vect3 ViscDeriv = globalSystem->Nu * ((de - dw) + (dn - ds) + (dt - db));
         TransDerivs[q] = ViscDeriv;
     }
 }
 /**************************************************************/
 Vect3 FVMCell::Diffuse(int q) {
-        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
-        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
+        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12.;
+        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12.;
 
-        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12;
-        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12;
+        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12.;
+        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12.;
 
-        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
-        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
+        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12.;
+        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12.;
         return globalSystem->Nu * ((de - dw) + (dn - ds) + (dt - db));
 }
 /**************************************************************/
 void FVMCell::DiffuseX() {
 
     for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
-        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12;
-        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12;
+        Vect3 dw = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].W)) - ((*Neighb_Val[q].E) + TransVars[q] - (*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / 12.;
+        Vect3 de = (4. / 3.)*((*Neighb_Val[q].E) - TransVars[q]) - ((*Neighb_Neighb_Val[q].E) + (*Neighb_Val[q].E) - TransVars[q] - (*Neighb_Val[q].W)) / 12.;
         Vect3 ViscDeriv = globalSystem->Nu * ((de - dw));
         TransDerivs[q] = ViscDeriv;
     }
@@ -740,8 +739,8 @@ void FVMCell::DiffuseX() {
 void FVMCell::DiffuseY() {
 
     for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
-        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12;
-        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12;
+        Vect3 ds = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].S)) - ((*Neighb_Val[q].N) + TransVars[q] - (*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / 12.;
+        Vect3 dn = (4. / 3.)*((*Neighb_Val[q].N) - TransVars[q]) - ((*Neighb_Neighb_Val[q].N) + (*Neighb_Val[q].N) - TransVars[q] - (*Neighb_Val[q].S)) / 12.;
         Vect3 ViscDeriv = globalSystem->Nu * ((dn - ds));
         TransDerivs[q] = ViscDeriv;
     }
@@ -751,8 +750,8 @@ void FVMCell::DiffuseY() {
 void FVMCell::DiffuseZ() {
 
     for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
-        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12;
-        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12;
+        Vect3 db = (4. / 3.)*(TransVars[q] - (*Neighb_Val[q].B)) - ((*Neighb_Val[q].T) + TransVars[q] - (*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / 12.;
+        Vect3 dt = (4. / 3.)*((*Neighb_Val[q].T) - TransVars[q]) - ((*Neighb_Neighb_Val[q].T) + (*Neighb_Val[q].T) - TransVars[q] - (*Neighb_Val[q].B)) / 12.;
         Vect3 ViscDeriv = globalSystem->Nu * ((dt - db));
         TransDerivs[q] = ViscDeriv;
     }

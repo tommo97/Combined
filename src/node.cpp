@@ -499,56 +499,36 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 
 /**************************************************************/
 void Node::GetISA() {
-    
-    
-    if (m > 0)
-    {
-        int count = 0;
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j)
-                for (int k = 0; k < 3; ++k){
-                    if (!LinISA[count])
-                        LinISA[count] = ReturnNeighb(i, j, k);
-                    if (LinISA[count])
-                        LinISA[count]->LinISA[Node::ISARecipInds[count]] = this;
-                    count ++;
-                }
-        
-        
-        
-    }
-    
-    
-    
-    
-    
-    
-    
     ISA[1][1][1] = this;
     if (m > 0) {
+        int count = 0;
         for (int i = 0, I = 2; i < 3; ++i, --I)
             for (int j = 0, J = 2; j < 3; ++j, --J)
                 for (int k = 0, K = 2; k < 3; ++k, --K) {
                     if (!ISA[i][j][k]) {
-                        ISA[i][j][k] = ReturnNeighb(i, j, k);
-                        if (ISA[i][j][k])
-                            ISA[i][j][k]->ISA[I][J][K] = this;
+                        Vect3 tP = this->Position + Vect3((i - 1) * this->size, (j - 1) * this->size, (k - 1) * this->size);
+
+                        OctreeCapsule C(tP, Vect3(0, 0, 0), false);
+                        C.ptr2Node = NULL;
+                        C.checkExist = true;
+                        C.mLevForNodeCheck = this->m;
+                        globalOctree->Root->EvalCapsule(C);
+                        ISA[i][j][k] = LinISA[count] = C.ptr2Node; //ReturnNeighb(i, j, k);
                     }
+                    if (LinISA[count]) {
+                        ISA[i][j][k]->ISA[I][J][K] = LinISA[count]->LinISA[Node::ISARecipInds[count]] = this;
+                    }
+                    count++;
                 }
+
         Neighb.E = ISA[2][1][1];
         Neighb.W = ISA[0][1][1];
         Neighb.N = ISA[1][2][1];
         Neighb.S = ISA[1][0][1];
         Neighb.T = ISA[1][1][2];
         Neighb.B = ISA[1][1][0];
-      
-//    Neighb.E = ReturnNeighb(2, 1, 1);
-//    Neighb.W = ReturnNeighb(0, 1, 1);
-//    Neighb.N = ReturnNeighb(1, 2, 1);
-//    Neighb.S = ReturnNeighb(1, 0, 1);
-//    Neighb.T = ReturnNeighb(1, 1, 2);
-//    Neighb.B = ReturnNeighb(1, 1, 0);
-        }
+
+    }
     for (int i = 0; i < 6; ++i) {
         if (Neighb[i]) {
             Neighb[i]->Neighb[Op[i]] = this;
@@ -600,8 +580,8 @@ Node* Node::ReturnNeighb(int i, int j, int k) {
     else if (k == 2) Trans2Neighb(v, 4);
     if (v[0] != -1) return NULL;
 #ifndef USE_ARRAY
-    Array <int> temp;
-    for (int i = 1; i < v.size(); ++i) temp.push_back(v[i]);
+    Array <int> temp(v.size() - 1);
+    for (int i = 1; i < v.size(); ++i) temp[i-1] = v[i];
     v = temp;
 #else
     v.pop_front();
@@ -632,8 +612,8 @@ Node* Node::MoveDownTree(Array <int> &Directions) {
     if (ind == -1) return NULL;
     if (Directions.size() > 1) {
 #ifndef USE_ARRAY
-        Array <int> temp;
-        for (int i = 1; i < Directions.size(); ++i) temp.push_back(Directions[i]);
+        Array <int> temp(Directions.size() - 1);
+        for (int i = 1; i < v.size(); ++i) temp[i - 1] = Directions[i];
         Directions = temp;
 #else
         Directions.pop_front();
@@ -649,11 +629,15 @@ Node* Node::MoveDownTree(Array <int> &Directions) {
 
 /**************************************************************/
 void Node::EvalCapsule(OctreeCapsule &c) {
-    if (c.has_load) {
-        HasLoad = true;
-        Omega += c.Omega;
+    if ((c.checkExist) && (c.mLevForNodeCheck == this->m))
+        c.ptr2Node = this;
+    else {
+        if (c.has_load) {
+            HasLoad = true;
+            Omega += c.Omega;
+        }
+        vEvalCapsule(c);
     }
-    vEvalCapsule(c);
 }
 
 /**************************************************************/

@@ -205,22 +205,18 @@ void Branch::vPassMmnts2Prnt() {
     }
 
 }
+
 /**************************************************************/
 void Branch::vEvalCapsule(OctreeCapsule &C) {
 
     C.S /= 2;
     int i = (int) (C.Position.x > 0), j = (int) (C.Position.y > 0), k = (int) (C.Position.z > 0);
 
-    if (C.has_load)
-        HasLoad = true;
-
-    Omega += C.Omega;
-
     C.Position.x -= C.S * (2 * i - 1);
     C.Position.y -= C.S * (2 * j - 1);
     C.Position.z -= C.S * (2 * k - 1);
 
-    if (!Children[i][j][k]) {
+    if ((!Children[i][j][k]) && (!C.checkExist)) {
         if (C.S > 0) {
             Branch *child = new Branch(this, i, j, k);
             Children[i][j][k] = child;
@@ -237,8 +233,10 @@ void Branch::vEvalCapsule(OctreeCapsule &C) {
             Children[i][j][k]->toMonitor = true;
         // the above line means that if the branch/cell is being made by a monitoring OctreeCapsule, then it can safely be deleted without affecting the FVM/FMM calcs....
     }
+    
+    if (Children[i][j][k])
+        Children[i][j][k]->EvalCapsule(C);
 
-    Children[i][j][k]->EvalCapsule(C);
 }
 
 /**************************************************************/
