@@ -716,7 +716,7 @@ void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName) {
     }
     UTIL::WriteMATLABMatrix1D("Del2", fname, globalSystem->Del2);
     UTIL::WriteMATLABMatrix1D("h", fname, SYSTEM::M4Radius_in_cells);
-    UTIL::WriteMATLABMatrix1D("SYSTEM::GambitScale", fname, SYSTEM::GambitScale);
+    UTIL::WriteMATLABMatrix1D("GambitScale", fname, SYSTEM::GambitScale);
     UTIL::WriteMATLABMatrix1D("MaxP", fname, SYSTEM::MaxP);
     UTIL::WriteMATLABMatrix1D("KinematicViscosity", fname, globalSystem->Nu);
     UTIL::WriteMATLABMatrix1D("LastFVMDeltaT", fname, globalTimeStepper->dt);
