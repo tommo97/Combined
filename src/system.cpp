@@ -204,6 +204,10 @@ void SYSTEM::PutWakesInTree() {
 #ifdef TIME_STEPS
     long unsigned int t1 = ticks();
 #endif
+    
+    REAL SpinUpCoefft = min(0.1 + TIME_STEPPER::SimTime / TIME_STEPPER::SpinUpTime, 1.0);
+    
+    
     int Num2Insert = 0, Num2Keep = 0;
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
@@ -308,7 +312,7 @@ void SYSTEM::PutWakesInTree() {
     Array <OctreeCapsule> Test(Xs.size());
 
     for (int i = 0; i < Test.size(); ++i) {
-        Test[i] = OctreeCapsule(Xs[i], 1.0 * Oms[i], true);
+        Test[i] = OctreeCapsule(Xs[i], SpinUpCoefft * Oms[i], true);
         Test[i].AssociatedBody = Owners[i];
     }
 

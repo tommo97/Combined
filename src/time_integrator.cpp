@@ -29,6 +29,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 REAL TIME_STEPPER::MaxTime = 0;
 REAL TIME_STEPPER::SimTime = 0;
 REAL TIME_STEPPER::SubStepTime = 0;
+REAL TIME_STEPPER::SpinUpMult = 0;
+REAL TIME_STEPPER::SpinUpTime = 2.5;
 int TIME_STEPPER::RKStep = 0;
 bool TIME_STEPPER::RK2Mode = false;
 

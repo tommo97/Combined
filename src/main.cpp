@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
    
 
     
-    
+    TIME_STEPPER::SpinUpTime = 2.5; // time over which starting vortices are linearly damped
     SYSTEM System(0);
     //  Some default values
     SYSTEM::GambitScale = 50.0;
