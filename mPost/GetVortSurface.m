@@ -1,5 +1,5 @@
 clear all; clear mex; clc;
-files = dir('RunData*0.mat');
+files = dir('RunData*1.mat');
 close all
 figure
 set(gcf,'Color',[1,1,1],'Renderer','OpenGL');
@@ -8,7 +8,7 @@ fname = files(s).name;
 load(fname,'GambitScale','Times','BodyRates0_x','BodyPointsX','BodyPointsY','BodyPointsZ')
 load(fname,'Time','XCG')
 
-scale = 50;
+scale = GambitScale;
 val = 10;
 
 XCG = 0.0;%scale * Time * 10.0;

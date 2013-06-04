@@ -1,4 +1,4 @@
-function [] = writeVTK(vol,vtkfile,spacing)
+function [] = writeVTK(vol,vtkfile,spacing,origin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Usage: writeVTK(vol,vtkfile)
 %
@@ -27,7 +27,7 @@ fprintf(fid, '%s\n', 'created by writeVTK (Matlab implementation by Erik Vidholm
 fprintf(fid, '%s\n', 'BINARY');  
 fprintf(fid, '%s\n', 'DATASET STRUCTURED_POINTS');  
 fprintf(fid, '%s%d%c%d%c%d\n', 'DIMENSIONS ', X, ' ', Y, ' ', Z);
-fprintf(fid, '%s%f%c%f%c%f\n', 'ORIGIN ', 0.0, ' ', 0.0, ' ', 0.0); 
+fprintf(fid, '%s%f%c%f%c%f\n', 'ORIGIN ', origin(1), ' ', origin(2), ' ', origin(3)); 
 fprintf(fid, '%s%f%c%f%c%f\n', 'SPACING ', spacing, ' ', spacing, ' ', spacing); 
 fprintf(fid, '%s%d\n', 'POINT_DATA ', X*Y*Z);
 
