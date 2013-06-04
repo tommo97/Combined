@@ -731,11 +731,7 @@ void SYSTEM::WriteData() {
     Array < Vect3 > CellPos(FVMCell::AllCells.size(), Vect3(0.0));
     Array < Vect3 > CellOms(FVMCell::AllCells.size(), Vect3(0.0));
     Array < Vect3 > CellVel(FVMCell::AllCells.size(), Vect3(0.0));
-    Array < Vect3 > CellCFL(FVMCell::AllCells.size(), Vect3(0.0));
-    Array < Vect3 > CellConvDeriv(FVMCell::AllCells.size(), Vect3(0.0));
-    Array < Vect3 > CellTiltDeriv(FVMCell::AllCells.size(), Vect3(0.0));
-    Array < Vect3 > CellViscDeriv(FVMCell::AllCells.size(), Vect3(0.0));
-    Array < Vect3 > CellArtDeriv(FVMCell::AllCells.size(), Vect3(0.0));
+
     for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
         CellPos[i] = FVMCell::AllCells[i]->Position + Vect3(0.5, 0.5, 0.5);
         CellOms[i] = FVMCell::AllCells[i]->Omega;
@@ -753,18 +749,6 @@ void SYSTEM::WriteData() {
     Output.Vect1DArrays.push_back(CellVel);
     Output.Vect1DArrayStrings.push_back(string("CellVel"));
 
-    Output.Vect1DArrays.push_back(CellConvDeriv);
-    Output.Vect1DArrayStrings.push_back(string("CellConvDeriv"));
-
-    Output.Vect1DArrays.push_back(CellTiltDeriv);
-    Output.Vect1DArrayStrings.push_back(string("CellTiltDeriv"));
-
-    Output.Vect1DArrays.push_back(CellViscDeriv);
-    Output.Vect1DArrayStrings.push_back(string("CellViscDeriv"));
-
-    Output.Vect1DArrays.push_back(CellArtDeriv);
-    Output.Vect1DArrayStrings.push_back(string("CellArtDeriv"));
-
     Output.Vect2DArrays.push_back(TransVars);
     Output.Vect2DArrayStrings.push_back(string("TransVars"));
 
@@ -781,9 +765,11 @@ void SYSTEM::WriteData() {
     if (globalSystem->useBodies) {
         Output.Double2DArrays.push_back(BODY::CpHistoryAll);
         Output.Double2DArrayStrings.push_back(string("CpHistoryAll"));
+        BODY::CpHistoryAll.clear();
 
         Output.Double2DArrays.push_back(BODY::CpHistoryAllD);
         Output.Double2DArrayStrings.push_back(string("CpHistoryAllD"));
+        BODY::CpHistoryAllD.clear();
 
         Output.Double1DArrays.push_back(BODY::SubTIMES);
         Output.Double1DArrayStrings.push_back(string("SubTimes"));

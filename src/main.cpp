@@ -136,8 +136,8 @@ void UTIL::PostAmble(string fname) {
     Array <REAL> Mus, Sigmas, PWGammas, CPs, TPrev, Cloc, Rloc, Areas;
     Array <Vect3> Centroids, VCentroids;
     for (int i = 0; i < BODY::Bodies.size(); ++i) {
-
-
+        UTIL::WriteMATLABMatrix1DVect3("BodyCG" + UTIL::toString(i),fname, BODY::Bodies[i]->CG);
+        UTIL::WriteMATLABMatrix1DVect3("BodyVel" + UTIL::toString(i),fname, BODY::Bodies[i]->Velocity);
         UTIL::WriteMATLABMatrix1DVect3("EulerAngles" + UTIL::toString(i), fname, BODY::Bodies[i]->EulerAngles);
         UTIL::WriteMATLABMatrix1DVect3("TRANS1_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[0]);
         UTIL::WriteMATLABMatrix1DVect3("TRANS2_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[1]);
