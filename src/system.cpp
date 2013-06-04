@@ -207,7 +207,7 @@ void SYSTEM::PutWakesInTree() {
     
     REAL SpinUpCoefft = min(TIME_STEPPER::SimTime / TIME_STEPPER::SpinUpTime, 1.0);
     
-    
+    //cout << SpinUpCoefft << endl;    
     int Num2Insert = 0, Num2Keep = 0;
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
@@ -350,7 +350,6 @@ void SYSTEM::PutWakesInTree() {
     //        globalOctree->Root->EvalCapsule(unique_data[i]);
     //    }
     //    cout << "I2 " << globalIO->ReturnMemPercent() << endl;
-
 
 
     BODY::VortexPositions = XtoKeep;

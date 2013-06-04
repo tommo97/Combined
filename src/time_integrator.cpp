@@ -501,7 +501,7 @@ void TIME_STEPPER::time_step() {
             dt = 1.05 * dt_prev;
     }
         
-       
+    dt_euler = dt; 
     
 //    dt = min(dt_euler,4.*cfl_lim/OmRMax);       // the maximum distance allowable by any body part is 4 cells...
 //  dt = min(dt_euler,cfl_lim/OmRMax);      
@@ -522,7 +522,7 @@ void TIME_STEPPER::time_step() {
         REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (OmRMax)); //
 
         int nss = (int) ceil(dt_euler / dt_lagrange);
-
+        //cout << dt_lagrange << " " << nss << " " << dt_euler << " " << cfl_lim << " " << OmRMax <<  endl;
 
         globalSystem->NumSubSteps = nss;
     }
