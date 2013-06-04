@@ -56,7 +56,7 @@ SYSTEM::SYSTEM(int NT) {
     g = 9.80665; // m/s/s
     Temp = 288.15; //  Kelvin
     Rho = 1027; //1.226; //1027; //  Kg/m3
-    Mu = 1e-1; //(sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity kg/ms
+    Mu = 1.5e-3; //(sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity
     SYSTEM::GambitScale = 1;
     NumThreads = 1;
 #ifdef _OPENMP
@@ -81,7 +81,7 @@ void SYSTEM::Initialise() {
 
     useFMM = true;
     scaledVinf = unscaledVinf*SYSTEM::GambitScale;
-    Nu = SYSTEM::GambitScale * SYSTEM::GambitScale * Mu / Rho;
+    Nu = SYSTEM::GambitScale * SYSTEM::GambitScale * Mu / Rho; // <- this is Reynolds scaling, for constant rho
     globalTimeStepper = new TIME_STEPPER();
 
     if (globalSystem->useBodies)
