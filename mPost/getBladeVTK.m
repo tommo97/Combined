@@ -1,7 +1,7 @@
 clear all
 close all
 clc
-fname = 'RunData_000000.mat';
+fname = 'RunData_000002.mat';
 load(fname,'CellPos','CellOms','GambitScale');
 Origin = min(CellPos)/GambitScale;
 
@@ -21,7 +21,7 @@ inds = sub2ind(size(Domain),subs(:,1),subs(:,2),subs(:,3));
 
 Domain(inds) = sqrt(CellOms(:,1).^2 + CellOms(:,2).^2 + CellOms(:,3).^2);
 
-writeVTK(Domain,'Wake50_1sec.full.vtk',1/GambitScale,Origin);
+writeVTK(Domain,'Wake100_3sec.full.vtk',1/GambitScale,Origin);
 load(fname,'Cp','NParts','AllBodyPoints_x','AllBodyPoints_y','AllBodyPoints_z');
  i = 1;
 eval(['load(fname,''TRANS1_' num2str(i-1) '_x'');']);
@@ -40,6 +40,7 @@ eval(['TRANS = [TRANS1_' num2str(i-1) '_x TRANS2_' num2str(i-1) '_x TRANS3_' num
 
 
 for i = 1:NParts
+    tic
     eval(['load(fname,''BodyMainPointIDS' num2str(i-1) ''')']);
     eval(['load(fname,''BodySurface' num2str(i-1) ''')']);
     Cps = eval(['Cp(BodySurface' num2str(i-1) ')']);

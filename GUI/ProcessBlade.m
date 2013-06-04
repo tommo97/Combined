@@ -242,15 +242,17 @@ chords(:) = interp1(Blade.Radius,Blade.Chord,UpperS.y(:),'cubic','extrap');
 CircLower.z = -repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]);
 CircUpper.z = repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]) ;
 
-
-UpperS.x = sweeps + chords.*(UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
+tx = (UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
+tz = (UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas)) - 0.0414;
+UpperS.x = sweeps + chords.*tx;
 UpperS.y = UpperS.y;
-UpperS.z = chords.*(UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas) - 0.0414);
+UpperS.z = chords.*tz;
 
-
-LowerS.x = sweeps + chords.*(LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
+tx = (LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
+tz = (LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas)) - 0.0414;
+LowerS.x = sweeps + chords.*tx;
 LowerS.y = LowerS.y;
-LowerS.z = chords.*(LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas) - 0.0414);
+LowerS.z = chords.*tz;
 
 if Blade.isNREL || Blade.isSOTON
     Blade.CircSection = zeros(size(Blade.TransitionPiece));
