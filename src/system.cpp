@@ -205,7 +205,7 @@ void SYSTEM::PutWakesInTree() {
     long unsigned int t1 = ticks();
 #endif
     
-    REAL SpinUpCoefft = min(0.1 + TIME_STEPPER::SimTime / TIME_STEPPER::SpinUpTime, 1.0);
+    REAL SpinUpCoefft = min(TIME_STEPPER::SimTime / TIME_STEPPER::SpinUpTime, 1.0);
     
     
     int Num2Insert = 0, Num2Keep = 0;
