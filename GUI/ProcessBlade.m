@@ -415,10 +415,10 @@ if Blade.RoundTips
     end
 end
     
-%if Blade.isNREL || Blade.isSOTON
-%    Blade.Panels.WakeShedders.LS.Local = MainPans(Blade.n2:end,1);
-%    Blade.Panels.WakeShedders.US.Local = MainPans(Blade.n2:end,end);
-%end
+if Blade.isNREL || Blade.isSOTON
+    Blade.Panels.WakeShedders.LS.Local = MainPans(Blade.n2:end,1);
+    Blade.Panels.WakeShedders.US.Local = MainPans(Blade.n2:end,end);
+end
 Mp = zeros(size(Blade.N.Local) - 1);
 Mp(:) = 1:numel(Mp);
 if ~Blade.RoundTips
