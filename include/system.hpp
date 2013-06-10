@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class SYSTEM {
 public:
-    static int MaxP, NumTransVars, M4Radius_in_cells;
+    static int MaxP, NumTransVars, M4Radius_in_cells, NumM4;
     static REAL GambitScale;
     int NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval;
 

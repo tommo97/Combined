@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "pgesv.hpp"
 #endif
 
-int SYSTEM::MaxP, SYSTEM::NumTransVars, SYSTEM::M4Radius_in_cells;
+int SYSTEM::MaxP, SYSTEM::NumTransVars, SYSTEM::M4Radius_in_cells = 0, SYSTEM::NumM4 = 0;
 REAL SYSTEM::GambitScale;
 /**************************************************************/
 SYSTEM::~SYSTEM() {
@@ -98,7 +98,8 @@ void SYSTEM::Initialise() {
     globalTimeStepper->time_step();
 
     globalSystem->NumSubSteps = nss;
-
+    int h = SYSTEM::M4Radius_in_cells;
+    SYSTEM::NumM4 = (4*h+1)*(4*h+1)*(4*h+1);
 
     cout << "nss" << nss << endl;
 }
@@ -205,7 +206,7 @@ void SYSTEM::PutWakesInTree() {
     long unsigned int t1 = ticks();
 #endif
     
-    REAL SpinUpCoefft = min(TIME_STEPPER::SimTime / TIME_STEPPER::SpinUpTime, 1.0);
+    REAL SpinUpCoefft = 1.0;//min(TIME_STEPPER::SimTime / TIME_STEPPER::SpinUpTime, 1.0);
     
     //cout << SpinUpCoefft << endl;    
     int Num2Insert = 0, Num2Keep = 0;
@@ -247,17 +248,15 @@ void SYSTEM::PutWakesInTree() {
 
 
 
-    REAL d = 1.0, u = 0;
+    REAL u = 0;
     REAL M4x = 0.0, M4y = 0.0, M4z = 0.0, M4 = 0;
     int count = 0, h = SYSTEM::M4Radius_in_cells;
-    for (REAL a = -h; a <= h; a += 1.0)
-        count++;
 
 
-    Array <Vect3> Xs(Num2Insert * (count * count * count)), Oms(Num2Insert * (count * count * count));
-    Array <int> Owners(Num2Insert * (count * count * count));
 
-    count = 0;
+    Array <Vect3> Xs(Num2Insert * (SYSTEM::NumM4)), Oms(Num2Insert * (SYSTEM::NumM4));
+    Array <int> Owners(Num2Insert * (SYSTEM::NumM4));
+
 
     for (int j = 0; j < XtoInsert.size(); ++j) {
         Vect3 X = XtoInsert[j];
@@ -268,36 +267,36 @@ void SYSTEM::PutWakesInTree() {
         //        globalOctree->Root->EvalCapsule(C);
 
         //
-        for (REAL a = -h; a <= h; a += 1.0) {
+        for (REAL a = -2.0*h; a <= 2.0*h; a += 1.0) {
             M4x = 0.0;
-            u = abs(a / (h * d));
+            u = abs(round(X.x + a) - X.x) / h;
             if (u <= 2)
-                M4x = .5 * (1 - u * (2 - u)*(2 - u));
+               M4x = .5 * (1 - u) * (2 - u)*(2 - u);
             if (u <= 1)
                 M4x = 1 - 2.5 * u * u + 1.5 * u * u * u;
             M4x = M4x / h;
-            for (REAL b = -h; b <= h; b += 1.0) {
+            for (REAL b = -2.0*h; b <= 2.0*h; b += 1.0) {
                 M4y = 0.0;
-                u = abs(b / (h * d));
+                u = abs(round(X.y + b) - X.y) / h;
                 if (u <= 2)
-                    M4y = .5 * (1 - u * (2 - u)*(2 - u));
+                    M4y =  .5*(1 - u)*(2 - u)*(2 - u);
                 if (u <= 1)
                     M4y = 1 - 2.5 * u * u + 1.5 * u * u * u;
                 M4y = M4y / h;
-                for (REAL c = -h; c <= h; c += 1.0) {
-
-                    u = abs(c / (h * d));
+                for (REAL c = -2.0*h; c <= 2.0*h; c += 1.0) {
+                    M4z = 0.0;
+                    u = abs(round(X.z + c) - X.z) / h;
                     if (u <= 2)
-                        M4z = .5 * (1 - u * (2 - u)*(2 - u));
+                        M4z =  .5*(1 - u)*(2 - u)*(2 - u);
                     if (u <= 1)
                         M4z = 1 - 2.5 * u * u + 1.5 * u * u * u;
 
                     M4z = M4z / h;
-                    M4 = M4x * M4y*M4z;
+                    M4 = M4x*M4y*M4z;
 
                     Vect3 G = M4*OM;
                     Xs[count] = Vect3(round(X.x + a), round(X.y + b), round(X.z + c));
-                    Oms[count] = (G);
+                    Oms[count] = G;
                     Owners[count] = (ID - 1);
                     count++;
                 }
@@ -318,7 +317,8 @@ void SYSTEM::PutWakesInTree() {
 
 
     for (int i = 0; i < Test.size(); ++i) {
-        globalOctree->Root->EvalCapsule(Test[i]);
+        if (Test[i].Omega.Dot(Test[i].Omega) > VORTICITY_CUTOFF * VORTICITY_CUTOFF)
+            globalOctree->Root->EvalCapsule(Test[i]);
     }
     //    Array<OctreeCapsule>::QuickSortB(Test);
     //    Vect3 min_diff = 1e16;

@@ -327,7 +327,7 @@ void TIME_STEPPER::TimeAdvance() {
 #endif
         for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
             FVMCell::CellDerivs[q][i] = FVMCell::AllCells[i]->O2UW(q);
-            FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Stretch(q);
+            FVMCell::CellDerivs[q][i] -= FVMCell::AllCells[i]->Stretch(q);
             //FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Diffuse(q);
         }
 #ifdef _OPENMP

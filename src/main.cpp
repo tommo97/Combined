@@ -46,7 +46,9 @@ inline bool srt_vect3 (Vect3 A, Vect3 B) {
         return (A.x < B.x); 
 }
 /**************************************************************/
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
+
     system("clear");
 
     PANEL::Initialise();
@@ -66,7 +68,7 @@ int main(int argc, char *argv[]) {
     //    TEST::TestBulkLoader(100000);
 //        TEST::TestFMM(argc, argv);
 //        TEST::SimpleTestPanel();
-    //    TEST::TestBiotSavart();
+//        TEST::TestBiotSavart();
 //        return 0;
     //    TEST::TestBEMFVM();
 //        return 0;
@@ -74,14 +76,15 @@ int main(int argc, char *argv[]) {
 
     
     TIME_STEPPER::SpinUpTime = 2.5; // time over which starting vortices are linearly damped
+    SYSTEM::M4Radius_in_cells = 2;  // need to define this before initialising the system
     SYSTEM System(0);
     //  Some default values
-    SYSTEM::GambitScale = 50.0;
+    SYSTEM::GambitScale = 100.;
     SYSTEM::MaxP = 3;
     globalSystem->Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
+    
     globalSystem->dtInit = 0.01; //     This *maybe* gets changed according to the maximum kinematic velocity of the body(s)
-    SYSTEM::M4Radius_in_cells = 2;
     globalSystem->unscaledVinf = Vect3(0.0);
     globalSystem->NumSubSteps = 25;
 
@@ -110,7 +113,6 @@ int main(int argc, char *argv[]) {
     if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
 #endif
 }
-
 /**************************************************************/
 void UTIL::PostAmble(string fname) {
 
