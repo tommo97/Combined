@@ -76,7 +76,7 @@ void UTIL::GetCellPans() {
 Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega) {
 
     REAL mult, nrm;
-    nrm = sqrt(globalSystem->Del2 + diff.Dot(diff));
+    nrm = sqrt(SYSTEM::Del2 + diff.Dot(diff));
     mult = -1. / (four_pi * nrm * nrm * nrm);
     return mult * diff.Cross(omega);
 }
@@ -105,7 +105,7 @@ void UTIL::globalDirectVelGrads(Vect3 diff, Vect3 omega, Array <Vect3> &Grads) {
     //  Diff here is Xtarget - Xsource (hence -ve (-=) below)
     REAL R, R3, R5;
     
-    R = sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z + globalSystem->Del2);
+    R = sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z + SYSTEM::Del2);
     R3 = R*R*R;
     R5 = R3*R*R;
     

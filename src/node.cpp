@@ -348,7 +348,7 @@ void Node::SetUpISBIndices() {
 void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 //#define VERSION_2
 #ifdef VERSION_2
-    REAL R2 = diff.Dot(diff) +  globalSystem->Del2;
+    REAL R2 = diff.Dot(diff) +  SYSTEM::Del2;
 
     // base case
 #ifdef MODE_3D
@@ -416,7 +416,7 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 #else
     // use this instead
 			Vect3 Diff = -1.0*diff;
-    REAL del2 = globalSystem->Del2;
+    REAL del2 = SYSTEM::Del2;
     int MAX_P = SYSTEM::MaxP;
     int p = MAX_P;
     Array <REAL> cff1(p + 1), cff2(p + 1);
@@ -501,7 +501,8 @@ void Node::CompCoeffts(Vect3 diff, JaggedArray <REAL> &coeffts) {
 
 /**************************************************************/
 void Node::GetISA() {
-    ISA[1][1][1] = this;
+    ISA[1][1][1] = LinISA[13] = this;;
+    
     if (m > 0) {
         int count = 0;
         for (int i = 0, I = 2; i < 3; ++i, --I)

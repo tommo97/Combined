@@ -96,7 +96,7 @@ void TEST::TestBEMFVM() {
     //  Some default values
     SYSTEM::GambitScale = 15;
     SYSTEM::MaxP = 5;
-    globalSystem->Del2 = 0.001;// * SYSTEM::GambitScale*SYSTEM::GambitScale;
+    SYSTEM::Del2 = 0.001;// * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 0.1;
     SYSTEM::M4Radius_in_cells = 2;
@@ -174,7 +174,7 @@ void TEST::TestBEM() {
     //  Some default values
     SYSTEM::GambitScale = 1.0;
     SYSTEM::MaxP = 5;
-    globalSystem->Del2 = 0.001;// * SYSTEM::GambitScale*SYSTEM::GambitScale;
+    SYSTEM::Del2 = 0.001;// * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
     globalSystem->dtInit = 1.e3;
     SYSTEM::M4Radius_in_cells = 2;
@@ -790,7 +790,7 @@ void TEST::TestBiotSavart()
 {
     //    {
         SYSTEM System(0);
-        globalSystem->Del2 = 0.001;
+        SYSTEM::Del2 = 0.001;
         int N = 1000;
         Array <REAL> xs = UTIL::globalLinspace(-3,3,N);
         
@@ -970,7 +970,7 @@ void TEST::SolveMatfileVels(string fname) {
     cout << "Enter SYSTEM::MaxP" << endl;
     cin >> SYSTEM::MaxP;
     cout << "Enter Del2" << endl;
-    cin >> globalSystem->Del2;
+    cin >> SYSTEM::Del2;
 
 
     cout << "Beginning insertion into tree" << endl;
@@ -1236,7 +1236,7 @@ void TEST::TestFMM(int argc, char *argv[]) {
     //  Some default values
     SYSTEM::GambitScale = 1;
     SYSTEM::MaxP = atoi(argv[2]);
-    globalSystem->Del2 = 0.001;
+    SYSTEM::Del2 = 0.001;
 
 
     //    globalIO->read_input(dir2 + argv[1]);
@@ -1656,6 +1656,7 @@ void TEST::TestFMM(int argc, char *argv[]) {
         NumVelGradients[i][0] = (VelE - VelW) / (2. * h);
         NumVelGradients[i][1] = (VelN - VelS) / (2. * h);
         NumVelGradients[i][2] = (VelT - VelB) / (2. * h);
+        
         DirectVels[i] = V;
     }
     REAL t3 = (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000;
@@ -1725,7 +1726,169 @@ void TEST::TestFMM(int argc, char *argv[]) {
 
 
 }
+/**************************************************************/
+void TEST::SmallTestFMM() {
 
+    system("clear");
+
+    
+    SYSTEM System(0);
+
+    //  Some default values
+    SYSTEM::GambitScale = 1;
+    SYSTEM::MaxP = 8;
+    SYSTEM::Del2 = 0.001;
+
+
+    globalSystem->Initialise();
+
+
+
+
+    {
+        Vect3 OM = Vect3(0.0,0.0,1.0);
+        Vect3 PX = Vect3(0.0,0.0,0.0);
+        OctreeCapsule C(PX, OM, true);
+        C.AssociatedBody = 0;
+        globalOctree->Root->EvalCapsule(C);
+    }
+    
+        {
+        Vect3 OM = Vect3(0.0,0.0,0.0);
+        Vect3 PX = Vect3(1.0,2.0,0.0);
+        OctreeCapsule C(PX, OM, false);
+        C.toMonitor = true;
+        C.AssociatedBody = 0;
+        globalOctree->Root->EvalCapsule(C);
+    }
+    
+        {
+        Vect3 OM = Vect3(0.0,0.0,0.0);
+        Vect3 PX = Vect3(-1.0,1.0,0.0);
+        OctreeCapsule C(PX, OM, false);
+        C.toMonitor = true;
+        C.AssociatedBody = 0;
+        globalOctree->Root->EvalCapsule(C);
+    }
+    
+        {
+        Vect3 OM = Vect3(0.0,0.0,0.0);
+        Vect3 PX = Vect3(-1.0,-1.0,0.0);
+        OctreeCapsule C(PX, OM, false);
+        C.toMonitor = true;
+        C.AssociatedBody = 0;
+        globalOctree->Root->EvalCapsule(C);
+    }
+    
+        {
+        Vect3 OM = Vect3(0.0,0.0,0.0);
+        Vect3 PX = Vect3(1.0,-1.0,0.0);
+        OctreeCapsule C(PX, OM, false);
+        C.toMonitor = true;
+        C.AssociatedBody = 0;
+        globalOctree->Root->EvalCapsule(C);
+    }
+    
+
+    globalOctree->Root->ApplyRecursively(&Node::MarkWithoutLoad, &Node::MarkWithoutLoad, &Node::DoNothing);
+    globalOctree->Root->ApplyRecursively(&Node::DoNothing, &Node::CheckLoad, &Node::DoNothing);
+
+    
+
+
+    FVMCell::AllCells.clear();
+    globalOctree->AllBranches.allocate(OCTREE_LEVS);
+    globalOctree->BranchCount.assign(OCTREE_LEVS - 1, 0);
+    globalOctree->Root->ApplyRecursively(&Branch::BranchCount, &Node::DoNothing, &Node::DoNothing);
+
+    for (int i = 0; i < globalOctree->BranchCount.size(); ++i) {
+        if (globalOctree->BranchCount[i] > 0)
+            globalOctree->AllBranches[i].assign(globalOctree->BranchCount[i], NULL);
+        globalOctree->BranchCount[i] = 0; //  Recycle for use as a pseudo iterator
+    }
+
+    globalOctree->CellCount = 0; //  This is used as a pseudo iterator for assigning into FVMCell::AllCells
+    FVMCell::AllCells.assign(FVMCell::NumCells, NULL);
+    Node::AllNodes.allocate(Node::NumNodes);
+    Node::NodeCount = 0;
+    Node::UpList.clear();
+    Node::DownList.clear();
+    globalOctree->Root->ApplyRecursively(&Node::DoNothing, &Node::ReList, &Node::ReList);
+    
+    
+    globalOctree->ResetAllVelsAndFields();
+    globalOctree->Root->ApplyRecursively(&Branch::SetVelsZero, &FVMCell::SetVelsZero, &Node::DoNothing);
+    globalOctree->GetVels();
+    int n = FVMCell::AllCells.size();
+    Array <Vect3> Posns(n);
+    Array <Vect3> Omegas(n);
+    Array <Vect3> FMMVels(n);
+    Array <Vect3> DirectVels(n);
+    Array < Array <Vect3> >  DirectVelGrads(n, Array <Vect3> (3, Vect3(0.0)));
+    Array < Array <Vect3> >  NumVelGrads(n, Array <Vect3> (3, Vect3(0.0)));
+
+
+
+
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
+        Posns[i] = (FVMCell::AllCells[i]->Position);
+        Omegas[i] = (FVMCell::AllCells[i]->Omega);
+        FMMVels[i] = (FVMCell::AllCells[i]->Velocity);
+    }
+
+    
+    for (int i = 0; i < Posns.size(); ++i) {
+        Vect3 V(0, 0, 0);
+
+        for (int j = 0; j < Posns.size(); ++j) {
+            Vect3 D = Posns[i] - Posns[j];
+            V += UTIL::globalCubicDirectVel(D, Omegas[j]);
+
+            UTIL::globalCubicDirectVelGrads(D, Omegas[j], DirectVelGrads[i]);
+        }
+
+
+        REAL h = 0.001;
+
+        Vect3 VelN(0.), VelS(0.), VelE(0.), VelW(0.), VelT(0.), VelB(0.);
+
+        for (int j = 0; j < Posns.size(); ++j) {
+            VelE += UTIL::globalCubicDirectVel(Posns[i] + Vect3(h, 0., 0.) - Posns[j], Omegas[j]);
+            VelW += UTIL::globalCubicDirectVel(Posns[i] - Vect3(h, 0., 0.) - Posns[j], Omegas[j]);
+            VelN += UTIL::globalCubicDirectVel(Posns[i] + Vect3(0., h, 0.) - Posns[j], Omegas[j]);
+            VelS += UTIL::globalCubicDirectVel(Posns[i] - Vect3(0., h, 0.) - Posns[j], Omegas[j]);
+            VelT += UTIL::globalCubicDirectVel(Posns[i] + Vect3(0., 0., h) - Posns[j], Omegas[j]);
+            VelB += UTIL::globalCubicDirectVel(Posns[i] - Vect3(0., 0., h) - Posns[j], Omegas[j]);
+        }
+        NumVelGrads[i][0] = (VelE - VelW) / (2. * h);
+        NumVelGrads[i][1] = (VelN - VelS) / (2. * h);
+        NumVelGrads[i][2] = (VelT - VelB) / (2. * h);
+        
+        DirectVels[i] = V;
+    }
+    
+    for (int i = 0; i < Posns.size(); ++i)
+{
+        cout << "---------------------" << endl;
+        cout << Posns[i] << endl;
+        cout << "FMMVel  " << FMMVels[i] << endl;
+        cout << "DirVel  " << DirectVels[i] << endl;
+        cout << "--" << endl;
+        cout << "FMMGrad " << FVMCell::AllCells[i]->VelGrads[0] << endl;
+        cout << "FMMGrad " << FVMCell::AllCells[i]->VelGrads[1] << endl;
+        cout << "FMMGrad " << FVMCell::AllCells[i]->VelGrads[2] << endl;
+        cout << "--" << endl;
+        cout << "DirGrad " << DirectVelGrads[i][0] << endl;
+        cout << "DirGrad " << DirectVelGrads[i][1] << endl;
+        cout << "DirGrad " << DirectVelGrads[i][2] << endl;
+        cout << "--" << endl;
+        cout << "NumGrad " << NumVelGrads[i][0] << endl;
+        cout << "NumGrad " << NumVelGrads[i][1] << endl;
+        cout << "NumGrad " << NumVelGrads[i][2] << endl;
+    }
+    
+
+}
 void TEST::TestBulkLoader(int n)
 {
     SYSTEM System(0);
@@ -1733,7 +1896,7 @@ void TEST::TestBulkLoader(int n)
     //  Some default values
     SYSTEM::GambitScale = 1;
     SYSTEM::MaxP = 3;
-    globalSystem->Del2 = 0.001;
+    SYSTEM::Del2 = 0.001;
     globalSystem->Initialise();
 
     Array <Vect3> Posns, Omegas;

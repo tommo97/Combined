@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #endif
 
 int SYSTEM::MaxP, SYSTEM::NumTransVars, SYSTEM::M4Radius_in_cells = 0, SYSTEM::NumM4 = 0;
-REAL SYSTEM::GambitScale;
+REAL SYSTEM::GambitScale = 1.0, SYSTEM::Del2 = 0.25;
 /**************************************************************/
 SYSTEM::~SYSTEM() {
 
@@ -206,7 +206,7 @@ void SYSTEM::PutWakesInTree() {
     long unsigned int t1 = ticks();
 #endif
     
-    REAL SpinUpCoefft = 1.0;//min(TIME_STEPPER::SimTime / TIME_STEPPER::SpinUpTime, 1.0);
+    REAL SpinUpCoefft = 1;//min(TIME_STEPPER::SimTime / TIME_STEPPER::SpinUpTime, 1.0);
     
     //cout << SpinUpCoefft << endl;    
     int Num2Insert = 0, Num2Keep = 0;

@@ -50,6 +50,9 @@ int main(int argc, char *argv[])
 {
 
     system("clear");
+    
+    
+
 
     PANEL::Initialise();
     UTIL::GetCellPans();
@@ -63,8 +66,9 @@ int main(int argc, char *argv[])
         UTIL::QuadWts[i] = UTIL::QuadWts[i] / 2.0;
     }
 
-
-    
+   
+    //TEST::SmallTestFMM();
+     //return 0;
     //    TEST::TestBulkLoader(100000);
 //        TEST::TestFMM(argc, argv);
 //        TEST::SimpleTestPanel();
@@ -79,9 +83,9 @@ int main(int argc, char *argv[])
     SYSTEM::M4Radius_in_cells = 2;  // need to define this before initialising the system
     SYSTEM System(0);
     //  Some default values
-    SYSTEM::GambitScale = 100.;
+    SYSTEM::GambitScale = 50.;
     SYSTEM::MaxP = 3;
-    globalSystem->Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
+    SYSTEM::Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
     
     globalSystem->dtInit = 0.01; //     This *maybe* gets changed according to the maximum kinematic velocity of the body(s)

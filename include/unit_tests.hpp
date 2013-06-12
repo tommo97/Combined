@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class TEST {
 public:
+    static void SmallTestFMM();
     static void TestFMM(int argc, char *argv[]);
     static void TestPanel();
     static void SolveMatfileVels(string fname);

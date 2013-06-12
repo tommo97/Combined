@@ -33,11 +33,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class SYSTEM {
 public:
     static int MaxP, NumTransVars, M4Radius_in_cells, NumM4;
-    static REAL GambitScale;
+    static REAL GambitScale, Del2;
     int NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval;
 
     bool LiftingLineMode, ZeroBodyRelativeMotion, useBodies, useFMM;
-    REAL dtInit, Del2, DS;
+    REAL dtInit, DS;
     REAL Mu, Nu, Rho, Temp, g;
     string NeuFile, CaseName, WorkingDir;
     Vect3 scaledVinf, unscaledVinf;

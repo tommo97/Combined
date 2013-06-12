@@ -206,7 +206,7 @@ void TIME_STEPPER::TimeAdvance() {
         for (int j = 0; j < FVMCell::AllCells.size(); ++j) {
             Vect3 D = FVMCell::AllCells[j]->Position - FVMCell::AllCells[i]->Position;
             FVMCell::AllCells[i]->Velocity += UTIL::globalDirectVel(D, FVMCell::AllCells[j]->Omega);
-            UTIL::globalCubicDirectVelGrads(D, FVMCell::AllCells[j]->Omega, FVMCell::AllCells[i]->VelGrads);
+            directGradMethod(D, FVMCell::AllCells[j]->Omega, FVMCell::AllCells[i]->VelGrads);
         }
 
     }
@@ -327,8 +327,8 @@ void TIME_STEPPER::TimeAdvance() {
 #endif
         for (int i = 0; i < FVMCell::AllCells.size(); ++i) {
             FVMCell::CellDerivs[q][i] = FVMCell::AllCells[i]->O2UW(q);
-            FVMCell::CellDerivs[q][i] -= FVMCell::AllCells[i]->Stretch(q);
-            //FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Diffuse(q);
+            FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Stretch(q);
+//            FVMCell::CellDerivs[q][i] += FVMCell::AllCells[i]->Diffuse(q);
         }
 #ifdef _OPENMP
 #pragma omp parallel for
