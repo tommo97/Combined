@@ -26,11 +26,11 @@ void TEST::SimpleTestPanel() {
     
     Vect3 Target = Vect3(6.,7.,8.);
     
-    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 1.));
+    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 1.0));
 
     P.GetNormal();
     
-    
+    //Target = P.CollocationPoint;
 
     
     
@@ -82,6 +82,8 @@ void TEST::SimpleTestPanel() {
     cout << setprecision(16) << two_pi*src->CurvedSourcePhi(Target) << " CurvedSourcePhi(x,y,z),  using the Wang method" << endl;
     cout << two_pi*PhisSDP << " SourceDoubletPotential(x,y,z),  using the flat panel (e.g. Katz & Plotkin) method" << endl;
     
+    
+    cout << two_pi*PhiSourceDirect/(two_pi*src->CurvedSourcePhi(Target)) << endl;
  
 
 }

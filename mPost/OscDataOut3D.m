@@ -2,7 +2,7 @@ close all
 clear all
 clc
 
-load RunData_000004.mat
+load Output.mat
 
 
 
@@ -51,7 +51,7 @@ for i = 1:size(CpHistory,1)
     Mucp0 = Mu(BodySurface0);
     CpCp0 = Cp(BodySurface0);
     
-    r = 0;
+    r = 0.6;
     
     
     
@@ -118,7 +118,7 @@ view(3)
 scatter3(VortonX_x(:),VortonX_y(:),VortonX_z(:),'+')
 % 
 figure
-plot(Times,Force_z)
+plot(Times,Force_x)
 %plot(Times,CL,'-b')
 hold all
 %plot(Times,Cl,'-k')

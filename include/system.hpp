@@ -37,6 +37,7 @@ public:
     int NumBodyPanels, ProcessID, NumBodies, NumThreads, NumSubSteps, SysDumpInterval;
 
     bool LiftingLineMode, ZeroBodyRelativeMotion, useBodies, useFMM;
+    static bool PanelOnly;
     REAL dtInit, DS;
     REAL Mu, Nu, Rho, Temp, g;
     string NeuFile, CaseName, WorkingDir;

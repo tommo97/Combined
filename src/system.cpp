@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int SYSTEM::MaxP, SYSTEM::NumTransVars, SYSTEM::M4Radius_in_cells = 0, SYSTEM::NumM4 = 0;
 REAL SYSTEM::GambitScale = 1.0, SYSTEM::Del2 = 0.25;
+bool SYSTEM::PanelOnly = false;
 /**************************************************************/
 SYSTEM::~SYSTEM() {
 

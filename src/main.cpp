@@ -53,12 +53,12 @@ int main(int argc, char *argv[])
     
     
 
-
+    SYSTEM::PanelOnly = true;
     PANEL::Initialise();
     UTIL::GetCellPans();
 
     //  Get quadrature points and weights
-    UTIL::NumCellGaussPts = 4;
+    UTIL::NumCellGaussPts = 64;
     UTIL::lgwt(UTIL::NumCellGaussPts, UTIL::QuadPts, UTIL::QuadWts);
     //  This is to get the right multipliers for a cell, e.g. a range [-0.5,0.5] rather than [-1,1]
     for (int i = 0; i < UTIL::QuadPts.size(); ++i) {
@@ -71,9 +71,9 @@ int main(int argc, char *argv[])
      //return 0;
     //    TEST::TestBulkLoader(100000);
 //        TEST::TestFMM(argc, argv);
-//        TEST::SimpleTestPanel();
+        TEST::SimpleTestPanel();
 //        TEST::TestBiotSavart();
-//        return 0;
+        return 0;
     //    TEST::TestBEMFVM();
 //        return 0;
    
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     SYSTEM::M4Radius_in_cells = 2;  // need to define this before initialising the system
     SYSTEM System(0);
     //  Some default values
-    SYSTEM::GambitScale = 50.;
+    SYSTEM::GambitScale = 1.;
     SYSTEM::MaxP = 3;
     SYSTEM::Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = .3;
@@ -97,24 +97,25 @@ int main(int argc, char *argv[])
 
     UTIL::PreAmble();
 
-  
-    globalSystem->Initialise();
 
-    globalSystem->VortonsXs.clear();
-    globalSystem->VortonOmegas.clear();
-    
+    if (!SYSTEM::PanelOnly) {
+        globalSystem->Initialise();
+
+        globalSystem->VortonsXs.clear();
+        globalSystem->VortonOmegas.clear();
+
 #ifndef use_NCURSES
-    if (WRITE_TO_SCREEN) cout << "SYSTEM::MaxP set to " << SYSTEM::MaxP << "; dtInit " << globalSystem->dtInit << endl;
+        if (WRITE_TO_SCREEN) cout << "SYSTEM::MaxP set to " << SYSTEM::MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
-    cout << "Number of cells: " << FVMCell::NumCells << endl;
-    globalSystem->TimeStep();
+        cout << "Number of cells: " << FVMCell::NumCells << endl;
+        globalSystem->TimeStep();
 
-
+    }
     UTIL::PostAmble(string("Output.mat"));
 
 
 #ifndef use_NCURSES
-    if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - globalTimeStepper->cpu_t) / 1000 << " seconds" << endl;
+    if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - UTIL::cpu_t) / 1000 << " seconds" << endl;
 #endif
 }
 /**************************************************************/
@@ -588,9 +589,10 @@ void UTIL::PreAmble() {
 
     BODY::SetUpInfluenceMatrices();
 
-
-    //    BODY::BodySubStep(maxT, nSteps);
-
+    if (SYSTEM::PanelOnly)
+    {
+        BODY::BodySubStep(maxT, nSteps);
+    }
 }
 
 /**************************************************************/

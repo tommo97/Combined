@@ -1003,22 +1003,48 @@ void BODY::UpdateGlobalInfluenceMatrices() {
         for (int i = 0; i < n; ++i) {
             PANEL *trg = &BODY::Bodies[I]->Faces[i];
 #ifdef _OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
             for (int j = 0; j < n; ++j) {
                 REAL PhiS = 0.0, PhiD = 0.0;
                 PANEL *src = &BODY::Bodies[I]->Faces[j];
                 PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
-
+                
+                
+//                REAL PhiSourceDirect = 0.0;
+//                {
+//                    int n = 10;
+//                    Array < Array < Vect3 > > CP;
+//                    Array < Array < Vect3 > > N;
+//                    Array < Array < REAL > > A;
+//                    src->DivPanel(n, CP, N, A);
+//
+//
+//
+//                    for (int i = 0; i < n; ++i)
+//                        for (int j = 0; j < n; ++j) {
+//
+//                            Vect3 DX = (CP[i][j] - trg->CollocationPoint);
+//                            REAL DXMag = DX.Mag();
+//                            REAL DXMag2 = DXMag * DXMag;
+//                            REAL DXMag3 = DXMag2 * DXMag;
+//                            PhiSourceDirect += -A[i][j] / (two_pi * DXMag);
+//                        }
+//                }
+                
+                
                 REAL a = PhiD;
-
-
+//                if (abs(i-j) < 5){
+//                src->Mu = 1.0;
+//                cout << a << " " << -1.0*src->GetTriTesselatedDoubletPhi(trg->CollocationPoint) << endl;
+//                }
+                
                 REAL b = PhiS;
-
-
+//                b = - PhiSourceDirect;
+                
 //                REAL c = PhiD;
 
-                src->Mu = 1.0;
+                
                 src->Sigma = 0.0;
                 //BODY::Bodies[I]->localVD[i][j] = VectMultMatrix(trg->TRANS, src->BodyPanelVelocity(trg->CollocationPoint));
 

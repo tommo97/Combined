@@ -1272,8 +1272,8 @@ REAL PANEL::CurvedSourcePhi(Vect3& XP) {
             
             REAL RF = (XP - XpF).Mag();
             REAL ratio = RF/RC;
-
-            outPhi -= UTIL::QuadWts[i] * UTIL::QuadWts[j] * Sigma *  Jdet * ratio / RF;
+            //  Multiply by 4.0 = 2*2 in order to get back into range [-1,1]
+            outPhi -= 4.0 * UTIL::QuadWts[i] * UTIL::QuadWts[j] *  Sigma  * Jdet;
 
             //cout << "scatter3([" << XpC.x << " " << XpF.x << "],[" << XpC.y << " " << XpF.y << "],["<< XpC.z << " " << XpF.z << "]);" << endl;
             

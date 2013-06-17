@@ -3,7 +3,7 @@ close all
 clc
 
 set(0,'defaulttextinterpreter','none','defaultaxesposition',[0.10    0.10    .89    .8]);
-files = dir('R*.mat');
+files = dir('Output.mat');
 
 
 %   Find out the interpolation weights
@@ -19,7 +19,7 @@ Xcp0 = CollocPts_x(BodySurface0);
 Ycp0 = CollocPts_y(BodySurface0);
 Zcp0 = CollocPts_z(BodySurface0);
 PressChord = zeros(size(C0(1,:)));
-Cp = CpHistoryAll(1,:)';
+Cp = CpHistory(1,:)';
 CPress = zeros(size(Cp(1,:)));
 
 load FDC0015.mat
