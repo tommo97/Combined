@@ -1,4 +1,4 @@
-close all
+%close all
 clear all
 clc
 
@@ -36,7 +36,7 @@ for i = 1:size(CpHistory,1)
     
     Cp = CpHistory(i,:)';
     F = -[Area.*Cp.*Norms(:,1) Area.*Cp.*Norms(:,2) Area.*Cp.*Norms(:,3)];
-
+    
     M = cross(F,[CollocPts_x CollocPts_y CollocPts_z]);
     Mx(i) = sum(M(:,1));
     
@@ -51,7 +51,7 @@ for i = 1:size(CpHistory,1)
     Mucp0 = Mu(BodySurface0);
     CpCp0 = Cp(BodySurface0);
     
-    r = 0.6;
+    r = 0.98;
     
     
     
@@ -61,14 +61,17 @@ for i = 1:size(CpHistory,1)
         PressChord(j) = interp1(R0(:,j),C0(:,j),r,'cubic');
         CPress(j) = interp1(R0(:,j),-CpCp0(:,j),r,'cubic');
     end
-   clf
-   plot(PressChord,CPress);
+    %clf
+    %plot(PressChord,CPress);
     
     Cl(i) = trapz(PressChord,CPress);
-    drawnow;
+    %drawnow;
     disp(i)
 end
+hold all
 
+plot(PressChord,CPress);
+return
 figure
 
 

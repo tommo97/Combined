@@ -26,13 +26,13 @@ void TEST::SimpleTestPanel() {
     
     Vect3 Target = Vect3(6.,7.,8.);
     
-    PANEL P(Vect3(-1.,-1., 0.), Vect3(1., -1., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 1.0));
+    PANEL P(Vect3(-1.,0., 0.), Vect3(1., 0., 0.), Vect3(1., 1., 0.), Vect3(-1., 1., 1.0));
 
     P.GetNormal();
     
     //Target = P.CollocationPoint;
 
-    
+    Target = P.CollocationPoint;
     
     PANEL *src = &P;
     P.Sigma = 1.0;
@@ -66,22 +66,74 @@ void TEST::SimpleTestPanel() {
                 PhiDoubletDirect += -P.Mu * A[i][j] * N[i][j].Dot(DX) / (two_pi * DXMag3);
             }
     }
+
+    REAL PhiDoubletDirectGuass = 0.0;
+    REAL PhiSourceDirectGuass = 0.0;
+    //   Normals of original panel
+    Vect3 Cr1 = 1. * ((P.C2 - P.C1).Cross(P.C1 - P.C4)).Normalise();
+    Vect3 Cr2 = 1. * ((P.C3 - P.C2).Cross(P.C2 - P.C1)).Normalise();
+    Vect3 Cr3 = 1. * ((P.C4 - P.C3).Cross(P.C3 - P.C2)).Normalise();
+    Vect3 Cr4 = 1. * ((P.C1 - P.C4).Cross(P.C4 - P.C3)).Normalise();
+    cout << Cr1 << endl << Cr2 << endl << Cr3 << endl << Cr4 << endl;
+    Array <REAL> QuadPts, QuadWts;
+    QuadPts.push_back(sqrt(1./5.));
+    QuadPts.push_back(-sqrt(1./5.));
+    QuadPts.push_back(1.0);
+    QuadPts.push_back(-1.0);
+    QuadWts.push_back(5./6.);
+    QuadWts.push_back(5./6.);
+    QuadWts.push_back(1.0/6.0);
+    QuadWts.push_back(1.0/6.0);
+    for (int i = 0; i < QuadPts.size(); ++i) {
+        REAL zeta = QuadPts[i];
+        for (int j = 0; j < QuadPts.size(); ++j) {
+            REAL wt = QuadWts[i] * QuadWts[j];
+            REAL eta = QuadPts[j];
+            //   Nodal shape functions
+            REAL N1 = 0.25 * (1 - zeta)*(1 - eta);
+            REAL N2 = 0.25 * (1 + zeta)*(1 - eta);
+            REAL N3 = 0.25 * (1 + zeta)*(1 + eta);
+            REAL N4 = 0.25 * (1 - zeta)*(1 + eta);
+
+            Vect3 XpC = N1 * P.C1 + N2 * P.C2 + N3 * P.C3 + N4 * P.C4;
+            Vect3 NormC = (N1 * Cr1 + N2 * Cr2 + N3 * Cr3 + N4 * Cr4).Normalise();
+
+            //   Elements of Jacobian matrix
+            Vect3 DXDZeta = 0.25 * ((eta - 1.) * P.C1 + (1. - eta) * P.C2 + (eta + 1.) * P.C3 + (-eta - 1.) * P.C4);
+            Vect3 DXDEta = 0.25 * ((zeta - 1.) * P.C1 + (-zeta - 1.) * P.C2 + (zeta + 1.) * P.C3 + (1. - zeta) * P.C4);
+
+            //   Determinant of Jacobian matrix
+            REAL Jdet = (DXDZeta.Cross(DXDEta)).Mag();
+            
+            Vect3 DX = (XpC - Target);
+            REAL DXMag = DX.Mag();
+            REAL DXMag2 = DXMag * DXMag;
+            REAL DXMag3 = DXMag2 * DXMag;
+
+            PhiSourceDirectGuass += wt * Jdet / (two_pi * DXMag);
+            PhiDoubletDirectGuass += wt * (DXDEta.Cross(DXDZeta)).Dot(DX) / (two_pi * DXMag3);
+        }
+    }
+    
+    
+    P.Sigma = 1.;
     
     PANEL::FarField = 1e32;
     REAL PhidSDP = 0.0, PhisSDP = 0.0;
-    PANEL::SourceDoubletPotential(src, Target, PhidSDP, PhisSDP, 1, 2);
+    PANEL::SourceDoubletPotential(src, Target, PhidSDP, PhisSDP, 1, 1);
     cout << "=========== Dipole Influence at " << Target << endl;
-    cout << setprecision(16) << two_pi*PhiDoubletDirect << " PhiDdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
-    cout << setprecision(16) << two_pi*src->GetTriTesselatedDoubletPhi(Target) <<  " GetTriTesselatedDoubletPhi(x,y,z),  using the Willis method" << endl;
-    cout << setprecision(16) << two_pi*src->CurvedDoubletPhi(Target) << " CurvedDoubletPhi(x,y,z),  using the Wang method" << endl;
-    cout << setprecision(16) << two_pi*src->HyperboloidDoubletPhi(Target) << " HyperboloidDoubletPhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl;
-    cout << two_pi*PhidSDP << " SourceDoubletPotential(x,y,z),  using the flat panel (e.g. Katz & Plotkin) method" << endl;
-        cout << "=========== Source Influence at " << Target << endl;
-    cout << setprecision(16) << two_pi*PhiSourceDirect << " PhiSdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
-    cout << setprecision(16) << two_pi*src->HyperboloidSourcePhi(Target) << " HyperboloidSourcePhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl; 
-    cout << setprecision(16) << two_pi*src->CurvedSourcePhi(Target) << " CurvedSourcePhi(x,y,z),  using the Wang method" << endl;
-    cout << two_pi*PhisSDP << " SourceDoubletPotential(x,y,z),  using the flat panel (e.g. Katz & Plotkin) method" << endl;
-    
+    cout << setprecision(16) << two_pi * PhiDoubletDirectGuass << endl;
+    cout << setprecision(16) << two_pi * PhiDoubletDirect << " PhiDdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
+    cout << setprecision(16) << two_pi * src->GetTriTesselatedDoubletPhi(Target) << " GetTriTesselatedDoubletPhi(x,y,z),  using the Willis method" << endl;
+    cout << setprecision(16) << two_pi * src->CurvedDoubletPhi(Target) << " CurvedDoubletPhi(x,y,z),  using the Wang method" << endl;
+    cout << setprecision(16) << two_pi * src->HyperboloidDoubletPhi(Target) << " HyperboloidDoubletPhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl;
+    cout << two_pi * PhidSDP << " SourceDoubletPotential(x,y,z),  using the flat panel (e.g. Katz & Plotkin) method" << endl;
+    cout << "=========== Source Influence at " << Target << endl;
+    cout << setprecision(16) << -two_pi * PhiSourceDirectGuass << endl;
+    cout << setprecision(16) << two_pi * PhiSourceDirect << " PhiSdirect(x,y,z),  using " << npts << "x" << npts << " points on panel surface" << endl;
+    cout << setprecision(16) << two_pi * src->HyperboloidSourcePhi(Target) << " HyperboloidSourcePhi(x,y,z),  using the hyperboloidal panel (e.g. Vaz) method" << endl;
+    cout << setprecision(16) << two_pi * src->CurvedSourcePhi(Target) << " CurvedSourcePhi(x,y,z),  using the Wang method" << endl;
+    cout << two_pi * PhisSDP << " SourceDoubletPotential(x,y,z),  using the flat panel (e.g. Katz & Plotkin) method" << endl;
     
     cout << two_pi*PhiSourceDirect/(two_pi*src->CurvedSourcePhi(Target)) << endl;
  

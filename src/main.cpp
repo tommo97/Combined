@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     UTIL::GetCellPans();
 
     //  Get quadrature points and weights
-    UTIL::NumCellGaussPts = 64;
+    UTIL::NumCellGaussPts = 24;
     UTIL::lgwt(UTIL::NumCellGaussPts, UTIL::QuadPts, UTIL::QuadWts);
     //  This is to get the right multipliers for a cell, e.g. a range [-0.5,0.5] rather than [-1,1]
     for (int i = 0; i < UTIL::QuadPts.size(); ++i) {
@@ -71,9 +71,9 @@ int main(int argc, char *argv[])
      //return 0;
     //    TEST::TestBulkLoader(100000);
 //        TEST::TestFMM(argc, argv);
-        TEST::SimpleTestPanel();
+//        TEST::SimpleTestPanel();
 //        TEST::TestBiotSavart();
-        return 0;
+//        return 0;
     //    TEST::TestBEMFVM();
 //        return 0;
    
@@ -86,9 +86,9 @@ int main(int argc, char *argv[])
     SYSTEM::GambitScale = 1.;
     SYSTEM::MaxP = 3;
     SYSTEM::Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
-    globalSystem->DS = .3;
+    globalSystem->DS = 1.0;
     
-    globalSystem->dtInit = 0.01; //     This *maybe* gets changed according to the maximum kinematic velocity of the body(s)
+//    globalSystem->dtInit = 0.01; //     This *maybe* gets changed according to the maximum kinematic velocity of the body(s)
     globalSystem->unscaledVinf = Vect3(0.0);
     globalSystem->NumSubSteps = 25;
 
@@ -246,8 +246,8 @@ void UTIL::PostAmble(string fname) {
     WriteMATLABMatrix1DVect3("WakePanC3", fname, C3);
     WriteMATLABMatrix1DVect3("WakePanC4", fname, C4);
     WriteMATLABMatrix1D("WakePanGamma", fname, GMA);
-    //WriteMATLABMatrix2D("Amatrix", fname, BODY::Bodies[0]->localA);
-    //WriteMATLABMatrix2D("Bmatrix", fname, BODY::Bodies[0]->localB);
+    WriteMATLABMatrix2D("Amatrix", fname, BODY::Bodies[0]->localA);
+    WriteMATLABMatrix2D("Bmatrix", fname, BODY::Bodies[0]->localB);
     WriteMATLABMatrix2D("PhiPrev", fname, PhiPrev);
     WriteMATLABMatrix2D("TRANS1", fname, TRANS1);
     WriteMATLABMatrix2D("TRANS2", fname, TRANS2);
@@ -554,8 +554,8 @@ void UTIL::PreAmble() {
             BODY::Bodies[i]->Faces[j].GetNewGlobalPosition();
 
     BODY::PollFaces();
-
-    BODY::SetUpProtoWakes(globalSystem->DS * globalSystem->dtInit);
+    globalSystem->dtInit = TIME_STEPPER::MaxTime/globalSystem->NumSubSteps;
+    BODY::SetUpProtoWakes(globalSystem->dtInit);
     Array < Array <REAL> > TRANS1, TRANS2, TRANS3, TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
         for (int j = 0; j < BODY::Bodies[i]->ProtoWakes.size(); ++j)

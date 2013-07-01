@@ -125,7 +125,7 @@ void BODY::MakeWake() {
     Array <Vect3> Oms, tOms;
     Array <Vect3*> Origins, tOrigins;
     for (int i = 0; i < WakePanels.size(); ++i)
-        if (WakePanels[i].size() > 25) {
+        if (WakePanels[i].size() > 15) {
             for (int j = 0; j < WakePanels[i][0].size(); ++j) {
                 PANEL *tmp = (WakePanels[i][0][j]);
                 for (int k = 0; k < n; ++k) {
@@ -378,7 +378,7 @@ void BODY::SplitUpLinearAlgebra() {
         REAL PhiWake = 0.0;
 
         for (int j = 0; j < BODY::VortexPositions.size(); ++j)
-            VWake += 1.0 * UTIL::globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
+            VWake += 2.0 * UTIL::globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
 
         /*        for (int j = 0; j < FVMCell::AllCells.size(); ++j)
                     VWake += 2.0*globalDirectVel(trg->CollocationPoint - FVMCell::AllCells[j]->Position,
@@ -386,11 +386,14 @@ void BODY::SplitUpLinearAlgebra() {
          */
         VWake += 1.0 * trg->Vfmm;
 
-        for (int j = 0; j < srcs.size(); ++j)
-            PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
+        for (int j = 0; j < srcs.size(); ++j){
+            srcs[j]->Mu = srcs[j]->Gamma;
+            PhiWake -= srcs[j]->GetTriTesselatedDoubletPhi(trg->CollocationPoint);
+        }
+//            PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
 
 
-        trg->Phi = PhiWake + trg->PhiWakePrev;
+        trg->Phi = PhiWake;// + trg->PhiWakePrev;
         trg->Vkin = Vkin;
         trg->VWake = VWake;
         trg->VCentroid = globalSystem->unscaledVinf - Vkin + VWake;
@@ -710,7 +713,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
     BODY::SubTIMES = BODY::Times;
 
     for (BODY::SubStep = 1; BODY::SubStep <= n_steps; ++BODY::SubStep) {
-
+        cout << BODY::SubStep << " " << n_steps << endl;
         BODY::TimePrev[3] = BODY::TimePrev[2];
         BODY::TimePrev[2] = BODY::TimePrev[1];
         BODY::TimePrev[1] = BODY::TimePrev[0];
@@ -730,25 +733,6 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         }
         //  Check the order of the next few lines
         for (int i = 0; i < BODY::Bodies.size(); ++i) {
-
-
-            REAL k = .5, c = 1.0, U = 1.0;
-            REAL om = 2.0 * U * k / c;
-
-            REAL dalpha = UTIL::deg2rad(5);
-
-            REAL alpha = dalpha;
-            REAL alpha_dot = 0.0;
-
-            if (BODY::Time < 4.733) {
-                alpha = -dalpha * sin(om * BODY::Time);
-                alpha_dot = -om * dalpha * cos(om * BODY::Time);
-            }
-
-            BODY::AlphaHistory.push_back(alpha);
-            BODY::AlphaDotHistory.push_back(alpha_dot);
-
-
             BODY::Bodies[i]->MoveBody();
             BODY::Bodies[i]->AngleHist.push_back(BODY::Bodies[i]->EulerAngles);
         }
@@ -993,6 +977,24 @@ void BODY::UpdateGlobalInfluenceMatrices() {
     t = ticks();
     REAL TempFarField = PANEL::FarField;
     PANEL::FarField = 1e32;
+    
+    
+    int npts = 10;
+    Array < Array < Array < Array <REAL> > > > Areas(BODY::Bodies.size());
+    Array < Array < Array < Array <Vect3> > > > CP(BODY::Bodies.size()), N(BODY::Bodies.size());
+    for (int I = 0; I < BODY::Bodies.size(); ++I) {
+        Areas[I].allocate(BODY::Bodies[I]->Faces.size());
+        CP[I].allocate(BODY::Bodies[I]->Faces.size());
+        N[I].allocate(BODY::Bodies[I]->Faces.size());
+        int n = BODY::Bodies[I]->Faces.size();
+        for (int j = 0; j < n; ++j) {
+            PANEL *src = &BODY::Bodies[I]->Faces[j];
+            src->DivPanel(npts, CP[I][j], N[I][j], Areas[I][j]);
+        }
+    }
+    
+    
+    
     for (int I = 0; I < BODY::Bodies.size(); ++I) {
         cout << "\t Body " << I + 1 << endl;
         int n = BODY::Bodies[I]->Faces.size();
@@ -1002,80 +1004,67 @@ void BODY::UpdateGlobalInfluenceMatrices() {
         //BODY::Bodies[I]->localVD = UTIL::zerosv(n, n);
         for (int i = 0; i < n; ++i) {
             PANEL *trg = &BODY::Bodies[I]->Faces[i];
+            cout << i << " " << n << endl;
 #ifdef _OPENMP
-//#pragma omp parallel for
+#pragma omp parallel for
 #endif
             for (int j = 0; j < n; ++j) {
                 REAL PhiS = 0.0, PhiD = 0.0;
                 PANEL *src = &BODY::Bodies[I]->Faces[j];
-                PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
-                
-                
-//                REAL PhiSourceDirect = 0.0;
-//                {
-//                    int n = 10;
-//                    Array < Array < Vect3 > > CP;
-//                    Array < Array < Vect3 > > N;
-//                    Array < Array < REAL > > A;
-//                    src->DivPanel(n, CP, N, A);
+//                PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
+
+//                if (i == j) {
+                    PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
+//                    {
+//                        for (int k = 0; k < npts; ++k)
+//                            for (int l = 0; l < npts; ++l) {
 //
+//                                Vect3 DX = (CP[I][j][k][l] - trg->CollocationPoint);
+//                                REAL DXMag = DX.Mag();
 //
-//
-//                    for (int i = 0; i < n; ++i)
-//                        for (int j = 0; j < n; ++j) {
-//
-//                            Vect3 DX = (CP[i][j] - trg->CollocationPoint);
-//                            REAL DXMag = DX.Mag();
-//                            REAL DXMag2 = DXMag * DXMag;
-//                            REAL DXMag3 = DXMag2 * DXMag;
-//                            PhiSourceDirect += -A[i][j] / (two_pi * DXMag);
-//                        }
-//                }
+//                                PhiS += Areas[I][j][k][l] / (two_pi * DXMag);
+//                            }
+//                    }
+//                                } else
+//                PhiS = -src->CurvedSourcePhi(trg->CollocationPoint);
+                //                PhiD = -src->CurvedDoubletPhi(trg->CollocationPoint);
+                //                
+                src->Mu = 1.0;
+                src->Gamma = 1.0;
+                //cout << PhiD << " " << -src->CurvedDoubletPhi(trg->CollocationPoint) << " " << -src->GetTriTesselatedDoubletPhi(trg->CollocationPoint) << endl;
+                if (i!=j)
+                    PhiD = -src->GetTriTesselatedDoubletPhi(trg->CollocationPoint);
+                else
+                    PhiD = 1.0;
                 
+                src->Mu = .0;
+               
+                src->Gamma = .0;
+//              
                 
-                REAL a = PhiD;
-//                if (abs(i-j) < 5){
-//                src->Mu = 1.0;
-//                cout << a << " " << -1.0*src->GetTriTesselatedDoubletPhi(trg->CollocationPoint) << endl;
-//                }
-                
+                REAL a = PhiD; 
                 REAL b = PhiS;
-//                b = - PhiSourceDirect;
-                
-//                REAL c = PhiD;
 
-                
-                src->Sigma = 0.0;
-                //BODY::Bodies[I]->localVD[i][j] = VectMultMatrix(trg->TRANS, src->BodyPanelVelocity(trg->CollocationPoint));
-
-                src->Mu = 0.0;
-                src->Sigma = 1.0;
-                //BODY::Bodies[I]->localVS[i][j] = VectMultMatrix(trg->TRANS, src->BodyPanelVelocity(trg->CollocationPoint));
-
-
+ 
                 if (BODY::Bodies[I]->Faces[j].isBound) {
                     PhiS = 0.0, PhiD = 0.0;
                     src = BODY::Bodies[I]->Faces[j].AttachedProtoWake;
 
-                    PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, 1, 2);
+                    src->Mu = src->Gamma = 1.0;
+                    PhiD = -src->GetTriTesselatedDoubletPhi(trg->CollocationPoint);
+                    src->Mu = src->Gamma = 0.0;
                     a += (BODY::Bodies[I]->Faces[j].isTop) ? PhiD : -PhiD;
-
-                    src->Gamma = 1.0;
-                    Vect3 VD = VectMultMatrix(trg->TRANS, src->VortexPanelVelocity(trg->CollocationPoint));
-                    //BODY::Bodies[I]->localVD[i][j] += (BODY::Bodies[I]->Faces[j].isTop) ? VD : -VD;
                 }
-
 
                 BODY::Bodies[I]->localA[i][j] = a;
                 BODY::Bodies[I]->localB[i][j] = b;
-                //            if (BODY::IPKC)
-                //                C[i][j] = c;
-
 
             }
 
         }
 #ifdef USE_MATRIX_INVERSE
+        UTIL::WriteMATLABMatrix2D("Amatrix", "Output.mat", BODY::Bodies[I]->localA);
+        UTIL::WriteMATLABMatrix2D("Bmatrix", "Output.mat", BODY::Bodies[I]->localB);
         inverse(BODY::Bodies[I]->localA);
 #endif
 
