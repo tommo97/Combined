@@ -1691,25 +1691,25 @@ void TEST::TestFMM(int argc, char *argv[]) {
             Vect3 D = Posns[Indices[i]] - Posns[j];
             V += UTIL::globalCubicDirectVel(D, Omegas[j]);
 
-            UTIL::globalCubicDirectVelGrads(D, Omegas[j], DirectVelGrads[i]);
+//            UTIL::globalCubicDirectVelGrads(D, Omegas[j], DirectVelGrads[i]);
         }
 
 
         REAL h = 0.001;
 
-        Vect3 VelN(0.), VelS(0.), VelE(0.), VelW(0.), VelT(0.), VelB(0.);
-
-        for (int j = 0; j < Posns.size(); ++j) {
-            VelE += UTIL::globalCubicDirectVel(Posns[Indices[i]] + Vect3(h, 0., 0.) - Posns[j], Omegas[j]);
-            VelW += UTIL::globalCubicDirectVel(Posns[Indices[i]] - Vect3(h, 0., 0.) - Posns[j], Omegas[j]);
-            VelN += UTIL::globalCubicDirectVel(Posns[Indices[i]] + Vect3(0., h, 0.) - Posns[j], Omegas[j]);
-            VelS += UTIL::globalCubicDirectVel(Posns[Indices[i]] - Vect3(0., h, 0.) - Posns[j], Omegas[j]);
-            VelT += UTIL::globalCubicDirectVel(Posns[Indices[i]] + Vect3(0., 0., h) - Posns[j], Omegas[j]);
-            VelB += UTIL::globalCubicDirectVel(Posns[Indices[i]] - Vect3(0., 0., h) - Posns[j], Omegas[j]);
-        }
-        NumVelGradients[i][0] = (VelE - VelW) / (2. * h);
-        NumVelGradients[i][1] = (VelN - VelS) / (2. * h);
-        NumVelGradients[i][2] = (VelT - VelB) / (2. * h);
+//        Vect3 VelN(0.), VelS(0.), VelE(0.), VelW(0.), VelT(0.), VelB(0.);
+//
+//        for (int j = 0; j < Posns.size(); ++j) {
+//            VelE += UTIL::globalCubicDirectVel(Posns[Indices[i]] + Vect3(h, 0., 0.) - Posns[j], Omegas[j]);
+//            VelW += UTIL::globalCubicDirectVel(Posns[Indices[i]] - Vect3(h, 0., 0.) - Posns[j], Omegas[j]);
+//            VelN += UTIL::globalCubicDirectVel(Posns[Indices[i]] + Vect3(0., h, 0.) - Posns[j], Omegas[j]);
+//            VelS += UTIL::globalCubicDirectVel(Posns[Indices[i]] - Vect3(0., h, 0.) - Posns[j], Omegas[j]);
+//            VelT += UTIL::globalCubicDirectVel(Posns[Indices[i]] + Vect3(0., 0., h) - Posns[j], Omegas[j]);
+//            VelB += UTIL::globalCubicDirectVel(Posns[Indices[i]] - Vect3(0., 0., h) - Posns[j], Omegas[j]);
+//        }
+//        NumVelGradients[i][0] = (VelE - VelW) / (2. * h);
+//        NumVelGradients[i][1] = (VelN - VelS) / (2. * h);
+//        NumVelGradients[i][2] = (VelT - VelB) / (2. * h);
         
         DirectVels[i] = V;
     }
