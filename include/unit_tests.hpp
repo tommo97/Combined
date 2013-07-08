@@ -37,7 +37,7 @@ public:
     static void SmallTestFMM();
     static void TestFMM(int argc, char *argv[]);
     static void TestPanel();
-    static void SolveMatfileVels(string fname);
+    static void SolveMatfileVels();
     static void TestBiotSavart();
     static void TestBEM();
     static void SimpleTestPanel();
