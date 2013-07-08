@@ -1084,7 +1084,8 @@ void TEST::SolveMatfileVels() {
     Posns.allocate(n);
     Omegas.allocate(n);
     Array <Vect3> FMMVels(n);
-    Array <Vect3> DirVels(n,Vect3(0.0,0.0,0.0));
+    Array <Vect3> FMMGrads0(n), FMMGrads1(n), FMMGrads2(n);
+//    Array <Vect3> DirVels(n,Vect3(0.0,0.0,0.0));
 
 
 
@@ -1094,20 +1095,23 @@ void TEST::SolveMatfileVels() {
         Posns[i] = (FVMCell::AllCells[i]->Position);
         Omegas[i] = (FVMCell::AllCells[i]->Omega);
         FMMVels[i] = (FVMCell::AllCells[i]->Velocity);
+        FMMGrads0[i] = FVMCell::AllCells[i]->VelGrads[0];
+        FMMGrads1[i] = FVMCell::AllCells[i]->VelGrads[1];
+        FMMGrads2[i] = FVMCell::AllCells[i]->VelGrads[2];
     }
-    
     
 //    
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int i = 0; i < n; ++i){
-        for (int j = 0; j < n; ++j)
-            DirVels[i] += UTIL::globalDirectVel(Posns[j] - Posns[i], Omegas[j]) ;
-        
-        //cout << DirVels[i] << " " << FMMVels[i] << (DirVels[i] - FMMVels[i]).Mag() << endl;
-    }
-    
+////    
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
+//    for (int i = 0; i < n; ++i){
+//        for (int j = 0; j < n; ++j)
+//            DirVels[i] += UTIL::globalDirectVel(Posns[j] - Posns[i], Omegas[j]) ;
+//        
+//        //cout << DirVels[i] << " " << FMMVels[i] << (DirVels[i] - FMMVels[i]).Mag() << endl;
+//    }
+//    
     
 
     cout << "Clearing tree ";
@@ -1127,7 +1131,10 @@ void TEST::SolveMatfileVels() {
     UTIL::WriteMATLABMatrix1DVect3(string("Posns"), fname, Posns);
     UTIL::WriteMATLABMatrix1DVect3(string("Omegas"), fname, Omegas);
     UTIL::WriteMATLABMatrix1DVect3(string("Vels"), fname, FMMVels);
-    UTIL::WriteMATLABMatrix1DVect3(string("DVels"), fname, DirVels);
+    UTIL::WriteMATLABMatrix1DVect3(string("VelGrad0"), fname, FMMGrads0);
+    UTIL::WriteMATLABMatrix1DVect3(string("VelGrad1"), fname, FMMGrads1);
+    UTIL::WriteMATLABMatrix1DVect3(string("VelGrad2"), fname, FMMGrads2);
+    //UTIL::WriteMATLABMatrix1DVect3(string("DVels"), fname, DirVels);
 
     return;
 }
