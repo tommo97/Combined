@@ -69,11 +69,13 @@ int main(int argc, char *argv[])
    
     //TEST::SmallTestFMM();
      //return 0;
+    TEST::SolveMatfileVels();
+    return 0;
     //    TEST::TestBulkLoader(100000);
-        TEST::TestFMM(argc, argv);
+//        TEST::TestFMM(argc, argv);
 //        TEST::SimpleTestPanel();
 //        TEST::TestBiotSavart();
-        return 0;
+//        return 0;
     //    TEST::TestBEMFVM();
 //        return 0;
    

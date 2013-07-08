@@ -901,7 +901,7 @@ void TEST::TestBiotSavart()
         
     
 }
-void TEST::SolveMatfileVels(string fname) {
+void TEST::SolveMatfileVels() {
 
     system("clear");
 
@@ -913,6 +913,7 @@ void TEST::SolveMatfileVels(string fname) {
     Array <REAL> data;
 
     Array <int> dims;
+    string fname;
     cout << "Enter name of .mat file containing [Nx3] list of vortex locations" << endl;
     getline(cin, fname);
     string varname = "Posns";
