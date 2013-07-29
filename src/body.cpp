@@ -387,9 +387,9 @@ void BODY::SplitUpLinearAlgebra() {
         VWake += 1.0 * trg->Vfmm;
         
         REAL a = 0.126/2.0, om = 5.236, d = 2.4, g = 9.80665,k = 2.7956;
-        REAL PhiWave = (a * g / om) * cosh(k * (d + trg->CollocationPoint.z)) * cos(om*TIME_STEPPER::SimTime - k*trg->CollocationPoint.x)/cosh(k*d);
-        REAL UWave = -(a*g*k*sin(trg->CollocationPoint.x*k - om*TIME_STEPPER::SimTime)*cosh(k*(trg->CollocationPoint.z + d)))/(om*cosh(d*k));
-        REAL VWave = (a*g*k*cos(trg->CollocationPoint.x*k - om*TIME_STEPPER::SimTime)*sinh(k*(trg->CollocationPoint.z + d)))/(om*cosh(d*k));
+        REAL PhiWave = (a * g / om) * cosh(k * (d + (trg->CollocationPoint.z - 0.8))) * cos(om*TIME_STEPPER::SimTime - k*trg->CollocationPoint.x)/cosh(k*d);
+        REAL UWave = -(a*g*k*sin(trg->CollocationPoint.x*k - om*TIME_STEPPER::SimTime)*cosh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
+        REAL VWave = (a*g*k*cos(trg->CollocationPoint.x*k - om*TIME_STEPPER::SimTime)*sinh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
         VWake.x += UWave*SYSTEM::GambitScale;
         VWake.z += VWave*SYSTEM::GambitScale;
         for (int j = 0; j < srcs.size(); ++j){
