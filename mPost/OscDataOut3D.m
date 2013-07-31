@@ -75,7 +75,7 @@ for i = 1:size(CpHistory,1)
 end
 hold all
 
-plot(PressChord,CPress);
+%plot(PressChord,CPress);
 return
 figure
 
