@@ -33,38 +33,43 @@ PressChord = zeros(size(C0(1,:)));
 
 
 for i = 1:size(CpHistory,1)
+    inds = BodySurface2(:);
+    Cp = CpHistory(i,inds)';
+    F = -[Area(inds).*Cp.*Norms(inds,1) Area(inds).*Cp.*Norms(inds,2) Area(inds).*Cp.*Norms(inds,3)];
     
-    Cp = CpHistory(i,:)';
-    F = -[Area.*Cp.*Norms(:,1) Area.*Cp.*Norms(:,2) Area.*Cp.*Norms(:,3)];
     
-    M = cross(F,[CollocPts_x CollocPts_y CollocPts_z]);
+    M = cross(F,[CollocPts_x(inds) CollocPts_y(inds) CollocPts_z(inds)]);
     Mx(i) = sum(M(:,1));
-    
+    Fx(i) = sum(F(:,1));
+    My(i) = sum(sqrt(CollocPts_y(inds).^2 +  CollocPts_z(inds).^2).*F(:,1));
+    Fy(i) = sum(F(:,2));
+    Mz(i) = sum(M(:,3));
+    Fz(i) = sum(F(:,3));
     CLift = sum(F(:,3))*cosd(8.5) - sum(F(:,1))*sind(8.5);
     CL(i) = sum(CLift)./12;
-    CDrag = Norms(:,1).*Area.*(Cp);
+    CDrag = Norms(inds,1).*Area(inds).*(Cp);
     CD(i) = sum(CDrag)./12;
     
     
     
     
-    Mucp0 = Mu(BodySurface0);
-    CpCp0 = Cp(BodySurface0);
+%    Mucp0 = Mu(BodySurface0);
+ %   CpCp0 = Cp;%(BodySurface0);
     
-    r = 0.98;
+ %   r = 0.6;
     
     
     
-    CPress = zeros(size(Cp(1,:)));
+   % CPress = zeros(size(Cp(1,:)));
     
-    for j = 1:size(R0,2)
-        PressChord(j) = interp1(R0(:,j),C0(:,j),r,'cubic');
-        CPress(j) = interp1(R0(:,j),-CpCp0(:,j),r,'cubic');
-    end
+    %for j = 1:size(R0,2)
+   %     PressChord(j) = interp1(R0(:,j),C0(:,j),r,'cubic');
+    %    CPress(j) = interp1(R0(:,j),-CpCp0(:,j),r,'cubic');
+   % end
     %clf
     %plot(PressChord,CPress);
     
-    Cl(i) = trapz(PressChord,CPress);
+    %Cl(i) = trapz(PressChord,CPress);
     %drawnow;
     disp(i)
 end
