@@ -66,7 +66,9 @@ int main(int argc, char *argv[])
         UTIL::QuadWts[i] = UTIL::QuadWts[i] / 2.0;
     }
 
-   
+
+
+    
     //TEST::SmallTestFMM();
      //return 0;
     //TEST::SolveMatfileVels();
@@ -98,7 +100,11 @@ int main(int argc, char *argv[])
     UTIL::cpu_t = ticks();
 
     UTIL::PreAmble();
-
+    
+    WaveField::Period = 1.0;//7.72;
+    WaveField::Height = 0.15;//18.6666*0.3048;
+    WaveField::Depth = 2.4;//30*0.3048;
+    WaveField::Cnoidal.WaveFieldCnoidal();
 
     if (!SYSTEM::PanelOnly) {
         globalSystem->Initialise();

@@ -67,6 +67,8 @@ public:
     
     void PiersonMoskowitz();
     
+    void WaveFieldCnoidal();
+    
 //    REAL getPhi2D(Vect3);
     
     void SetPeakFreq(REAL in)
@@ -91,14 +93,24 @@ public:
         {
             return S;
         }
+        
+        Vect3 CnoidalVelocity(Vect3, REAL);
 
-    static REAL Depth;
+    static REAL Depth, Period, Height, WaveLength, WaveNumber, Celerity;
+    static WaveField Cnoidal;
 private:
     bool PeakFreqSet, ModalFreqSet, HSigSet, WindDataSet;
-    static REAL Gravity;
     Array <REAL> S, Freqs, Amplitudes, Phases, WaveNumbers, WaveLengths, Periods;
     REAL HSig, ModalFreq, PeakFreq;
+    REAL lambda, lambda2, lambda3, lambda4, lambda5;
+    
+    REAL A11, A13, A15, A22, A24, A33, A35, A44, A55;
+    REAL B22, B24, B33, B35, B44, B55;
+    REAL C02, C1, C2, C3, C4;
+    REAL beta;
 
+
+    
     
 };
 #endif	/* WAVES_HPP */

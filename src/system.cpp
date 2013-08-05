@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int SYSTEM::MaxP, SYSTEM::NumTransVars, SYSTEM::M4Radius_in_cells = 0, SYSTEM::NumM4 = 0;
 REAL SYSTEM::GambitScale = 1.0, SYSTEM::Del2 = 0.25;
 bool SYSTEM::PanelOnly = false;
+REAL SYSTEM::g = 9.80665; // m/s/s
 /**************************************************************/
 SYSTEM::~SYSTEM() {
 
@@ -54,7 +55,7 @@ SYSTEM::SYSTEM(int NT) {
     DS = .3;
     dtInit = 0.0;
     NumSubSteps = 0;
-    g = 9.80665; // m/s/s
+    
     Temp = 288.15; //  Kelvin
     Rho = 1027; //1.226; //1027; //  Kg/m3
     Mu = 1.5e-3; //(sqrt(pow(Temp, 3)) * 1.458e-6) / (Temp + 110.4); //   Dynamic Viscocity

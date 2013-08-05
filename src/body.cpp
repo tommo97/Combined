@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define PANEL_MODE
 
 #include "body.hpp"
+#include "waves.hpp"
 
 /**************************************************************/
 #include "body.hpp"
@@ -386,13 +387,36 @@ void BODY::SplitUpLinearAlgebra() {
          */
         VWake += 1.0 * trg->Vfmm;
         
-        REAL a = 0.150/2.0, om = 2.0*pi, d = 2.4, g = 9.80665,k = 4.0257;
+       
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+//        REAL a = 0.150/2.0, om = 2.0*pi, d = 2.4, g = 9.80665, k = 4.0257;
         REAL t = TIME_STEPPER::SimTime + 2.5;
-        REAL PhiWave = (a * g / om) * cosh(k * (d + (trg->CollocationPoint.z - 0.8))) * cos(om*t - k*trg->CollocationPoint.x)/cosh(k*d);
-        REAL UWave = -(a*g*k*sin(trg->CollocationPoint.x*k - om*t)*cosh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
-        REAL VWave = (a*g*k*cos(trg->CollocationPoint.x*k - om*t)*sinh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
-        VWake.x += UWave*SYSTEM::GambitScale;
-        VWake.z += VWave*SYSTEM::GambitScale;
+//        REAL PhiWave = (a * g / om) * cosh(k * (d + (trg->CollocationPoint.z - 0.8))) * cos(om*t - k*trg->CollocationPoint.x)/cosh(k*d);
+//        REAL UWave = -(a*g*k*sin(trg->CollocationPoint.x*k - om*t)*cosh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
+//        REAL VWave = (a*g*k*cos(trg->CollocationPoint.x*k - om*t)*sinh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
+        Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint ,t );
+        VWake += WaveVel*SYSTEM::GambitScale;
+//        VWake.x += UWave*SYSTEM::GambitScale;
+//        VWake.z += VWave*SYSTEM::GambitScale;
         for (int j = 0; j < srcs.size(); ++j){
             srcs[j]->Mu = srcs[j]->Gamma;
             PhiWake -= srcs[j]->GetTriTesselatedDoubletPhi(trg->CollocationPoint);
@@ -400,7 +424,7 @@ void BODY::SplitUpLinearAlgebra() {
 //            PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
 
 
-        trg->Phi = PhiWake + 0.0*PhiWave;// + trg->PhiWakePrev;
+        trg->Phi = PhiWake;// + 0.0*PhiWave;// + trg->PhiWakePrev;
         trg->Vkin = Vkin;
         trg->VWake = VWake;
         trg->VCentroid = globalSystem->unscaledVinf - Vkin + VWake;

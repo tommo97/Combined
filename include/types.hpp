@@ -61,7 +61,6 @@ using namespace std;
 
 
 /**************************************************************/
-
 class Branch;
 class FVMCell;
 class Node;
