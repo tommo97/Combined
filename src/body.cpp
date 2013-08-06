@@ -413,7 +413,11 @@ void BODY::SplitUpLinearAlgebra() {
 //        REAL PhiWave = (a * g / om) * cosh(k * (d + (trg->CollocationPoint.z - 0.8))) * cos(om*t - k*trg->CollocationPoint.x)/cosh(k*d);
 //        REAL UWave = -(a*g*k*sin(trg->CollocationPoint.x*k - om*t)*cosh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
 //        REAL VWave = (a*g*k*cos(trg->CollocationPoint.x*k - om*t)*sinh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
+<<<<<<< HEAD
         Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint  - Vect3(0.,0.,0.277777775),t );
+=======
+        Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint  - Vect3(0.,0.,0.275),t );
+>>>>>>> c29096a3f34b29388da8d2a019fb0d486c5aea25
         VWake += WaveVel*SYSTEM::GambitScale;
 //        VWake.x += UWave*SYSTEM::GambitScale;
 //        VWake.z += VWave*SYSTEM::GambitScale;
