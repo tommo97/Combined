@@ -260,15 +260,28 @@ void WaveField::WaveFieldCnoidal() {
 
 }
 
+REAL WaveField::CnoidalPerturbationPotential(Vect3 X, REAL time) {
+    REAL px = X.x;
+    REAL pz = X.z;
+
+    REAL C = WaveField::Celerity;
+    REAL d = WaveField::Depth;
+    REAL S = pz + d;
+    REAL THETAs = beta * (px - C * time);
+    REAL L1 = (lambda * A11 + lambda3 * A13 + lambda5 * A15) * cosh(beta * S) * sin(THETAs);
+    REAL L2 = (lambda2 * A22 + lambda4 * A24) * cosh(2 * beta * S) * sin(2 * THETAs);
+    REAL L3 = (lambda3 * A33 + lambda5 * A35) * cosh(3 * beta * S) * sin(3 * THETAs);
+    REAL L4 = (lambda4 * A44) * cosh(4 * beta * S) * sin(4 * THETAs);
+    REAL L5 = (lambda5 * A55) * cosh(5 * beta * S) * sin(5 * THETAs);
+
+    REAL betaphi_C = L1 + L2 + L3 + L4 + L5;
+    return betaphi_C * C / beta;
+}
+
 Vect3 WaveField::CnoidalVelocity(Vect3 X, REAL time)
 {
     REAL px = X.x;
     REAL pz = X.z;
-    
-    REAL lambda2 = lambda*lambda;
-    REAL lambda3 = lambda2*lambda;
-    REAL lambda4 = lambda3*lambda;
-    REAL lambda5 = lambda4*lambda;
     
     REAL C = WaveField::Celerity;
     REAL d = WaveField::Depth;

@@ -102,6 +102,9 @@ int main(int argc, char *argv[])
     WaveField::Height = 0.15;//18.6666*0.3048;
     WaveField::Depth = 2.4;//30*0.3048;
     WaveField::Cnoidal.WaveFieldCnoidal();
+//    cout << WaveField::Cnoidal.CnoidalVelocity(Vect3(1.2, 0.0, -1.2) ,2.5) << endl;
+//    cout << WaveField::Cnoidal.CnoidalPerturbationPotential(Vect3(1.2, 0.0, -1.2) ,2.5) << endl;
+//    return 0;
     UTIL::PreAmble();
     
 
