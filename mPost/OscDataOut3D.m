@@ -152,7 +152,7 @@ for i = 1:size(CpHistory,1)
 %     Fzl = c1 * F(:,1) + c2 * F(:,2) + c3 * F(:,3);
     
     M = cross(F,[CollocPts_x(inds) CollocPts_y(inds) CollocPts_z(inds)]);
-    SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(0)+BodyRates0_x*Times(i)));
+    SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(th)+BodyRates0_x*Times(i)));
     
     
     Yl = CollocPts_y(inds);
