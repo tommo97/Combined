@@ -128,13 +128,16 @@ for i = 1:size(CpHistory,1)
     q = 0.5.*998.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
     F = -[q.*Area(inds).*Cp.*Norms(inds,1) q.*Area(inds).*Cp.*Norms(inds,2) q.*Area(inds).*Cp.*Norms(inds,3)];
     
-    
+    ct = cos(BodyRates0_x*Times(end));
+    st = sin(BodyRates0_x*Times(end));
+    Yl = CollocPts_y(inds)*ct + CollocPts_z(inds)*st;
+    Zl = CollocPts_y(inds)*st - CollocPts_z(inds)*ct;
     M = cross(F,[CollocPts_x(inds) CollocPts_y(inds) CollocPts_z(inds)]);
     SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(0)+BodyRates0_x*Times(i)));
     
     Mx(i) = sum(M(:,1));
     Fx(i) = sum(F(:,1));
-    My(i) = sum(sqrt(CollocPts_y(inds).^2 +  CollocPts_z(inds).^2).*F(:,1));
+    My(i) = sum(Yl.*F(:,1));
     Fy(i) = sum(F(:,2));
     Mz(i) = sum(M(:,3));
     Fz(i) = sum(F(:,3));
