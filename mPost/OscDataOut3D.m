@@ -123,14 +123,14 @@ apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
 
 
 for i = 1:size(CpHistory,1)
-    inds = BodySurface2(:);
+    inds = BodySurface0(:);
     Cp = CpHistory(i,inds)';
     q = 0.5.*998.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
     F = -[q.*Area(inds).*Cp.*Norms(inds,1) q.*Area(inds).*Cp.*Norms(inds,2) q.*Area(inds).*Cp.*Norms(inds,3)];
     
     
     M = cross(F,[CollocPts_x(inds) CollocPts_y(inds) CollocPts_z(inds)]);
-    SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(240)+BodyRates0_x*Times(i)));
+    SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(0)+BodyRates0_x*Times(i)));
     
     Mx(i) = sum(M(:,1));
     Fx(i) = sum(F(:,1));
