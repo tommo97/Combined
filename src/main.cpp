@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     system("clear");
     
     
-
+    BODY::OutputSubStepCollocationPoints = true;
     SYSTEM::PanelOnly = true;
     PANEL::Initialise();
     UTIL::GetCellPans();
@@ -160,8 +160,8 @@ void UTIL::PostAmble(string fname) {
         UTIL::WriteMATLABMatrix1DVect3("TRANS1_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[0]);
         UTIL::WriteMATLABMatrix1DVect3("TRANS2_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[1]);
         UTIL::WriteMATLABMatrix1DVect3("TRANS3_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[2]);
-
-
+        UTIL::WriteMATLABMatrix2DVect3("CollocPtHistory" + UTIL::toString(i), fname, BODY::SubStepCollocPts[i]);
+        UTIL::WriteMATLABMatrix2DVect3("PanelNormalHistory" + UTIL::toString(i), fname, BODY::SubStepCollocPtNrms[i]);
         for (int j = 0; j < BODY::Bodies[i]->VortonX.size(); ++j) {
             UTIL::WriteMATLABMatrix2DVect3("VortonPoints" + UTIL::toString(i) + "_" + UTIL::toString(j), fname, BODY::Bodies[i]->VortonX[j]);
             UTIL::WriteMATLABMatrix2DVect3("VortonStrength" + UTIL::toString(i) + "_" + UTIL::toString(j), fname, BODY::Bodies[i]->VortonOM[j]);
@@ -257,8 +257,8 @@ void UTIL::PostAmble(string fname) {
     WriteMATLABMatrix1DVect3("WakePanC3", fname, C3);
     WriteMATLABMatrix1DVect3("WakePanC4", fname, C4);
     WriteMATLABMatrix1D("WakePanGamma", fname, GMA);
-    WriteMATLABMatrix2D("Amatrix", fname, BODY::Bodies[0]->localA);
-    WriteMATLABMatrix2D("Bmatrix", fname, BODY::Bodies[0]->localB);
+//    WriteMATLABMatrix2D("Amatrix", fname, BODY::Bodies[0]->localA);
+//    WriteMATLABMatrix2D("Bmatrix", fname, BODY::Bodies[0]->localB);
     WriteMATLABMatrix2D("PhiPrev", fname, PhiPrev);
     WriteMATLABMatrix2D("TRANS1", fname, TRANS1);
     WriteMATLABMatrix2D("TRANS2", fname, TRANS2);
@@ -285,7 +285,7 @@ void UTIL::PostAmble(string fname) {
     WriteMATLABMatrix1DVect3("VCollocPts", fname, VCentroids);
     WriteMATLABMatrix1DVect3("VortonX", fname, BODY::VortexPositions);
     WriteMATLABMatrix1DVect3("VortonO", fname, BODY::VortexOmegas);
-    WriteMATLABMatrix1D("VortonOwnerID", fname, BODY::VortexOwnerID);
+//    WriteMATLABMatrix1D("VortonOwnerID", fname, BODY::VortexOwnerID);
     Array <Vect3> AllBodyPointsTransformed(BODY::AllBodyPoints.size(), Vect3(0.0));
 
     //        for (int i = 0; i < BODY::AllBodyPoints.size(); ++i)

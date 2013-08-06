@@ -2,7 +2,7 @@
 clear all
 clc
 
-load Output.mat
+load Output.+ve_Phi.250mm.lambda=3.66.correct_depth.mat
 
 
 
@@ -123,7 +123,7 @@ apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
 
 
 for i = 1:size(CpHistory,1)
-    inds = BodySurface0(:);
+    inds = BodySurface1(:);
     Cp = CpHistory(i,inds)';
     q = 0.5.*998.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
     F = -[q.*Area(inds).*Cp.*Norms(inds,1) q.*Area(inds).*Cp.*Norms(inds,2) q.*Area(inds).*Cp.*Norms(inds,3)];
@@ -150,13 +150,14 @@ for i = 1:size(CpHistory,1)
 %     Fxl = a1 * F(:,1) + a2 * F(:,2) + a3 * F(:,3);
 %     Fyl = b1 * F(:,1) + b2 * F(:,2) + b3 * F(:,3);
 %     Fzl = c1 * F(:,1) + c2 * F(:,2) + c3 * F(:,3);
-    
-    M = cross(F,[CollocPts_x(inds) CollocPts_y(inds) CollocPts_z(inds)]);
+    scatter(CollocPts(inds,2),CollocPts(inds,3));
+    drawnow
+    M = cross(F,[CollocPts(inds,1) CollocPts(inds,2) CollocPts(inds,3)]);
     SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(th)+BodyRates0_x*Times(i)));
     
     
-    Yl = CollocPts_y(inds);
-    Zl = CollocPts_z(inds);
+    Yl = CollocPts(inds,1);
+    Zl = CollocPts(inds,2);
     
     YLr = (round(Yl*1000))/1000;
     

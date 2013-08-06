@@ -42,11 +42,13 @@ Array <Vect3> BODY::ATTITUDE;
 Array <REAL> BODY::TimePrev = Array <REAL> (4, 0.0);
 REAL BODY::Time = 0;
 REAL BODY::RHO = 1;
+bool BODY::OutputSubStepCollocationPoints = false;
 int BODY::BodyPanelIDCounter = 0, BODY::BodyPointIDCounter = 0, BODY::SubStep = 0;
 Array <Vect3> BODY::TorqueHist;
 Array <Vect3> BODY::ForceHist;
 Array < BODY*> BODY::Bodies;
 Array <PANEL*> BODY::AllBodyFaces;
+Array < Array < Array < Vect3 > > > BODY::SubStepCollocPts, BODY::SubStepCollocPtNrms;
 Array < Array < Array < int > > > BODY::Surfaces;
 Array < Array < Array < PANEL* > > > BODY::ptSurfaces;
 Array < Array <REAL> > BODY::A;
@@ -743,6 +745,20 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
     BODY::CpHistoryD = UTIL::zeros(n_steps, BODY::AllBodyFaces.size());
     BODY::SubTIMES = BODY::Times;
 
+
+    
+    if (BODY::OutputSubStepCollocationPoints) {
+        BODY::SubStepCollocPts.allocate(BODY::Bodies.size());
+        BODY::SubStepCollocPtNrms.allocate(BODY::Bodies.size());
+        for (int i = 0; i < BODY::Bodies.size(); ++i) {
+            BODY::SubStepCollocPts[i] = UTIL::zerosv(BODY::Bodies[i]->Faces.size(),n_steps);
+            BODY::SubStepCollocPtNrms[i] = UTIL::zerosv(BODY::Bodies[i]->Faces.size(),n_steps);
+          
+        }
+    }
+    
+    
+    
     for (BODY::SubStep = 1; BODY::SubStep <= n_steps; ++BODY::SubStep) {
         cout << BODY::SubStep << " " << n_steps << endl;
         BODY::TimePrev[3] = BODY::TimePrev[2];
@@ -757,6 +773,14 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
 
         SplitUpLinearAlgebra();
 
+        if (BODY::OutputSubStepCollocationPoints) {
+            for (int i = 0; i < BODY::Bodies.size(); ++i) {
+                for (int j = 0; j < BODY::Bodies[i]->Faces.size(); ++j) {
+                    BODY::SubStepCollocPts[i][j][BODY::SubStep-1] = BODY::Bodies[i]->Faces[j].CollocationPoint;
+                    BODY::SubStepCollocPtNrms[i][j][BODY::SubStep-1] = BODY::Bodies[i]->Faces[j].TRANS[2];
+                }
+            }
+        }
 
         //        //      Interpolate face vels for subtimestep...
         for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {

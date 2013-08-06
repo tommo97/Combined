@@ -39,6 +39,9 @@ public:
     static Array <Vect3> ATTITUDE;
     Vect3 Attitude;
     static Array <Vect3> VELOCITY;
+    static bool OutputSubStepCollocationPoints;
+    static Array < Array < Array < Vect3 > > > SubStepCollocPts, SubStepCollocPtNrms;
+
     Vect3 Velocity;
     static Array <Vect3> RATES;
     static Array <string> NAMES;
