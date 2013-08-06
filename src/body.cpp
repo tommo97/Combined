@@ -424,7 +424,7 @@ void BODY::SplitUpLinearAlgebra() {
 //            PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
 
 
-        trg->Phi = PhiWake + WaveField::Cnoidal.CnoidalPerturbationPotential(trg->CollocationPoint  - Vect3(0.,0.,0.200), t+0.25 );// + 0.0*PhiWave;// + trg->PhiWakePrev;
+        trg->Phi = PhiWake + WaveField::Cnoidal.CnoidalPerturbationPotential(trg->CollocationPoint  - Vect3(0.,0.,0.200), t+30.25 );// + 0.0*PhiWave;// + trg->PhiWakePrev;
         trg->Vkin = Vkin;
         trg->VWake = VWake;
         trg->VCentroid = globalSystem->unscaledVinf - Vkin + VWake;
