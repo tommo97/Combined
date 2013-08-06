@@ -1,4 +1,4 @@
-%close all
+close all
 clear all
 clc
 
@@ -123,17 +123,52 @@ apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
 
 
 for i = 1:size(CpHistory,1)
-    inds = BodySurface0(:);
+    inds = BodySurface1(:);
     Cp = CpHistory(i,inds)';
-    q = 0.5.*998.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
+    q = 0.5.*998.*(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
     F = -[q.*Area(inds).*Cp.*Norms(inds,1) q.*Area(inds).*Cp.*Norms(inds,2) q.*Area(inds).*Cp.*Norms(inds,3)];
+    th = -120;
+   
     
-    ct = cos(BodyRates0_x*Times(end));
-    st = sin(BodyRates0_x*Times(end));
-    Yl = CollocPts_y(inds)*ct + CollocPts_z(inds)*st;
-    Zl = CollocPts_y(inds)*st - CollocPts_z(inds)*ct;
+%     EulerAngles.x = EulerHist0_x(i); % roll
+%     EulerAngles.y = EulerHist0_y(i); % pitch
+%     EulerAngles.z = EulerHist0_z(i); % yaw
+%     
+%     cosphi = cos(EulerAngles.x); costhe = cos(EulerAngles.y); cospsi = cos(EulerAngles.z);
+%     sinphi = sin(EulerAngles.x); sinthe = sin(EulerAngles.y); sinpsi = sin(EulerAngles.z);
+%     a1 = costhe*cospsi;
+%     a2 = costhe*sinpsi;
+%     a3 = -sinthe;
+%     b1 = sinphi * sinthe * cospsi - cosphi*sinpsi;
+%     b2 = sinphi * sinthe * sinpsi + cosphi*cospsi;
+%     b3 = sinphi*costhe;
+%     c1 = cosphi * sinthe * cospsi + sinphi*sinpsi;
+%     c2 = cosphi * sinthe * sinpsi - sinphi*cospsi;
+%     c3 = cosphi*costhe;
+%     TRANS = [ a1, b1, c1 ; a2, b2, c2 ; a3, b3, c3];
+%     
+%     Fxl = a1 * F(:,1) + a2 * F(:,2) + a3 * F(:,3);
+%     Fyl = b1 * F(:,1) + b2 * F(:,2) + b3 * F(:,3);
+%     Fzl = c1 * F(:,1) + c2 * F(:,2) + c3 * F(:,3);
+    
     M = cross(F,[CollocPts_x(inds) CollocPts_y(inds) CollocPts_z(inds)]);
     SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(0)+BodyRates0_x*Times(i)));
+    
+    
+    Yl = CollocPts_y(inds);
+    Zl = CollocPts_z(inds);
+    
+    YLr = (round(Yl*1000))/1000;
+    
+    YLru = unique(YLr);
+    
+    for j = 1:length(YLru)
+         Fop(j) = sum((YLr==YLru(j)).*F(:,1));
+    end
+    
+    
+    Mout_of_plane(i) = trapz(YLru,Fop');
+   % Min_plane(i) = trapz(YLru,YLru.*Fip');
     
     Mx(i) = sum(M(:,1));
     Fx(i) = sum(F(:,1));
@@ -147,6 +182,12 @@ for i = 1:size(CpHistory,1)
     CD(i) = sum(CDrag)./12;
     
     
+    
+    
+    
+    %scatter(Yl,Zl)
+    %axis equal
+    %drawnow
     
     
 %    Mucp0 = Mu(BodySurface0);
