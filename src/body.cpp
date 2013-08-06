@@ -1118,8 +1118,8 @@ void BODY::UpdateGlobalInfluenceMatrices() {
 
         }
 #ifdef USE_MATRIX_INVERSE
-        UTIL::WriteMATLABMatrix2D("Amatrix", "Output.mat", BODY::Bodies[I]->localA);
-        UTIL::WriteMATLABMatrix2D("Bmatrix", "Output.mat", BODY::Bodies[I]->localB);
+//        UTIL::WriteMATLABMatrix2D("Amatrix", "Output.mat", BODY::Bodies[I]->localA);
+//        UTIL::WriteMATLABMatrix2D("Bmatrix", "Output.mat", BODY::Bodies[I]->localB);
         inverse(BODY::Bodies[I]->localA);
 #endif
 
