@@ -409,11 +409,11 @@ void BODY::SplitUpLinearAlgebra() {
         
         
 //        REAL a = 0.150/2.0, om = 2.0*pi, d = 2.4, g = 9.80665, k = 4.0257;
-        REAL t = TIME_STEPPER::SimTime + 2.5;
+        REAL t = TIME_STEPPER::SimTime;
 //        REAL PhiWave = (a * g / om) * cosh(k * (d + (trg->CollocationPoint.z - 0.8))) * cos(om*t - k*trg->CollocationPoint.x)/cosh(k*d);
 //        REAL UWave = -(a*g*k*sin(trg->CollocationPoint.x*k - om*t)*cosh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
 //        REAL VWave = (a*g*k*cos(trg->CollocationPoint.x*k - om*t)*sinh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
-        Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint  - Vect3(0.,0.,0.35),t );
+        Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint  - Vect3(0.,0.,0.277777775),t );
         VWake += WaveVel*SYSTEM::GambitScale;
 //        VWake.x += UWave*SYSTEM::GambitScale;
 //        VWake.z += VWave*SYSTEM::GambitScale;
