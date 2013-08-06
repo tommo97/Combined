@@ -95,6 +95,7 @@ public:
         }
         
         Vect3 CnoidalVelocity(Vect3, REAL);
+        REAL CnoidalPerturbationPotential(Vect3, REAL);
 
     static REAL Depth, Period, Height, WaveLength, WaveNumber, Celerity;
     static WaveField Cnoidal;
