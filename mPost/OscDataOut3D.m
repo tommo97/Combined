@@ -1,4 +1,4 @@
-close all
+%close all
 clear all
 clc
 
@@ -123,9 +123,9 @@ apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
 
 
 for i = 1:size(CpHistory,1)
-    inds = BodySurface1(:);
+    inds = BodySurface2(:);
     Cp = CpHistory(i,inds)';
-    q = 0.5.*998.*(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
+    q = 0.5.*998.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
     F = -[q.*Area(inds).*Cp.*Norms(inds,1) q.*Area(inds).*Cp.*Norms(inds,2) q.*Area(inds).*Cp.*Norms(inds,3)];
     th = -120;
    
@@ -162,12 +162,14 @@ for i = 1:size(CpHistory,1)
     
     YLru = unique(YLr);
     
+    bnds = [0.026; YLru(1:end-1) + 0.5*diff(YLru); 0.175];
+    dbnds = diff(bnds);
     for j = 1:length(YLru)
-         Fop(j) = sum((YLr==YLru(j)).*F(:,1));
+         Fop(j) = sum((YLr==YLru(j)).*F(:,1)/dbnds(j));
     end
     
     
-    Mout_of_plane(i) = trapz(YLru,Fop');
+    Mout_of_plane(i) = trapz(YLru,YLru.*Fop');
    % Min_plane(i) = trapz(YLru,YLru.*Fip');
     
     Mx(i) = sum(M(:,1));
