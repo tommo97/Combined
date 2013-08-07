@@ -5,7 +5,9 @@ clc
 figure('Position',[1531         203         707         400]);
 
 %   For 150mm 1Hz In plane, use lambda3.66, out of plane use 3.77
-load Output.lambda3.7.vel.0.5Hz.mat
+load Output.lambda3.66.vel.0.5Hz.doubleheight.mat
+
+
 
 
 % BarltropMx1Hz150mm
@@ -141,7 +143,7 @@ for i = 1:size(CpHistory,1)
     
     CollocPts = [CollocPtHistory0_x(:,i) CollocPtHistory0_y(:,i) CollocPtHistory0_z(:,i)];
     F = -[q.*Area(inds).*Cp.*Norms(:,1) q.*Area(inds).*Cp.*Norms(:,2) q.*Area(inds).*Cp.*Norms(:,3)];
-    th = 0;
+    th =0;
    
     
 %     EulerAngles.x = EulerHist0_x(i); % roll
