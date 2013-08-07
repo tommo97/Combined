@@ -5,8 +5,7 @@ clc
 figure('Position',[1531         203         707         400]);
 
 %   For 150mm 1Hz In plane, use lambda3.66, out of plane use 3.77
-load Output.lambda3.7.2phi.mat
-
+load Output.lambda3.66.2phi.0.5Hz.mat
 
 
 % BarltropMx1Hz150mm
@@ -123,6 +122,7 @@ rhoH2O = 998;
 MassBlade = blade.AREA * rhoSteel;
 ratio = rhoSteel/rhoH2O;
 apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
+
 % for i = 1:360
 %     
 %     
@@ -132,16 +132,16 @@ apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
 
 % try BodySurface1 with +ve with 15 secs sim time 
 for i = 1:size(CpHistory,1)
-    inds = BodySurface1(:);
+    inds = BodySurface0(:);
     Cp = CpHistory(i,inds)';
-    q = 0.5.*998.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
+    q = 0.5.*rhoH2O.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
     
     
     Norms = [PanelNormalHistory0_x(inds,i) PanelNormalHistory0_y(inds,i) PanelNormalHistory0_z(inds,i)];
     
     CollocPts = [CollocPtHistory0_x(:,i) CollocPtHistory0_y(:,i) CollocPtHistory0_z(:,i)];
     F = -[q.*Area(inds).*Cp.*Norms(:,1) q.*Area(inds).*Cp.*Norms(:,2) q.*Area(inds).*Cp.*Norms(:,3)];
-    th = 120;
+    th = 0;
    
     
 %     EulerAngles.x = EulerHist0_x(i); % roll
@@ -167,7 +167,7 @@ for i = 1:size(CpHistory,1)
     %scatter(CollocPts(inds,2),CollocPts(inds,3));
     %drawnow
     M = cross(F,[CollocPts(inds,1) CollocPts(inds,2) CollocPts(inds,3)]);
-    SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(th)+BodyRates0_x*Times(i)));
+    SelfMoment(i) = FoilArea * (rhoSteel - rhoH2O) * cos(deg2rad(th) + BodyRates0_x*Times(i)) * trapz(blade.RADIUS,blade.RADIUS.*blade.CHORD);
     
     
     Yl = CollocPts_y(inds);

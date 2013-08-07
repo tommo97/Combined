@@ -415,8 +415,8 @@ void BODY::SplitUpLinearAlgebra() {
 //        REAL PhiWave = (a * g / om) * cosh(k * (d + (trg->CollocationPoint.z - 0.8))) * cos(om*t - k*trg->CollocationPoint.x)/cosh(k*d);
 //        REAL UWave = -(a*g*k*sin(trg->CollocationPoint.x*k - om*t)*cosh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
 //        REAL VWave = (a*g*k*cos(trg->CollocationPoint.x*k - om*t)*sinh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
-        //Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint  - Vect3(0.,0.,0.250), t+0.739 );
-        //VWake += WaveVel*SYSTEM::GambitScale;
+        Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint  - Vect3(0.,0.,0.250), t+0.739 );
+        VWake += WaveVel*SYSTEM::GambitScale;
 //        VWake.x += UWave*SYSTEM::GambitScale;
 //        VWake.z += VWave*SYSTEM::GambitScale;
         for (int j = 0; j < srcs.size(); ++j){
@@ -426,7 +426,7 @@ void BODY::SplitUpLinearAlgebra() {
 //            PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
 
 
-        trg->Phi = PhiWake + 2.*WaveField::Cnoidal.CnoidalPerturbationPotential(trg->CollocationPoint  - Vect3(0.,0.,0.250), t+0.739 );// + 0.0*PhiWave;// + trg->PhiWakePrev;
+        trg->Phi = PhiWake;// + WaveField::Cnoidal.CnoidalPerturbationPotential(trg->CollocationPoint  - Vect3(0.,0.,0.250), t+0.739 );// + 0.0*PhiWave;// + trg->PhiWakePrev;
         trg->Vkin = Vkin;
         trg->VWake = VWake;
         trg->VCentroid = globalSystem->unscaledVinf - Vkin + VWake;
