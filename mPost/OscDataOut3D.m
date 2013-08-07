@@ -2,7 +2,7 @@
 clear all
 clc
 
-load Output.+ve_Phi.250mm.lambda=3.66.correct_depth.mat
+load Output.lambda3.66.mat
 
 
 
@@ -123,10 +123,15 @@ apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
 
 
 for i = 1:size(CpHistory,1)
-    inds = BodySurface1(:);
+    inds = BodySurface0(:);
     Cp = CpHistory(i,inds)';
     q = 0.5.*998.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
-    F = -[q.*Area(inds).*Cp.*Norms(inds,1) q.*Area(inds).*Cp.*Norms(inds,2) q.*Area(inds).*Cp.*Norms(inds,3)];
+    
+    
+    Norms = [PanelNormalHistory0_x(inds,i) PanelNormalHistory0_y(inds,i) PanelNormalHistory0_z(inds,i)];
+    
+    CollocPts = [CollocPtHistory0_x(:,i) CollocPtHistory0_y(:,i) CollocPtHistory0_z(:,i)];
+    F = -[q.*Area(inds).*Cp.*Norms(:,1) q.*Area(inds).*Cp.*Norms(:,2) q.*Area(inds).*Cp.*Norms(:,3)];
     th = -0;
    
     
@@ -150,42 +155,44 @@ for i = 1:size(CpHistory,1)
 %     Fxl = a1 * F(:,1) + a2 * F(:,2) + a3 * F(:,3);
 %     Fyl = b1 * F(:,1) + b2 * F(:,2) + b3 * F(:,3);
 %     Fzl = c1 * F(:,1) + c2 * F(:,2) + c3 * F(:,3);
-    scatter(CollocPts(inds,2),CollocPts(inds,3));
-    drawnow
+    %scatter(CollocPts(inds,2),CollocPts(inds,3));
+    %drawnow
     M = cross(F,[CollocPts(inds,1) CollocPts(inds,2) CollocPts(inds,3)]);
     SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(th)+BodyRates0_x*Times(i)));
     
     
-    Yl = CollocPts(inds,1);
-    Zl = CollocPts(inds,2);
-    
-    YLr = (round(Yl*1000))/1000;
-    
-    YLru = unique(YLr);
-    
-    bnds = [0.026; YLru(1:end-1) + 0.5*diff(YLru); 0.175];
-    dbnds = diff(bnds);
-    for j = 1:length(YLru)
-         Fop(j) = sum((YLr==YLru(j)).*F(:,1)/dbnds(j));
-    end
-    
-    
-    Mout_of_plane(i) = trapz(YLru,YLru.*Fop');
+%     Yl = CollocPts(inds,1);
+%     Zl = CollocPts(inds,2);
+%     
+%     YLr = (round(Yl*1000))/1000;
+%     
+%     YLru = unique(YLr);
+%     
+%     bnds = [0.026; YLru(1:end-1) + 0.5*diff(YLru); 0.175];
+%     dbnds = diff(bnds);
+%     for j = 1:length(YLru)
+%          Fop(j) = sum((YLr==YLru(j)).*F(:,1)/dbnds(j));
+%     end
+%     
+%     
+%     Mout_of_plane(i) = trapz(YLru,YLru.*Fop');
    % Min_plane(i) = trapz(YLru,YLru.*Fip');
     
     Mx(i) = sum(M(:,1));
     Fx(i) = sum(F(:,1));
-    My(i) = sum(Yl.*F(:,1));
+    %My(i) = sum(Yl.*F(:,1));
     Fy(i) = sum(F(:,2));
     Mz(i) = sum(M(:,3));
     Fz(i) = sum(F(:,3));
     CLift = sum(F(:,3))*cosd(8.5) - sum(F(:,1))*sind(8.5);
     CL(i) = sum(CLift)./12;
-    CDrag = Norms(inds,1).*Area(inds).*(Cp);
-    CD(i) = sum(CDrag)./12;
+%    CDrag = Norms(inds,1).*Area(inds).*(Cp);
+ %   CD(i) = sum(CDrag)./12;
     
     
-    
+%     scatter3(CollocPts(:,1), CollocPts(:,2), CollocPts(:,3));
+% axis equal square
+% drawnow
     
     
     %scatter(Yl,Zl)
