@@ -1,6 +1,7 @@
 %close all
 %clear all
 clc
+clear data_srt_int
 load Barltrop1Hz150mmMy.mat
 [a b] = sort(data(:,1));
 data_srt = data(b,1:2);

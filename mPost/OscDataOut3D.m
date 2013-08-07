@@ -1,14 +1,23 @@
-%close all
+close all
 clear all
 clc
+%set(0,'defaulttextinterpreter','none','defaultaxesposition',[0.10    0.10    .89    .8]);
+figure('Position',[1531         203         707         400]);
 
-load Output.lambda3.66.mat
+%   For 150mm 1Hz In plane, use lambda3.66, out of plane use 3.77
+load Output.lambda3.7.2phi.mat
 
 
 
+% BarltropMx1Hz150mm
+% scatter(data_srt_int(:,1),smooth(data_srt_int(:,2)),'.'); hold all;
+% plot(Times-4.0254,-1.*(1.5*Mx + 0.9*SelfMoment)-0.,'-r','linewidth',2)
 
-
-
+% BodySurface2
+% BarltropMy1Hz150mm
+% scatter(data_srt_int(:,1),smooth(data_srt_int(:,2)),'.'); hold all;
+% plot(Times-3.95,-2*Mout_of_plane,'-r','linewidth',2)
+% axis([0 4    0.2    1.8])
 
 
 C1 = [BodyPointsX(:,1) BodyPointsY(:,1) BodyPointsZ(:,1)];
@@ -121,9 +130,9 @@ apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
 % end
 
 
-
+% try BodySurface1 with +ve with 15 secs sim time 
 for i = 1:size(CpHistory,1)
-    inds = BodySurface0(:);
+    inds = BodySurface1(:);
     Cp = CpHistory(i,inds)';
     q = 0.5.*998.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
     
@@ -132,7 +141,7 @@ for i = 1:size(CpHistory,1)
     
     CollocPts = [CollocPtHistory0_x(:,i) CollocPtHistory0_y(:,i) CollocPtHistory0_z(:,i)];
     F = -[q.*Area(inds).*Cp.*Norms(:,1) q.*Area(inds).*Cp.*Norms(:,2) q.*Area(inds).*Cp.*Norms(:,3)];
-    th = -0;
+    th = 120;
    
     
 %     EulerAngles.x = EulerHist0_x(i); % roll
@@ -161,26 +170,26 @@ for i = 1:size(CpHistory,1)
     SelfMoment(i) = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(deg2rad(th)+BodyRates0_x*Times(i)));
     
     
-%     Yl = CollocPts(inds,1);
-%     Zl = CollocPts(inds,2);
-%     
-%     YLr = (round(Yl*1000))/1000;
-%     
-%     YLru = unique(YLr);
-%     
-%     bnds = [0.026; YLru(1:end-1) + 0.5*diff(YLru); 0.175];
-%     dbnds = diff(bnds);
-%     for j = 1:length(YLru)
-%          Fop(j) = sum((YLr==YLru(j)).*F(:,1)/dbnds(j));
-%     end
-%     
-%     
-%     Mout_of_plane(i) = trapz(YLru,YLru.*Fop');
+    Yl = CollocPts_y(inds);
+    Zl = CollocPts_z(inds);
+    
+    YLr = (round(Yl*1000))/1000;
+    
+    YLru = unique(YLr);
+    
+    bnds = [0.026; YLru(1:end-1) + 0.5*diff(YLru); 0.175];
+    dbnds = diff(bnds);
+    for j = 1:length(YLru)
+         Fop(j) = sum((YLr==YLru(j)).*F(:,1)/dbnds(j));
+    end
+    
+    
+    Mout_of_plane(i) = trapz(YLru,YLru.*Fop');
    % Min_plane(i) = trapz(YLru,YLru.*Fip');
     
     Mx(i) = sum(M(:,1));
     Fx(i) = sum(F(:,1));
-    %My(i) = sum(Yl.*F(:,1));
+    My(i) = sum(Yl.*F(:,1));
     Fy(i) = sum(F(:,2));
     Mz(i) = sum(M(:,3));
     Fz(i) = sum(F(:,3));
