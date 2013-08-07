@@ -1,11 +1,11 @@
-close all
+%close all
 clear all
 clc
 %set(0,'defaulttextinterpreter','none','defaultaxesposition',[0.10    0.10    .89    .8]);
 figure('Position',[1531         203         707         400]);
 
 %   For 150mm 1Hz In plane, use lambda3.66, out of plane use 3.77
-load Output.lambda3.66.2phi.0.5Hz.mat
+load Output.lambda3.7.vel.0.5Hz.mat
 
 
 % BarltropMx1Hz150mm
@@ -167,7 +167,7 @@ for i = 1:size(CpHistory,1)
     %scatter(CollocPts(inds,2),CollocPts(inds,3));
     %drawnow
     M = cross(F,[CollocPts(inds,1) CollocPts(inds,2) CollocPts(inds,3)]);
-    SelfMoment(i) = FoilArea * (rhoSteel - rhoH2O) * cos(deg2rad(th) + BodyRates0_x*Times(i)) * trapz(blade.RADIUS,blade.RADIUS.*blade.CHORD);
+    SelfMoment(i) = FoilArea * (rhoSteel - rhoH2O) * 9.80665 * cos(deg2rad(th) + BodyRates0_x*Times(i)) * trapz(blade.RADIUS,blade.RADIUS.*blade.RADIUS.*blade.CHORD);
     
     
     Yl = CollocPts_y(inds);

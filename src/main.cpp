@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     UTIL::cpu_t = ticks();
     WaveField::Period = 2.0;//7.72;
-    WaveField::Height = 0.15;//18.6666*0.3048;
+    WaveField::Height = 0.3;//18.6666*0.3048;
     WaveField::Depth = 2.245;//30*0.3048;
     WaveField::Cnoidal.WaveFieldCnoidal();
 //    cout << WaveField::Cnoidal.CnoidalVelocity(Vect3(1.2, 0.0, -1.2) ,2.5) << endl;
