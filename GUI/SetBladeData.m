@@ -542,6 +542,40 @@ c(4:17) = linspace(0.03,0.125,14);
         blade.THETA = 10*zeros(size(blade.RADIUS));
         blade.CHORD = sqrt(0.125*0.125 - linspace(-0.125,0.125));
         blade.THICKNESS = [];
+        
+        ChordData = [0.15	43.910256
+    0.200913	42.948718
+    0.248858	41.346154
+    0.301370	40.064103
+    0.351598	38.461538
+    0.401826	36.858974
+    0.447489	35.576923
+    0.500000	34.134615
+    0.598174	31.410256
+    0.698630	28.525641
+    0.801370	25.801282
+    0.904110	22.916667
+    1.000000	20.192308];
+
+TwistData = [0.15	32.211538
+    0.198630	27.083333
+    0.248858	20.032051
+    0.301370	15.224359
+    0.349315	11.057692
+    0.399543	7.532051
+    0.449772	5.608974
+    0.502283	4.166667
+    0.600457	2.243590
+    0.698630	0.641026
+    0.799087	-0.320513
+    0.899543	-1.282051
+    1.000	-1.762821];
+
+blade.RADIUS = linspace(0.15,1.0,10000);
+blade.THETA = interp1(TwistData(:,1),TwistData(:,2),blade.RADIUS);
+blade.CHORD = interp1(ChordData(:,1),ChordData(:,2),blade.RADIUS)/1000;
+blade.RADIUS = 0.175*linspace(0.15,1.0,10000);
+blade.THICKNESS = [];
     case 'Straight'
         blade.RADIUS = linspace(-6,6);
         blade.THETA = 10*zeros(size(blade.RADIUS));
