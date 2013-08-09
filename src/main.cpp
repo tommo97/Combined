@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     
     
     BODY::OutputSubStepCollocationPoints = true;
-    SYSTEM::PanelOnly = true;
+    SYSTEM::PanelOnly = false;
     PANEL::Initialise();
     UTIL::GetCellPans();
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     SYSTEM::M4Radius_in_cells = 2;  // need to define this before initialising the system
     SYSTEM System(0);
     //  Some default values
-    SYSTEM::GambitScale = 1.;
+    SYSTEM::GambitScale = 215;
     SYSTEM::MaxP = 3;
     SYSTEM::Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = 1.0;

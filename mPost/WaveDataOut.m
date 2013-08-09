@@ -1,11 +1,10 @@
-%close all
-clear all
+function DATA = WaveDataOut(infile,nBlade,th)
 clc
 %set(0,'defaulttextinterpreter','none','defaultaxesposition',[0.10    0.10    .89    .8]);
-figure('Position',[1531         203         707         400]);
+%figure('Position',[1531         203         707         400]);
 
 %   For 150mm 1Hz In plane, use lambda3.66, out of plane use 3.77
-load Output.lambda3.66.vel.0.5Hz.doubleheight.mat
+load(infile);
 %clear all
 %load Output.lambda3.77.mat
 
@@ -128,18 +127,19 @@ MassBlade = blade.AREA * rhoSteel;
 ratio = rhoSteel/rhoH2O;
 apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
 
-% for i = 1:360
-%     
-%     
-%     SelfMoment = trapz(blade.RADIUS,apparentMass .* blade.RADIUS.* blade.RADIUS .* sin(theta));
-% end
 
-
-% try BodySurface1 with +ve with 15 secs sim time 
 
 for i = 1:size(CpHistory,1)
-    inds = BodySurface2(:);
+    if nBlade==0
+        inds = BodySurface0(:);
+     
+    elseif nBlade==1
+        inds = BodySurface1(:);
+       
+    else
+        inds = BodySurface2(:);
    
+    end
     Cp = CpHistory(i,inds)';
     q = 0.5.*rhoH2O.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
     
@@ -148,7 +148,7 @@ for i = 1:size(CpHistory,1)
     
     CollocPts = [CollocPtHistory0_x(:,i) CollocPtHistory0_y(:,i) CollocPtHistory0_z(:,i)];
     F = -[q.*Area(inds).*Cp.*Norms(:,1) q.*Area(inds).*Cp.*Norms(:,2) q.*Area(inds).*Cp.*Norms(:,3)];
-    th = 120;
+    
    
     
     M = cross(F,[CollocPts(inds,1) CollocPts(inds,2) CollocPts(inds,3)]);
@@ -194,101 +194,16 @@ for i = 1:size(CpHistory,1)
     Fy(i) = sum(F(:,2));
     Mz(i) = sum(M(:,3));
     Fz(i) = sum(F(:,3));
-    CLift = sum(F(:,3))*cosd(8.5) - sum(F(:,1))*sind(8.5);
-    CL(i) = sum(CLift)./12;
-%    CDrag = Norms(inds,1).*Area(inds).*(Cp);
- %   CD(i) = sum(CDrag)./12;
-    
-    
-%     scatter3(CollocPts(:,1), CollocPts(:,2), CollocPts(:,3));
-% axis equal square
-% drawnow
-    
-    
-    %scatter(Yl,Zl)
-    %axis equal
-    %drawnow
-    
-    
-%    Mucp0 = Mu(BodySurface0);
- %   CpCp0 = Cp;%(BodySurface0);
-    
- %   r = 0.6;
-    
-    
-    
-   % CPress = zeros(size(Cp(1,:)));
-    
-    %for j = 1:size(R0,2)
-   %     PressChord(j) = interp1(R0(:,j),C0(:,j),r,'cubic');
-    %    CPress(j) = interp1(R0(:,j),-CpCp0(:,j),r,'cubic');
-   % end
-    %clf
-    %plot(PressChord,CPress);
-    
-    %Cl(i) = trapz(PressChord,CPress);
-    %drawnow;
+
     disp(i)
 end
-hold all
 
 
-Times * (20.9500/2*pi)
+DATA.Times = Times;
+DATA.Mx = Mx;
+DATA.My = My;
+DATA.Mout_of_plane = Mout_of_plane;
+DATA.Fx = Fx;
+DATA.SelfMoment = SelfMoment;
 
-
-%plot(PressChord,CPress);
 return
-figure
-
-
-BodyPanPts = [C1;C2;C3;C4];
-PtIDS = 1:4*length(C1);
-PtIDS = reshape(PtIDS,length(C1),4);
-
-p = patch('Vertices',BodyPanPts,...
-    'Faces',PtIDS,'FaceVertexCData',Cp(:),...
-    'FaceColor','flat','EdgeColor','none');
-set(gcf,'Renderer','OpenGL')
-hold all
-
-WakePanPts = [WakePanC1_x WakePanC1_y WakePanC1_z;
-    WakePanC2_x WakePanC2_y WakePanC2_z;
-    WakePanC3_x WakePanC3_y WakePanC3_z;
-    WakePanC4_x WakePanC4_y WakePanC4_z];
-
-PtIDS = 1:4*length(WakePanC1_x);
-PtIDS = reshape(PtIDS,length(WakePanC1_x),4);
-
-p2 = patch('Vertices',WakePanPts,...
-    'Faces',PtIDS,'FaceVertexCData',WakePanGamma(:),...
-    'FaceColor','flat','EdgeColor','k');
-
-
-% ProtoWakePanPts = [ProtoWakePointsX(:,1) ProtoWakePointsY(:,1) ProtoWakePointsZ(:,1);
-%     ProtoWakePointsX(:,2) ProtoWakePointsY(:,2) ProtoWakePointsZ(:,2);
-%     ProtoWakePointsX(:,3) ProtoWakePointsY(:,3) ProtoWakePointsZ(:,3);
-%     ProtoWakePointsX(:,4) ProtoWakePointsY(:,4) ProtoWakePointsZ(:,4)];
-% 
-% 
-% 
-% 
-% PtIDS = 1:4*length(ProtoWakePointsX(:,1));
-% PtIDS = reshape(PtIDS,length(ProtoWakePointsX(:,1)),4);
-% 
-% p3 = patch('Vertices',ProtoWakePanPts,...
-%    'Faces',PtIDS,'FaceVertexCData',ProtoWakeGamma(:),...
-%    'FaceColor','flat','EdgeColor','k');
-
-axis equal tight
-view(3)
-
-
-
-scatter3(VortonX_x(:),VortonX_y(:),VortonX_z(:),'+')
-% 
-figure
-plot(Times,Force_x)
-%plot(Times,CL,'-b')
-hold all
-%plot(Times,Cl,'-k')
-%plot(Times,2*pi*AlphaHistory,'-r')

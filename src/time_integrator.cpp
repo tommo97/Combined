@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /**************************************************************/
 #include "time_integrator.hpp"
+#include "waves.hpp"
 #include <gsl/gsl_sf_bessel.h>
 REAL TIME_STEPPER::MaxTime = 0;
 REAL TIME_STEPPER::SimTime = 0;
@@ -306,9 +307,13 @@ void TIME_STEPPER::TimeAdvance() {
     //  t0: get cell velocities/gradients etc.
     DoFMM();
 
+
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->Velocity += SYSTEM::GambitScale * WaveField::Cnoidal.CnoidalVelocity(FVMCell::AllCells[i]->Position / SYSTEM::GambitScale - Vect3(0., 0., 0.250), t + 0.739);
+
     //  t0: calculate face velocities due to body
     globalSystem->GetFaceVels();
-    
+
     //  t0: calculate timestep length (use last values of panel singularity strengths for body influence)
     time_step();
     //  t0: get panel FMM Vels
@@ -316,6 +321,9 @@ void TIME_STEPPER::TimeAdvance() {
         globalSystem->GetPanelFMMVelocities(0.0);
 
     //  
+    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
+        FVMCell::AllCells[i]->Velocity += SYSTEM::GambitScale * WaveField::Cnoidal.CnoidalVelocity(FVMCell::AllCells[i]->Position / SYSTEM::GambitScale - Vect3(0., 0., 0.250), t + 0.739);
+
     globalSystem->GetFaceVels();
 
  
@@ -423,9 +431,7 @@ void TIME_STEPPER::time_loop() {
         
         globalOctree->Reset();
         globalOctree->GetVels();
-        for (int i = 0; i < FVMCell::AllCells.size(); ++i)
-            FVMCell::AllCells[i]->Velocity = Vect3(SYSTEM::GambitScale * globalSystem->unscaledVinf);
-
+        
 //        if (globalSystem->useFMM) {
 //#pragma omp parallel for
 //            for (int i = 0; i < FVMCell::AllCells.size(); ++i)

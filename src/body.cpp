@@ -415,7 +415,7 @@ void BODY::SplitUpLinearAlgebra() {
 //        REAL PhiWave = (a * g / om) * cosh(k * (d + (trg->CollocationPoint.z - 0.8))) * cos(om*t - k*trg->CollocationPoint.x)/cosh(k*d);
 //        REAL UWave = -(a*g*k*sin(trg->CollocationPoint.x*k - om*t)*cosh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
 //        REAL VWave = (a*g*k*cos(trg->CollocationPoint.x*k - om*t)*sinh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
-        Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint  - Vect3(0.,0.,0.250), t+0.739 );
+        Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint/SYSTEM::GambitScale  - Vect3(0.,0.,0.250), t+0.739 );
         VWake += WaveVel*SYSTEM::GambitScale;
 //        VWake.x += UWave*SYSTEM::GambitScale;
 //        VWake.z += VWave*SYSTEM::GambitScale;
@@ -760,7 +760,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
     
     
     for (BODY::SubStep = 1; BODY::SubStep <= n_steps; ++BODY::SubStep) {
-        cout << BODY::SubStep << " " << n_steps << endl;
+//        cout << BODY::SubStep << " " << n_steps << endl;
         BODY::TimePrev[3] = BODY::TimePrev[2];
         BODY::TimePrev[2] = BODY::TimePrev[1];
         BODY::TimePrev[1] = BODY::TimePrev[0];
@@ -1059,7 +1059,7 @@ void BODY::UpdateGlobalInfluenceMatrices() {
         //BODY::Bodies[I]->localVD = UTIL::zerosv(n, n);
         for (int i = 0; i < n; ++i) {
             PANEL *trg = &BODY::Bodies[I]->Faces[i];
-            cout << i << " " << n << endl;
+//            cout << i << " " << n << endl;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
