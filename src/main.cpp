@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     system("clear");
     
     
-    BODY::OutputSubStepCollocationPoints = true;
+    BODY::OutputSubStepCollocationPoints = false;
     SYSTEM::PanelOnly = false;
     PANEL::Initialise();
     UTIL::GetCellPans();
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         globalSystem->VortonOmegas.clear();
 
 #ifndef use_NCURSES
-        if (WRITE_TO_SCREEN) cout << "SYSTEM::MaxP set to " << SYSTEM::MaxP << "; dtInit " << globalSystem->dtInit << endl;
+        if (WRITE_TO_SCREEN) cout << "SYSTEM::MaxP set to " << SYSTEM::MaxP << "; dtInit " << globalSystem->dtInit <<  " NSS " << globalSystem->NumSubSteps << endl;
 #endif
         cout << "Number of cells: " << FVMCell::NumCells << endl;
         globalSystem->TimeStep();
@@ -566,6 +566,9 @@ void UTIL::PreAmble() {
 
     BODY::PollFaces();
     globalSystem->dtInit = TIME_STEPPER::MaxTime/globalSystem->NumSubSteps;
+    if (!SYSTEM::PanelOnly)
+        globalSystem->dtInit /= 100.;
+    
     BODY::SetUpProtoWakes(globalSystem->dtInit);
     Array < Array <REAL> > TRANS1, TRANS2, TRANS3, TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
