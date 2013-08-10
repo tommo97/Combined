@@ -3,6 +3,7 @@ function blade = SetBladeData(blade)
 blade.REVERSE = false;
 blade.isNREL = false;   %   for transisition piece
 blade.isSOTON = false;  %   for transisition piece
+blade.isBarltrop = false;
 blade.TransitionPiece = [];
 blade.SWEEP = [];
 switch blade.type;
@@ -215,6 +216,16 @@ switch blade.type;
             2.343;2.562;2.867;3.172;3.185;3.476;3.781;4.023;4.086;4.391;4.696;4.78;5;5.305;5.532];
         blade.THETA=[0;0;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
             3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-2.191;-2.5];
+        [xData, yData] = prepareCurveData( blade.RADIUS, blade.CHORD );
+        
+        % Set up fittype and options.
+        ft = fittype( 'pchipinterp' );
+        opts = fitoptions( ft );
+        opts.Normalize = 'on';
+        
+        % Fit model to data.
+        [ChordFit, gof] = fit( xData, yData, ft, opts );
+        blade.CHORD = ChordFit(blade.RADIUS);
         blade.THETA = interp1(RADIUS,blade.THETA,blade.RADIUS,'cubic');
         blade.THETA = blade.THETA  - blade.THETA(end);
         blade.isNREL = true;
@@ -543,39 +554,60 @@ c(4:17) = linspace(0.03,0.125,14);
         blade.CHORD = sqrt(0.125*0.125 - linspace(-0.125,0.125));
         blade.THICKNESS = [];
         
-        ChordData = [0.15	43.910256
-    0.200913	42.948718
-    0.248858	41.346154
-    0.301370	40.064103
-    0.351598	38.461538
-    0.401826	36.858974
-    0.447489	35.576923
-    0.500000	34.134615
-    0.598174	31.410256
-    0.698630	28.525641
-    0.801370	25.801282
-    0.904110	22.916667
-    1.000000	20.192308];
+        ChordData = [ 0.05 10
+            0.075 10
+            0.125 20
+            0.15	43.910256
+            0.200913	42.948718
+            0.248858	41.346154
+            0.301370	40.064103
+            0.351598	38.461538
+            0.401826	36.858974
+            0.447489	35.576923
+            0.500000	34.134615
+            0.598174	31.410256
+            0.698630	28.525641
+            0.801370	25.801282
+            0.904110	22.916667
+            1.000000	20.192308];
+        TwistData = [0.025 32.211
+            0.05 32.211
+            0.15	32.211538
+            0.198630	27.083333
+            0.248858	20.032051
+            0.301370	15.224359
+            0.349315	11.057692
+            0.399543	7.532051
+            0.449772	5.608974
+            0.502283	4.166667
+            0.600457	2.243590
+            0.698630	0.641026
+            0.799087	-0.320513
+            0.899543	-1.282051
+            1.000	-1.762821];
 
-TwistData = [0.15	32.211538
-    0.198630	27.083333
-    0.248858	20.032051
-    0.301370	15.224359
-    0.349315	11.057692
-    0.399543	7.532051
-    0.449772	5.608974
-    0.502283	4.166667
-    0.600457	2.243590
-    0.698630	0.641026
-    0.799087	-0.320513
-    0.899543	-1.282051
-    1.000	-1.762821];
-
-blade.RADIUS = linspace(0.15,1.0,10000);
-blade.THETA = interp1(TwistData(:,1),TwistData(:,2),blade.RADIUS);
-blade.CHORD = interp1(ChordData(:,1),ChordData(:,2),blade.RADIUS)/1000;
-blade.RADIUS = 0.175*linspace(0.15,1.0,10000);
-blade.THICKNESS = [];
+        [xData, yData] = prepareCurveData( ChordData(:,1), ChordData(:,2) );
+        
+        % Set up fittype and options.
+        ft = fittype( 'pchipinterp' );
+        opts = fitoptions( ft );
+        opts.Normalize = 'on';
+        
+        % Fit model to data.
+        [ChordFit, gof] = fit( xData, yData, ft, opts );
+        [xData, yData] = prepareCurveData( TwistData(:,1), TwistData(:,2) );
+        % Set up fittype and options.
+        ft = fittype( 'pchipinterp' );
+        opts = fitoptions( ft );
+        opts.Normalize = 'on';
+        blade.isBarltrop = true;
+        % Fit model to data.
+        [TwistFit, gof] = fit( xData, yData, ft, opts );
+        blade.RADIUS = linspace(0.05,1.0,10000);
+        blade.THETA = TwistFit(blade.RADIUS);%interp1(TwistData(:,1),TwistData(:,2),blade.RADIUS);
+        blade.CHORD = ChordFit(blade.RADIUS)/1000;%interp1(ChordData(:,1),ChordData(:,2),blade.RADIUS)/1000;
+        blade.RADIUS = 0.175*linspace(0.05,1.0,10000);
+        blade.THICKNESS = [];
     case 'Straight'
         blade.RADIUS = linspace(-6,6);
         blade.THETA = 10*zeros(size(blade.RADIUS));
@@ -626,40 +658,107 @@ blade.DistPanel.maxx = min(maxrad,min(maxrad, blade.Cutout.Tip));
 blade.DistPanel.minx = max(minrad,max(blade.Cutout.Root, minrad));
 
 
-if blade.isNREL && ~isempty(blade.y) && (blade.Cutout.Root < 1.257) && (blade.Cutout.Root >= 0.45)
-    if (blade.Cutout.Root <= 0.660)
-        blade.n1 = interp1(blade.y,1:length(blade.y),0.660,'nearest');
-        blade.n2 = interp1(blade.y,1:length(blade.y),1.257,'nearest');
+% if blade.isNREL || blade.isSOTON || blade.isBarltrop
+%     bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
+%     if blade.isSOTON
+%         shoulder = 0.315;
+%     elseif blade.isNREL
+%         shoulder = 0.66;
+%     else
+%         shoulder = 0.024;
+%     end
+%     if ~isempty(blade.y) && (blade.Cutout.Root < bcR) && (blade.Cutout.Root >= min(blade.RADIUS))
+%         if (blade.Cutout.Root <= shoulder)
+%             blade.n1 = interp1(blade.y,1:length(blade.y),shoulder,'nearest');
+%             blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
+%             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
+%             blade.y(1:blade.n1) = linspace(blade.Cutout.Root,shoulder,blade.n1);
+%             blade.y(blade.n1:blade.n2) = linspace(max(blade.Cutout.Root,shoulder),bcR,1+blade.n2-blade.n1);
+%             
+%             
+%             blade.TransitionPiece = zeros(size(blade.y));
+%             blade.TransitionPiece(1:blade.n1) = 1;
+%             if (blade.n2-blade.n1) > 1
+%                 blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
+%             end
+%         end
+%     end
+% end
+
+if blade.isNREL || blade.isSOTON || blade.isBarltrop
+    bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
+    if blade.isSOTON
+        shoulder = 0.0315;
+    elseif blade.isNREL
+        shoulder = 0.66;
+    else
+        shoulder = 0.014;
+    end
+    if ~isempty(blade.y) && (blade.Cutout.Root < bcR) && (blade.Cutout.Root >= min(blade.RADIUS))
         
-        blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.660,blade.n1);
-        blade.y(blade.n1:blade.n2) = linspace(max(blade.Cutout.Root,0.660),1.257,1+blade.n2-blade.n1);
-        
-        
-        blade.TransitionPiece = zeros(size(blade.y));
-        blade.TransitionPiece(1:blade.n1) = 1;
-        if (blade.n2-blade.n1) > 1
-            blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
+        if (blade.Cutout.Root < bcR)
+            blade.n1 = interp1(blade.y,1:length(blade.y),shoulder,'nearest');
+            blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
+            disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
+            %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
+            blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,min(blade.RADIUS)),bcR,blade.n2+1);
+            
+            blade.y(blade.n2+1:end) = linspace(bcR,max(blade.RADIUS),numel(blade.y(blade.n2+1:end)));
+            blade.TransitionPiece = zeros(size(blade.y));
+            blade.TransitionPiece(1:blade.n2) = 1;
+            blade.CircTrans = 1:blade.n2;
+            %     if (blade.n2-blade.n1) > 1
+            %     blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
+            %     end
         end
     end
 end
-
-if blade.isSOTON && ~isempty(blade.y) && (blade.Cutout.Root < 0.0814) && (blade.Cutout.Root >= 0.02)
-    if (blade.Cutout.Root < 0.0814)
-        blade.n1 = interp1(blade.y,1:length(blade.y),0.0315,'nearest');
-        blade.n2 = interp1(blade.y,1:length(blade.y),0.0814,'nearest');
-        
-        %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
-        blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,0.02),0.0814,blade.n2+1);
-        
-        blade.y(blade.n2+1:end) = linspace(0.0814,0.4,numel(blade.y(blade.n2+1:end)));
-        blade.TransitionPiece = zeros(size(blade.y));
-        blade.TransitionPiece(1:blade.n2) = 1;
-        blade.CircTrans = 1:blade.n2;
-        %     if (blade.n2-blade.n1) > 1
-        %     blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
-        %     end
-    end
-end
+    
+% if blade.isSOTON 
+%     bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
+%     shoulder = 0.315;
+% 
+%     if ~isempty(blade.y) && (blade.Cutout.Root < bcR) && (blade.Cutout.Root >= min(blade.RADIUS))
+%         
+%         if (blade.Cutout.Root < bcR)
+%             blade.n1 = interp1(blade.y,1:length(blade.y),0.0315,'nearest');
+%             blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
+%             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
+%             %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
+%             blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,0.02),bcR,blade.n2+1);
+%             
+%             blade.y(blade.n2+1:end) = linspace(bcR,0.4,numel(blade.y(blade.n2+1:end)));
+%             blade.TransitionPiece = zeros(size(blade.y));
+%             blade.TransitionPiece(1:blade.n2) = 1;
+%             blade.CircTrans = 1:blade.n2;
+%             %     if (blade.n2-blade.n1) > 1
+%             %     blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
+%             %     end
+%         end
+%     end
+% end
+% 
+% if blade.isBarltrop
+%     bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
+%     if ~isempty(blade.y) && (blade.Cutout.Root < bcR) && (blade.Cutout.Root >= 0.0175)
+%         if (blade.Cutout.Root < bcR)
+%             blade.n1 = interp1(blade.y,1:length(blade.y),0.024,'nearest');
+%             blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
+%             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
+%             
+%             %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
+%             blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,0.0175),bcR,blade.n2+1);
+%             
+%             blade.y(blade.n2+1:end) = linspace(bcR,0.4,numel(blade.y(blade.n2+1:end)));
+%             blade.TransitionPiece = zeros(size(blade.y));
+%             blade.TransitionPiece(1:blade.n2) = 1;
+%             blade.CircTrans = 1:blade.n2;
+%             %     if (blade.n2-blade.n1) > 1
+%             %     blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
+%             %     end
+%         end
+%     end
+% end
 
 
 if ~isempty(blade.y)

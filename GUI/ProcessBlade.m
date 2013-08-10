@@ -57,7 +57,7 @@ if ~isempty(Blade.Thickness)
 end
 
 
-if Blade.isNREL || Blade.isSOTON
+if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
     %RootBlendCoefft = repmat(Blade.TransitionPiece', [1 Blade.NChord]);
     if isempty(RootBlendCoefft)
         RootBlendCoefft = repmat(linspace(1,0,Blade.NSpan)', [1 Blade.NChord]);
@@ -226,8 +226,6 @@ else
 end
 
 
-
-%%   Scale and twist
 sweeps = zeros(size(UpperS.x));
 thetas = sweeps;
 chords = sweeps;
@@ -236,47 +234,101 @@ sweeps(:) = interp1(Blade.Radius,Blade.Sweep,UpperS.y(:),'cubic','extrap');
 thetas(:) = interp1(Blade.Radius,Blade.Theta,UpperS.y(:),'cubic','extrap');
 chords(:) = interp1(Blade.Radius,Blade.Chord,UpperS.y(:),'cubic','extrap');
 
+UpperS.x = chords.*UpperS.x;
+UpperS.y = UpperS.y;
+UpperS.z = chords.*UpperS.z;
+
+LowerS.x = chords.*LowerS.x;
+LowerS.y = LowerS.y;
+LowerS.z = chords.*LowerS.z;
+
+
+%   A circle of same chord as root, centered at the root
+
+LXs = LowerS.x(1,:);
+UXs = UpperS.x(1,:);
+CX = 0.5*(min(LXs) + 0.5*(max(LXs) - min(LXs)) +  min(UXs) + 0.5*(max(UXs) - min(UXs)));
+RADIUS = 0.25*((max(LXs) - min(LXs)) +  (max(UXs) - min(UXs)));
+
+xu = UXs - CX;
+xl = LXs - CX;
+zu = sqrt(max(RADIUS*RADIUS - xu.*xu,0));
+zl = -sqrt(max(RADIUS*RADIUS - xl.*xl,0));
+
+
+UZs = repmat(zu,[Blade.n2+1,1]);
+LZs = repmat(zl,[Blade.n2+1,1]);
+
+[a b ] = size(LowerS.y(1:(Blade.n2+1),:))
+scales = repmat(linspace(1,0,a),[b 1]);
+
+
+URADII =  UpperS.x(1:(Blade.n2+1),:) - CX;
+LRADII =  LowerS.x(1:(Blade.n2+1),:) - CX;
+uinds = find(abs(URADII) <= RADIUS);
+linds = find(abs(LRADII) <= RADIUS);
+
+tu = UpperS.z(1:(Blade.n2+1),:);
+tl = LowerS.z(1:(Blade.n2+1),:);
+
+tu(uinds) = max(tu(uinds),UZs(uinds));
+tl(linds) = min(tl(linds)+LZs(linds));
+UpperS.z(1:(Blade.n2+1),:) = scales.^0.5'.*UZs + (1-scales.^0.5').*UpperS.z(1:(Blade.n2+1),:);
+LowerS.z(1:(Blade.n2+1),:) = scales.^0.5'.*LZs + (1-scales.^0.5').*LowerS.z(1:(Blade.n2+1),:);
+Zs = 0.5*(LowerS.z(1,:) + UpperS.z(1,:));
+
+LowerS.z(1,:) = Zs;
+UpperS.z(1,:) = Zs;
+% 
+% CircLower.z = -repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]);
+% CircUpper.z = repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]) ;
+% if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
+%     Blade.CircSection = zeros(size(Blade.TransitionPiece));
+%     Blade.CircSection(Blade.n1:Blade.n2) = linspace(1,0,Blade.n2 - Blade.n1 +1);
+%     Blade.CircSection(1:Blade.n1) = 1;
+%     CircSectionBlendCoefft = repmat(Blade.CircSection', [1 Blade.NChord]);
+%     
+%     NRELscaleR = [0 0.508 0.660 0.883 1.008  1.067 1.133 1.257 1.343 5.532];
+%     NRELscaleS = [0.218/0.218 0.218/0.218 0.218/0.218 0.183/0.183 0.163/0.349 0.154/0.442 0.154/0.544 0.154/0.738 0.2095 0.2095];%/0.2095;
+%     
+%   %if Blade.isNREL
+%   %    Supper = interp1(NRELscaleR,NRELscaleS,UpperS.y);
+%   %    Slower = interp1(NRELscaleR,NRELscaleS,LowerS.y);
+%   %else
+%       Supper = ones(size(UpperS.y));
+%       Slower = ones(size(UpperS.y));
+%   %end
+%     
+%     UpperS.z(2:end-1,:) = CircSectionBlendCoefft.*CircUpper.z + (1-CircSectionBlendCoefft).*UpperS.z(2:end-1,:);
+%     UpperS.z = UpperS.z.*Supper;
+%     LowerS.z(2:end-1,:) = CircSectionBlendCoefft.*CircLower.z + (1-CircSectionBlendCoefft).*LowerS.z(2:end-1,:);
+%     LowerS.z = LowerS.z.*Slower;
+%     
+% end
+% 
+
+
+%%   Scale and twist
+
+
 
 %UpperS.z(1,:)./sqrt(UpperS.x(1,:).^2 + UpperS.z(1,:).^2);
 %LowerS.z(1,:)./sqrt(LowerS.x(1,:).^2 + LowerS.z(1,:).^2);
-CircLower.z = -repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]);
-CircUpper.z = repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]) ;
+
 
 tx = (UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
 tz = (UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas)) - 0.0414;
-UpperS.x = sweeps + chords.*tx;
+UpperS.x = sweeps + 1.*tx;
 UpperS.y = UpperS.y;
-UpperS.z = chords.*tz;
+UpperS.z = 1.*tz;
 
 tx = (LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
 tz = (LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas)) - 0.0414;
-LowerS.x = sweeps + chords.*tx;
+LowerS.x = sweeps + 1.*tx;
 LowerS.y = LowerS.y;
-LowerS.z = chords.*tz;
+LowerS.z = 1.*tz;
 
-if Blade.isNREL || Blade.isSOTON
-    Blade.CircSection = zeros(size(Blade.TransitionPiece));
-    Blade.CircSection(Blade.n1:Blade.n2) = linspace(1,0,Blade.n2 - Blade.n1 +1);
-    Blade.CircSection(1:Blade.n1) = 1;
-    CircSectionBlendCoefft = repmat(Blade.CircSection', [1 Blade.NChord]);
-    
-    NRELscaleR = [0 0.508 0.660 0.883 1.008  1.067 1.133 1.257 1.343 5.532];
-    NRELscaleS = [0.218/0.218 0.218/0.218 0.218/0.218 0.183/0.183 0.163/0.349 0.154/0.442 0.154/0.544 0.154/0.738 0.2095 0.2095];%/0.2095;
-    
-  if Blade.isNREL
-      Supper = interp1(NRELscaleR,NRELscaleS,UpperS.y);
-      Slower = interp1(NRELscaleR,NRELscaleS,LowerS.y);
-  else
-      Supper = ones(size(UpperS.y));
-      Slower = ones(size(UpperS.y));
-  end
-    
-    UpperS.z(2:end-1,:) = chords(1)*CircSectionBlendCoefft.*CircUpper.z + (1-CircSectionBlendCoefft).*UpperS.z(2:end-1,:);
-    %UpperS.z = UpperS.z.*Supper;
-    LowerS.z(2:end-1,:) = chords(1)*CircSectionBlendCoefft.*CircLower.z + (1-CircSectionBlendCoefft).*LowerS.z(2:end-1,:);
-    %LowerS.z = LowerS.z.*Slower;
-    
-end
+
 
 Blade.Upper = UpperS;
 Blade.US.Local = UpperS;
@@ -409,13 +461,13 @@ if Blade.RoundTips
     n = Blade.num_tip_pans+1;
     Blade.Panels.WakeShedders.LS.Local = MainPans(n:(end-n),1);
     Blade.Panels.WakeShedders.US.Local = MainPans(n:(end-n),end);
-    if Blade.isNREL || Blade.isSOTON
+    if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
             Blade.Panels.WakeShedders.LS.Local = MainPans((n+Blade.n2):(end-n),1);
         Blade.Panels.WakeShedders.US.Local = MainPans((n+Blade.n2):(end-n),end);
     end
 end
     
-if Blade.isNREL || Blade.isSOTON
+if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
     Blade.Panels.WakeShedders.LS.Local = MainPans(Blade.n2:end,1);
     Blade.Panels.WakeShedders.US.Local = MainPans(Blade.n2:end,end);
 end

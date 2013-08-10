@@ -6,8 +6,10 @@ figure('Position',[1531         203         707         400]);
 
 %   For 150mm 1Hz In plane, use lambda3.66, out of plane use 3.77
 load Output.lambda3.66.vel.0.5Hz.doubleheight.mat
-clear all
-load Output.lambda3.66.vel.1Hz.doubleheight.mat
+%clear all
+%load Output.lambda3.77.mat
+
+
 
 
 
@@ -135,7 +137,7 @@ apparentMass = 9.80665*(MassBlade - MassBlade/ratio);
 
 % try BodySurface1 with +ve with 15 secs sim time 
 for i = 1:size(CpHistory,1)
-    inds = BodySurface1(:);
+    inds = BodySurface0(:);
     Cp = CpHistory(i,inds)';
     q = 0.5.*rhoH2O.*sqrt(VCollocPts_x(inds).^2 + VCollocPts_y(inds).^2 + VCollocPts_z(inds).^2);
     

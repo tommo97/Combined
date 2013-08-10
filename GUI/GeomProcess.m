@@ -18,8 +18,9 @@ Blade.Reverse = handles.Span.REVERSE;
 
 Blade.isNREL = handles.Span.isNREL;
 Blade.isSOTON = handles.Span.isSOTON;
+Blade.isBarltrop = handles.Span.isBarltrop;
 
-if Blade.isNREL || Blade.isSOTON
+if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
     Blade.n1 = handles.Span.n1;
     Blade.n2 = handles.Span.n2;
 end
