@@ -66,7 +66,13 @@ if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
   
 end
 
+
+
+if Blade.isSOTON
+    RootBlendCoefft = repmat((Blade.Thickness - Blade.Thickness(end)), [1 Blade.NChord])/(Blade.Thickness(1) - Blade.Thickness(end));
+end
 TipBlendCoefft = 1-RootBlendCoefft;
+
 UpperS.x = RootBlendCoefft.*RUpperS.x + TipBlendCoefft.*TUpperS.x;
 UpperS.y = RootBlendCoefft.*RUpperS.y + TipBlendCoefft.*TUpperS.y;
 UpperS.z = RootBlendCoefft.*RUpperS.z + TipBlendCoefft.*TUpperS.z;
@@ -244,11 +250,11 @@ LowerS.z = chords.*LowerS.z;
 
 
 %   A circle of same chord as root, centered at the root
-
+if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
 LXs = LowerS.x(1,:);
 UXs = UpperS.x(1,:);
 CX = 0.5*(min(LXs) + 0.5*(max(LXs) - min(LXs)) +  min(UXs) + 0.5*(max(UXs) - min(UXs)));
-RADIUS = 0.25*((max(LXs) - min(LXs)) +  (max(UXs) - min(UXs)));
+RADIUS = 0.25*((max(LXs) - min(LXs)) + (max(UXs) - min(UXs)));
 
 xu = UXs - CX;
 xl = LXs - CX;
@@ -261,7 +267,7 @@ LZs = repmat(zl,[Blade.n2+1,1]);
 
 [a b ] = size(LowerS.y(1:(Blade.n2+1),:))
 scales = repmat(linspace(1,0,a),[b 1]);
-
+scales = repmat([ones(1,Blade.n1) linspace(1,0,a-Blade.n1)],[b 1]);
 
 URADII =  UpperS.x(1:(Blade.n2+1),:) - CX;
 LRADII =  LowerS.x(1:(Blade.n2+1),:) - CX;
@@ -273,12 +279,17 @@ tl = LowerS.z(1:(Blade.n2+1),:);
 
 tu(uinds) = max(tu(uinds),UZs(uinds));
 tl(linds) = min(tl(linds)+LZs(linds));
+
+
 UpperS.z(1:(Blade.n2+1),:) = scales.^0.5'.*UZs + (1-scales.^0.5').*UpperS.z(1:(Blade.n2+1),:);
+
 LowerS.z(1:(Blade.n2+1),:) = scales.^0.5'.*LZs + (1-scales.^0.5').*LowerS.z(1:(Blade.n2+1),:);
+
 Zs = 0.5*(LowerS.z(1,:) + UpperS.z(1,:));
 
 LowerS.z(1,:) = Zs;
 UpperS.z(1,:) = Zs;
+end
 % 
 % CircLower.z = -repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]);
 % CircUpper.z = repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]) ;

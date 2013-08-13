@@ -13,7 +13,7 @@ hold(ax,'off');
 cla(ax);
 azimuth = ([1:Rotor.NumBlades] - 1)*2*pi/Rotor.NumBlades;
 
-
+cols = [0 0  1; 0. 1 0.; 1 0. 0.];
 for i = 1:Rotor.NumBlades
     Rotor.Blade{i} = handles.Blade;
     Rotor.Blade{i}.Azimuth = azimuth(i);
@@ -62,15 +62,31 @@ for i = 1:Rotor.NumBlades
     %%  Display them
     
     hold(ax,'on');
-    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.N.Local));
+    
+    colr = cols(1 + round(3*(i/3 - floor(i/3))),:);
+    
+    
+    
+    
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.N.Local),'facecolor',colr,'edgecolor','none');
 
-    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.US.N.Local));
-    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.LS.N.Local));
-    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.US.N.Local));
-    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local));
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.US.N.Local),'facecolor',colr','edgecolor','none');
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),'facecolor',colr,'edgecolor','none');
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.US.N.Local),'facecolor',colr,'edgecolor','none');
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),'facecolor',colr,'edgecolor','none');
+    
+       surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.N.Local),'facecolor','none','edgecolor','w');
+
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.US.N.Local),'facecolor','none','edgecolor','w');
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),'facecolor','none','edgecolor','w');
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.US.N.Local),'facecolor','none','edgecolor','w');
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),'facecolor','none','edgecolor','w');
     view(ax,3);
 end
 axis(ax,'equal','tight');
 Rotor.Split = get(handles.blades_as_bodies,'Value') ;
-
+material shiny
+lighting phong
+camlight(90,0)
+camlight(-90,0)
 hold(ax,'off');

@@ -1,6 +1,7 @@
 function [foil data] = SetFoilData(foil,DistPanel)
 type = foil.section;
 [Foil Data] = MakeFoil(DistPanel.x,foil.thickness);
+
 set(foil.thickness_slider,'enable','off');
 set(foil.thickness_edit_text,'enable','off');
 % Set current data to the selected data set.
@@ -46,7 +47,16 @@ switch type;
         data.LS = Data.N0012.LS;
         data.X = Data.N0012.X;
 end
+s_in = DistPanel.x;
+%s_in = cumsum(s_in)/sum(s_in);
 
+sU = cumsum(sqrt(diff(foil.US).^2 + diff(foil.X).^2)); sU = sU/sU(end);
+sL = cumsum(sqrt(diff(foil.LS).^2 + diff(foil.X).^2)); sL = sL/sL(end);
+
+data.X = 0.5*(interp1([0 sU],foil.X,s_in,'cubic') + interp1([0 sL],foil.X,s_in,'cubic'));
+data.US = interp1([0 sU],foil.US,s_in,'cubic');
+data.LS = interp1([0 sL],foil.LS,s_in,'cubic');
+    
 foil.SectionShape = data;
 
 
