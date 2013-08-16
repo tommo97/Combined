@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     SYSTEM::M4Radius_in_cells = 2;  // need to define this before initialising the system
     SYSTEM System(0);
     //  Some default values
-    SYSTEM::GambitScale = 215;
+    SYSTEM::GambitScale = 16;
     SYSTEM::MaxP = 3;
     SYSTEM::Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
     globalSystem->DS = 1.0;
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     UTIL::cpu_t = ticks();
     WaveField::Period = 1.0;//7.72;
-    WaveField::Height = 0.3;//18.6666*0.3048;
+    WaveField::Height = 0.15;//18.6666*0.3048;
     WaveField::Depth = 2.245;//30*0.3048;
     WaveField::Cnoidal.WaveFieldCnoidal();
 //    cout << WaveField::Cnoidal.CnoidalVelocity(Vect3(1.2, 0.0, -1.2) ,2.5) << endl;
@@ -160,8 +160,10 @@ void UTIL::PostAmble(string fname) {
         UTIL::WriteMATLABMatrix1DVect3("TRANS1_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[0]);
         UTIL::WriteMATLABMatrix1DVect3("TRANS2_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[1]);
         UTIL::WriteMATLABMatrix1DVect3("TRANS3_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[2]);
-        UTIL::WriteMATLABMatrix2DVect3("CollocPtHistory" + UTIL::toString(i), fname, BODY::SubStepCollocPts[i]);
-        UTIL::WriteMATLABMatrix2DVect3("PanelNormalHistory" + UTIL::toString(i), fname, BODY::SubStepCollocPtNrms[i]);
+        if (BODY::OutputSubStepCollocationPoints) {
+            UTIL::WriteMATLABMatrix2DVect3("CollocPtHistory" + UTIL::toString(i), fname, BODY::SubStepCollocPts[i]);
+            UTIL::WriteMATLABMatrix2DVect3("PanelNormalHistory" + UTIL::toString(i), fname, BODY::SubStepCollocPtNrms[i]);
+        }
         for (int j = 0; j < BODY::Bodies[i]->VortonX.size(); ++j) {
             UTIL::WriteMATLABMatrix2DVect3("VortonPoints" + UTIL::toString(i) + "_" + UTIL::toString(j), fname, BODY::Bodies[i]->VortonX[j]);
             UTIL::WriteMATLABMatrix2DVect3("VortonStrength" + UTIL::toString(i) + "_" + UTIL::toString(j), fname, BODY::Bodies[i]->VortonOM[j]);
@@ -567,7 +569,7 @@ void UTIL::PreAmble() {
     BODY::PollFaces();
     globalSystem->dtInit = TIME_STEPPER::MaxTime/globalSystem->NumSubSteps;
     if (!SYSTEM::PanelOnly)
-        globalSystem->dtInit /= 100.;
+        globalSystem->dtInit /= 1000.;
     
     BODY::SetUpProtoWakes(globalSystem->dtInit);
     Array < Array <REAL> > TRANS1, TRANS2, TRANS3, TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;

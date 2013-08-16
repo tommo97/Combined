@@ -5,7 +5,7 @@ clc
 figure('Position',[1531         203         707         400]);
 
 %   For 150mm 1Hz In plane, use lambda3.66, out of plane use 3.77
-load Output.lambda3.66.vel.0.5Hz.doubleheight.mat
+load RunData_000000.mat
 %clear all
 %load Output.lambda3.77.mat
 

@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "vect34.hpp"
 #include "node.hpp"
 #include "types.hpp"
+#include "waves.hpp"
 #include "cell.hpp"
 int FVMCell::NumCells = 0;
 Array < Array <int> > FVMCell::MomentInds;
@@ -507,6 +508,10 @@ void FVMCell::vCollapseVField() {
 
                 }
         }
+    
+    
+//    Velocity += SYSTEM::GambitScale * WaveField::Cnoidal.CnoidalVelocity(((1./SYSTEM::GambitScale) * Position) - Vect3(0., 0., 0.250), TIME_STEPPER::SimTime);
+    
 #ifndef COLLAPSE_TO_FACES
     FaceVels = Velocity;
 #endif

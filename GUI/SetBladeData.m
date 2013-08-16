@@ -156,9 +156,12 @@ switch blade.type;
         r = linspace(0.1, 0.975,numel(theta))*max(blade.RADIUS);
         theta = -[fliplr(theta) theta];
         r = [fliplr(-r) r];
-        blade.THETA = interp1(r,theta,blade.RADIUS,'cubic','extrap');
-        blade.THETA(20:40) = blade.THETA(20:40)-10;
-        blade.THETA(60:80) = blade.THETA(60:80)-10;
+
+        blade.THETA = interp1(r,theta,blade.RADIUS,'linear','extrap');
+        r = blade.RADIUS;
+        rmin = r(20);
+        rmax = r(40);
+        blade.THETA(boolean(1-((abs(r)>=abs(rmin)) + (abs(r)<=abs(rmax))))) = blade.THETA(boolean(1-((abs(r)>=abs(rmin)) + (abs(r)<=abs(rmax)))))-10;
         
         blade.CHORD =  [linspace(3.983,17.7,50)/17.7 linspace(17.7,3.983,50)/17.7];
         blade.SWEEP =  sind(33.5)*[linspace(10,0,50) linspace(0,10,50)]/5;
@@ -211,12 +214,13 @@ if blade.isNREL || blade.isSOTON || blade.isBarltrop
         
         if (blade.Cutout.Root < bcR)
             blade.n1 = interp1(blade.y,1:length(blade.y),shoulder,'nearest');
-            blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
+            blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest')+1;
+            disp(num2str([blade.n1 blade.n2]));
             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
             %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
-            blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,min(blade.RADIUS)),bcR,blade.n2+1);
+            blade.y(1:blade.n2) = linspace(max(blade.Cutout.Root,min(blade.RADIUS)),bcR,blade.n2);
             
-            blade.y(blade.n2+1:end) = linspace(bcR,max(blade.RADIUS),numel(blade.y(blade.n2+1:end)));
+            blade.y(blade.n2:end) = linspace(bcR,max(blade.RADIUS),numel(blade.y(blade.n2:end)));
             blade.TransitionPiece = zeros(size(blade.y));
             blade.TransitionPiece(1:blade.n2) = 1;
             blade.CircTrans = 1:blade.n2;
@@ -308,6 +312,17 @@ hold(blade.axes,'off')
 if ~isempty(blade.y)
     scatter(blade.axes,blade.Radius,blade.Chord);
     hold(blade.axes,'on');
+    if blade.isNREL || blade.isSOTON || blade.isBarltrop
+    plot(blade.axes,blade.Radius(blade.n2),blade.Chord(blade.n2),'o','LineWidth',2,...
+        'MarkerEdgeColor','k',...
+        'MarkerFaceColor','none',...
+        'MarkerSize',10)
+    
+    plot(blade.axes,blade.Radius(blade.n1),blade.Chord(blade.n1),'o','LineWidth',2,...
+        'MarkerEdgeColor','k',...
+        'MarkerFaceColor','none',...
+        'MarkerSize',10)
+    end
 end
 if ~isempty(blade.THICKNESS)
     plot(blade.axes,blade.RADIUS,blade.THICKNESS/100);

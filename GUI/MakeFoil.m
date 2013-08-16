@@ -103,15 +103,14 @@ if ~isempty(xin)
     end
     
     
-    s_in = cumsum(xin)/sum(xin);
+    
     Data.N0012.US = interp1(Foil.N0012.US.x,Foil.N0012.US.Data,xin,'cubic');
     Data.N0012.LS = interp1(Foil.N0012.LS.x,Foil.N0012.LS.Data,xin,'cubic');
     Data.N0012.X = xin;
     
     
     
-    Data.N0012.sU = cumsum(sqrt(diff(Data.N0012.US).^2 + diff(Data.N0012.X).^2));
-    Data.N0012.sL = cumsum(sqrt(diff(Data.N0012.LS).^2 + diff(Data.N0012.X).^2));
+    
     
     
     Data.N00xx.US = interp1(Foil.N00xx.US.x,Foil.N00xx.US.Data,xin,'cubic');

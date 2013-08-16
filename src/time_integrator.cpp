@@ -44,7 +44,7 @@ TIME_STEPPER::TIME_STEPPER() {
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
     cfl_lim = 0.4;
-    dt_out = 1.0;
+    dt_out = 0.25;
     t_out = dt_out;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();
@@ -308,10 +308,9 @@ void TIME_STEPPER::TimeAdvance() {
     DoFMM();
 
 
-    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
-        FVMCell::AllCells[i]->Velocity += SYSTEM::GambitScale * WaveField::Cnoidal.CnoidalVelocity(FVMCell::AllCells[i]->Position / SYSTEM::GambitScale - Vect3(0., 0., 0.250), t + 0.739);
-
     //  t0: calculate face velocities due to body
+
+    
     globalSystem->GetFaceVels();
 
     //  t0: calculate timestep length (use last values of panel singularity strengths for body influence)
@@ -321,8 +320,7 @@ void TIME_STEPPER::TimeAdvance() {
         globalSystem->GetPanelFMMVelocities(0.0);
 
     //  
-    for (int i = 0; i < FVMCell::AllCells.size(); ++i)
-        FVMCell::AllCells[i]->Velocity += SYSTEM::GambitScale * WaveField::Cnoidal.CnoidalVelocity(FVMCell::AllCells[i]->Position / SYSTEM::GambitScale - Vect3(0., 0., 0.250), t + 0.739);
+
 
     globalSystem->GetFaceVels();
 
