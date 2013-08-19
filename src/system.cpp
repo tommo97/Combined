@@ -96,7 +96,7 @@ void SYSTEM::Initialise() {
     if (WRITE_TO_SCREEN) cout << "\tFluid properties      \t  ρ: " << Rho << " kg/m³" << endl;
     if (WRITE_TO_SCREEN) cout << "\t                      \t  μ: " << Mu << " Pa·s" <<endl;
     if (WRITE_TO_SCREEN) cout << "\t                      \t∴ ν: " << Nu << " m²/s" << endl;
-    if (WRITE_TO_SCREEN) cout << "\tSmoothing parameter   \t δ²:" << SYSTEM::Del2 << endl; " h; h: " << 1/SYSTEM::GambitScale << " m" <<  endl;
+    if (WRITE_TO_SCREEN) cout << "\tSmoothing parameter   \t δ²: " << SYSTEM::Del2 << " h; h: " << 1/SYSTEM::GambitScale << " m" <<  endl;
     int nss = globalSystem->NumSubSteps;
     globalTimeStepper->dt_prev = globalSystem->dtInit;
     globalTimeStepper->time_step();
