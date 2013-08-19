@@ -784,58 +784,92 @@ string IO::FormattedQueryString(string input) {
 
     int remainder = linelength - output.length();
 
-    if (input.length() >= 60) {
-        size_t found = input.find(" ", 60, 1);
+    if (input.length() > 70) {
+        size_t found = input.find("(", 0, 1);
         if (found != string::npos) {
             output = input.substr(0, found) + "\n";
-            string tmp = "          " + input.substr(found + 1);
+            string tmp = "          " + input.substr(found);
             remainder = linelength - tmp.length();
             output = output + tmp;
+        } else {
+            found = input.find(" ", 70, 1);
+            if (found != string::npos) {
+                output = input.substr(0, found) + "\n";
+                string tmp = "          " + input.substr(found);
+                remainder = linelength - tmp.length();
+                output = output + tmp;
+            }
         }
+        remainder -= 1;
     }
 
 
-    if (remainder > 10) {
-        output.insert(output.length(), remainder - 10, '.');
+    if (remainder > 6) {
+        output.insert(output.length(), remainder - 6, '.');
         output += " ";
     }
     return output;
 }
+
 /**************************************************************/
-void IO::FormattedQuery(string input, stringstream &log, string &out) {
-    cout << IO::FormattedQueryString(input);
+void IO::FormattedQuery(string input, string postfix, stringstream &log, string &out) {
+    //    cout << IO::FormattedQueryString(input);
+    int l = postfix.length();
+    string dots;
+    dots.insert(0, 47 - l, '.');
+    cout << input << "\n\t\t\t" << dots << postfix << ": ";
     string in;
     cin >> in;
     log << in << endl;
     out = in;
 }
+
 /**************************************************************/
-void IO::FormattedQuery(string input, stringstream &log, REAL &out) {
-    cout << IO::FormattedQueryString(input);
+void IO::FormattedQuery(string input, string postfix, stringstream &log, REAL &out) {
+    int l = postfix.length();
+    string dots;
+    dots.insert(0, 47 - l, '.');
+    cout << input << "\n\t\t\t" << dots << postfix << ": ";
+    //    cout << IO::FormattedQueryString(input);
     REAL in;
     cin >> in;
     log << in << endl;
     out = in;
 }
+
 /**************************************************************/
-void IO::FormattedQuery(string input, stringstream &log, bool &out) {
-    cout << IO::FormattedQueryString(input);
+void IO::FormattedQuery(string input, string postfix, stringstream &log, bool &out) {
+    int l = postfix.length();
+    string dots;
+    dots.insert(0, 47 - l, '.');
+    cout << input << "\n\t\t\t" << dots << postfix << ": ";
+    //    cout << IO::FormattedQueryString(input);
     bool in;
     cin >> in;
     log << in << endl;
     out = in;
 }
+
 /**************************************************************/
-void IO::FormattedQuery(string input, stringstream &log, Vect3 &out) {
-    cout << IO::FormattedQueryString(input);
+void IO::FormattedQuery(string input, string postfix, stringstream &log, Vect3 &out) {
+    int l = postfix.length();
+    string dots;
+    dots.insert(0, 47 - l, '.');
+    cout << input << "\n\t\t\t" << dots << postfix << ": ";
+    //    cout << IO::FormattedQueryString(input);
     Vect3 in;
     cin >> in.x >> in.y >> in.z;
     log << in << endl;
     out = in;
 }
+
 /**************************************************************/
-void IO::FormattedQuery(string input, stringstream &log, int &out) {
-    cout << IO::FormattedQueryString(input);
+void IO::FormattedQuery(string input, string postfix, stringstream &log, int &out) {
+    int l = postfix.length();
+    string dots;
+    dots.insert(0, 47 - l, '.');
+    cout << input << "\n\t\t\t" << dots << postfix << ": ";
+    //    cout << IO::FormattedQueryString(input);
     int in;
     cin >> in;
     log << in << endl;

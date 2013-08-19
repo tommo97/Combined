@@ -134,9 +134,6 @@ class OutOfMemory {};
 #define two_pi 6.283185307179586476925286766559005768394338798750211641949889185
 #define four_pi 12.56637061435917295385057353311801153678867759750042328389977837
 
-
-
-
 #define sech(x) 1.0/cosh(x)
 
 #define NVARS 3
@@ -172,9 +169,9 @@ class OutOfMemory {};
 /* REAL is the floating point type to be used. If double is used, then fast approximations for atan2, invsqrt and SQRT cannot be used */
 #define BIGINT long unsigned int
 
-#define DEG2RAD(a) two_pi*a/360
+#define DEG2RAD(a) two_pi*a/360.0
 
-#define RAD2DEG(a) 360*a/two_pi
+#define RAD2DEG(a) 360.0*a/two_pi
 
 #define acosd(a) RAD2DEG(acos(a))
 

@@ -92,9 +92,9 @@ void SYSTEM::Initialise() {
 
     globalOctree = new OCTREE();
     cout << setfill('-') << setw(80) << "-" << endl;
-    if (WRITE_TO_SCREEN) cout << "\tFVM mesh scale Factor: " << SYSTEM::GambitScale << endl;
-    if (WRITE_TO_SCREEN) cout << "\tFluid properties:" << endl << "\trho: " << Rho << "; mu: " << Mu << "; nu: " << Nu << endl;
-
+    if (WRITE_TO_SCREEN) cout << "\tFVM mesh scale Factor:\t    " << SYSTEM::GambitScale << endl;
+    if (WRITE_TO_SCREEN) cout << "\tFluid properties      \t ρ: " << Rho << " kg/m³ ;μ: " << Mu << " Pa·s ∴ ν: " << Nu << " m²/s" << endl;
+    if (WRITE_TO_SCREEN) cout << "\tSmoothing parameter   \t δ²:" << SYSTEM::Del2 << " h; h: " << 1/SYSTEM::GambitScale << " m" <<  endl;
     int nss = globalSystem->NumSubSteps;
     globalTimeStepper->dt_prev = globalSystem->dtInit;
     globalTimeStepper->time_step();
@@ -103,7 +103,7 @@ void SYSTEM::Initialise() {
     int h = SYSTEM::M4Radius_in_cells;
     SYSTEM::NumM4 = (4*h+1)*(4*h+1)*(4*h+1);
 
-    cout << "\t# substeps: " << nss << endl;
+    if (WRITE_TO_SCREEN) cout << "\t# substeps:           \t    " << nss << endl;
 }
 
 /**************************************************************/
