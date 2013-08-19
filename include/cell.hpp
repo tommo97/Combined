@@ -66,6 +66,56 @@ public:
 
     void GetISBGrads();
     
+    static REAL (*limiter) (REAL);
+
+    inline static REAL O1UW(REAL r) {
+        return 0.0; //O(1)UW
+    }
+
+    inline static REAL minmod(REAL r) {
+        return max(REAL(0.0), min(REAL(1.0), r));
+    };
+
+    inline static REAL superbee(REAL r) {
+        return max(max(min(REAL(2.0) * r, REAL(1.0)), min(r, REAL(1.0))), REAL(0.0));
+    };
+
+    inline static REAL vanLeer(REAL r) {
+        return (r + fabs(r)) / (1.0 + fabs(r));
+    };
+
+    inline static REAL Koren(REAL r) {
+        return max(0.0, min(min(2.0 * r, (2.0 + r) / 3.0), 2.0));
+    };
+
+    inline static REAL UMIST(REAL r) {
+        REAL M = 2.0, kappa = 0.5;
+        return max(0.0, min(M, min(min(0.5 * (1. + kappa) * r + 0.5 * (1. - kappa), 0.5 * (1. - kappa) * r + 0.5 * (1. + kappa)), 2.0 * r))); //UMIST
+        //return max(0.0,min(2.0*r,min(min(0.25+0.75*r,0.75+0.25*r),2.)));
+    }
+
+    inline static REAL  MUSCL(REAL r) {
+        REAL M = 2.0, kappa = 0.0;
+        return max(0.0, min(M, min(min(0.5 * (1. + kappa) * r + 0.5 * (1. - kappa), 0.5 * (1. - kappa) * r + 0.5 * (1. + kappa)), 2.0 * r))); //MUSCL
+    }
+
+    inline static REAL  CADA(REAL r) {
+        REAL ar = fabs(r);
+        return max(-3.0 / ar, min((2.0 + r) / 3.0, min((2.0 * ar) / (0.6 + ar), 5.0 / ar))); //CADA
+    }
+
+    inline static REAL  MC(REAL r) {
+        return max(0.0, min(min(2.0 * r, (1.0 + r) / 2.0), 2.0)); //
+    }
+
+
+
+    inline static Vect3 flim(Vect3 r) {
+        return Vect3(limiter(r.x), limiter(r.y), limiter(r.z));
+    };
+
+
+    
 //    REAL Phi;                         // unused?
 
     Array <Vect3> VelGrads, VelGradsHold;

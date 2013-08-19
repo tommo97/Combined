@@ -651,7 +651,6 @@ void Node::UpdateMomentMults() {
 
             }
 
-    cout << "MomentSize " << Node::MomentSize << endl;
     
     DirVelMultsX = ARRAY9(Vect3) (2);
     DirVelMultsY = ARRAY9(Vect3) (2);

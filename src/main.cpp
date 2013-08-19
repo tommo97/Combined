@@ -34,79 +34,60 @@ using namespace std;
 /**************************************************************/
 
 void sheet(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL amplitude, REAL radius, REAL scale, REAL THETA);
-inline bool srt_vect3 (Vect3 A, Vect3 B) { 
-    if (A.x == B.x)
-    {
+
+inline bool srt_vect3(Vect3 A, Vect3 B) {
+    if (A.x == B.x) {
         if (A.y == B.y)
             return (A.z < B.z);
         else
             return (A.y < B.y);
-    }
-    else
-        return (A.x < B.x); 
+    } else
+        return (A.x < B.x);
 }
+
 /**************************************************************/
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
     system("clear");
-    
-    
+
+
     BODY::OutputSubStepCollocationPoints = false;
     SYSTEM::PanelOnly = false;
     PANEL::Initialise();
     UTIL::GetCellPans();
 
-    //  Get quadrature points and weights
-    UTIL::NumCellGaussPts = 24;
-    UTIL::lgwt(UTIL::NumCellGaussPts, UTIL::QuadPts, UTIL::QuadWts);
-    //  This is to get the right multipliers for a cell, e.g. a range [-0.5,0.5] rather than [-1,1]
-    for (int i = 0; i < UTIL::QuadPts.size(); ++i) {
-        UTIL::QuadPts[i] = UTIL::QuadPts[i] / 2.0;
-        UTIL::QuadWts[i] = UTIL::QuadWts[i] / 2.0;
-    }
 
 
 
-    
     //TEST::SmallTestFMM();
-     //return 0;
+    //return 0;
     //TEST::SolveMatfileVels();
     //return 0;
     //    TEST::TestBulkLoader(100000);
-//        TEST::TestFMM(argc, argv);
-//        TEST::SimpleTestPanel();
-//        TEST::TestBiotSavart();
-//        return 0;
+    //        TEST::TestFMM(argc, argv);
+    //        TEST::SimpleTestPanel();
+    //        TEST::TestBiotSavart();
+    //        return 0;
     //    TEST::TestBEMFVM();
-//        return 0;
-   
+    //        return 0;
 
-    
+
+
     TIME_STEPPER::SpinUpTime = 2.5; // time over which starting vortices are linearly damped
-    SYSTEM::M4Radius_in_cells = 2;  // need to define this before initialising the system
     SYSTEM System(0);
-    //  Some default values
-    SYSTEM::GambitScale = 16;
-    SYSTEM::MaxP = 3;
-    SYSTEM::Del2 = 0.001; // * SYSTEM::GambitScale*SYSTEM::GambitScale;
-    globalSystem->DS = 1.0;
-    
-//    globalSystem->dtInit = 0.01; //     This *maybe* gets changed according to the maximum kinematic velocity of the body(s)
-    globalSystem->unscaledVinf = Vect3(0.0);
-    globalSystem->NumSubSteps = 25;
 
+    //    globalSystem->dtInit = 0.01; //     This *maybe* gets changed according to the maximum kinematic velocity of the body(s)
 
     UTIL::cpu_t = ticks();
-    WaveField::Period = 1.0;//7.72;
-    WaveField::Height = 0.15;//18.6666*0.3048;
-    WaveField::Depth = 2.245;//30*0.3048;
-    WaveField::Cnoidal.WaveFieldCnoidal();
-//    cout << WaveField::Cnoidal.CnoidalVelocity(Vect3(1.2, 0.0, -1.2) ,2.5) << endl;
-//    cout << WaveField::Cnoidal.CnoidalPerturbationPotential(Vect3(1.2, 0.0, -1.2) ,2.5) << endl;
-//    return 0;
+    //    WaveField::Period = 1.0;//7.72;
+    //    WaveField::Height = 0.15;//18.6666*0.3048;
+    //    WaveField::Depth = 2.245;//30*0.3048;
+    //    WaveField::Cnoidal.WaveFieldCnoidal();
+    //    cout << WaveField::Cnoidal.CnoidalVelocity(Vect3(1.2, 0.0, -1.2) ,2.5) << endl;
+    //    cout << WaveField::Cnoidal.CnoidalPerturbationPotential(Vect3(1.2, 0.0, -1.2) ,2.5) << endl;
+    //    return 0;
     UTIL::PreAmble();
-    
+
 
 
     if (!SYSTEM::PanelOnly) {
@@ -116,9 +97,8 @@ int main(int argc, char *argv[])
         globalSystem->VortonOmegas.clear();
 
 #ifndef use_NCURSES
-        if (WRITE_TO_SCREEN) cout << "SYSTEM::MaxP set to " << SYSTEM::MaxP << "; dtInit " << globalSystem->dtInit <<  " NSS " << globalSystem->NumSubSteps << endl;
+        if (WRITE_TO_SCREEN) cout << "\tFMM MaxP set to " << SYSTEM::MaxP << "; dtInit " << globalSystem->dtInit << endl;
 #endif
-        cout << "Number of cells: " << FVMCell::NumCells << endl;
         globalSystem->TimeStep();
 
     }
@@ -129,6 +109,7 @@ int main(int argc, char *argv[])
     if (WRITE_TO_SCREEN) cout << "CPU time: " << (REAL) (ticks() - UTIL::cpu_t) / 1000 << " seconds" << endl;
 #endif
 }
+
 /**************************************************************/
 void UTIL::PostAmble(string fname) {
 
@@ -154,8 +135,8 @@ void UTIL::PostAmble(string fname) {
     Array <REAL> Mus, Sigmas, PWGammas, CPs, TPrev, Cloc, Rloc, Areas;
     Array <Vect3> Centroids, VCentroids;
     for (int i = 0; i < BODY::Bodies.size(); ++i) {
-        UTIL::WriteMATLABMatrix1DVect3("BodyCG" + UTIL::toString(i),fname, BODY::Bodies[i]->CG);
-        UTIL::WriteMATLABMatrix1DVect3("BodyVel" + UTIL::toString(i),fname, BODY::Bodies[i]->Velocity);
+        UTIL::WriteMATLABMatrix1DVect3("BodyCG" + UTIL::toString(i), fname, BODY::Bodies[i]->CG);
+        UTIL::WriteMATLABMatrix1DVect3("BodyVel" + UTIL::toString(i), fname, BODY::Bodies[i]->Velocity);
         UTIL::WriteMATLABMatrix1DVect3("EulerAngles" + UTIL::toString(i), fname, BODY::Bodies[i]->EulerAngles);
         UTIL::WriteMATLABMatrix1DVect3("TRANS1_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[0]);
         UTIL::WriteMATLABMatrix1DVect3("TRANS2_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[1]);
@@ -259,8 +240,8 @@ void UTIL::PostAmble(string fname) {
     WriteMATLABMatrix1DVect3("WakePanC3", fname, C3);
     WriteMATLABMatrix1DVect3("WakePanC4", fname, C4);
     WriteMATLABMatrix1D("WakePanGamma", fname, GMA);
-//    WriteMATLABMatrix2D("Amatrix", fname, BODY::Bodies[0]->localA);
-//    WriteMATLABMatrix2D("Bmatrix", fname, BODY::Bodies[0]->localB);
+    //    WriteMATLABMatrix2D("Amatrix", fname, BODY::Bodies[0]->localA);
+    //    WriteMATLABMatrix2D("Bmatrix", fname, BODY::Bodies[0]->localB);
     WriteMATLABMatrix2D("PhiPrev", fname, PhiPrev);
     WriteMATLABMatrix2D("TRANS1", fname, TRANS1);
     WriteMATLABMatrix2D("TRANS2", fname, TRANS2);
@@ -287,7 +268,7 @@ void UTIL::PostAmble(string fname) {
     WriteMATLABMatrix1DVect3("VCollocPts", fname, VCentroids);
     WriteMATLABMatrix1DVect3("VortonX", fname, BODY::VortexPositions);
     WriteMATLABMatrix1DVect3("VortonO", fname, BODY::VortexOmegas);
-//    WriteMATLABMatrix1D("VortonOwnerID", fname, BODY::VortexOwnerID);
+    //    WriteMATLABMatrix1D("VortonOwnerID", fname, BODY::VortexOwnerID);
     Array <Vect3> AllBodyPointsTransformed(BODY::AllBodyPoints.size(), Vect3(0.0));
 
     //        for (int i = 0; i < BODY::AllBodyPoints.size(); ++i)
@@ -365,61 +346,110 @@ void UTIL::PreAmble() {
 
 
     cout << setfill('=') << setw(80) << "=" << endl;
+
+    cout << "\t Engine Initialisation & Setup: " << endl;
+
+    IO::FormattedQuery("Enter FMM maximum expansion order (minimum 3, suggest 5) [int]:", outstream, SYSTEM::MaxP);
+    IO::FormattedQuery("Enter FMM smoothing parameter radius (suggest 0.0316) [real]:", outstream, SYSTEM::Del2);
+    SYSTEM::Del2 *= SYSTEM::Del2;
+    IO::FormattedQuery("Enter scale factor for model [real]:", outstream, SYSTEM::GambitScale);
+    IO::FormattedQuery("Enter number of quadrature points to use during multipole expansions (minimum 2, suggest 24) [int]:", outstream, UTIL::NumCellGaussPts);
+    IO::FormattedQuery("Enter M'4 interpolation radius, measured in cells (default 2) [int]:", outstream, SYSTEM::M4Radius_in_cells);
+    IO::FormattedQuery("Enter initial number of sub-time-steps (suggest 25) [int]:", outstream, globalSystem->NumSubSteps);
+    IO::FormattedQuery("Enter fraction of timestep for protowake length (suggest 0.3) [real]:", outstream, globalSystem->DS);
+
+
+
+    cout << "Select flux limiter:" << endl;
+
+    cout << "         0) First order upwind " << endl;
+    cout << "         1) minmod " << endl;
+    cout << "         2) superbee " << endl;
+    cout << "         3) van Leer " << endl;
+    cout << "         4) Koren (3rd order)" << endl;
+    cout << "         5) MUSCL (TVD LUD/Fromm) " << endl;
+    cout << "         6) UMIST (TVD QUICK) " << endl;
+    cout << "         7) CADA" << endl;
+    int flim;
+    IO::FormattedQuery("         8) MC", outstream, flim);
+
+
+    switch (flim) {
+        case 0:
+            FVMCell::limiter = FVMCell::O1UW;
+            break;
+        case 1:
+            FVMCell::limiter = FVMCell::minmod;
+            break;
+        case 2:
+            FVMCell::limiter = FVMCell::superbee;
+            break;
+        case 3:
+            FVMCell::limiter = FVMCell::vanLeer;
+            break;
+        case 4:
+            FVMCell::limiter = FVMCell::Koren;
+            break;
+        case 5:
+            FVMCell::limiter = FVMCell::MUSCL;
+            break;
+        case 6:
+            FVMCell::limiter = FVMCell::UMIST;
+            break;
+        case 7:
+            FVMCell::limiter = FVMCell::CADA;
+            break;
+        case 8:
+            FVMCell::limiter = FVMCell::MC;
+            break;
+        default:
+            FVMCell::limiter = FVMCell::O1UW;
+    }
+
+
+
+
+
+    cout << setfill('=') << setw(80) << "=" << endl;
     cout << "\t Simulation Setup: " << endl;
-    cout << "Enter number of bodies [int]:";
-    cin >> nBodies;
-    outstream << nBodies << endl;
+    bool WaveModel = false;
+    bool cnoidal = false;
+
+    IO::FormattedQuery("Use wave model? [bool 1/0]:", outstream, WaveModel);
+
+    if (WaveModel) {
+        IO::FormattedQuery("          Enter wave period in seconds [real]:", outstream, WaveField::Period);
+        IO::FormattedQuery("          Enter wave height in metres [real]:", outstream, WaveField::Height);
+        IO::FormattedQuery("          Enter water depth in metres [real]:", outstream, WaveField::Depth);
+        IO::FormattedQuery("Preferred wave theory [linear=0, cnoidal=1]:", outstream, cnoidal);
+    }
+
+    IO::FormattedQuery("Enter number of bodies [int]:", outstream, nBodies);
 
     Array <string> infname(nBodies);
 
-    cout << "Enter body to use for specifying # revs [enter +ve integer], or use time [enter 0]:" << endl;
-    cin >> BodyDatum;
-    outstream << BodyDatum << endl;
+    IO::FormattedQuery("Enter body to use for specifying # revs [enter +ve integer], or use time [enter 0]:", outstream, BodyDatum);
+    //cout << "Enter body to use for specifying # revs [enter +ve integer], or use time [enter 0]:\t";
 
     if (BodyDatum > 0) {
         useRevs = true;
-        cout << "Enter number of revs for body " << BodyDatum << " [real]:" << endl;
-        cin >> nRevs;
-        outstream << nRevs << endl;
+        IO::FormattedQuery("Enter number of revs for body " + toString(BodyDatum) + " [real]:", outstream, nRevs);
     } else {
-        cout << "Enter simulation duration in seconds [real]:" << endl;
-        cin >> maxT;
-        outstream << maxT << endl;
+        IO::FormattedQuery("Enter simulation duration in seconds [real]:", outstream, maxT);
     }
     bool useTSR, useRadians;
 
-    cout << "Prefer to specify degrees or radians for attitudes [degrees=1, radians=0]?:" << endl;
-    cin >> useRadians;
-    outstream << useRadians << endl;
-    cout << "Prefer to specify TSR plus axis or rates [TSR=1, rates=0]:" << endl;
-    cin >> useTSR;
-    outstream << useTSR << endl;
+    IO::FormattedQuery("Prefer to specify degrees or radians for attitudes [degrees=1, radians=0]?:", outstream, useRadians);
+    IO::FormattedQuery("Prefer to specify TSR plus axis or rates [TSR=1, rates=0]:", outstream, useTSR);
 
     int defRates = 2;
     if (!useTSR) {
-        cout << "Prefer to specify rates RPM, Hz, or rad/s [RPM=0, Hz=1, rad/s=2]:" << endl;
-        cin >> defRates;
-        outstream << defRates << endl;
+        IO::FormattedQuery("Prefer to specify rates RPM, Hz, or rad/s [RPM=0, Hz=1, rad/s=2]:", outstream, defRates);
     }
-
-
-
-
-
-    cout << "Enter number of timestep samples [integer]:" << endl;
-    cin >> nSteps;
-    outstream << nSteps << endl;
-
-    cout << "Enter freestream velocity Uinf Vinf Winf as [3 x real]:" << endl;
-
-    cin >> globalSystem->unscaledVinf.x >> globalSystem->unscaledVinf.y >> globalSystem->unscaledVinf.z;
-    outstream << globalSystem->unscaledVinf << endl;
-    cout << "Enter fluid density in kg/m3 [real]:" << endl;
-    cin >> rho;
-    outstream << BODY::RHO << endl;
-    cout << "Use iterative pressure kutta condition? [bool 1/0]:" << endl;
-    cin >> IPKC;
-    outstream << IPKC << endl;
+    IO::FormattedQuery("Enter number of timestep samples [integer]:", outstream, nSteps);
+    IO::FormattedQuery("Enter freestream velocity Uinf Vinf Winf as [3 x real]:", outstream, globalSystem->unscaledVinf);
+    IO::FormattedQuery("Enter fluid density in kg/m3 [real]:", outstream, rho);
+    IO::FormattedQuery("Use iterative pressure kutta condition? [bool 1/0]:", outstream, IPKC);
     if (IPKC == 0)
         BODY::IPKC = false;
     else
@@ -427,9 +457,7 @@ void UTIL::PreAmble() {
 
 
 
-    cout << "Make an input log file? [bool 1/0]:" << endl;
-    cin >> makeLog;
-    outstream << makeLog << endl;
+    IO::FormattedQuery("Make an input log file? [bool 1/0]:", outstream, makeLog);
 
     Array <REAL> tsr(nBodies, 0.0), rads(nBodies, 0.0);
     BODY::NAMES = Array <string > (nBodies);
@@ -445,52 +473,28 @@ void UTIL::PreAmble() {
         cout << setfill('=') << setw(80) << "=" << endl;
         cout << "\t Body " << i + 1 << " Setup:" << endl;
 
-        cout << "Enter input neutral file [string]:" << endl;
-        cin >> infname[i];
-        outstream << infname[i] << endl;
+        IO::FormattedQuery("Enter input neutral file [string]:", outstream, infname[i]);
+        IO::FormattedQuery("Mirror/flip input geometry? [bool 1/0]", outstream, flip[i]);
+
+        if (flip[i])
+            IO::FormattedQuery("Mirror using yz, xz or xy plane? [yz=1, xz=2, xy=3]", outstream, plane[i]);
 
 
-        cout << "Mirror/flip input geometry? [bool 1/0]" << endl;
-        cin >> flip[i];
-        outstream << flip[i] << endl;
-
-        if (flip[i]) {
-            cout << "Mirror using yz, xz or xy plane? [yz=1, xz=2, xy=3]" << endl;
-            cin >> plane[i];
-            outstream << plane[i] << endl;
-
-        }
-
-        cout << "Enter displacement of neutral file origin in global frame as [3 x real]:" << endl;
-        cin >> Disp[i].x >> Disp[i].y >> Disp[i].z;
-        outstream << Disp[i] << endl;
+        IO::FormattedQuery("Enter displacement of neutral file origin in global frame as [3 x real]:", outstream, Disp[i]);
         Disp[i] = SYSTEM::GambitScale * Disp[i];
-        cout << "Enter body CG position (i.e. centre of rotation) xcg ycg zcg as [3 x real]:" << endl;
-        cin >> BODY::CGS[i].x >> BODY::CGS[i].y >> BODY::CGS[i].z;
-        outstream << BODY::CGS[i] << endl;
+        IO::FormattedQuery("Enter body CG position (i.e. centre of rotation) xcg ycg zcg as [3 x real]:", outstream, BODY::CGS[i]);
         BODY::CGS[i] = SYSTEM::GambitScale * BODY::CGS[i];
-        cout << "Enter body CG translational velocity Vx Vy Vz as [3 x real]:" << endl;
-        cin >> BODY::VELOCITY[i].x >> BODY::VELOCITY[i].y >> BODY::VELOCITY[i].z;
-
-        outstream << BODY::VELOCITY[i] << endl;
+        IO::FormattedQuery("Enter body CG translational velocity Vx Vy Vz as [3 x real]:", outstream, BODY::VELOCITY[i]);
 
 
-        cout << "Enter body attitude psi theta phi in degrees as [3 x real]:" << endl;
-        cin >> BODY::ATTITUDE[i].x >> BODY::ATTITUDE[i].y >> BODY::ATTITUDE[i].z;
-        outstream << BODY::ATTITUDE[i] << endl;
+        IO::FormattedQuery("Enter body attitude psi theta phi in degrees as [3 x real]:", outstream, BODY::ATTITUDE[i]);
 
         if (useTSR) {
-            cout << "Enter TSR (lambda) [real]:" << endl;
-            cin >> tsr[i];
-            outstream << tsr[i] << endl;
+            IO::FormattedQuery("Enter TSR (lambda) [real]:", outstream, tsr[i]);
 
-            cout << "Enter rotation axis as [3 x real]:" << endl;
-            cin >> Ax[i].x >> Ax[i].y >> Ax[i].z;
-            outstream << Ax[i] << endl;
+            IO::FormattedQuery("Enter rotation axis as [3 x real]:", outstream, Ax[i]);
 
-            cout << "Enter radius as [real]:" << endl;
-            cin >> rads[i];
-            outstream << rads[i] << endl;
+            IO::FormattedQuery("Enter radius as [real]:", outstream, rads[i]);
 
             BODY::Radius = rads[0];
             BODY::RATES[i] = Ax[i]*((globalSystem->unscaledVinf - BODY::VELOCITY[i]).Mag() * tsr[i] / rads[i]);
@@ -498,10 +502,8 @@ void UTIL::PreAmble() {
 
 
         } else {
-            cout << "Enter body rotational velocity p q r as [3 x real]:" << endl;
             Vect3 rt;
-            cin >> rt.x >> rt.y >> rt.z;
-            outstream << rt << endl;
+            IO::FormattedQuery("Enter body rotational velocity p q r as [3 x real]:", outstream, rt);
 
             if (defRates == 2)
                 BODY::RATES[i] = rt;
@@ -567,10 +569,10 @@ void UTIL::PreAmble() {
             BODY::Bodies[i]->Faces[j].GetNewGlobalPosition();
 
     BODY::PollFaces();
-    globalSystem->dtInit = TIME_STEPPER::MaxTime/globalSystem->NumSubSteps;
+    globalSystem->dtInit = TIME_STEPPER::MaxTime / globalSystem->NumSubSteps;
     if (!SYSTEM::PanelOnly)
         globalSystem->dtInit /= 1000.;
-    
+
     BODY::SetUpProtoWakes(globalSystem->dtInit);
     Array < Array <REAL> > TRANS1, TRANS2, TRANS3, TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;
     for (int i = 0; i < BODY::Bodies.size(); ++i)
@@ -605,8 +607,16 @@ void UTIL::PreAmble() {
 
     BODY::SetUpInfluenceMatrices();
 
-    if (SYSTEM::PanelOnly)
-    {
+    if (WaveModel) {
+        cout << setfill('=') << setw(80) << "=" << endl;
+        if (cnoidal)
+            WaveField::Cnoidal.WaveFieldCnoidal();
+        else
+            WaveField::Linear.WaveFieldLinear();
+        cout << setfill('=') << setw(80) << "=" << endl;
+    }
+
+    if (SYSTEM::PanelOnly) {
         BODY::BodySubStep(maxT, nSteps);
     }
 }

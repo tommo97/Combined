@@ -135,19 +135,7 @@ class OutOfMemory {};
 #define four_pi 12.56637061435917295385057353311801153678867759750042328389977837
 
 
-#define SUPERBEE(r) max(max(min(REAL(2.0)*r, REAL(1.0)), min(r, REAL(1.0))), REAL(0.0))
 
-#define MINMOD(r) max(REAL(0.0), min(REAL(1.0), r))
-
-#define VANLEER(r) (r+abs(r))/(1+abs(r))
-
-#define Koren(r) max(0.0,min(min(2.0*r,(2.0+r)/3.0),2.0))
-
-#define flim(r) Vect3(LIMITER(r.x), LIMITER(r.y), LIMITER(r.z))
-
-#define MINMOD2(x,y) 0.5*(sign(x) + sign(y))*min(fabs(x),fabs(y))
-
-#define MINMOD3(x,y,z) MINMOD2(x,MINMOD2(y,z))
 
 #define sech(x) 1.0/cosh(x)
 

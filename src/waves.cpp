@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 REAL WaveField::Depth;
 WaveField WaveField::Cnoidal;
+WaveField WaveField::Linear;
 REAL WaveField::Period, WaveField::Height, WaveField::WaveLength, WaveField::WaveNumber, WaveField::Celerity;
 /**************************************************************/
 WaveField::~WaveField(){
@@ -136,7 +137,7 @@ void WaveField::WaveFieldCnoidal() {
         }
         lambda = 2 * pi / k;
         cout << "Initial guess" << endl;
-        cout << k * d / two_pi << " " << lambda << " " << count << endl;
+    cout << "k: "  << k << " lambda: " << lambda << " # iterations: " << count << endl;
     }
 
     
@@ -198,7 +199,7 @@ void WaveField::WaveFieldCnoidal() {
     }
 
     cout << "Final converged solution" << endl;
-    cout << k * d / two_pi << " " << lambda << " " << numits << endl;
+    cout << "k: "  << k  << " lambda: " << lambda << " # iterations: " << numits << endl;
 
 
 
@@ -258,6 +259,61 @@ void WaveField::WaveFieldCnoidal() {
     cout << "Wave length:   L       = " << WaveField::WaveLength << " m" << endl;
     cout << "Wave celerity: C       = " << WaveField::Celerity << " m/s" << endl;
 
+}
+
+
+
+void WaveField::WaveFieldLinear() {
+
+
+    REAL T = WaveField::Period;
+    REAL d = WaveField::Depth;
+    REAL omega = two_pi/T;
+    
+    //  Initial guess for wavenumber based on linear wave theory
+    REAL k = d;
+    {
+        REAL om2_g = omega * omega / SYSTEM::g;
+        int count = 0;
+        REAL eps = 1.0;
+        while (eps > 1e-12) {
+            REAL val = k * tanh(d * k) - om2_g;
+            REAL deriv = d * k * sech(d * k) * sech(d * k) + tanh(d * k);
+
+            REAL new_val = k - (val / deriv);
+            eps = fabs(k - new_val);
+            k = abs(new_val);
+            count += 1;
+        }
+        lambda = 2 * pi / k;
+        cout << "Converged solution" << endl;
+    cout << "k: "  << k << " lambda: " << lambda << " # iterations: " << count << endl;
+    }
+
+    
+    
+    WaveField::WaveNumber = k;
+    WaveField::WaveLength = 2 * pi / WaveField::WaveNumber;
+    WaveField::Celerity = 2*pi/k/T;
+    
+    
+    
+    cout << "------------------------ Results ------------------------" << endl;
+    cout << "Wave length:   L       = " << WaveField::WaveLength << " m" << endl;
+    cout << "Wave celerity: C       = " << WaveField::Celerity << " m/s" << endl;
+
+}
+
+Vect3 WaveField::LinearVelocity(Vect3 X, REAL t) {
+    REAL a = WaveField::Height, om = two_pi / WaveField::Period, d = WaveField::Depth, g = 9.80665, k = WaveField::WaveNumber;
+    REAL UWave = -(a * g * k * sin(X.x * k - om * t) * cosh(k * ((X.z - 0.8) + d))) / (om * cosh(d * k));
+    REAL WWave = (a * g * k * cos(X.x * k - om * t) * sinh(k * ((X.z - 0.8) + d))) / (om * cosh(d * k));
+    return Vect3(UWave, 0.0, WWave);
+}
+
+REAL WaveField::LinearPerturbationPotential(Vect3 X, REAL t) {
+    REAL a = WaveField::Height, om = two_pi / WaveField::Period, d = WaveField::Depth, g = 9.80665, k = WaveField::WaveNumber;
+    return (a * g / om) * cosh(k * (d + (X.z - 0.8))) * cos(om * t - k * X.x) / cosh(k * d);
 }
 
 REAL WaveField::CnoidalPerturbationPotential(Vect3 X, REAL time) {

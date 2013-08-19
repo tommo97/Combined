@@ -32,6 +32,7 @@ int FVMCell::MomentIndsSize;
 Array < Array <REAL> > FVMCell::OffsetPows;
 Array <FVMCell*> FVMCell::AllCells;
 Array < Array < Vect3> > FVMCell::CellDerivs0, FVMCell::CellDerivs1, FVMCell::CellDerivs;
+REAL (*FVMCell::limiter) (REAL);
 /**************************************************************/
 FVMCell::FVMCell() : Node(), FaceVels(0.) {
     if (WRITE_TO_SCREEN) cout << "Warning - uninitialised cell" << endl;
@@ -782,12 +783,12 @@ void FVMCell::O2UWx() {
         Vect3 rem = (((*Neighb_Neighb_Val[q].E) - (*Neighb_Val[q].E)) / (ep + 1e-16));
         Vect3 rwm = (((*Neighb_Val[q].W) - (*Neighb_Neighb_Val[q].W)) / (pw + 1e-16));
 
-        Vect3 spsip_e = flim(rep);
-        Vect3 spsip_w = flim(rwp);
+        Vect3 spsip_e = FVMCell::flim(rep);
+        Vect3 spsip_w = FVMCell::flim(rwp);
 
 
-        Vect3 spsim_e = flim(rem);
-        Vect3 spsim_w = flim(rwm);
+        Vect3 spsim_e = FVMCell::flim(rem);
+        Vect3 spsim_w = FVMCell::flim(rwm);
 
         Vect3 fe = FPE * (TransVars[q] + .5 * spsip_e * ep) - FME * ((*Neighb_Val[q].E) - .5 * spsim_e * ep);
         Vect3 fw = FPW * (TransVars[q] - .5 * spsip_w * pw) - FMW * ((*Neighb_Val[q].W) + .5 * spsim_w * pw);
@@ -824,11 +825,11 @@ void FVMCell::O2UWy() {
         Vect3 rsm = (((*Neighb_Val[q].S) - (*Neighb_Neighb_Val[q].S)) / (ps + 1e-16));
         //
 
-        Vect3 spsip_n = flim(rnp);
-        Vect3 spsip_s = flim(rsp);
+        Vect3 spsip_n = FVMCell::flim(rnp);
+        Vect3 spsip_s = FVMCell::flim(rsp);
 
-        Vect3 spsim_n = flim(rnm);
-        Vect3 spsim_s = flim(rsm);
+        Vect3 spsim_n = FVMCell::flim(rnm);
+        Vect3 spsim_s = FVMCell::flim(rsm);
 
         Vect3 fn = FPN * (TransVars[q] + .5 * spsip_n * np) - FMN * ((*Neighb_Val[q].N) - .5 * spsim_n * np);
         Vect3 fs = FPS * (TransVars[q] - .5 * spsip_s * ps) - FMS * ((*Neighb_Val[q].S) + .5 * spsim_s * ps);
@@ -859,11 +860,11 @@ void FVMCell::O2UWz() {
         Vect3 rtm = (((*Neighb_Neighb_Val[q].T) - (*Neighb_Val[q].T)) / (tp + 1e-16));
         Vect3 rbm = (((*Neighb_Val[q].B) - (*Neighb_Neighb_Val[q].B)) / (pb + 1e-16));
 
-        Vect3 spsip_t = flim(rtp);
-        Vect3 spsip_b = flim(rbp);
+        Vect3 spsip_t = FVMCell::flim(rtp);
+        Vect3 spsip_b = FVMCell::flim(rbp);
 
-        Vect3 spsim_t = flim(rtm);
-        Vect3 spsim_b = flim(rbm);
+        Vect3 spsim_t = FVMCell::flim(rtm);
+        Vect3 spsim_b = FVMCell::flim(rbm);
 
         Vect3 ft = FPT * (TransVars[q] + .5 * spsip_t * tp) - FMT * ((*Neighb_Val[q].T) - .5 * spsim_t * tp);
         Vect3 fb = FPB * (TransVars[q] - .5 * spsip_b * pb) - FMB * ((*Neighb_Val[q].B) + .5 * spsim_b * pb);
@@ -922,21 +923,21 @@ void FVMCell::O2UW() {
 #endif
         //
 
-        Vect3 spsip_e = flim(rep);
-        Vect3 spsip_w = flim(rwp);
-        Vect3 spsip_n = flim(rnp);
-        Vect3 spsip_s = flim(rsp);
+        Vect3 spsip_e = FVMCell::flim(rep);
+        Vect3 spsip_w = FVMCell::flim(rwp);
+        Vect3 spsip_n = FVMCell::flim(rnp);
+        Vect3 spsip_s = FVMCell::flim(rsp);
 #ifdef MODE_3D
-        Vect3 spsip_t = flim(rtp);
-        Vect3 spsip_b = flim(rbp);
+        Vect3 spsip_t = FVMCell::flim(rtp);
+        Vect3 spsip_b = FVMCell::flim(rbp);
 #endif
-        Vect3 spsim_e = flim(rem);
-        Vect3 spsim_w = flim(rwm);
-        Vect3 spsim_n = flim(rnm);
-        Vect3 spsim_s = flim(rsm);
+        Vect3 spsim_e = FVMCell::flim(rem);
+        Vect3 spsim_w = FVMCell::flim(rwm);
+        Vect3 spsim_n = FVMCell::flim(rnm);
+        Vect3 spsim_s = FVMCell::flim(rsm);
 #ifdef MODE_3D
-        Vect3 spsim_t = flim(rtm);
-        Vect3 spsim_b = flim(rbm);
+        Vect3 spsim_t = FVMCell::flim(rtm);
+        Vect3 spsim_b = FVMCell::flim(rbm);
 #endif
         Vect3 fe = FPE * (TransVars[q] + .5 * spsip_e * ep) - FME * ((*Neighb_Val[q].E) - .5 * spsim_e * ep);
         Vect3 fw = FPW * (TransVars[q] - .5 * spsip_w * pw) - FMW * ((*Neighb_Val[q].W) + .5 * spsim_w * pw);
@@ -1002,21 +1003,21 @@ Vect3 FVMCell::O2UW(int q) {
 #endif
     //
 
-    Vect3 spsip_e = flim(rep);
-    Vect3 spsip_w = flim(rwp);
-    Vect3 spsip_n = flim(rnp);
-    Vect3 spsip_s = flim(rsp);
+    Vect3 spsip_e = FVMCell::flim(rep);
+    Vect3 spsip_w = FVMCell::flim(rwp);
+    Vect3 spsip_n = FVMCell::flim(rnp);
+    Vect3 spsip_s = FVMCell::flim(rsp);
 #ifdef MODE_3D
-    Vect3 spsip_t = flim(rtp);
-    Vect3 spsip_b = flim(rbp);
+    Vect3 spsip_t = FVMCell::flim(rtp);
+    Vect3 spsip_b = FVMCell::flim(rbp);
 #endif
-    Vect3 spsim_e = flim(rem);
-    Vect3 spsim_w = flim(rwm);
-    Vect3 spsim_n = flim(rnm);
-    Vect3 spsim_s = flim(rsm);
+    Vect3 spsim_e = FVMCell::flim(rem);
+    Vect3 spsim_w = FVMCell::flim(rwm);
+    Vect3 spsim_n = FVMCell::flim(rnm);
+    Vect3 spsim_s = FVMCell::flim(rsm);
 #ifdef MODE_3D
-    Vect3 spsim_t = flim(rtm);
-    Vect3 spsim_b = flim(rbm);
+    Vect3 spsim_t = FVMCell::flim(rtm);
+    Vect3 spsim_b = FVMCell::flim(rbm);
 #endif
     Vect3 fe = FPE * (TransVars[q] + .5 * spsip_e * ep) - FME * ((*Neighb_Val[q].E) - .5 * spsim_e * ep);
     Vect3 fw = FPW * (TransVars[q] - .5 * spsip_w * pw) - FMW * ((*Neighb_Val[q].W) + .5 * spsim_w * pw);

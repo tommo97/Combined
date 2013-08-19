@@ -69,6 +69,8 @@ public:
     
     void WaveFieldCnoidal();
     
+    void WaveFieldLinear();
+    
 //    REAL getPhi2D(Vect3);
     
     void SetPeakFreq(REAL in)
@@ -93,12 +95,15 @@ public:
         {
             return S;
         }
-        
-        Vect3 CnoidalVelocity(Vect3, REAL);
-        REAL CnoidalPerturbationPotential(Vect3, REAL);
 
+    Vect3 LinearVelocity(Vect3, REAL);
+    REAL LinearPerturbationPotential(Vect3, REAL);
+
+    Vect3 CnoidalVelocity(Vect3, REAL);
+    REAL CnoidalPerturbationPotential(Vect3, REAL);
     static REAL Depth, Period, Height, WaveLength, WaveNumber, Celerity;
     static WaveField Cnoidal;
+    static WaveField Linear;
 private:
     bool PeakFreqSet, ModalFreqSet, HSigSet, WindDataSet;
     Array <REAL> S, Freqs, Amplitudes, Phases, WaveNumbers, WaveLengths, Periods;

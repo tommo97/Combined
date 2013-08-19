@@ -92,8 +92,6 @@ bool BODY::LiftingLineMode;
 /**************************************************************/
 void BODY::MakeWake() {
 
-    if (WakePanels[0].size() == 0)
-        cout << "!!!!!!!!!!!!! No Wake Panels!" << endl;
     Vect3 C1, C2, C3, C4;
     for (int i = 0; i < ProtoWakes.size(); ++i) {
         Array <PANEL*> tmp;
@@ -1666,12 +1664,11 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
     }
 
 
-    cout << "%\t------------|" << endl;
     for (int i = 0; i < GROUPS.size(); ++i) {
 
         //        ORIGIN *= SYSTEM::GambitScale;
         cout << "%\t" << name << " " << rates << " " << cg << endl;
-        cout << "%\tmaking body " << endl;
+        cout << "%\tMaking body " << endl;
 
         BODY::Bodies.push_back(new BODY(cg, att, vel, rates, name));
         BODY::Bodies.back()->ID = BODY::Bodies.size();
@@ -1679,7 +1676,6 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
 
         BODY::Bodies.back()->GetPanels(BodyPanels[i]);
         BODY::NumBodies++;
-        cout << "\tdone" << endl;
     }
 
 
@@ -1700,8 +1696,6 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
 
 
     for (int i = 0; i < NumBodies; ++i) {
-        cout << "%\t" << BODY::Bodies[i]->Name << " " << BODY::Bodies[i]->NumFaces;
-        cout << " " << BODY::Bodies[i]->BoundaryFaces.size() << endl;
 
         for (int j = 0; j < (int) BODY::Bodies[i]->Faces.size(); ++j) {
             BODY::Bodies[i]->Faces[j].Owner = BODY::Bodies[i];
@@ -1734,7 +1728,10 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
         for (int j = 0; j < BODY::Bodies[i]->Faces.size(); ++j)
             BODY::WaitLenghts = max(BODY::WaitLenghts, BODY::Bodies[i]->Faces[j].MaxDiagonal);
 
-    cout << "WaitLength -----------------> " << BODY::WaitLenghts << endl;
+    cout << "%\t Maximum panel diagonal: " << BODY::WaitLenghts << endl;
+
+    cout << "%\t Done" << endl;
+
 }
 
 

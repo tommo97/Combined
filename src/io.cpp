@@ -776,7 +776,71 @@ void IO::write_m() {
 //
 //    out_stream.close();
 }
+/**************************************************************/
+string IO::FormattedQueryString(string input) {
+    int linelength = 80;
 
+    string output = input;
+
+    int remainder = linelength - output.length();
+
+    if (input.length() >= 60) {
+        size_t found = input.find(" ", 60, 1);
+        if (found != string::npos) {
+            output = input.substr(0, found) + "\n";
+            string tmp = "          " + input.substr(found + 1);
+            remainder = linelength - tmp.length();
+            output = output + tmp;
+        }
+    }
+
+
+    if (remainder > 10) {
+        output.insert(output.length(), remainder - 10, '.');
+        output += " ";
+    }
+    return output;
+}
+/**************************************************************/
+void IO::FormattedQuery(string input, stringstream &log, string &out) {
+    cout << IO::FormattedQueryString(input);
+    string in;
+    cin >> in;
+    log << in << endl;
+    out = in;
+}
+/**************************************************************/
+void IO::FormattedQuery(string input, stringstream &log, REAL &out) {
+    cout << IO::FormattedQueryString(input);
+    REAL in;
+    cin >> in;
+    log << in << endl;
+    out = in;
+}
+/**************************************************************/
+void IO::FormattedQuery(string input, stringstream &log, bool &out) {
+    cout << IO::FormattedQueryString(input);
+    bool in;
+    cin >> in;
+    log << in << endl;
+    out = in;
+}
+/**************************************************************/
+void IO::FormattedQuery(string input, stringstream &log, Vect3 &out) {
+    cout << IO::FormattedQueryString(input);
+    Vect3 in;
+    cin >> in.x >> in.y >> in.z;
+    log << in << endl;
+    out = in;
+}
+/**************************************************************/
+void IO::FormattedQuery(string input, stringstream &log, int &out) {
+    cout << IO::FormattedQueryString(input);
+    int in;
+    cin >> in;
+    log << in << endl;
+    out = in;
+}
 /**************************************************************/
 void IO::write_forces() {
 }

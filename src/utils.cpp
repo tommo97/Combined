@@ -488,7 +488,10 @@ int UTIL::read_neu(string infname,
                 }
             }
         }
-        cout << "%\tRead file " << infname << " got " << Surfaces.size() << " surfaces of size " << Surfaces[0].size() << " by " << Surfaces[0][0].size() << endl;
+        if (Surfaces.size() > 1)
+            cout << "%\tRead file " << infname << " got " << Surfaces.size() << " surfaces of size " << Surfaces[0].size() << " by " << Surfaces[0][0].size() << endl;
+        else
+            cout << "%\tRead file " << infname << " got " << Surfaces.size() << " surface of size " << Surfaces[0].size() << " by " << Surfaces[0][0].size() << endl;
     }
 
 

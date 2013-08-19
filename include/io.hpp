@@ -70,6 +70,21 @@ public:
     void write_ISA();
 
     void WriteBinary();
+    
+    
+    static void FormattedQuery(string, stringstream&, REAL&);
+    static void FormattedQuery(string, stringstream&, bool&);
+    static void FormattedQuery(string, stringstream&, Vect3&);
+    static void FormattedQuery(string, stringstream&, int&);
+    static void FormattedQuery(string, stringstream&, string&);
+    static string FormattedQueryString(string);
+  
+
+
+    
+    
+    
+    
 
     REAL ReturnMemPercent() {
         top_data = "\t\t" + globalGetStdoutFromCommand(top_command);
