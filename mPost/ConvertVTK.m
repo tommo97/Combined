@@ -39,7 +39,9 @@ eval(['load(fname,''TRANS3_' num2str(i-1) '_y'');']);
 eval(['load(fname,''TRANS1_' num2str(i-1) '_z'');']);
 eval(['load(fname,''TRANS2_' num2str(i-1) '_z'');']);
 eval(['load(fname,''TRANS3_' num2str(i-1) '_z'');']);
-
+eval(['load(fname,''BodyCG' num2str(i-1) '_x'')']);
+eval(['load(fname,''BodyCG' num2str(i-1) '_y'')']);
+eval(['load(fname,''BodyCG' num2str(i-1) '_z'')']);
 eval(['TRANS = [TRANS1_' num2str(i-1) '_x TRANS2_' num2str(i-1) '_x TRANS3_' num2str(i-1) '_x; TRANS1_' num2str(i-1) '_y TRANS2_' num2str(i-1) '_y TRANS3_0_y; TRANS1_' num2str(i-1) '_z TRANS2_' num2str(i-1) '_z TRANS3_' num2str(i-1) '_z]']);
 
 
@@ -47,6 +49,7 @@ for i = 1:NParts
     tic
     eval(['load(fname,''BodyMainPointIDS' num2str(i-1) ''')']);
     eval(['load(fname,''BodySurface' num2str(i-1) ''')']);
+
     Cps = eval(['Cp(BodySurface' num2str(i-1) ')']);
     
     [ni nj] = size(Cps);
@@ -72,9 +75,9 @@ for i = 1:NParts
     
    
     
-    xi = Body{i}.X * TRANS(1,1) + Body{i}.Y * TRANS(2,1) + Body{i}.Z * TRANS(3,1) + Origin(1);
-    yi = Body{i}.X * TRANS(1,2) + Body{i}.Y * TRANS(2,2) + Body{i}.Z * TRANS(3,2);% + Origin(2);
-    zi = Body{i}.X * TRANS(1,3) + Body{i}.Y * TRANS(2,3) + Body{i}.Z * TRANS(3,3);% + Origin(3);
+    xi = Body{i}.X * TRANS(1,1) + Body{i}.Y * TRANS(2,1) + Body{i}.Z * TRANS(3,1) + BodyCG0_x/GambitScale;
+    yi = Body{i}.X * TRANS(1,2) + Body{i}.Y * TRANS(2,2) + Body{i}.Z * TRANS(3,2) + BodyCG0_y/GambitScale;
+    zi = Body{i}.X * TRANS(1,3) + Body{i}.Y * TRANS(2,3) + Body{i}.Z * TRANS(3,3) + BodyCG0_z/GambitScale;
     val = Body{i}.CPi;
     
     

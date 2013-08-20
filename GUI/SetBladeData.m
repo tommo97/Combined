@@ -142,7 +142,7 @@ switch blade.type;
         % x = [x fliplr(4-x)];
         % y = [y fliplr(y)];
         
-        blade.RADIUS = linspace(-10,10);
+        %blade.RADIUS = linspace(-10,10);
         blade.THETA =   0*ones(size(blade.RADIUS));
         blade.CHORD =  1*ones(size(blade.RADIUS));
         blade.THICKNESS = [];
@@ -312,7 +312,7 @@ hold(blade.axes,'off')
 if ~isempty(blade.y)
     scatter(blade.axes,blade.Radius,blade.Chord);
     hold(blade.axes,'on');
-    if blade.isNREL || blade.isSOTON || blade.isBarltrop
+    if (exist('blade.n1') && exist('blade.n2'))
     plot(blade.axes,blade.Radius(blade.n2),blade.Chord(blade.n2),'o','LineWidth',2,...
         'MarkerEdgeColor','k',...
         'MarkerFaceColor','none',...
