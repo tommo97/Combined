@@ -810,70 +810,113 @@ string IO::FormattedQueryString(string input) {
     }
     return output;
 }
-
 /**************************************************************/
-void IO::FormattedQuery(string input, string postfix, stringstream &log, string &out) {
+void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, string &out) {
     //    cout << IO::FormattedQueryString(input);
     int l = postfix.length();
     string dots;
     dots.insert(0, 47 - l, '.');
     cout << input << "\n\t\t\t" << dots << postfix << ": ";
-    string in;
-    cin >> in;
-    log << in << endl;
-    out = in;
+
+    string in;    
+    getline(cin, in);
+    
+    size_t found = in.find_first_of("\%");
+    
+    if (found != string::npos)
+        in = in.substr(0, found);
+
+    //	Now split output into n components as required
+    istringstream iss(in);
+    iss >> out;
+
+    log << in << "\t\t % " << shortstring << endl;
 }
 
 /**************************************************************/
-void IO::FormattedQuery(string input, string postfix, stringstream &log, REAL &out) {
+void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, REAL &out) {
     int l = postfix.length();
     string dots;
     dots.insert(0, 47 - l, '.');
     cout << input << "\n\t\t\t" << dots << postfix << ": ";
-    //    cout << IO::FormattedQueryString(input);
-    REAL in;
-    cin >> in;
-    log << in << endl;
-    out = in;
+    string in;    
+    getline(cin, in);
+    
+    size_t found = in.find_first_of("\%");
+    
+    if (found != string::npos)
+        in = in.substr(0, found);
+
+    //	Now split output into n components as required
+    istringstream iss(in);
+    iss >> out;
+
+    log << in << "\t\t % " << shortstring << endl;
 }
 
 /**************************************************************/
-void IO::FormattedQuery(string input, string postfix, stringstream &log, bool &out) {
+void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, bool &out) {
     int l = postfix.length();
     string dots;
     dots.insert(0, 47 - l, '.');
     cout << input << "\n\t\t\t" << dots << postfix << ": ";
     //    cout << IO::FormattedQueryString(input);
-    bool in;
-    cin >> in;
-    log << in << endl;
-    out = in;
+    string in;    
+    getline(cin, in);
+    
+    size_t found = in.find_first_of("\%");
+    
+    if (found != string::npos)
+        in = in.substr(0, found);
+
+    //	Now split output into n components as required
+    istringstream iss(in);
+    iss >> out;
+
+    log << in << "\t\t % " << shortstring << endl;
 }
 
 /**************************************************************/
-void IO::FormattedQuery(string input, string postfix, stringstream &log, Vect3 &out) {
+void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, Vect3 &out) {
     int l = postfix.length();
     string dots;
     dots.insert(0, 47 - l, '.');
     cout << input << "\n\t\t\t" << dots << postfix << ": ";
     //    cout << IO::FormattedQueryString(input);
-    Vect3 in;
-    cin >> in.x >> in.y >> in.z;
-    log << in << endl;
-    out = in;
+    string in;    
+    getline(cin, in);
+    
+    size_t found = in.find_first_of("\%");
+    
+    if (found != string::npos)
+        in = in.substr(0, found);
+
+    //	Now split output into n components as required
+    istringstream iss(in);
+    iss >> out.x >> out.y >> out.z;
+
+    log << in << "\t\t % " << shortstring << endl;
 }
 
 /**************************************************************/
-void IO::FormattedQuery(string input, string postfix, stringstream &log, int &out) {
+void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, int &out) {
     int l = postfix.length();
     string dots;
     dots.insert(0, 47 - l, '.');
     cout << input << "\n\t\t\t" << dots << postfix << ": ";
-    //    cout << IO::FormattedQueryString(input);
-    int in;
-    cin >> in;
-    log << in << endl;
-    out = in;
+    string in;    
+    getline(cin, in);
+    
+    size_t found = in.find_first_of("\%");
+    
+    if (found != string::npos)
+        in = in.substr(0, found);
+
+    //	Now split output into n components as required
+    istringstream iss(in);
+    iss >> out;
+
+    log << in << "\t\t % " << shortstring << endl;
 }
 /**************************************************************/
 void IO::write_forces() {

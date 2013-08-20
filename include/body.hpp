@@ -46,6 +46,7 @@ public:
     static Array <Vect3> RATES;
     static Array <string> NAMES;
     static Array <REAL> TimePrev;
+    Array <Vect3> EulerAngPrev, EulerRatePrev;
     static Array <REAL> DPhi;
     static Array <REAL> DCp;
     static Array <REAL> DphiDCp;
@@ -108,9 +109,9 @@ public:
     
     void MakeTmpWake();
 
-    Vect3 BodyRates, BodyAngles, EulerRates, EulerAngles;
+    Vect3 BodyRates, EulerRates, EulerAngles;
 
-	Array <Vect3> AngleHist;
+    Array <Vect3> AngleHist;
 
     Array < Array <Vect3> > ProtoWakeLastC1, ProtoWakeLastC2, ProtoWakeLastC3, ProtoWakeLastC4;
     Array < Array < Array <PANEL*> > > WakePanels;
@@ -136,11 +137,12 @@ public:
         TRANS.assign(3, Vect3(0.0));
         EulerAngles = Attitude; //  psi theta phi
         SetEulerTrans();
-        BodyAngles = Vect3(0.0); //  omx omy omz
         CGo = CG;
         SetEulerTrans();
         GetEulerRates();
         BODY::LiftingLineMode = false;
+        EulerAngPrev = Array <Vect3> (4, 0.0);
+        EulerRatePrev = Array <Vect3> (4, 0.0);
 //        WkTmp = Array < Array < Array <PANEL> > > ();
     };
 

@@ -40,6 +40,7 @@ Array <Vect3> BODY::RATES;
 Array <Vect3> BODY::VELOCITY;
 Array <Vect3> BODY::ATTITUDE;
 Array <REAL> BODY::TimePrev = Array <REAL> (4, 0.0);
+
 REAL BODY::Time = 0;
 REAL BODY::RHO = 1;
 bool BODY::OutputSubStepCollocationPoints = false;
@@ -766,6 +767,18 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         BODY::TimePrev[1] = BODY::TimePrev[0];
         BODY::TimePrev[0] = TIME_STEPPER::SimTime = BODY::Time;
 
+        for (int I = 0; I < BODY::Bodies.size(); ++I) {
+            BODY::Bodies[I]->EulerAngPrev[3] = BODY::Bodies[I]->EulerAngPrev[2];
+            BODY::Bodies[I]->EulerAngPrev[2] = BODY::Bodies[I]->EulerAngPrev[1];
+            BODY::Bodies[I]->EulerAngPrev[1] = BODY::Bodies[I]->EulerAngPrev[0];
+            BODY::Bodies[I]->EulerAngPrev[0] = BODY::Bodies[I]->EulerAngles;
+
+            BODY::Bodies[I]->EulerRatePrev[3] = BODY::Bodies[I]->EulerRatePrev[2];
+            BODY::Bodies[I]->EulerRatePrev[2] = BODY::Bodies[I]->EulerRatePrev[1];
+            BODY::Bodies[I]->EulerRatePrev[1] = BODY::Bodies[I]->EulerRatePrev[0];
+            BODY::Bodies[I]->EulerRatePrev[0] = BODY::Bodies[I]->EulerRates;
+        }
+        
         TIME_STEPPER::SubStepTime += dt;
         TIME_STEPPER::SimTime += dt;
         BODY::Time = TIME_STEPPER::SimTime;
@@ -1392,11 +1405,21 @@ void BODY::MoveBody() {
     //        EulerAngles = Vect3(0.0, BODY::AlphaHistory.back(), 0.0);
     //    }
     //    Now get new cg position in global reference frame
-    EulerAngles = EulerRates * BODY::Time;
+    GetEulerRates();
+    if (BODY::Time > 0){
+        REAL dt = (BODY::Time - BODY::TimePrev[0]);
+        Vect3 Rates0 = EulerRates;
+        Vect3 Angles0 = EulerAngles;
+        EulerAngles = EulerAngles + EulerRates * dt; // Angles*
+        GetEulerRates(); //     Rates*
+        Vect3 RatesStar = EulerRates;
+        EulerAngles = Angles0 + 0.5 * dt * (Rates0 + RatesStar);
+    }
+    
     CG = Velocity * BODY::Time;
     //    Now set appropriate body rates, and transforms etc.
     SetEulerTrans();
-
+    GetEulerRates();
 
     for (int i = 0; i < Faces.size(); ++i) 
         Faces[i].GetNewGlobalPosition();

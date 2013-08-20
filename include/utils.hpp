@@ -141,7 +141,10 @@ public:
         return theta * 0.017453292519943;
     }
 
-
+    inline static Vect3 deg2rad(Vect3 theta) {
+        return theta * 0.017453292519943;
+    }
+    
     static double interp2(Array<Array<double> > &X, Array<Array<double> > &Y, Array<Array<
             double> > &Z, double Xi, double Yi);
 

@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 
 
     BODY::OutputSubStepCollocationPoints = false;
-    SYSTEM::PanelOnly = false;
+    SYSTEM::PanelOnly = true;
     PANEL::Initialise();
     UTIL::GetCellPans();
 
@@ -349,20 +349,20 @@ void UTIL::PreAmble() {
 
     cout << "\t Engine Initialisation & Setup: " << endl;
 
-    IO::FormattedQuery("Enter FMM maximum expansion order, pₘₐₓ ", "integer, minimum 3, suggest 5", outstream, SYSTEM::MaxP);
-    IO::FormattedQuery("Enter FMM smoothing parameter radius, δ", "real, suggest 0.0316", outstream, SYSTEM::Del2);
+    IO::FormattedQuery("Enter FMM maximum expansion order, pₘₐₓ ", "integer, minimum 3, suggest 5","FMM maximum expansion order", outstream, SYSTEM::MaxP);
+    IO::FormattedQuery("Enter FMM smoothing parameter radius, δ", "real, suggest 0.0316","FMM smoothing parameter radius", outstream, SYSTEM::Del2);
     SYSTEM::Del2 *= SYSTEM::Del2;
-    IO::FormattedQuery("Enter scale factor for model","real", outstream, SYSTEM::GambitScale);
-    IO::FormattedQuery("Enter number of quadrature points to use during multipole expansions","integer, minimum 2, suggest 24", outstream, UTIL::NumCellGaussPts);
+    IO::FormattedQuery("Enter scale factor for model","real","Scale factor", outstream, SYSTEM::GambitScale);
+    IO::FormattedQuery("Enter number of quadrature points to use during multipole expansions","integer, minimum 2, suggest 24","Number of quadrature points", outstream, UTIL::NumCellGaussPts);
     UTIL::lgwt(UTIL::NumCellGaussPts, UTIL::QuadPts, UTIL::QuadWts);
     //  This is to get the right multipliers for a cell, e.g. a range [-0.5,0.5] rather than [-1,1]
     for (int i = 0; i < UTIL::QuadPts.size(); ++i) {
         UTIL::QuadPts[i] = UTIL::QuadPts[i] / 2.0;
         UTIL::QuadWts[i] = UTIL::QuadWts[i] / 2.0;
     }
-    IO::FormattedQuery("Enter M'₄ interpolation radius, measured in cells", "integer, suggest 2", outstream, SYSTEM::M4Radius_in_cells);
-    IO::FormattedQuery("Enter initial number of sub-time-steps, nₛₛ", "integer, suggest 25", outstream, globalSystem->NumSubSteps);
-    IO::FormattedQuery("Enter fraction of timestep for protowake length, Δₛ", "real, suggest 0.3", outstream, globalSystem->DS);
+    IO::FormattedQuery("Enter M'₄ interpolation radius, measured in cells", "integer, suggest 2","M'4 interpolation radius", outstream, SYSTEM::M4Radius_in_cells);
+    IO::FormattedQuery("Enter initial number of sub-time-steps, nₛₛ", "integer, suggest 25","Initial number of sub-time-steps", outstream, globalSystem->NumSubSteps);
+    IO::FormattedQuery("Enter fraction of timestep for protowake length, Δₛ", "real, suggest 0.3","Fraction of timestep for protowake length", outstream, globalSystem->DS);
 
 
 
@@ -377,7 +377,7 @@ void UTIL::PreAmble() {
     cout << "         6) UMIST (TVD QUICK) " << endl;
     cout << "         7) CADA" << endl;
     int FLIM;
-    IO::FormattedQuery("         8) MC","", outstream, FLIM);
+    IO::FormattedQuery("         8) MC","","Flux limiter", outstream, FLIM);
 
 
     switch (FLIM) {
@@ -421,41 +421,41 @@ void UTIL::PreAmble() {
     bool WaveModel = false;
     bool cnoidal = false;
 
-    IO::FormattedQuery("Use wave model?", "no=0, yes=1", outstream, WaveModel);
+    IO::FormattedQuery("Use wave model?", "no=0, yes=1","Wave model?", outstream, WaveModel);
 
     if (WaveModel) {
-        IO::FormattedQuery("          Enter wave period in seconds","real", outstream, WaveField::Period);
-        IO::FormattedQuery("          Enter wave height in metres","real", outstream, WaveField::Height);
-        IO::FormattedQuery("          Enter water depth in metres","real", outstream, WaveField::Depth);
-        IO::FormattedQuery("Preferred wave theory","linear=0, cnoidal=1", outstream, cnoidal);
+        IO::FormattedQuery("          Enter wave period in seconds","real","Period", outstream, WaveField::Period);
+        IO::FormattedQuery("          Enter wave height in metres","real","Height", outstream, WaveField::Height);
+        IO::FormattedQuery("          Enter water depth in metres","real","Water depth", outstream, WaveField::Depth);
+        IO::FormattedQuery("Preferred wave theory","linear=0, cnoidal=1","Wave theory? linear=0, cnoidal=1", outstream, cnoidal);
     }
 
-    IO::FormattedQuery("Enter number of bodies","integer", outstream, nBodies);
+    IO::FormattedQuery("Enter number of bodies","integer","Number of bodies", outstream, nBodies);
 
     Array <string> infname(nBodies);
 
-    IO::FormattedQuery("Enter body to use for specifying # revs [enter +ve integer], or use time [enter 0]","", outstream, BodyDatum);
+    IO::FormattedQuery("Enter body to use for specifying # revs [enter +ve integer], or use time [enter 0]","","Body for # revs [+ve], or use time [0]", outstream, BodyDatum);
     //cout << "Enter body to use for specifying # revs [enter +ve integer], or use time [enter 0]:\t";
 
     if (BodyDatum > 0) {
         useRevs = true;
-        IO::FormattedQuery("Enter number of revs for body " + toString(BodyDatum) + " ","real", outstream, nRevs);
+        IO::FormattedQuery("Enter number of revs for body " + toString(BodyDatum) + " ","real","# revs for body " + toString(BodyDatum), outstream, nRevs);
     } else {
-        IO::FormattedQuery("Enter simulation duration in seconds","real", outstream, maxT);
+        IO::FormattedQuery("Enter simulation duration in seconds","real","Max sim time", outstream, maxT);
     }
     bool useTSR, useRadians;
 
-    IO::FormattedQuery("Prefer to specify degrees or radians for attitudes?"," radians=0, degrees=1", outstream, useRadians);
-    IO::FormattedQuery("Prefer to specify TSR plus axis or rates?", " rates=0, TSR=1", outstream, useTSR);
+    IO::FormattedQuery("Prefer to specify degrees or radians for attitudes?"," degrees=0, radians=1","Degrees or radians for attitudes? degrees=0, rads=1", outstream, useRadians);
+    IO::FormattedQuery("Prefer to specify TSR plus axis or rates?", " rates=0, TSR=1","Rates or TSR? rates=0, TSR=1", outstream, useTSR);
 
     int defRates = 2;
     if (!useTSR) {
-        IO::FormattedQuery("Prefer to specify rates RPM, Hz, or rad/s?", "RPM=0, Hz=1, rad/s=2", outstream, defRates);
+        IO::FormattedQuery("Prefer to specify rates RPM, Hz, or rad/s?", "RPM=0, Hz=1, rad/s=2","RPM, Hz or rad/s? RPM=0, Hz=1, rad/s=2", outstream, defRates);
     }
-    IO::FormattedQuery("Enter number of timestep samples", "integer", outstream, nSteps);
-    IO::FormattedQuery("Enter freestream velocity U∞ V∞ W∞","3 x real", outstream, globalSystem->unscaledVinf);
-    IO::FormattedQuery("Enter fluid density in kg/m³","real", outstream, rho);
-    IO::FormattedQuery("Use iterative pressure kutta condition?","no=0, yes=1", outstream, IPKC);
+    IO::FormattedQuery("Enter number of timestep samples", "integer","Timestep samples", outstream, nSteps);
+    IO::FormattedQuery("Enter freestream velocity U∞ V∞ W∞","3 x real","Freestream velocity", outstream, globalSystem->unscaledVinf);
+    IO::FormattedQuery("Enter fluid density in kg/m³","real","Fluid density", outstream, rho);
+    IO::FormattedQuery("Use iterative pressure kutta condition?","no=0, yes=1","Use IPKC? no=0, yes=1", outstream, IPKC);
     if (IPKC == 0)
         BODY::IPKC = false;
     else
@@ -463,7 +463,7 @@ void UTIL::PreAmble() {
 
 
 
-    IO::FormattedQuery("Make an input log file?","no=0, yes=1", outstream, makeLog);
+    IO::FormattedQuery("Make an input log file?","no=0, yes=1","Make log? no=0, yes=1", outstream, makeLog);
 
     Array <REAL> tsr(nBodies, 0.0), rads(nBodies, 0.0);
     BODY::NAMES = Array <string > (nBodies);
@@ -479,28 +479,33 @@ void UTIL::PreAmble() {
         cout << setfill('=') << setw(80) << "=" << endl;
         cout << "\t Body " << i + 1 << " Setup:" << endl;
 
-        IO::FormattedQuery("Enter input neutral file","string", outstream, infname[i]);
-        IO::FormattedQuery("Mirror/flip input geometry?","no=0, yes=1", outstream, flip[i]);
+        IO::FormattedQuery("Enter input neutral file","string","Neutral file", outstream, infname[i]);
+        IO::FormattedQuery("Mirror/flip input geometry?","no=0, yes=1","Mirror/flip geometry? no=0, yes=1", outstream, flip[i]);
 
         if (flip[i])
-            IO::FormattedQuery("Mirror using yz, xz or xy plane?","yz=1, xz=2, xy=3", outstream, plane[i]);
+            IO::FormattedQuery("Mirror using yz, xz or xy plane?","yz=1, xz=2, xy=3","Flip plane yz=1, xz=2, xy=3", outstream, plane[i]);
 
 
-        IO::FormattedQuery("Enter displacement of neutral file origin in global frame","3 x real", outstream, Disp[i]);
+        IO::FormattedQuery("Enter displacement of neutral file origin in global frame","3 x real","Displacement of origin [dx,dy,dz]", outstream, Disp[i]);
         Disp[i] = SYSTEM::GambitScale * Disp[i];
-        IO::FormattedQuery("Enter body CG position (i.e. centre of rotation) xcg ycg zcg","3 x real", outstream, BODY::CGS[i]);
+        IO::FormattedQuery("Enter body CG position (i.e. centre of rotation) xcg ycg zcg","3 x real","CG position [x,y,z]", outstream, BODY::CGS[i]);
         BODY::CGS[i] = SYSTEM::GambitScale * BODY::CGS[i];
-        IO::FormattedQuery("Enter body CG translational velocity Vx Vy Vz", "3 x real", outstream, BODY::VELOCITY[i]);
+        IO::FormattedQuery("Enter body CG translational velocity Vx Vy Vz", "3 x real","CG velocity [u,v,w]", outstream, BODY::VELOCITY[i]);
 
-
-        IO::FormattedQuery("Enter body attitude ψ, θ, and φ in degrees", "3 x real", outstream, BODY::ATTITUDE[i]);
+        if (useRadians)
+            IO::FormattedQuery("Enter body attitude ψ, θ, and φ in radians", "3 x real","Body Euler angles (radians) [psi, theta, phi]", outstream, BODY::ATTITUDE[i]);
+        else
+        {
+            IO::FormattedQuery("Enter body attitude ψ, θ, and φ in degrees", "3 x real","Body Euler angles (degrees) [psi, theta, phi]", outstream, BODY::ATTITUDE[i]);
+            BODY::ATTITUDE[i] = deg2rad(BODY::ATTITUDE[i]);
+        }
 
         if (useTSR) {
-            IO::FormattedQuery("Enter tip-speed ratio, λ","real", outstream, tsr[i]);
+            IO::FormattedQuery("Enter tip-speed ratio, λ","real","TSR", outstream, tsr[i]);
 
-            IO::FormattedQuery("Enter rotation axis unit vector", "3 x real", outstream, Ax[i]);
+            IO::FormattedQuery("Enter rotation axis unit vector", "3 x real","Rotation axis vector [vx,vy,vz]", outstream, Ax[i]);
 
-            IO::FormattedQuery("Enter radius in metres","real", outstream, rads[i]);
+            IO::FormattedQuery("Enter radius in metres","real","Radius", outstream, rads[i]);
 
             BODY::Radius = rads[0];
             BODY::RATES[i] = Ax[i]*((globalSystem->unscaledVinf - BODY::VELOCITY[i]).Mag() * tsr[i] / rads[i]);
@@ -509,16 +514,23 @@ void UTIL::PreAmble() {
 
         } else {
             Vect3 rt;
-            IO::FormattedQuery("Enter body rotational velocity p q r", "3 x real", outstream, rt);
 
-            if (defRates == 2)
+
+            if (defRates == 2) {
+                IO::FormattedQuery("Enter body rotational velocity p q r in rads/s", "3 x real", "Body rates [p,q,r] in rads/s", outstream, rt);
                 BODY::RATES[i] = rt;
+            }
 
-            if (defRates == 1)
+            if (defRates == 1) {
+                IO::FormattedQuery("Enter body rotational velocity p q r in Hz", "3 x real", "Body rates [p,q,r] in Hz", outstream, rt);
                 BODY::RATES[i] = rt * two_pi;
+            }
 
-            if (defRates == 0)
+            if (defRates == 0) {
+                IO::FormattedQuery("Enter body rotational velocity p q r in RPM", "3 x real", "Body rates [p,q,r] in RPM", outstream, rt);
                 BODY::RATES[i] = rt * two_pi / 60.;
+            }
+
         }
 
         BODY::VELOCITY[i] = SYSTEM::GambitScale * BODY::VELOCITY[i];
@@ -558,7 +570,7 @@ void UTIL::PreAmble() {
         cout << "\tBody " << i + 1 << " Summary:" << endl;
         cout << "\tCG position: \t\t\t" << BODY::Bodies[i]->CG << endl;
         cout << "\tCG translational velocity: \t" << BODY::Bodies[i]->Velocity << endl;
-        cout << "\tAttitude: \t\t\t" << BODY::Bodies[i]->BodyAngles << endl;
+        cout << "\tAttitude: \t\t\t" << BODY::Bodies[i]->EulerAngles << endl;
         cout << "\tBody rates: \t\t\t" << BODY::Bodies[i]->BodyRates << endl;
         cout << "\tNeutral file: \t\t\t" << infname[i] << endl;
 

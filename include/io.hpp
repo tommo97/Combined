@@ -72,11 +72,11 @@ public:
     void WriteBinary();
     
     
-    static void FormattedQuery(string, string, stringstream&, REAL&);
-    static void FormattedQuery(string, string, stringstream&, bool&);
-    static void FormattedQuery(string, string, stringstream&, Vect3&);
-    static void FormattedQuery(string, string, stringstream&, int&);
-    static void FormattedQuery(string, string, stringstream&, string&);
+    static void FormattedQuery(string, string, string, stringstream&, REAL&);
+    static void FormattedQuery(string, string, string, stringstream&, bool&);
+    static void FormattedQuery(string, string, string, stringstream&, Vect3&);
+    static void FormattedQuery(string, string, string, stringstream&, int&);
+    static void FormattedQuery(string, string, string, stringstream&, string&);
     static string FormattedQueryString(string);
   
 
