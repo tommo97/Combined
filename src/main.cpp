@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 
 
     BODY::OutputSubStepCollocationPoints = false;
-    SYSTEM::PanelOnly = true;
+    SYSTEM::PanelOnly = false;
     PANEL::Initialise();
     UTIL::GetCellPans();
 
