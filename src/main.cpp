@@ -96,9 +96,7 @@ int main(int argc, char *argv[]) {
         globalSystem->VortonsXs.clear();
         globalSystem->VortonOmegas.clear();
 
-#ifndef use_NCURSES
-        if (WRITE_TO_SCREEN) cout << "\tFMM MaxP set to " << SYSTEM::MaxP << "; dtInit " << globalSystem->dtInit << endl;
-#endif
+
         globalSystem->TimeStep();
 
     }
@@ -348,7 +346,8 @@ void UTIL::PreAmble() {
     cout << setfill('=') << setw(80) << "=" << endl;
 
     cout << "\t Engine Initialisation & Setup: " << endl;
-
+    IO::VerboseMode = true;
+    IO::FormattedQuery("Verbose Menu Mode?", "quiet=0, verbose=1, suggest quiet for script","Verbose Menu? Quiet=0, Verbose=1", outstream, IO::VerboseMode);
     IO::FormattedQuery("Enter FMM maximum expansion order, pₘₐₓ ", "integer, minimum 3, suggest 5","FMM maximum expansion order", outstream, SYSTEM::MaxP);
     IO::FormattedQuery("Enter FMM smoothing parameter radius, δ", "real, suggest 0.0316","FMM smoothing parameter radius", outstream, SYSTEM::Del2);
     SYSTEM::Del2 *= SYSTEM::Del2;
@@ -454,8 +453,8 @@ void UTIL::PreAmble() {
     }
     IO::FormattedQuery("Enter number of timestep samples", "integer","Timestep samples", outstream, nSteps);
     IO::FormattedQuery("Enter freestream velocity U∞ V∞ W∞","3 x real","Freestream velocity", outstream, globalSystem->unscaledVinf);
-    IO::FormattedQuery("Enter fluid density in kg/m³","real","Fluid density", outstream, rho);
-    IO::FormattedQuery("Use iterative pressure kutta condition?","no=0, yes=1","Use IPKC? no=0, yes=1", outstream, IPKC);
+    IO::FormattedQuery("Enter fluid density in kg/m³","real","Fluid density", outstream, globalSystem->Rho);
+    IO::FormattedQuery("Use iterative pressure Kutta condition?","no=0, yes=1","Use IPKC? no=0, yes=1", outstream, IPKC);
     if (IPKC == 0)
         BODY::IPKC = false;
     else
@@ -634,6 +633,7 @@ void UTIL::PreAmble() {
         cout << setfill('=') << setw(80) << "=" << endl;
     }
 
+    IO::VerboseMode = true;
     if (SYSTEM::PanelOnly) {
         BODY::BodySubStep(maxT, nSteps);
     }

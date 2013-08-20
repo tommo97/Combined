@@ -25,7 +25,7 @@
 #include <fstream>
 #include <cstring>
 //#include "gnuplot_i.hpp" //Gnuplot class handles POSIX-Pipe-communication with Gnuplot
-
+bool IO::VerboseMode = true;
 IO::IO() {
     num_file = 0;
     num_dat = 0;
@@ -777,146 +777,63 @@ void IO::write_m() {
 //    out_stream.close();
 }
 /**************************************************************/
-string IO::FormattedQueryString(string input) {
-    int linelength = 80;
+string IO::FormattedQueryString(string query, string postfix, string shortstring, stringstream &log) {
+    
+    int l = postfix.length();
+    string dots;
+    dots.insert(0, 47 - l, '.');
+    if (IO::VerboseMode)
+        cout << query << "\n\t\t\t" << dots << postfix << ": ";
+    
+    string in;
+    
+    getline(cin, in);
+    //  see if there is a comment on the line
+    size_t found = in.find_first_of("\%");
 
-    string output = input;
+    if (found != string::npos)
+        in = in.substr(0, found);
+    
+    // erase trailing whitespace
+    string whitespaces (" \t\f\v\n\r");
+    
+    found = in.find_last_not_of(whitespaces);
+    if (found != string::npos)
+        in.erase(found + 1);
+    else
+        in.clear(); // str is all whitespace
 
-    int remainder = linelength - output.length();
+    string str = in;
+    str.insert(str.end(), max(0, 25 - int(str.length())), ' ');
+    log << str << "% " << shortstring << endl;
 
-    if (input.length() > 70) {
-        size_t found = input.find("(", 0, 1);
-        if (found != string::npos) {
-            output = input.substr(0, found) + "\n";
-            string tmp = "          " + input.substr(found);
-            remainder = linelength - tmp.length();
-            output = output + tmp;
-        } else {
-            found = input.find(" ", 70, 1);
-            if (found != string::npos) {
-                output = input.substr(0, found) + "\n";
-                string tmp = "          " + input.substr(found);
-                remainder = linelength - tmp.length();
-                output = output + tmp;
-            }
-        }
-        remainder -= 1;
-    }
-
-
-    if (remainder > 6) {
-        output.insert(output.length(), remainder - 6, '.');
-        output += " ";
-    }
-    return output;
+    return in;
 }
 /**************************************************************/
 void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, string &out) {
-    //    cout << IO::FormattedQueryString(input);
-    int l = postfix.length();
-    string dots;
-    dots.insert(0, 47 - l, '.');
-    cout << input << "\n\t\t\t" << dots << postfix << ": ";
-
-    string in;    
-    getline(cin, in);
-    
-    size_t found = in.find_first_of("\%");
-    
-    if (found != string::npos)
-        in = in.substr(0, found);
-
-    //	Now split output into n components as required
-    istringstream iss(in);
+    istringstream iss(FormattedQueryString(input, postfix, shortstring, log));
     iss >> out;
 
-    log << in << "\t\t % " << shortstring << endl;
 }
-
 /**************************************************************/
 void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, REAL &out) {
-    int l = postfix.length();
-    string dots;
-    dots.insert(0, 47 - l, '.');
-    cout << input << "\n\t\t\t" << dots << postfix << ": ";
-    string in;    
-    getline(cin, in);
-    
-    size_t found = in.find_first_of("\%");
-    
-    if (found != string::npos)
-        in = in.substr(0, found);
-
-    //	Now split output into n components as required
-    istringstream iss(in);
+    istringstream iss(FormattedQueryString(input, postfix, shortstring, log));
     iss >> out;
-
-    log << in << "\t\t % " << shortstring << endl;
 }
-
 /**************************************************************/
 void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, bool &out) {
-    int l = postfix.length();
-    string dots;
-    dots.insert(0, 47 - l, '.');
-    cout << input << "\n\t\t\t" << dots << postfix << ": ";
-    //    cout << IO::FormattedQueryString(input);
-    string in;    
-    getline(cin, in);
-    
-    size_t found = in.find_first_of("\%");
-    
-    if (found != string::npos)
-        in = in.substr(0, found);
-
-    //	Now split output into n components as required
-    istringstream iss(in);
+    istringstream iss(FormattedQueryString(input, postfix, shortstring, log));
     iss >> out;
-
-    log << in << "\t\t % " << shortstring << endl;
 }
-
 /**************************************************************/
 void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, Vect3 &out) {
-    int l = postfix.length();
-    string dots;
-    dots.insert(0, 47 - l, '.');
-    cout << input << "\n\t\t\t" << dots << postfix << ": ";
-    //    cout << IO::FormattedQueryString(input);
-    string in;    
-    getline(cin, in);
-    
-    size_t found = in.find_first_of("\%");
-    
-    if (found != string::npos)
-        in = in.substr(0, found);
-
-    //	Now split output into n components as required
-    istringstream iss(in);
+    istringstream iss(FormattedQueryString(input, postfix, shortstring, log));
     iss >> out.x >> out.y >> out.z;
-
-    log << in << "\t\t % " << shortstring << endl;
 }
-
 /**************************************************************/
 void IO::FormattedQuery(string input, string postfix, string shortstring, stringstream &log, int &out) {
-    int l = postfix.length();
-    string dots;
-    dots.insert(0, 47 - l, '.');
-    cout << input << "\n\t\t\t" << dots << postfix << ": ";
-    string in;    
-    getline(cin, in);
-    
-    size_t found = in.find_first_of("\%");
-    
-    if (found != string::npos)
-        in = in.substr(0, found);
-
-    //	Now split output into n components as required
-    istringstream iss(in);
+    istringstream iss(FormattedQueryString(input, postfix, shortstring, log));
     iss >> out;
-
-    log << in << "\t\t % " << shortstring << endl;
 }
 /**************************************************************/
 void IO::write_forces() {

@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class IO {
 public:
     IO();
-
+    static bool VerboseMode;
     int num_file;
     int num_dat;
     int num_forces;
@@ -77,7 +77,7 @@ public:
     static void FormattedQuery(string, string, string, stringstream&, Vect3&);
     static void FormattedQuery(string, string, string, stringstream&, int&);
     static void FormattedQuery(string, string, string, stringstream&, string&);
-    static string FormattedQueryString(string);
+    static string FormattedQueryString(string, string, string, stringstream&);
   
 
 

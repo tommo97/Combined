@@ -92,11 +92,12 @@ void SYSTEM::Initialise() {
 
     globalOctree = new OCTREE();
     cout << setfill('-') << setw(80) << "-" << endl;
-    if (WRITE_TO_SCREEN) cout << "\tFVM mesh scale Factor:\t    " << SYSTEM::GambitScale << endl;
-    if (WRITE_TO_SCREEN) cout << "\tFluid properties      \t  ρ: " << Rho << " kg/m³" << endl;
-    if (WRITE_TO_SCREEN) cout << "\t                      \t  μ: " << Mu << " Pa·s" <<endl;
-    if (WRITE_TO_SCREEN) cout << "\t                      \t∴ ν: " << Nu << " m²/s" << endl;
-    if (WRITE_TO_SCREEN) cout << "\tSmoothing parameter   \t δ²: " << SYSTEM::Del2 << " h; h: " << 1/SYSTEM::GambitScale << " m" <<  endl;
+    if (WRITE_TO_SCREEN) cout << "\tFVM mesh scale Factor \t    : " << SYSTEM::GambitScale << endl;
+    if (WRITE_TO_SCREEN) cout << "\tFluid properties      \t  ρ : " << Rho << " kg/m³" << endl;
+    if (WRITE_TO_SCREEN) cout << "\t                      \t  μ : " << Mu << " Pa·s" <<endl;
+    if (WRITE_TO_SCREEN) cout << "\t                      \t∴ ν : " << Nu << " m²/s" << endl;
+    if (WRITE_TO_SCREEN) cout << "\tSmoothing parameter   \t  δ²: " << SYSTEM::Del2 << " h;" << endl;
+    if (WRITE_TO_SCREEN) cout << "\t                      \t  h : " << 1/SYSTEM::GambitScale << " m" <<  endl;
     int nss = globalSystem->NumSubSteps;
     globalTimeStepper->dt_prev = globalSystem->dtInit;
     globalTimeStepper->time_step();
@@ -105,7 +106,11 @@ void SYSTEM::Initialise() {
     int h = SYSTEM::M4Radius_in_cells;
     SYSTEM::NumM4 = (4*h+1)*(4*h+1)*(4*h+1);
 
-    if (WRITE_TO_SCREEN) cout << "\t# substeps:           \t    " << nss << endl;
+    if (WRITE_TO_SCREEN) cout << "\t# substeps:           \t    : " << nss << endl;
+    if (WRITE_TO_SCREEN) cout << "        FMM pₘₐₓ set to             : " << SYSTEM::MaxP << endl;
+    if (WRITE_TO_SCREEN) cout << "\tFirst timestep length \t    : " << globalSystem->dtInit << " s" <<endl;
+    cout << setfill('=') << setw(80) << "=" << endl;
+
 }
 
 /**************************************************************/
