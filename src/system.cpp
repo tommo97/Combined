@@ -107,7 +107,7 @@ void SYSTEM::Initialise() {
     SYSTEM::NumM4 = (4*h+1)*(4*h+1)*(4*h+1);
 
     if (WRITE_TO_SCREEN) cout << "\t# substeps:           \t    : " << nss << endl;
-    if (WRITE_TO_SCREEN) cout << "        FMM pₘₐₓ set to             : " << SYSTEM::MaxP << endl;
+    if (WRITE_TO_SCREEN) cout << "\tFMM pₘₐₓ set to       \t    : " << SYSTEM::MaxP << endl;
     if (WRITE_TO_SCREEN) cout << "\tFirst timestep length \t    : " << globalSystem->dtInit << " s" <<endl;
     cout << setfill('=') << setw(80) << "=" << endl;
 
@@ -426,11 +426,13 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 #endif
 
 
+    REAL tprev = BODY::TimePrev[0];
 #pragma omp parallel for
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->Xfmm0 = BODY::AllBodyFaces[i]->CollocationPoint;
     }
     if (dt > 0) {
+        BODY::TimePrev[0] = BODY::Time;
         BODY::Time += dt;
         for (int i = 0; i < BODY::Bodies.size(); ++i)
             BODY::Bodies[i]->MoveBody();
@@ -440,11 +442,24 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
             BODY::AllBodyFaces[i]->Xfmm1 = BODY::AllBodyFaces[i]->CollocationPoint;
         }
 
-
+        BODY::TimePrev[0] = BODY::Time;
         BODY::Time -= dt;
         for (int i = 0; i < BODY::Bodies.size(); ++i)
             BODY::Bodies[i]->MoveBody();
     }
+    BODY::TimePrev[0] = tprev;
+//    if (dt > 0) {
+//        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+//            Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
+//            // 	Get point kinematic velocity - rotational part first
+//            Vect3 Vrot = BODY::AllBodyFaces[i]->Owner->EulerRates.Cross(Pos);
+//            // 	Add to translational velocity....
+//            Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
+//            cout << BODY::AllBodyFaces[i]->Xfmm1  << " " << Pos + Vkin*dt << endl;
+//        }
+//    }
+    
+    
 
 #pragma omp parallel for
     for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {

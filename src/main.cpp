@@ -134,6 +134,7 @@ void UTIL::PostAmble(string fname) {
     Array <Vect3> Centroids, VCentroids;
     for (int i = 0; i < BODY::Bodies.size(); ++i) {
         UTIL::WriteMATLABMatrix1DVect3("BodyCG" + UTIL::toString(i), fname, BODY::Bodies[i]->CG);
+        UTIL::WriteMATLABMatrix1DVect3("BodyDisplacement" + UTIL::toString(i), fname, BODY::Bodies[i]->Disp);
         UTIL::WriteMATLABMatrix1DVect3("BodyVel" + UTIL::toString(i), fname, BODY::Bodies[i]->Velocity);
         UTIL::WriteMATLABMatrix1DVect3("EulerAngles" + UTIL::toString(i), fname, BODY::Bodies[i]->EulerAngles);
         UTIL::WriteMATLABMatrix1DVect3("TRANS1_" + UTIL::toString(i), fname, BODY::Bodies[i]->TRANS[0]);

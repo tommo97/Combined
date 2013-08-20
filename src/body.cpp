@@ -738,7 +738,6 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
     REAL dt = delta_t / n_steps;
 
     
-    
     BODY::CpHistoryAll.push_back(BODY::CpHistory);
     BODY::CpHistory = UTIL::zeros(n_steps, BODY::AllBodyFaces.size());
 
@@ -1414,9 +1413,9 @@ void BODY::MoveBody() {
         GetEulerRates(); //     Rates*
         Vect3 RatesStar = EulerRates;
         EulerAngles = Angles0 + 0.5 * dt * (Rates0 + RatesStar);
+        //CG = CG + dt * Velocity;
     }
-    
-    CG = Velocity * BODY::Time;
+    CG = CGo + BODY::Time * Velocity;
     //    Now set appropriate body rates, and transforms etc.
     SetEulerTrans();
     GetEulerRates();
@@ -1564,7 +1563,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
 
     //  .... to here.
 
-    Array <Vect3> BodyPoints;
+    Array <Vect3> BodyPoints, BodyPointsRelToCG0;
     Array < Array <PANEL> > BodyPanels(ngrps);
 
 
@@ -1586,9 +1585,10 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
         }
         Vect3 P = Vect3((X[i] + dpos));
         BodyPoints.push_back(P);
+        BodyPointsRelToCG0.push_back(P - cg);   //      needed since ConvertVTK translates and rotates according to final CG location and Euler angles.
     }
 
-    BODY::AllBodyPoints.push_back(BodyPoints);
+    BODY::AllBodyPoints.push_back(BodyPointsRelToCG0);
 
     {
         Array <PANEL> tmp(PNLS.size());
@@ -1695,6 +1695,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
 
         BODY::Bodies.push_back(new BODY(cg, att, vel, rates, name));
         BODY::Bodies.back()->ID = BODY::Bodies.size();
+        BODY::Bodies.back()->Disp = dpos;
         cout << "%\tdone. Getting panels: " << BodyPanels[i].size();
 
         BODY::Bodies.back()->GetPanels(BodyPanels[i]);

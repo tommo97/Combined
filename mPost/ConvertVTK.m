@@ -27,26 +27,38 @@ mkdir(dirname)
 
 writeDomainVTK(Domain,wakeVTKname,1/GambitScale,Origin);
 load(fname,'Cp','NParts','AllBodyPoints_x','AllBodyPoints_y','AllBodyPoints_z');
- i = 1;
-eval(['load(fname,''TRANS1_' num2str(i-1) '_x'');']);
-eval(['load(fname,''TRANS2_' num2str(i-1) '_x'');']);
-eval(['load(fname,''TRANS3_' num2str(i-1) '_x'');']);
 
-eval(['load(fname,''TRANS1_' num2str(i-1) '_y'');']);
-eval(['load(fname,''TRANS2_' num2str(i-1) '_y'');']);
-eval(['load(fname,''TRANS3_' num2str(i-1) '_y'');']);
-
-eval(['load(fname,''TRANS1_' num2str(i-1) '_z'');']);
-eval(['load(fname,''TRANS2_' num2str(i-1) '_z'');']);
-eval(['load(fname,''TRANS3_' num2str(i-1) '_z'');']);
-eval(['load(fname,''BodyCG' num2str(i-1) '_x'')']);
-eval(['load(fname,''BodyCG' num2str(i-1) '_y'')']);
-eval(['load(fname,''BodyCG' num2str(i-1) '_z'')']);
-eval(['TRANS = [TRANS1_' num2str(i-1) '_x TRANS2_' num2str(i-1) '_x TRANS3_' num2str(i-1) '_x; TRANS1_' num2str(i-1) '_y TRANS2_' num2str(i-1) '_y TRANS3_0_y; TRANS1_' num2str(i-1) '_z TRANS2_' num2str(i-1) '_z TRANS3_' num2str(i-1) '_z]']);
 
 
 for i = 1:NParts
     tic
+    eval(['load(fname,''TRANS1_' num2str(i-1) '_x'');']);
+    eval(['load(fname,''TRANS2_' num2str(i-1) '_x'');']);
+    eval(['load(fname,''TRANS3_' num2str(i-1) '_x'');']);
+    
+    eval(['load(fname,''TRANS1_' num2str(i-1) '_y'');']);
+    eval(['load(fname,''TRANS2_' num2str(i-1) '_y'');']);
+    eval(['load(fname,''TRANS3_' num2str(i-1) '_y'');']);
+    
+    eval(['load(fname,''TRANS1_' num2str(i-1) '_z'');']);
+    eval(['load(fname,''TRANS2_' num2str(i-1) '_z'');']);
+    eval(['load(fname,''TRANS3_' num2str(i-1) '_z'');']);
+    
+    
+    eval(['load(fname,''BodyCG' num2str(i-1) '_x'')']);
+    eval(['load(fname,''BodyCG' num2str(i-1) '_y'')']);
+    eval(['load(fname,''BodyCG' num2str(i-1) '_z'')']);
+    
+    eval(['load(fname,''BodyDisplacement' num2str(i-1) '_x'')']);
+    eval(['load(fname,''BodyDisplacement' num2str(i-1) '_y'')']);
+    eval(['load(fname,''BodyDisplacement' num2str(i-1) '_z'')']);
+    
+    try
+        eval(['TRANS = [TRANS1_' num2str(i-1) '_x TRANS2_' num2str(i-1) '_x TRANS3_' num2str(i-1) '_x; TRANS1_' num2str(i-1) '_y TRANS2_' num2str(i-1) '_y TRANS3_0_y; TRANS1_' num2str(i-1) '_z TRANS2_' num2str(i-1) '_z TRANS3_' num2str(i-1) '_z]']);
+    catch
+        eval(['TRANS = [TRANS1_0_x TRANS2_0_x TRANS3_0_x; TRANS1_0_y TRANS2_0_y TRANS3_0_y; TRANS1_0_z TRANS2_0_z TRANS3_0_z]']);
+    end
+        
     eval(['load(fname,''BodyMainPointIDS' num2str(i-1) ''')']);
     eval(['load(fname,''BodySurface' num2str(i-1) ''')']);
 
@@ -73,11 +85,17 @@ for i = 1:NParts
     str = ['vtkname = [''' dirname '/BodyData_Scale=' num2str(GambitScale) '_Time=' num2str(Time) '_Body=' num2str(i-1) '.vtk'']'];
     eval(str);
     
-   
+    try
+        eval(['xi = Body{i}.X * TRANS(1,1) + Body{i}.Y * TRANS(2,1) + Body{i}.Z * TRANS(3,1) + BodyCG' num2str(i-1) '_x/GambitScale;']);
+        eval(['yi = Body{i}.X * TRANS(1,2) + Body{i}.Y * TRANS(2,2) + Body{i}.Z * TRANS(3,2) + BodyCG' num2str(i-1) '_y/GambitScale;']);
+        eval(['zi = Body{i}.X * TRANS(1,3) + Body{i}.Y * TRANS(2,3) + Body{i}.Z * TRANS(3,3) + BodyCG' num2str(i-1) '_z/GambitScale;']);
+    catch
+        xi = Body{i}.X * TRANS(1,1) + Body{i}.Y * TRANS(2,1) + Body{i}.Z * TRANS(3,1) + BodyCG0_x/GambitScale;
+        yi = Body{i}.X * TRANS(1,2) + Body{i}.Y * TRANS(2,2) + Body{i}.Z * TRANS(3,2) + BodyCG0_y/GambitScale;
+        zi = Body{i}.X * TRANS(1,3) + Body{i}.Y * TRANS(2,3) + Body{i}.Z * TRANS(3,3) + BodyCG0_z/GambitScale;
+    end
     
-    xi = Body{i}.X * TRANS(1,1) + Body{i}.Y * TRANS(2,1) + Body{i}.Z * TRANS(3,1) + BodyCG0_x/GambitScale;
-    yi = Body{i}.X * TRANS(1,2) + Body{i}.Y * TRANS(2,2) + Body{i}.Z * TRANS(3,2) + BodyCG0_y/GambitScale;
-    zi = Body{i}.X * TRANS(1,3) + Body{i}.Y * TRANS(2,3) + Body{i}.Z * TRANS(3,3) + BodyCG0_z/GambitScale;
+    
     val = Body{i}.CPi;
     
     

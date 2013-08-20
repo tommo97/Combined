@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class BODY {
 public:
     static Array <Vect3> CGS, VX, VO;
-    Vect3 CG, CGo;
+    Vect3 CG, CGo, Disp;
     static Array <Vect3> ATTITUDE;
     Vect3 Attitude;
     static Array <Vect3> VELOCITY;
@@ -138,6 +138,7 @@ public:
         EulerAngles = Attitude; //  psi theta phi
         SetEulerTrans();
         CGo = CG;
+        Disp = Vect3(0.0);
         SetEulerTrans();
         GetEulerRates();
         BODY::LiftingLineMode = false;
