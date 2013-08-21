@@ -1050,3 +1050,46 @@ double UTIL::interp2(Array<Array<double> > &X, Array<Array<double> > &Y, Array<A
 }
 /**************************************************************/
 
+Vect3 UTIL::ODE4(Vect3 (*functocall)(Vect3, Vect3),Array <REAL> t, Array <Vect3> &Y, Vect3 ICs, Vect3 Params)
+{
+  Array <double> h = diff(t);
+  Y.allocate(t.size());
+  Y[0] = ICs;
+  Vect3 F1, F2, F3, F4;
+  for (int i = 1; i < t.size(); ++i)
+  {
+    double ti = t[i-1];
+    double hi = h[i-1];
+    Vect3 yi = Y[i-1];
+    
+    F1 = functocall(yi, Params);
+    F2 = functocall(yi+0.5*hi*F1, Params);
+    F3 = functocall(yi+0.5*hi*F2, Params);
+    F4 = functocall(yi+hi*F3, Params);
+   
+    
+    
+    Y[i] = (yi + (hi/6.0)*(F1 + 2.0*F2 + 2.0*F3 + F4));
+  }
+  
+  return Y.back();
+}
+/**************************************************************/
+
+Vect3 UTIL::ODE4Final(Vect3 (*functocall)(Vect3, Vect3),REAL t0, REAL tmax, REAL dt, Vect3 ICs, Vect3 Params)
+{
+  Vect3 Y = ICs;
+  Vect3 F1, F2, F3, F4;
+  int n = ceil((tmax - t0)/dt) + 1;
+  dt = (tmax - t0)/n;
+  for (int i = 1; i < n; ++i)
+  {
+    F1 = functocall(Y, Params);
+    F2 = functocall(Y+0.5*dt*F1, Params);
+    F3 = functocall(Y+0.5*dt*F2, Params);
+    F4 = functocall(Y+dt*F3, Params);
+    Y += (dt/6.0)*(F1 + 2.0*F2 + 2.0*F3 + F4);
+  }
+  
+  return Y;
+}

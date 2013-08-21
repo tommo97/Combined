@@ -311,6 +311,15 @@ partLS:
 
         return L;
     }
+    
+    inline friend Array <T> diff(const Array<T> A) {
+        Array <T> L(A.length - 1);
+        for (int i = 1; i < A.length; ++i)
+            L.data_[i-1] = A.data_[i] - A.data_[i-1];
+
+        return L;
+    }
+        
 
     //  Some addition operators
 

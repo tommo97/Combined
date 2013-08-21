@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class BODY {
 public:
     static Array <Vect3> CGS, VX, VO;
-    Vect3 CG, CGo, Disp;
+    Vect3 CG, CG0, Disp;
     static Array <Vect3> ATTITUDE;
     Vect3 Attitude;
     static Array <Vect3> VELOCITY;
@@ -109,7 +109,7 @@ public:
     
     void MakeTmpWake();
 
-    Vect3 BodyRates, EulerRates, EulerAngles;
+    Vect3 BodyRates, EulerRates, EulerAngles, EulerAngles0;
 
     Array <Vect3> AngleHist;
 
@@ -135,9 +135,9 @@ public:
 
     BODY(Vect3 Or, Vect3 At, Vect3 Ve, Vect3 Ra, string Na) : CG(Or), Attitude(At), Velocity(Ve), Name(Na), BodyRates(Ra) {
         TRANS.assign(3, Vect3(0.0));
-        EulerAngles = Attitude; //  psi theta phi
+        EulerAngles = EulerAngles0 = Attitude; //  psi theta phi
         SetEulerTrans();
-        CGo = CG;
+        CG0 = CG;
         Disp = Vect3(0.0);
         SetEulerTrans();
         GetEulerRates();
@@ -149,7 +149,7 @@ public:
 
     
     void GetPanelVels();
-    static void ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, Vect3 vel, Vect3 att, Vect3 rates, bool flip, int plane);
+    static void ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, Vect3 vel, Vect3 att, Vect3 rates, bool flip, int plane, REAL scale);
     void GetPanels(Array <PANEL> &PANELS);
     void GetEulerRates();
     void GetBodyRates();
@@ -167,6 +167,7 @@ public:
     static void GetNonLinearRHS();
     static void LinAlg();
     Vect3 GetWakeVel(Vect3);
+    static Vect3 EulerDot(Vect3 ICs, Vect3 params);
     REAL GetWakePhi(Vect3);
 
 };

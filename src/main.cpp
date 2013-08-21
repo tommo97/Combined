@@ -45,14 +45,35 @@ inline bool srt_vect3(Vect3 A, Vect3 B) {
         return (A.x < B.x);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**************************************************************/
 int main(int argc, char *argv[]) {
 
     system("clear");
 
+    
+    
+    
 
-    BODY::OutputSubStepCollocationPoints = false;
-    SYSTEM::PanelOnly = false;
+    BODY::OutputSubStepCollocationPoints = SYSTEM::PanelOnly = false;
     PANEL::Initialise();
     UTIL::GetCellPans();
 
@@ -349,6 +370,9 @@ void UTIL::PreAmble() {
     cout << "\t Engine Initialisation & Setup: " << endl;
     IO::VerboseMode = true;
     IO::FormattedQuery("Verbose Menu Mode?", "quiet=0, verbose=1, suggest quiet for script","Verbose Menu? Quiet=0, Verbose=1", outstream, IO::VerboseMode);
+    if (!IO::VerboseMode)
+        cout << endl;
+    
     IO::FormattedQuery("Enter FMM maximum expansion order, pₘₐₓ ", "integer, minimum 3, suggest 5","FMM maximum expansion order", outstream, SYSTEM::MaxP);
     IO::FormattedQuery("Enter FMM smoothing parameter radius, δ", "real, suggest 0.0316","FMM smoothing parameter radius", outstream, SYSTEM::Del2);
     SYSTEM::Del2 *= SYSTEM::Del2;
@@ -364,10 +388,9 @@ void UTIL::PreAmble() {
     IO::FormattedQuery("Enter initial number of sub-time-steps, nₛₛ", "integer, suggest 25","Initial number of sub-time-steps", outstream, globalSystem->NumSubSteps);
     IO::FormattedQuery("Enter fraction of timestep for protowake length, Δₛ", "real, suggest 0.3","Fraction of timestep for protowake length", outstream, globalSystem->DS);
 
-
-
+        
+    if (IO::VerboseMode){
     cout << "Select flux limiter:" << endl;
-
     cout << "         0) First order upwind " << endl;
     cout << "         1) minmod " << endl;
     cout << "         2) superbee " << endl;
@@ -376,6 +399,7 @@ void UTIL::PreAmble() {
     cout << "         5) MUSCL (TVD LUD/Fromm) " << endl;
     cout << "         6) UMIST (TVD QUICK) " << endl;
     cout << "         7) CADA" << endl;
+    }
     int FLIM;
     IO::FormattedQuery("         8) MC","","Flux limiter", outstream, FLIM);
 
@@ -480,8 +504,14 @@ void UTIL::PreAmble() {
         cout << "\t Body " << i + 1 << " Setup:" << endl;
 
         IO::FormattedQuery("Enter input neutral file","string","Neutral file", outstream, infname[i]);
+        
+        REAL scale = 1.;
+        IO::FormattedQuery("Enter geometry scale factor","real, normally suggest 1.0","Geometry scale", outstream, scale);
+        
         IO::FormattedQuery("Mirror/flip input geometry?","no=0, yes=1","Mirror/flip geometry? no=0, yes=1", outstream, flip[i]);
 
+        
+        
         if (flip[i])
             IO::FormattedQuery("Mirror using yz, xz or xy plane?","yz=1, xz=2, xy=3","Flip plane yz=1, xz=2, xy=3", outstream, plane[i]);
 
@@ -540,7 +570,7 @@ void UTIL::PreAmble() {
             maxT = two_pi * nRevs / (max(Om));
         }
         string str_tmp = "tmp";
-        BODY::ReadNeuGetBodies(infname[i], str_tmp, Disp[i], BODY::CGS[i], BODY::VELOCITY[i], BODY::ATTITUDE[i], BODY::RATES[i], flip[i], plane[i]);
+        BODY::ReadNeuGetBodies(infname[i], str_tmp, Disp[i], BODY::CGS[i], BODY::VELOCITY[i], BODY::ATTITUDE[i], BODY::RATES[i], flip[i], plane[i],scale);
     }
 
     cout << setfill('=') << setw(80) << "=" << endl;

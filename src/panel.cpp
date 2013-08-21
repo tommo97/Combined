@@ -897,10 +897,10 @@ void PANEL::SourceDoubletPotential(PANEL *source, Vect3 target, REAL &PhiDoublet
 /**************************************************************/
 void PANEL::GetNewGlobalPosition() {
 
-    C1 = Owner->CG + VectMultMatrix(Owner->TRANS, C1o - Owner->CGo);
-    C2 = Owner->CG + VectMultMatrix(Owner->TRANS, C2o - Owner->CGo);
-    C3 = Owner->CG + VectMultMatrix(Owner->TRANS, C3o - Owner->CGo);
-    C4 = Owner->CG + VectMultMatrix(Owner->TRANS, C4o - Owner->CGo);
+    C1 = Owner->CG + VectMultMatrix(Owner->TRANS, C1o - Owner->CG0);
+    C2 = Owner->CG + VectMultMatrix(Owner->TRANS, C2o - Owner->CG0);
+    C3 = Owner->CG + VectMultMatrix(Owner->TRANS, C3o - Owner->CG0);
+    C4 = Owner->CG + VectMultMatrix(Owner->TRANS, C4o - Owner->CG0);
 
 
 

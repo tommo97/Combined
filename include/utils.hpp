@@ -54,6 +54,8 @@ public:
 
     static unsigned long int cpu_t;
     static int NumCellGaussPts;
+    static Vect3 ODE4Final(Vect3(*functocall)(Vect3, Vect3), REAL, REAL, REAL, Vect3 ICs, Vect3 Params);
+    static Vect3 ODE4(Vect3(*functocall)(Vect3, Vect3), Array <REAL> t, Array <Vect3> &Y, Vect3 ICs, Vect3 Params);
 
     static inline Array < Array <double> > zeros(int a, int b) {
         return Array < Array <double> > (a, Array <double> (b, 0.0));

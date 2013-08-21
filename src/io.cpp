@@ -790,7 +790,13 @@ string IO::FormattedQueryString(string query, string postfix, string shortstring
     getline(cin, in);
     //  see if there is a comment on the line
     size_t found = in.find_first_of("\%");
-
+    size_t found2 = in.find_first_not_of("\t\f\v\n\r\%");
+    while ((found != string::npos) && (found2 != string::npos) && (int(found2) > int(found))) {
+        getline(cin, in);
+        found = in.find_first_of("\%");
+        found2 = in.find_first_not_of("\t\f\v\n\r\%");
+    }
+    // if there is a comment after the input
     if (found != string::npos)
         in = in.substr(0, found);
     

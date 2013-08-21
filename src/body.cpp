@@ -127,7 +127,7 @@ void BODY::MakeWake() {
     Array <Vect3> Oms, tOms;
     Array <Vect3*> Origins, tOrigins;
     for (int i = 0; i < WakePanels.size(); ++i)
-        if (WakePanels[i].size() > 25) {
+        if (WakePanels[i].size() > 5) {
             for (int j = 0; j < WakePanels[i][0].size(); ++j) {
                 PANEL *tmp = (WakePanels[i][0][j]);
                 for (int k = 0; k < n; ++k) {
@@ -1352,7 +1352,20 @@ void BODY::SetUpProtoWakes(REAL dt) {
 
 
 }
-
+Vect3 BODY::EulerDot(Vect3 ICs, Vect3 params)
+{
+  double phi = ICs.x;
+  double theta = ICs.y;
+  double psi = ICs.z;
+  double p = params.x;
+  double q = params.y;
+  double r = params.z;
+  Vect3 out;
+  out.x = p + q*sin(phi)*tan(theta) + r*cos(phi)*tan(theta);
+  out.y = q*cos(phi) - r*sin(phi);
+  out.z = q*sin(phi)/(cos(theta)) + r*cos(phi)/(cos(theta));
+  return out;
+}
 /**************************************************************/
 void BODY::GetEulerRates() {
     REAL cosphi = cos(EulerAngles.x), tanthe = tan(EulerAngles.y + 1e-16);
@@ -1396,26 +1409,16 @@ void BODY::SetEulerTrans() {
 /**************************************************************/
 void BODY::MoveBody() {
 
-    //    First off calculate new Euler angles
-
-
-    //    if (BODY::Time > 0.0) {
-    //        EulerRates = Vect3(0.0, BODY::AlphaDotHistory.back(), 0.0);
-    //        EulerAngles = Vect3(0.0, BODY::AlphaHistory.back(), 0.0);
-    //    }
-    //    Now get new cg position in global reference frame
-    GetEulerRates();
-    if (BODY::Time > 0){
-        REAL dt = (BODY::Time - BODY::TimePrev[0]);
-        Vect3 Rates0 = EulerRates;
-        Vect3 Angles0 = EulerAngles;
-        EulerAngles = EulerAngles + EulerRates * dt; // Angles*
-        GetEulerRates(); //     Rates*
-        Vect3 RatesStar = EulerRates;
-        EulerAngles = Angles0 + 0.5 * dt * (Rates0 + RatesStar);
-        //CG = CG + dt * Velocity;
+ 
+    {
+        
+        int nt = ceil(BODY::Time/0.001);
+        Array <REAL> times = UTIL::globalLinspace(0.0, BODY::Time, 10000);
+        Array <Vect3> Y;
+        EulerAngles = UTIL::ODE4Final(BODY::EulerDot, 0.0, BODY::Time, 0.001, EulerAngles0, BodyRates);
     }
-    CG = CGo + BODY::Time * Velocity;
+
+    CG = CG0 + BODY::Time * Velocity;
     //    Now set appropriate body rates, and transforms etc.
     SetEulerTrans();
     GetEulerRates();
@@ -1492,7 +1495,7 @@ void BODY::GetPanels(Array <PANEL> &PANELS) {
 }
 
 /**************************************************************/
-void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, Vect3 vel, Vect3 att, Vect3 rates, bool mirror, int plane) {
+void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, Vect3 vel, Vect3 att, Vect3 rates, bool mirror, int plane, REAL scale) {
     //  The trick here (and what must be done) is to set it that all data read from files is combined AT THE END of the function
     //  call into the global (BODY::etc) variables, without prematurly overwriting already existant data. The ID numbering system
     //  for points and panels can remain locally independant, but when it is combined they point and panel ID numbers must include
@@ -1534,7 +1537,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
 
 
     for (int i = 0; i < X.size(); ++i)
-        X[i] = SYSTEM::GambitScale * X[i];
+        X[i] = scale * SYSTEM::GambitScale * X[i];
 
     BODY::PointsAsRead = X;
     BODY::PanelsAsRead = PNLS;

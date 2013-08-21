@@ -222,7 +222,7 @@ void SYSTEM::PutWakesInTree() {
 
     Array <bool> toInsert(BODY::VortexPositions.size(), false);
     for (int i = 0; i < BODY::VortexPositions.size(); ++i)              // set from 0.0275 (Barltrop) to 0.0625 (SOTON)
-        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (0.0275 * SYSTEM::GambitScale)) {
+        if ((BODY::VortexPositions[i] - *BODY::VortexOrigins[i]).Mag() > (1.0 * SYSTEM::GambitScale)) {
             Num2Insert++;
             toInsert[i] = true;
         } else
