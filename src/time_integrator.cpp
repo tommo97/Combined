@@ -32,6 +32,7 @@ REAL TIME_STEPPER::SimTime = 0;
 REAL TIME_STEPPER::SubStepTime = 0;
 REAL TIME_STEPPER::SpinUpMult = 0;
 REAL TIME_STEPPER::SpinUpTime = 2.5;
+REAL TIME_STEPPER::dt_out = 1.0;
 int TIME_STEPPER::RKStep = 0;
 bool TIME_STEPPER::RK2Mode = false;
 
@@ -44,8 +45,7 @@ TIME_STEPPER::TIME_STEPPER() {
     RKStep = 0;
     t = substep_time = sim_time = 0.0;
     cfl_lim = 0.4;
-    dt_out = 0.25;
-    t_out = dt_out;
+    t_out = TIME_STEPPER::dt_out;
     lambda = mu = nu = 0.0;
     cpu_t = ticks();
     dump_next = show_rundata = false;
@@ -518,12 +518,12 @@ void TIME_STEPPER::time_step() {
             last_step = true;
         dump_next = true;
         //dt = dt_euler = min(t_out - TIME_STEPPER::SimTime, TIME_STEPPER::MaxTime - TIME_STEPPER::SimTime);
-        t_out += dt_out;
+        t_out += TIME_STEPPER::dt_out;
     }
 
     if (globalSystem->useBodies) {
         //  If Lagrangian time-step is infinite (ie body is not moving) use a sensible number of sub-steps
-        REAL dt_lagrange = min(dt_euler / 10, cfl_lim / (OmRMax)); //
+        REAL dt_lagrange = min(dt_euler / globalSystem->NumSubSteps, cfl_lim / (OmRMax)); //
 
         int nss = (int) ceil(dt_euler / dt_lagrange);
         //cout << dt_lagrange << " " << nss << " " << dt_euler << " " << cfl_lim << " " << OmRMax <<  endl;

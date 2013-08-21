@@ -385,7 +385,8 @@ void UTIL::PreAmble() {
         UTIL::QuadWts[i] = UTIL::QuadWts[i] / 2.0;
     }
     IO::FormattedQuery("Enter M'₄ interpolation radius, measured in cells", "integer, suggest 2","M'4 interpolation radius", outstream, SYSTEM::M4Radius_in_cells);
-    IO::FormattedQuery("Enter initial number of sub-time-steps, nₛₛ", "integer, suggest 25","Initial number of sub-time-steps", outstream, globalSystem->NumSubSteps);
+    IO::FormattedQuery("Enter number of sub-time-steps to be approximated per FVM step, nₛₛ", "integer, suggest 5-10","Initial number of sub-time-steps", outstream, globalSystem->NumSubSteps);
+    IO::FormattedQuery("Enter period of data output", "real","Data sample period", outstream, TIME_STEPPER::dt_out);
     IO::FormattedQuery("Enter fraction of timestep for protowake length, Δₛ", "real, suggest 0.3","Fraction of timestep for protowake length", outstream, globalSystem->DS);
 
         
@@ -476,7 +477,6 @@ void UTIL::PreAmble() {
     if (!useTSR) {
         IO::FormattedQuery("Prefer to specify rates RPM, Hz, or rad/s?", "RPM=0, Hz=1, rad/s=2","RPM, Hz or rad/s? RPM=0, Hz=1, rad/s=2", outstream, defRates);
     }
-    IO::FormattedQuery("Enter number of timestep samples", "integer","Timestep samples", outstream, nSteps);
     IO::FormattedQuery("Enter freestream velocity U∞ V∞ W∞","3 x real","Freestream velocity", outstream, globalSystem->unscaledVinf);
     IO::FormattedQuery("Enter fluid density in kg/m³","real","Fluid density", outstream, globalSystem->Rho);
     IO::FormattedQuery("Use iterative pressure Kutta condition?","no=0, yes=1","Use IPKC? no=0, yes=1", outstream, IPKC);
@@ -586,7 +586,7 @@ void UTIL::PreAmble() {
     UTIL::WriteMATLABString("Input", "Output.mat", outstream.str());
     globalSystem->InputStr = outstream.str();
     TIME_STEPPER::MaxTime = maxT;
-    globalSystem->NumSubSteps = nSteps;
+    nSteps = globalSystem->NumSubSteps;
 
 
 

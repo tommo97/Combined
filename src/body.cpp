@@ -127,7 +127,7 @@ void BODY::MakeWake() {
     Array <Vect3> Oms, tOms;
     Array <Vect3*> Origins, tOrigins;
     for (int i = 0; i < WakePanels.size(); ++i)
-        if (WakePanels[i].size() > 5) {
+        if (WakePanels[i].size() > 25) {
             for (int j = 0; j < WakePanels[i][0].size(); ++j) {
                 PANEL *tmp = (WakePanels[i][0][j]);
                 for (int k = 0; k < n; ++k) {
@@ -758,9 +758,10 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
     }
     
     
-    
+
     for (BODY::SubStep = 1; BODY::SubStep <= n_steps; ++BODY::SubStep) {
-//        cout << BODY::SubStep << " " << n_steps << endl;
+        if (SYSTEM::PanelOnly)
+            cout << BODY::SubStep << " " << n_steps << endl;
         BODY::TimePrev[3] = BODY::TimePrev[2];
         BODY::TimePrev[2] = BODY::TimePrev[1];
         BODY::TimePrev[1] = BODY::TimePrev[0];
@@ -1409,15 +1410,13 @@ void BODY::SetEulerTrans() {
 /**************************************************************/
 void BODY::MoveBody() {
 
- 
-    {
-        
-        int nt = ceil(BODY::Time/0.001);
-        Array <REAL> times = UTIL::globalLinspace(0.0, BODY::Time, 10000);
-        Array <Vect3> Y;
+    
+    if (BODY::Time < 0) {
+        GetEulerRates();
+        EulerAngles += EulerRates * BODY::Time;
+    } else {
         EulerAngles = UTIL::ODE4Final(BODY::EulerDot, 0.0, BODY::Time, 0.001, EulerAngles0, BodyRates);
     }
-
     CG = CG0 + BODY::Time * Velocity;
     //    Now set appropriate body rates, and transforms etc.
     SetEulerTrans();
