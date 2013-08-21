@@ -122,7 +122,38 @@ switch blade.type;
         blade.RADIUS = 0.175*linspace(0.05,1.0,10000);
         blade.THICKNESS = [];
     case 'Straight'
-        blade.RADIUS = linspace(-6,6);
+        
+        
+        US = [0.05 0.018761
+            0.251040	0.018761
+            0.814147	0.018761
+            0.843273	0.020177
+            0.889043	0.034336
+            0.908460	0.035752
+            0.947295	0.020177
+            0.968100	0.007434
+            1.000000	-0.023717];
+        LS = [
+            1.000000	-0.097345
+            0.990291	-0.087434
+            0.911234	-0.053451
+            0.251040	-0.053451
+            0.05         -0.025];
+        rr = linspace(0.05,1);
+        uz = interp1(US(:,1),US(:,2),rr,'cubic');
+        lz = interp1(LS(:,1),LS(:,2),rr,'cubic');
+        
+        swp = 0.5*(uz + lz);
+%         close all
+%         plot(rr,lz)
+%         hold all
+%         plot(rr,uz)
+%         plot(rr,swp);
+%         axis equal tight
+        
+
+
+        blade.RADIUS = linspace(-20,20);
         blade.THETA = 10*zeros(size(blade.RADIUS));
         blade.CHORD = 1*ones(size(blade.RADIUS));
         blade.THICKNESS = [];
@@ -142,9 +173,10 @@ switch blade.type;
         % x = [x fliplr(4-x)];
         % y = [y fliplr(y)];
         
-        %blade.RADIUS = linspace(-10,10);
+        blade.RADIUS = rr*7.5;%linspace(-10,10);
         blade.THETA =   0*ones(size(blade.RADIUS));
-        blade.CHORD =  1*ones(size(blade.RADIUS));
+        blade.CHORD =  7.5*(uz-lz);%1*ones(size(blade.RADIUS));
+        blade.SWEEP =  -7.5*swp;
         blade.THICKNESS = [];
         
     case 'Wing'
