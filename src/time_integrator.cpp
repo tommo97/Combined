@@ -141,7 +141,7 @@ void TIME_STEPPER::DoFMM() {
                 MinX = min(MinX, Xp);
                 MaxX = max(MaxX, Xp);
             }
-            REAL Buffer = 1.0;
+            REAL Buffer = 2.0;
             MaxX += Vect3(Buffer, Buffer, Buffer);
             MinX -= Vect3(Buffer, Buffer, Buffer);
 
