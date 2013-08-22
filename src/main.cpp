@@ -68,16 +68,14 @@ inline bool srt_vect3(Vect3 A, Vect3 B) {
 int main(int argc, char *argv[]) {
 
     system("clear");
-
-    
-    
-    
+    system("rm Output.mat");
 
     BODY::OutputSubStepCollocationPoints = SYSTEM::PanelOnly = false;
     PANEL::Initialise();
     UTIL::GetCellPans();
 
-
+//    TEST::SimpleTestPanel();
+//    return 0;
 
 
     //TEST::SmallTestFMM();
@@ -470,7 +468,7 @@ void UTIL::PreAmble() {
     }
     bool useTSR, useRadians;
 
-    IO::FormattedQuery("Prefer to specify degrees or radians for attitudes?"," degrees=0, radians=1","Degrees or radians for attitudes? degrees=0, rads=1", outstream, useRadians);
+    IO::FormattedQuery("Prefer to specify degrees or radians for attitudes?"," degrees=0, radians=1","Degrees[0] or radians[1] for attitudes?", outstream, useRadians);
     IO::FormattedQuery("Prefer to specify TSR plus axis or rates?", " rates=0, TSR=1","Rates or TSR? rates=0, TSR=1", outstream, useTSR);
 
     int defRates = 2;
@@ -509,13 +507,22 @@ void UTIL::PreAmble() {
         IO::FormattedQuery("Enter geometry scale factor","real, normally suggest 1.0","Geometry scale", outstream, scale);
         
         IO::FormattedQuery("Mirror/flip input geometry?","no=0, yes=1","Mirror/flip geometry? no=0, yes=1", outstream, flip[i]);
-
-        
-        
+       
         if (flip[i])
             IO::FormattedQuery("Mirror using yz, xz or xy plane?","yz=1, xz=2, xy=3","Flip plane yz=1, xz=2, xy=3", outstream, plane[i]);
 
 
+         int tmp_int = 0;
+        IO::FormattedQuery("Use either translation[0]/rotation[1]/both[2] for protowake?","int, suggest 2 only if confirmed working","Translation[0]/rotation[1]/both[2] for protowake", outstream, tmp_int);
+        BODY::ProtowakeRotTrans.push_back(tmp_int);
+        
+        tmp_int = 0;
+        IO::FormattedQuery("Number of panels to produce before conversion to vortex particles?","int, suggest 5-25","# panels before conversion to particles", outstream, tmp_int);
+        BODY::nPanelsBeforeVortons.push_back(tmp_int);
+        
+        REAL tmp_real = 0;
+                IO::FormattedQuery("Minimum distance before binning particle into octree?","real, suggest 1-5 chord lengths","Min distance before binning particle into tree", outstream, tmp_real);
+        BODY::MinDistance.push_back(tmp_real);
         IO::FormattedQuery("Enter displacement of neutral file origin in global frame","3 x real","Displacement of origin [dx,dy,dz]", outstream, Disp[i]);
         Disp[i] = SYSTEM::GambitScale * Disp[i];
         IO::FormattedQuery("Enter body CG position (i.e. centre of rotation) xcg ycg zcg","3 x real","CG position [x,y,z]", outstream, BODY::CGS[i]);

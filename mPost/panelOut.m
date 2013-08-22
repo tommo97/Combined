@@ -6,7 +6,7 @@ load Output.mat
 
 % 
 % for i = 1:size(CollocPtHistory0_x,2)
-%     
+%     clf
 % %x1 = CollocPtHistory1_x(i,:);
 % %z1 = CollocPtHistory1_z(i,:);
 % %y1 = CollocPtHistory1_y(i,:);
@@ -20,9 +20,10 @@ load Output.mat
 % hold all
 % scatter3(x0,y0,z0);
 % 
-% axis equal
+% 
 % 
 % view(3)
+% axis equal
 % 
 % pause(0.1)
 % 

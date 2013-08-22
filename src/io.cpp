@@ -681,7 +681,12 @@ void IO::writeMATLABOutputStruct(MATLABOutputStruct &outdata, string OutName) {
     fname += "_" + globalSystem->CaseName + string(pad, '0') + num.str() + ".mat";
     num_file++;
     latest_file = "<-W " + fname;
+    //  Check for existance of file with name equal to fname, and if exist delete it
 
+    
+    
+    
+    
     fstream filestr;
 
     for (int i = 0; i < outdata.Int1DArrays.size(); ++i)

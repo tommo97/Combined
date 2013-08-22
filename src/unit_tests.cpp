@@ -32,7 +32,7 @@ void TEST::SimpleTestPanel() {
     
     //Target = P.CollocationPoint;
 
-    Target = P.CollocationPoint;
+    //Target = P.CollocationPoint;
     
     PANEL *src = &P;
     P.Sigma = 1.0;

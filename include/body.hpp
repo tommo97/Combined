@@ -40,12 +40,12 @@ public:
     Vect3 Attitude;
     static Array <Vect3> VELOCITY;
     static bool OutputSubStepCollocationPoints;
+    static Array <int>  ProtowakeRotTrans, nPanelsBeforeVortons;
     static Array < Array < Array < Vect3 > > > SubStepCollocPts, SubStepCollocPtNrms;
-
     Vect3 Velocity;
     static Array <Vect3> RATES;
     static Array <string> NAMES;
-    static Array <REAL> TimePrev;
+    static Array <REAL> TimePrev, MinDistance;
     Array <Vect3> EulerAngPrev, EulerRatePrev;
     static Array <REAL> DPhi;
     static Array <REAL> DCp;

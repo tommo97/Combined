@@ -44,6 +44,8 @@ Array <REAL> BODY::TimePrev = Array <REAL> (4, 0.0);
 REAL BODY::Time = 0;
 REAL BODY::RHO = 1;
 bool BODY::OutputSubStepCollocationPoints = false;
+Array <int> BODY::ProtowakeRotTrans, BODY::nPanelsBeforeVortons;
+Array <REAL> BODY::MinDistance;
 int BODY::BodyPanelIDCounter = 0, BODY::BodyPointIDCounter = 0, BODY::SubStep = 0;
 Array <Vect3> BODY::TorqueHist;
 Array <Vect3> BODY::ForceHist;
@@ -127,7 +129,7 @@ void BODY::MakeWake() {
     Array <Vect3> Oms, tOms;
     Array <Vect3*> Origins, tOrigins;
     for (int i = 0; i < WakePanels.size(); ++i)
-        if (WakePanels[i].size() > 25) {
+        if (WakePanels[i].size() > BODY::nPanelsBeforeVortons[this->ID - 1]) {
             for (int j = 0; j < WakePanels[i][0].size(); ++j) {
                 PANEL *tmp = (WakePanels[i][0][j]);
                 for (int k = 0; k < n; ++k) {
@@ -422,7 +424,7 @@ void BODY::SplitUpLinearAlgebra() {
         for (int j = 0; j < srcs.size(); ++j) {
             srcs[j]->Mu = srcs[j]->Gamma;
             //            PhiWake -= srcs[j]->GetTriTesselatedDoubletPhi(trg->CollocationPoint);
-            PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
+            PhiWake += srcs[j]->HyperboloidDoubletPhi(trg->CollocationPoint);
         }
         //            PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
 
@@ -1101,6 +1103,7 @@ void BODY::UpdateGlobalInfluenceMatrices() {
             }
 
         }
+        
 #ifdef USE_MATRIX_INVERSE
         inverse(BODY::Bodies[I]->localA);
 #endif
@@ -1136,6 +1139,16 @@ void BODY::SetUpProtoWakes(REAL dt) {
         Array <REAL> LL, LR;
 
         BODY::Time = -dt * globalSystem->DS;
+        
+        Vect3 VelHold = BODY::Bodies[I]->Velocity;
+        Vect3 RateHold = BODY::Bodies[I]->EulerRates;
+        
+        if (BODY::ProtowakeRotTrans[I]==0)
+            BODY::Bodies[I]->EulerRates = Vect3(0.0);
+        
+        if (BODY::ProtowakeRotTrans[I]==1)
+            BODY::Bodies[I]->Velocity = Vect3(0.0);        
+        
         BODY::Bodies[I]->MoveBody();
         for (int i = 0; i < BODY::Bodies[I]->BoundaryFaces.size(); ++i) {
             Vect3 P1 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX1);
@@ -1152,6 +1165,8 @@ void BODY::SetUpProtoWakes(REAL dt) {
         BODY::Bodies[I]->MoveBody();
 
 
+        BODY::Bodies[I]->Velocity = VelHold;
+        BODY::Bodies[I]->EulerRates = RateHold;
 
         for (int i = 0; i < BODY::Bodies[I]->BoundaryFaces.size(); ++i) {
             Vect3 P1 = (BODY::Bodies[I]->BoundaryFaces[i]->edgeX1);
