@@ -174,11 +174,11 @@ public:
 
         //	Find dx, dy, dz
 #ifndef ARRAY_NO_CHECK
-        if ((Xi.x < X[0][0][0].x) || (Xi.y < X[0][0][0].y) || (Xi.z < X[0][0][0].z))
-            cout << "Interpolation error: bounds exceeded: " << Xi << " " << X[0][0][0] << endl;
+        if ((Xi.x < X[0][0][0]->x) || (Xi.y < X[0][0][0]->y) || (Xi.z < X[0][0][0]->z))
+            cout << "Interpolation error: bounds exceeded: " << Xi << " " << *(X[0][0][0]) << endl;
         
-         if ((Xi.x > X.back().back().back().x) || (Xi.y > X.back().back().back().y) || (Xi.z > X.back().back().back().z))
-            cout << "Interpolation error: bounds exceeded: " << Xi << " " << XX.back().back().back() << endl;
+         if ((Xi.x > X.back().back().back()->x) || (Xi.y > X.back().back().back()->y) || (Xi.z > X.back().back().back()->z))
+            cout << "Interpolation error: bounds exceeded: " << Xi << " " << *(X.back().back().back()) << endl;
 #endif
         Vect3 DX(X[1][0][0]->x - X[0][0][0]->x, X[0][1][0]->y - X[0][0][0]->y, X[0][0][1]->z - X[0][0][0]->z);
 
