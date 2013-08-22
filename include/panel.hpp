@@ -52,7 +52,7 @@ public:
     Vect4 DX, DY, M, D;
     Vect3 C1o, C2o, C3o, C4o;
     Vect3 NC1, NC2, NC3, NC4;
-    Vect3 X1, X2;
+    Vect3 XP1, XP2;
     REAL DoubletValidRange2, ValidRange;
     REAL Phi, Sigma, Mu, Gamma, MuPrev, GammaPrev, Cloc, Rloc, PhiWakePrev;
     REAL Area, MaxDiagonal, Vn;

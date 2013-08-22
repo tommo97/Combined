@@ -127,7 +127,7 @@ void TIME_STEPPER::DoFMM() {
         Vect3 EulerAnglesTplusDT = UTIL::ODE4(BODY::EulerDot, times, EulerHist, BODY::Bodies[I]->EulerAngles, BODY::Bodies[I]->BodyRates);
 
         for (int i = 0; i < BODY::Bodies[I]->Faces.size(); ++i) {
-            BODY::Bodies[I]->Faces[i].X1 = BODY::Bodies[I]->Faces[i].CollocationPoint;
+            BODY::Bodies[I]->Faces[i].XP1 = BODY::Bodies[I]->Faces[i].CollocationPoint;
             Vect3 MinX = BODY::Bodies[I]->Faces[i].CollocationPoint, MaxX = BODY::Bodies[I]->Faces[i].CollocationPoint;
             for (int t = 0; t < nt; ++t) {
                 Vect3 CGTplusDT = BODY::Bodies[I]->CG0 + times[t] * BODY::Bodies[I]->Velocity;
@@ -137,7 +137,7 @@ void TIME_STEPPER::DoFMM() {
                 Vect3 C3 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C3o - BODY::Bodies[I]->CG0);
                 Vect3 C4 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C4o - BODY::Bodies[I]->CG0);
                 Vect3 Xp = 0.25 * (C1 + C2 + C3 + C4);
-                BODY::Bodies[I]->Faces[i].X2 = Xp;
+                BODY::Bodies[I]->Faces[i].XP2 = Xp;
                 MinX = min(MinX, Xp);
                 MaxX = max(MaxX, Xp);
             }
