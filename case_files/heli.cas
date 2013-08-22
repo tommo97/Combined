@@ -34,7 +34,7 @@ NeuFiles/heli_tail.neu        % Neutral file
 0.2                      % Geometry scale
 0                        % Mirror/flip geometry? no=0, yes=1
 1
-100
+10
 0.2
 10 0 0                   % Displacement of origin [dx,dy,dz]
 10 0 0                  % CG position [x,y,z]
