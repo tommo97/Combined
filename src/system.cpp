@@ -428,20 +428,28 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 
 
     for (int I = 0; I < BODY::Bodies.size(); ++I) {
-        Vect3 EulerAnglesTplusDT = UTIL::ODE4Final(BODY::EulerDot, 0.0, BODY::Time + dt, 0.001, BODY::Bodies[I]->EulerAngles0, BODY::Bodies[I]->BodyRates);
-        Vect3 CGTplusDT = BODY::Bodies[I]->CG0 + BODY::Time * BODY::Bodies[I]->Velocity;
-        Array <Vect3> TRANS = BODY::ReturnTrans(EulerAnglesTplusDT);
-        for (int i = 0; i < BODY::Bodies[I]->Faces.size(); ++i) {
-            BODY::Bodies[I]->Faces[i].Xfmm0 = BODY::Bodies[I]->Faces[i].CollocationPoint;
-            Vect3 C1 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C1o - BODY::Bodies[I]->CG0);
-            Vect3 C2 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C2o - BODY::Bodies[I]->CG0);
-            Vect3 C3 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C3o - BODY::Bodies[I]->CG0);
-            Vect3 C4 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C4o - BODY::Bodies[I]->CG0);
-            BODY::Bodies[I]->Faces[i].Xfmm1 = 0.25*(C1 + C2 + C3 + C4);
-        }
+        BODY::Bodies[I]->EulerAngles = UTIL::ODE4Final(BODY::EulerDot, 0.0, BODY::Time + dt, 0.001, BODY::Bodies[I]->EulerAngles0, BODY::Bodies[I]->BodyRates);
+        BODY::Bodies[I]->CG = BODY::Bodies[I]->CG0 + (BODY::Time + dt) * BODY::Bodies[I]->Velocity;
+        BODY::Bodies[I]->TRANS = BODY::ReturnTrans(BODY::Bodies[I]->EulerAngles);
     }
-    
-    
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        BODY::AllBodyFaces[i]->Xfmm0 = BODY::AllBodyFaces[i]->CollocationPoint;
+        Vect3 CG = BODY::AllBodyFaces[i]->Owner->CG;
+        Vect3 CG0 = BODY::AllBodyFaces[i]->Owner->CG0;
+
+        Vect3 C1 = CG + VectMultMatrix(BODY::AllBodyFaces[i]->Owner->TRANS, BODY::AllBodyFaces[i]->C1o - CG0);
+        Vect3 C2 = CG + VectMultMatrix(BODY::AllBodyFaces[i]->Owner->TRANS, BODY::AllBodyFaces[i]->C2o - CG0);
+        Vect3 C3 = CG + VectMultMatrix(BODY::AllBodyFaces[i]->Owner->TRANS, BODY::AllBodyFaces[i]->C3o - CG0);
+        Vect3 C4 = CG + VectMultMatrix(BODY::AllBodyFaces[i]->Owner->TRANS, BODY::AllBodyFaces[i]->C4o - CG0);
+        BODY::AllBodyFaces[i]->Xfmm1 = 0.25 * (C1 + C2 + C3 + C4);
+    }
+
+
+    for (int I = 0; I < BODY::Bodies.size(); ++I) {
+        BODY::Bodies[I]->EulerAngles = UTIL::ODE4Final(BODY::EulerDot, 0.0, BODY::Time, 0.001, BODY::Bodies[I]->EulerAngles0, BODY::Bodies[I]->BodyRates);
+        BODY::Bodies[I]->CG = BODY::Bodies[I]->CG0 + BODY::Time * BODY::Bodies[I]->Velocity;
+        BODY::Bodies[I]->TRANS = BODY::ReturnTrans(BODY::Bodies[I]->EulerAngles);
+    }
     
 
 #pragma omp parallel for
