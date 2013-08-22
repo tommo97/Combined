@@ -127,7 +127,7 @@ void TIME_STEPPER::DoFMM() {
         Vect3 EulerAnglesTplusDT = UTIL::ODE4(BODY::EulerDot, times, EulerHist, BODY::Bodies[I]->EulerAngles, BODY::Bodies[I]->BodyRates);
 
         for (int i = 0; i < BODY::Bodies[I]->Faces.size(); ++i) {
-            BODY::Bodies[I]->Faces[i]->X1 = BODY::Bodies[I]->Faces[i].CollocationPoint;
+            BODY::Bodies[I]->Faces[i].X1 = BODY::Bodies[I]->Faces[i].CollocationPoint;
             Vect3 MinX = BODY::Bodies[I]->Faces[i].CollocationPoint, MaxX = BODY::Bodies[I]->Faces[i].CollocationPoint;
             for (int t = 0; t < nt; ++t) {
                 Vect3 CGTplusDT = BODY::Bodies[I]->CG0 + times[t] * BODY::Bodies[I]->Velocity;
