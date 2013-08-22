@@ -426,38 +426,21 @@ void SYSTEM::GetPanelFMMVelocities(REAL dt) {
 #endif
 
 
-    REAL tprev = BODY::TimePrev[0];
-#pragma omp parallel for
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        BODY::AllBodyFaces[i]->Xfmm0 = BODY::AllBodyFaces[i]->CollocationPoint;
-    }
-    if (dt > 0) {
-        BODY::TimePrev[0] = BODY::Time;
-        BODY::Time += dt;
-        for (int i = 0; i < BODY::Bodies.size(); ++i)
-            BODY::Bodies[i]->MoveBody();
 
-#pragma omp parallel for
-        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-            BODY::AllBodyFaces[i]->Xfmm1 = BODY::AllBodyFaces[i]->CollocationPoint;
+    for (int I = 0; I < BODY::Bodies.size(); ++I) {
+        Vect3 EulerAnglesTplusDT = UTIL::ODE4Final(BODY::EulerDot, 0.0, BODY::Time + dt, 0.001, BODY::Bodies[I]->EulerAngles0, BODY::Bodies[I]->BodyRates);
+        Vect3 CGTplusDT = BODY::Bodies[I]->CG0 + BODY::Time * BODY::Bodies[I]->Velocity;
+        Array <Vect3> TRANS = BODY::ReturnTrans(EulerAnglesTplusDT);
+        for (int i = 0; i < BODY::Bodies[I]->Faces.size(); ++i) {
+            BODY::Bodies[I]->Faces[i].Xfmm0 = BODY::Bodies[I]->Faces[i].CollocationPoint;
+            Vect3 C1 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C1o - BODY::Bodies[I]->CG0);
+            Vect3 C2 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C2o - BODY::Bodies[I]->CG0);
+            Vect3 C3 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C3o - BODY::Bodies[I]->CG0);
+            Vect3 C4 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C4o - BODY::Bodies[I]->CG0);
+            BODY::Bodies[I]->Faces[i].Xfmm1 = 0.25*(C1 + C2 + C3 + C4);
         }
-
-        BODY::TimePrev[0] = BODY::Time;
-        BODY::Time -= dt;
-        for (int i = 0; i < BODY::Bodies.size(); ++i)
-            BODY::Bodies[i]->MoveBody();
     }
-    BODY::TimePrev[0] = tprev;
-//    if (dt > 0) {
-//        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-//            Vect3 Pos = BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG;
-//            // 	Get point kinematic velocity - rotational part first
-//            Vect3 Vrot = BODY::AllBodyFaces[i]->Owner->EulerRates.Cross(Pos);
-//            // 	Add to translational velocity....
-//            Vect3 Vkin = BODY::AllBodyFaces[i]->Owner->Velocity + Vrot;
-//            cout << BODY::AllBodyFaces[i]->Xfmm1  << " " << Pos + Vkin*dt << endl;
-//        }
-//    }
+    
     
     
 

@@ -162,6 +162,8 @@ public:
     static void UpdateGlobalInfluenceMatrices();
     static void SplitUpLinearAlgebra();
     static void SetUpInfluenceMatrices();
+    static Array < Vect3 > ReturnTrans(Vect3 Angles);
+
     void MakeWake();
     static void GetLinearRHS();
     static void GetNonLinearRHS();

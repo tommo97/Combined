@@ -1403,11 +1403,12 @@ void BODY::GetBodyRates() {
     vTransform[2] = Vect3(0., -sinphi, costhe * cosphi);
     BodyRates = VectMultMatrix(vTransform, EulerRates);
 }
-
 /**************************************************************/
-void BODY::SetEulerTrans() {
-    REAL cosphi = cos(EulerAngles.x), costhe = cos(EulerAngles.y), cospsi = cos(EulerAngles.z);
-    REAL sinphi = sin(EulerAngles.x), sinthe = sin(EulerAngles.y), sinpsi = sin(EulerAngles.z);
+Array < Vect3 > BODY::ReturnTrans(Vect3 Angles)
+{
+    Array <Vect3> out(3,Vect3(0.0));
+    REAL cosphi = cos(Angles.x), costhe = cos(Angles.y), cospsi = cos(Angles.z);
+    REAL sinphi = sin(Angles.x), sinthe = sin(Angles.y), sinpsi = sin(Angles.z);
     REAL a1 = costhe*cospsi;
     REAL a2 = costhe*sinpsi;
     REAL a3 = -sinthe;
@@ -1417,9 +1418,16 @@ void BODY::SetEulerTrans() {
     REAL c1 = cosphi * sinthe * cospsi + sinphi*sinpsi;
     REAL c2 = cosphi * sinthe * sinpsi - sinphi*cospsi;
     REAL c3 = cosphi*costhe;
-    TRANS[0] = Vect3(a1, b1, c1);
-    TRANS[1] = Vect3(a2, b2, c2);
-    TRANS[2] = Vect3(a3, b3, c3);
+    out[0] = Vect3(a1, b1, c1);
+    out[1] = Vect3(a2, b2, c2);
+    out[2] = Vect3(a3, b3, c3);
+    
+    return out;
+    
+}
+/**************************************************************/
+void BODY::SetEulerTrans() {
+    TRANS = BODY::ReturnTrans(EulerAngles);
 }
 
 /**************************************************************/
