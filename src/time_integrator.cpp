@@ -119,13 +119,13 @@ void lamb_dipole(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL ampl
 
 void TIME_STEPPER::DoFMM() {
 
-            int nt = 100;
+    int nt = 100;
     for (int I = 0; I < BODY::Bodies.size(); ++I) {
-        
-        Array <REAL> times = UTIL::globalLinspace(BODY::Time,BODY::Time + dt, nt);
+
+        Array <REAL> times = UTIL::globalLinspace(BODY::Time, BODY::Time + 1.1*dt, nt); //      max timestep change permitted is +- 5%
         Array <Vect3> EulerHist;
-        Vect3 EulerAnglesTplusDT = UTIL::ODE4(BODY::EulerDot,times, EulerHist, BODY::Bodies[I]->EulerAngles, BODY::Bodies[I]->BodyRates);
-                
+        Vect3 EulerAnglesTplusDT = UTIL::ODE4(BODY::EulerDot, times, EulerHist, BODY::Bodies[I]->EulerAngles, BODY::Bodies[I]->BodyRates);
+
         for (int i = 0; i < BODY::Bodies[I]->Faces.size(); ++i) {
             Vect3 MinX = BODY::Bodies[I]->Faces[i].CollocationPoint, MaxX = BODY::Bodies[I]->Faces[i].CollocationPoint;
             for (int t = 0; t < nt; ++t) {
@@ -149,7 +149,7 @@ void TIME_STEPPER::DoFMM() {
             int DX = int((MaxX.x) - (MinX.x));
             int DY = int((MaxX.y) - (MinX.y));
             int DZ = int((MaxX.z) - (MinX.z));
-            
+
             BODY::Bodies[I]->Faces[i].Xp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
             BODY::Bodies[I]->Faces[i].Vp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
 
