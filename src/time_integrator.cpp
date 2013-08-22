@@ -119,29 +119,26 @@ void lamb_dipole(Vect3 centre, Array <Vect3> &X, Array <Vect3> &Omega, REAL ampl
 
 void TIME_STEPPER::DoFMM() {
 
-    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-        Vect3 Xp = BODY::AllBodyFaces[i]->CollocationPoint;
-        {
-            Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
-            Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
-            Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
-
-            Vect3 MinX = Xp, MaxX = Xp;
-
-            for (int nt = 1; nt < 100; ++nt) {
-                Vect3 PanelVel = OwnerVel + OwnerRates.Cross(Xp - OwnerCG);
-
-                OwnerCG += OwnerVel * dt / 100;
-
-                Xp += dt * PanelVel / 100;
-
+            int nt = 100;
+    for (int I = 0; I < BODY::Bodies.size(); ++I) {
+        
+        Array <REAL> times = UTIL::globalLinspace(BODY::Time,BODY::Time + dt, nt);
+        Array <Vect3> EulerHist;
+        Vect3 EulerAnglesTplusDT = UTIL::ODE4(BODY::EulerDot,times, EulerHist, BODY::Bodies[I]->EulerAngles, BODY::Bodies[I]->BodyRates);
+                
+        for (int i = 0; i < BODY::Bodies[I]->Faces.size(); ++i) {
+            Vect3 MinX = BODY::Bodies[I]->Faces[i].CollocationPoint, MaxX = BODY::Bodies[I]->Faces[i].CollocationPoint;
+            for (int t = 0; t < nt; ++t) {
+                Vect3 CGTplusDT = BODY::Bodies[I]->CG0 + times[t] * BODY::Bodies[I]->Velocity;
+                Array <Vect3> TRANS = BODY::ReturnTrans(EulerHist[t]);
+                Vect3 C1 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C1o - BODY::Bodies[I]->CG0);
+                Vect3 C2 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C2o - BODY::Bodies[I]->CG0);
+                Vect3 C3 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C3o - BODY::Bodies[I]->CG0);
+                Vect3 C4 = CGTplusDT + VectMultMatrix(TRANS, BODY::Bodies[I]->Faces[i].C4o - BODY::Bodies[I]->CG0);
+                Vect3 Xp = 0.25 * (C1 + C2 + C3 + C4);
                 MinX = min(MinX, Xp);
                 MaxX = max(MaxX, Xp);
             }
-
-
-
-
             REAL Buffer = 1.0;
             MaxX += Vect3(Buffer, Buffer, Buffer);
             MinX -= Vect3(Buffer, Buffer, Buffer);
@@ -152,9 +149,9 @@ void TIME_STEPPER::DoFMM() {
             int DX = int((MaxX.x) - (MinX.x));
             int DY = int((MaxX.y) - (MinX.y));
             int DZ = int((MaxX.z) - (MinX.z));
-
-            BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
-            BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
+            
+            BODY::Bodies[I]->Faces[i].Xp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
+            BODY::Bodies[I]->Faces[i].Vp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
 
             for (int a = 0; a < DX; ++a)
                 for (int b = 0; b < DY; ++b)
@@ -163,14 +160,65 @@ void TIME_STEPPER::DoFMM() {
                         C.toMonitor = true;
                         globalOctree->Root->EvalCapsule(C);
                         //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
-                        BODY::AllBodyFaces[i]->Vp[a][b][c] = C.Ptr2CellVelocity;
-                        BODY::AllBodyFaces[i]->Xp[a][b][c] = C.Ptr2CellPosition;
+                        BODY::Bodies[I]->Faces[i].Vp[a][b][c] = C.Ptr2CellVelocity;
+                        BODY::Bodies[I]->Faces[i].Xp[a][b][c] = C.Ptr2CellPosition;
                     }
-
-
-
         }
     }
+    
+//    
+//    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+//        Vect3 Xp = BODY::AllBodyFaces[i]->CollocationPoint;
+//        {
+//            Vect3 OwnerCG = BODY::AllBodyFaces[i]->Owner->CG;
+//            Vect3 OwnerVel = BODY::AllBodyFaces[i]->Owner->Velocity;
+//            Vect3 OwnerRates = BODY::AllBodyFaces[i]->Owner->BodyRates;
+//
+//            Vect3 MinX = Xp, MaxX = Xp;
+//
+//            for (int nt = 1; nt < 100; ++nt) {
+//                Vect3 PanelVel = OwnerVel + OwnerRates.Cross(Xp - OwnerCG);
+//
+//                OwnerCG += OwnerVel * dt / 100;
+//
+//                Xp += dt * PanelVel / 100;
+//
+//                MinX = min(MinX, Xp);
+//                MaxX = max(MaxX, Xp);
+//            }
+//
+//
+//
+//
+//            REAL Buffer = 1.0;
+//            MaxX += Vect3(Buffer, Buffer, Buffer);
+//            MinX -= Vect3(Buffer, Buffer, Buffer);
+//
+//            MinX = floor(MinX) - 0.5;
+//            MaxX = ceil(MaxX) + 0.5;
+//
+//            int DX = int((MaxX.x) - (MinX.x));
+//            int DY = int((MaxX.y) - (MinX.y));
+//            int DZ = int((MaxX.z) - (MinX.z));
+//
+//            BODY::AllBodyFaces[i]->Xp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
+//            BODY::AllBodyFaces[i]->Vp = Array < Array < Array <Vect3*> > > (DX, Array < Array < Vect3*> > (DY, Array <Vect3*> (DZ, NULL)));
+//
+//            for (int a = 0; a < DX; ++a)
+//                for (int b = 0; b < DY; ++b)
+//                    for (int c = 0; c < DZ; ++c) {
+//                        OctreeCapsule C(MinX + Vect3(1.0 * a, 1.0 * b, 1.0 * c), Vect3(0, 0, 0), false);
+//                        C.toMonitor = true;
+//                        globalOctree->Root->EvalCapsule(C);
+//                        //  Any nodes which are created in this step are NOT included in the FVM calculation, and can safely be removed after the FMM/Panel vel calcs...
+//                        BODY::AllBodyFaces[i]->Vp[a][b][c] = C.Ptr2CellVelocity;
+//                        BODY::AllBodyFaces[i]->Xp[a][b][c] = C.Ptr2CellPosition;
+//                    }
+//
+//
+//
+//        }
+//    }
 
 
 
