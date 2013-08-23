@@ -187,7 +187,7 @@ void BODY::MakeWake() {
 
     BODY::VortexPositions.push_back(Posns); // = Array <Vect3 > (BODY::VortexPositions.size() + Pts.size());
     BODY::VortexOmegas.push_back(Vorts); // = Array <Vect3 > (BODY::VortexOmegas.size() + Pts.size());
-    BODY::VortexOwnerID.push_back(Array <int> (Pts.size(), this->ID)); // = Array <int> (BODY::VortexOwnerID.size() + Pts.size());
+    BODY::VortexOwnerID.push_back(Array <int> (Posns.size(), this->ID)); // = Array <int> (BODY::VortexOwnerID.size() + Pts.size());
     BODY::VortexOrigins.push_back(Orgns);
 
 

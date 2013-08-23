@@ -1,7 +1,7 @@
 0                        % Verbose Menu? Quiet=0, Verbose=1
 3                        % FMM maximum expansion order
 0.0316                   % FMM smoothing parameter radius
-103                      % Scale factor
+206                      % Scale factor
 24                       % Number of quadrature points
 2                        % M'4 interpolation radius
 5                        % Initial number of sub-time-steps

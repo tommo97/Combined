@@ -760,6 +760,9 @@ void SYSTEM::WriteData() {
             TransVars[i][j] = FVMCell::AllCells[i]->TransVars[j];
     }
 
+    Array <int> NTV; NTV.push_back(SYSTEM::NumTransVars);
+    Output.Int1DArrays.push_back(NTV);
+    Output.Int1DArrayStrings.push_back(string("NumTransVars"));
     Output.Vect1DArrays.push_back(CellPos);
     Output.Vect1DArrayStrings.push_back(string("CellPos"));
 

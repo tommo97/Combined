@@ -107,7 +107,7 @@ void FVMCell::NormaliseObliterate() {
 
 
     //  Normalise/obliterate the vorticities in the cell
-    for (int q1 = 0; q1 < SYSTEM::NumTransVars; ++q1)
+   /* for (int q1 = 0; q1 < SYSTEM::NumTransVars; ++q1)
         for (int q2 = 0; q2 < SYSTEM::NumTransVars; ++q2)
             if (q1 != q2) {
                 if (SIGN(TransVars[q1].x) != SIGN(TransVars[q2].x)) {
@@ -129,7 +129,7 @@ void FVMCell::NormaliseObliterate() {
                     }
                 }
 
-            }
+            }*/
 
     for (int q = 0; q < SYSTEM::NumTransVars; ++q) {
         if ((TransVars[q].x * TransVars[q].x) < (VORTICITY_CUTOFF * VORTICITY_CUTOFF))

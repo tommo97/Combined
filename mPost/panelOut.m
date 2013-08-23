@@ -47,7 +47,7 @@ PtIDS = 1:4*length(C1);
 PtIDS = reshape(PtIDS,length(C1),4);
 p = patch('Vertices',BodyPanPts,...
 'Faces',PtIDS,'FaceVertexCData',1,...
-'FaceColor','flat','EdgeColor','none');
+'FaceColor','flat','EdgeColor','w');
 set(gcf,'Renderer','OpenGL')
 hold all
 WakePanPts = [WakePanC1_x WakePanC1_y WakePanC1_z;

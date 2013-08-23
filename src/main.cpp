@@ -286,7 +286,7 @@ void UTIL::PostAmble(string fname) {
     WriteMATLABMatrix1DVect3("VCollocPts", fname, VCentroids);
     WriteMATLABMatrix1DVect3("VortonX", fname, BODY::VortexPositions);
     WriteMATLABMatrix1DVect3("VortonO", fname, BODY::VortexOmegas);
-
+    WriteMATLABMatrix1D("VortonOwnerID", fname, BODY::VortexOwnerID);
 
     {
         Array <Vect3> AllBodyPoints;

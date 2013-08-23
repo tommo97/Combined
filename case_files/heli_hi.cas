@@ -1,0 +1,43 @@
+0                        % Verbose Menu? Quiet=0, Verbose=1
+3                        % FMM maximum expansion order
+0.0316                   % FMM smoothing parameter radius
+9                        % Scale factor
+24                       % Number of quadrature points
+2                        % M'4 interpolation radius
+5                        % Initial number of sub-time-steps
+0.25                     % Data sample period
+1                     % Fraction of timestep for protowake length
+4                        % Flux limiter
+0                        % Wave model?
+2                        % Number of bodies
+0                        % Body for # revs [+ve], or use time [0]
+10                        % Max sim time
+0                        % Degrees[0] or radians[1] for attitudes?
+0                        % Rates or TSR? rates=0, TSR=1
+2                        % RPM, Hz or rad/s? RPM=0, Hz=1, rad/s=2
+0 0 0                    % Freestream velocity
+0.998                    % Fluid density
+0                        % Use IPKC? no=0, yes=1
+1                        % Make log? no=0, yes=1
+NeuFiles/heli_hi.neu        % Neutral file
+1                        % Geometry scale
+0                        % Mirror/flip geometry? no=0, yes=1
+1                        % Translation[0]/rotation[1]/both[2] for protowake
+10                       % # panels before conversion to particles
+1                        % Min distance before binning particle into tree
+0 0 0                    % Displacement of origin [dx,dy,dz]
+0 0 0                    % CG position [x,y,z]
+-25 -3 -0                  % CG velocity [u,v,w]
+0 0 0                    % Body Euler angles (degrees) [psi, theta, phi]
+0 0 19                   % Body rates [p,q,r] in rads/s
+NeuFiles/heli_tail_hi.neu        % Neutral file
+0.2                      % Geometry scale
+0                        % Mirror/flip geometry? no=0, yes=1
+1
+10
+0.2
+10 0 0                   % Displacement of origin [dx,dy,dz]
+10 0 0                  % CG position [x,y,z]
+-25 -3 -0                 % CG velocity [u,v,w]
+90 0 0                   % Body Euler angles (degrees) [psi, theta, phi]
+0 0 50                  % Body rates [p,q,r] in rads/s
