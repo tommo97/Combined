@@ -286,13 +286,43 @@ void UTIL::PostAmble(string fname) {
     WriteMATLABMatrix1DVect3("VCollocPts", fname, VCentroids);
     WriteMATLABMatrix1DVect3("VortonX", fname, BODY::VortexPositions);
     WriteMATLABMatrix1DVect3("VortonO", fname, BODY::VortexOmegas);
+
+
+    {
+        Array <Vect3> AllBodyPoints;
+        for (int i = 0; i < BODY::AllBodyPoints0.size(); ++i) {
+            Vect3 X0 = BODY::AllBodyPoints0[i];         // nb: already relative to cg0
+            Vect3 CG0 = BODY::AllBodyPointCG0[i];
+            Vect3 Rates = BODY::AllBodyPointRates0[i];
+            Vect3 Angles0 = BODY::AllBodyPointEulerAngles0[i];
+            Vect3 Vels0 = BODY::AllBodyPointCGVels0[i];
+
+            Vect3 EulerAngles = UTIL::ODE4Final(BODY::EulerDot, 0.0, BODY::Time, 0.001, Angles0, Rates);
+
+            Vect3 CG = CG0 + BODY::Time * Vels0;
+            Array <Vect3> TRANS = BODY::ReturnTrans(EulerAngles);
+            Vect3 X = CG + VectMultMatrix(TRANS, X0);
+            AllBodyPoints.push_back(X);
+        }
+        UTIL::WriteMATLABMatrix1DVect3("AllBodyPoints", fname, AllBodyPoints);
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
     //    WriteMATLABMatrix1D("VortonOwnerID", fname, BODY::VortexOwnerID);
-    Array <Vect3> AllBodyPointsTransformed(BODY::AllBodyPoints.size(), Vect3(0.0));
+    Array <Vect3> AllBodyPointsTransformed(BODY::AllBodyPoints0.size(), Vect3(0.0));
 
     //        for (int i = 0; i < BODY::AllBodyPoints.size(); ++i)
     //            AllBodyPointsTransformed[i] = VectMultMatrix(BODY::AllBodyFaces->, vCorner_g);
 
-    UTIL::WriteMATLABMatrix1DVect3("AllBodyPoints", fname, BODY::AllBodyPoints);
+//    UTIL::WriteMATLABMatrix1DVect3("AllBodyPoints", fname, BODY::AllBodyPoints0);
     UTIL::WriteMATLABMatrix2D("ProtoWakePointsX", fname, TmpPWPtsx);
     UTIL::WriteMATLABMatrix2D("ProtoWakePointsY", fname, TmpPWPtsy);
     UTIL::WriteMATLABMatrix2D("ProtoWakePointsZ", fname, TmpPWPtsz);

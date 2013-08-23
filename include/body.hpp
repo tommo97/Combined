@@ -40,7 +40,7 @@ public:
     Vect3 Attitude;
     static Array <Vect3> VELOCITY;
     static bool OutputSubStepCollocationPoints;
-    static Array <int>  ProtowakeRotTrans, nPanelsBeforeVortons;
+    static Array <int>  ProtowakeRotTrans, nPanelsBeforeVortons, SurfOwner;
     static Array < Array < Array < Vect3 > > > SubStepCollocPts, SubStepCollocPtNrms;
     Vect3 Velocity;
     static Array <Vect3> RATES;
@@ -88,7 +88,7 @@ public:
     static Array < Array <Array <int> > > TipOutboardLSIDS;
     static Array < Array < Array < int > > > InnerTipUSPanelIDS, OuterTipUSPanelIDS;
     static Array < Array < Array < int > > > InnerTipLSPanelIDS, OuterTipLSPanelIDS;
-    static Array <Vect3> AllBodyPoints;
+    static Array <Vect3> AllBodyPoints0, AllBodyPointCG0, AllBodyPointRates0, AllBodyPointEulerAngles0, AllBodyPointCGVels0;
     static Array < Array <REAL> > A;
     static Array < Array <REAL> > B;
     static Array < Array <REAL> > C;

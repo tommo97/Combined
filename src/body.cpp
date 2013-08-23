@@ -82,7 +82,7 @@ Array < Array < Array < int > > > BODY::InnerTipUSPanelIDS, BODY::OuterTipUSPane
 Array < Array < Array < int > > > BODY::InnerTipLSPanelIDS, BODY::OuterTipLSPanelIDS;
 Array <Vect3> BODY::PointsAsRead;
 Array <Array < int > > BODY::PanelsAsRead;
-Array <Vect3> BODY::AllBodyPoints;
+Array <Vect3> BODY::AllBodyPoints0, BODY::AllBodyPointCG0, BODY::AllBodyPointRates0, BODY::AllBodyPointEulerAngles0, BODY::AllBodyPointCGVels0;
 bool BODY::IPKC = false;
 int BODY::NumFaces = 0;
 int BODY::NumBodies = 0;
@@ -1573,7 +1573,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
 
     BODY::Surfaces.push_back(Surfs);
     BODY::LocalChordRadius.push_back(LCrds);
-    BODY::PtIDS.push_back(PtIDS_local + BODY::AllBodyPoints.size());
+    BODY::PtIDS.push_back(PtIDS_local + BODY::AllBodyPoints0.size());
 
 
     //  Not sure how important it is to get the following correct ....
@@ -1611,9 +1611,15 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
         Vect3 P = Vect3((X[i] + dpos));
         BodyPoints.push_back(P);
         BodyPointsRelToCG0.push_back(P - cg);   //      needed since ConvertVTK translates and rotates according to final CG location and Euler angles.
+        BODY::AllBodyPointCG0.push_back(cg);
+        BODY::AllBodyPointEulerAngles0.push_back(att);
+        BODY::AllBodyPointRates0.push_back(rates);
+        BODY::AllBodyPointCGVels0.push_back(vel);
     }
 
-    BODY::AllBodyPoints.push_back(BodyPointsRelToCG0);
+    BODY::AllBodyPoints0.push_back(BodyPointsRelToCG0);
+ 
+    
 
     {
         Array <PANEL> tmp(PNLS.size());
@@ -1720,6 +1726,7 @@ void BODY::ReadNeuGetBodies(string neu_file, string name, Vect3 dpos, Vect3 cg, 
 
         BODY::Bodies.push_back(new BODY(cg, att, vel, rates, name));
         BODY::Bodies.back()->ID = BODY::Bodies.size();
+        
         BODY::Bodies.back()->Disp = dpos;
         cout << "%\tdone. Getting panels: " << BodyPanels[i].size();
 
