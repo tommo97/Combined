@@ -27,7 +27,7 @@ NeuFiles/heli.neu        % Neutral file
 1                        % Min distance before binning particle into tree
 0 0 0                    % Displacement of origin [dx,dy,dz]
 0 0 0                    % CG position [x,y,z]
--25 -0 -0                  % CG velocity [u,v,w]
+-25 -3 -0                  % CG velocity [u,v,w]
 0 0 0                    % Body Euler angles (degrees) [psi, theta, phi]
 0 0 19                   % Body rates [p,q,r] in rads/s
 NeuFiles/heli_tail.neu        % Neutral file
@@ -38,6 +38,6 @@ NeuFiles/heli_tail.neu        % Neutral file
 0.2
 10 0 0                   % Displacement of origin [dx,dy,dz]
 10 0 0                  % CG position [x,y,z]
--25 -0 -0                 % CG velocity [u,v,w]
+-25 -3 -0                 % CG velocity [u,v,w]
 90 0 0                   % Body Euler angles (degrees) [psi, theta, phi]
 0 0 50                  % Body rates [p,q,r] in rads/s

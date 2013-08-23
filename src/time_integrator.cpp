@@ -141,7 +141,7 @@ void TIME_STEPPER::DoFMM() {
                 MinX = min(MinX, Xp);
                 MaxX = max(MaxX, Xp);
             }
-            REAL Buffer = 2.0;
+            REAL Buffer = 1.0;
             MaxX += Vect3(Buffer, Buffer, Buffer);
             MinX -= Vect3(Buffer, Buffer, Buffer);
 
@@ -366,8 +366,8 @@ void TIME_STEPPER::TimeAdvance() {
     //  t0: calculate timestep length (use last values of panel singularity strengths for body influence)
     time_step();
     //  t0: get panel FMM Vels
-    if (globalSystem->useBodies)
-        globalSystem->GetPanelFMMVelocities(0.0);
+//    if (globalSystem->useBodies)
+//        globalSystem->GetPanelFMMVelocities(0.0);
 
     //  
 
