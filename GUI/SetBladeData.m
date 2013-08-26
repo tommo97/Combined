@@ -12,12 +12,12 @@ switch blade.type;
         blade.RADIUS=[0.508;0.66;0.883;1.008;1.067;1.133;1.257;1.343;1.51;1.648;1.9520;2.257;...
             2.343;2.562;2.867;3.172;3.185;3.476;3.781;4.023;4.086;4.391;4.696;4.78;5;5.305;5.532];
         blade.CHORD=[0.218;0.218;0.183;0.349;0.441;0.544;0.737;0.728;0.711;0.697;0.6660;0.636;0.627;0.605;0.574;0.543;0.542;0.512;0.482;0.457;0.451;0.42;0.389;0.381;0.358;0.328;0.305];
-               
+        
         blade.THETA=[0;0;0;6.7;9.9;13.4;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
             3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-2.191;-2.5];
         %blade.THETA=[20.04;20.04;20.04;20.04;20.04;20.04;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
         %    3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-2.191;-2.5];
-          % Set up chord fit and options.
+        % Set up chord fit and options.
         ChordFit = FitData(blade.RADIUS, blade.CHORD);
         TwistFit = FitData(blade.RADIUS, blade.THETA);
         
@@ -53,24 +53,33 @@ switch blade.type;
         TwistFit = FitData(blade.RADIUS, blade.THETA);
         ThickFit = FitData(blade.RADIUS, blade.THICKNESS);
         
-       
+        
         % Fit model to data.
         blade.RADIUS = linspace(min(blade.RADIUS),max(blade.RADIUS),10000);
         blade.CHORD = ChordFit(blade.RADIUS);
         blade.THETA = TwistFit(blade.RADIUS);
         blade.THICKNESS = ThickFit(blade.RADIUS);
         blade.isSOTON = true;
- 
+        
         
     case 'ESRU PoC 1' % User selects Sinc.
-        blade.RADIUS=[0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1,1.050000,1.1,1.150000,1.2,1.250000;];
-        blade.CHORD=[0.100,0.0965,0.0930,0.0895,0.0860,0.0825,0.0790,0.0755,0.0720,0.0685,0.0650,0.0615,0.0580,0.0545,0.0510,0.0475,0.0440,0.0405,0.0370,0.0335,0.0300;];
-        blade.THETA=[35.48354,30.66771,26.60373,23.19068,20.33544,17.95276,15.96524,14.30328,12.90517,11.71700,10.69272,9.794129,8.990847,8.260345,7.587935,6.966768,6.397837,5.889976,5.459857,5.131995,4.938747;];
+        R =[ 0.1  0.112917  0.125833  0.13875  0.151667  0.164583  0.1775  0.190417  0.203333  0.21625  0.229167  0.242083  0.255  0.267917  0.280833  0.29375  0.306667  0.319583  0.3325  0.345417  0.358333  0.37125  0.384167  0.397083  0.41];
+        C =[70.3215  68.8429  67.153  65.183  63.2333  61.4796  59.8027  58.1888  56.6188  55.015  53.3909  51.7565  50.1151  48.47  46.8245  45.1818  43.5448  41.9095  40.2746  38.6401  37.0059  35.3721  33.7386  32.1055  30.4729];
+        T =[30.8046  27.4344  24.0086  20.9988  18.1984  15.489  13.3731  11.4029  10.2671  9.15221  8.16945  7.40376  6.64244  6.23712  5.86305  5.50817  5.15678  4.76766  4.40474  4.1555  4.03983  3.96066  3.87216  3.77521  3.67576];
+        blade.RADIUS = R;% blade.RADIUS=[0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1,1.050000,1.1,1.150000,1.2,1.250000;];
+        blade.CHORD = C/1000;% blade.CHORD=1.7*[0.100,0.0965,0.0930,0.0895,0.0860,0.0825,0.0790,0.0755,0.0720,0.0685,0.0650,0.0615,0.0580,0.0545,0.0510,0.0475,0.0440,0.0405,0.0370,0.0335,0.0300;];
+        blade.THETA = T;% blade.THETA=[35.48354,30.66771,26.60373,23.19068,20.33544,17.95276,15.96524,14.30328,12.90517,11.71700,10.69272,9.794129,8.990847,8.260345,7.587935,6.966768,6.397837,5.889976,5.459857,5.131995,4.938747;];
         blade.THICKNESS = [];
     case 'ESRU PoC 2' % User selects Sinc.
-        blade.RADIUS=[0.2500;0.3000;0.3500;0.4000;0.4500;0.5000;0.5500;0.6000;0.6500;0.7000;0.7500;0.8000;0.8500;0.9000;0.9500;1;1.050;1.100;1.150;1.200;1.250;];
-        blade.CHORD=0.01*[23.30;20.60;18.05;15.85;13.90;12.30;10.90;10;9.200;8.550;8;7.600;7.250;6.850;6.450;6.050;5.550;5;4.400;3.800;3.200;];
-        blade.THETA= [26.40;23.25;20.50;18;15.80;13.75;12;10.55;9.550;8.700;8;7.400;6.850;6.350;5.800;5.250;4.600;4;3.400;2.800;2.200;];
+        R =[ 0.1  0.112917  0.125833  0.13875  0.151667  0.164583  0.1775  0.190417  0.203333  0.21625  0.229167  0.242083  0.255  0.267917  0.280833  0.29375  0.306667  0.319583  0.3325  0.345417  0.358333  0.37125  0.384167  0.397083  0.41];
+        C =[43.0174  41.348  40.0282  39.0337  38.1981  36.2351  33.6698  31.1398  28.772  26.6954  24.8896  23.3257  22.3308  21.6894  20.9814  20.0424  19.0982  18.3801  17.7797  16.9415  15.6329  14.1218  12.321  10.2511  8.01775];
+        T =[22.4457  20.0551  17.5885  15.0617  12.9736  11.3141  9.4275  7.51059  5.97481  4.96882  3.93159  2.98391  2.64092  2.41224  1.97246  1.61796  1.20832  0.964359  0.91954  0.832386  0.382052  0.00485497 -0.918604 -2.21871 -3.29319];
+        blade.RADIUS = R;
+        blade.CHORD = C/1000;
+        blade.THETA = T;
+        %blade.RADIUS=[0.2500;0.3000;0.3500;0.4000;0.4500;0.5000;0.5500;0.6000;0.6500;0.7000;0.7500;0.8000;0.8500;0.9000;0.9500;1;1.050;1.100;1.150;1.200;1.250;];
+        %blade.CHORD=0.01*[23.30;20.60;18.05;15.85;13.90;12.30;10.90;10;9.200;8.550;8;7.600;7.250;6.850;6.450;6.050;5.550;5;4.400;3.800;3.200;];
+        %blade.THETA= [26.40;23.25;20.50;18;15.80;13.75;12;10.55;9.550;8.700;8;7.400;6.850;6.350;5.800;5.250;4.600;4;3.400;2.800;2.200;];
         blade.THICKNESS = [];
         
     case 'Elliptic'
@@ -110,7 +119,7 @@ switch blade.type;
             0.799087	-0.320513
             0.899543	-1.282051
             1.000	-1.762821];
-
+        
         ChordFit = FitData(ChordData(:,1), ChordData(:,2));
         TwistFit = FitData(TwistData(:,1), TwistData(:,2));
         
@@ -144,15 +153,15 @@ switch blade.type;
         lz = interp1(LS(:,1),LS(:,2),rr,'cubic');
         
         swp = 0.5*(uz + lz);
-%         close all
-%         plot(rr,lz)
-%         hold all
-%         plot(rr,uz)
-%         plot(rr,swp);
-%         axis equal tight
+        %         close all
+        %         plot(rr,lz)
+        %         hold all
+        %         plot(rr,uz)
+        %         plot(rr,swp);
+        %         axis equal tight
         
-
-
+        
+        
         blade.RADIUS = linspace(-20,20);
         blade.THETA = 10*zeros(size(blade.RADIUS));
         blade.CHORD = 1*ones(size(blade.RADIUS));
@@ -188,7 +197,7 @@ switch blade.type;
         r = linspace(0.1, 0.975,numel(theta))*max(blade.RADIUS);
         theta = -[fliplr(theta) theta];
         r = [fliplr(-r) r];
-
+        
         blade.THETA = interp1(r,theta,blade.RADIUS,'linear','extrap');
         r = blade.RADIUS;
         rmin = r(20);
@@ -222,8 +231,8 @@ blade.DistPanel.minx = max(minrad,max(blade.Cutout.Root, minrad));
 %             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
 %             blade.y(1:blade.n1) = linspace(blade.Cutout.Root,shoulder,blade.n1);
 %             blade.y(blade.n1:blade.n2) = linspace(max(blade.Cutout.Root,shoulder),bcR,1+blade.n2-blade.n1);
-%             
-%             
+%
+%
 %             blade.TransitionPiece = zeros(size(blade.y));
 %             blade.TransitionPiece(1:blade.n1) = 1;
 %             if (blade.n2-blade.n1) > 1
@@ -262,20 +271,20 @@ if blade.isNREL || blade.isSOTON || blade.isBarltrop
         end
     end
 end
-    
-% if blade.isSOTON 
+
+% if blade.isSOTON
 %     bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
 %     shoulder = 0.315;
-% 
+%
 %     if ~isempty(blade.y) && (blade.Cutout.Root < bcR) && (blade.Cutout.Root >= min(blade.RADIUS))
-%         
+%
 %         if (blade.Cutout.Root < bcR)
 %             blade.n1 = interp1(blade.y,1:length(blade.y),0.0315,'nearest');
 %             blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
 %             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
 %             %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
 %             blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,0.02),bcR,blade.n2+1);
-%             
+%
 %             blade.y(blade.n2+1:end) = linspace(bcR,0.4,numel(blade.y(blade.n2+1:end)));
 %             blade.TransitionPiece = zeros(size(blade.y));
 %             blade.TransitionPiece(1:blade.n2) = 1;
@@ -286,7 +295,7 @@ end
 %         end
 %     end
 % end
-% 
+%
 % if blade.isBarltrop
 %     bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
 %     if ~isempty(blade.y) && (blade.Cutout.Root < bcR) && (blade.Cutout.Root >= 0.0175)
@@ -294,10 +303,10 @@ end
 %             blade.n1 = interp1(blade.y,1:length(blade.y),0.024,'nearest');
 %             blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
 %             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
-%             
+%
 %             %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
 %             blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,0.0175),bcR,blade.n2+1);
-%             
+%
 %             blade.y(blade.n2+1:end) = linspace(bcR,0.4,numel(blade.y(blade.n2+1:end)));
 %             blade.TransitionPiece = zeros(size(blade.y));
 %             blade.TransitionPiece(1:blade.n2) = 1;
@@ -322,21 +331,21 @@ if ~isempty(blade.y)
     if ~isempty(blade.SWEEP)
         blade.Sweep = interp1(blade.RADIUS,blade.SWEEP,blade.Radius,'cubic');
     else
-            blade.Sweep = zeros(size(blade.Radius));
+        blade.Sweep = zeros(size(blade.Radius));
     end
-
+    
 end
 
 PlotBlade(blade);
 
 
 function Fit = FitData(xdata,ydata)
- % Set up chord fit and options.
-        [xData, yData] = prepareCurveData(xdata, ydata);
-        ft = fittype( 'pchipinterp' );
-        opts = fitoptions( ft );
-        opts.Normalize = 'on';
-        Fit = fit( xData, yData, ft, opts );
+% Set up chord fit and options.
+[xData, yData] = prepareCurveData(xdata, ydata);
+ft = fittype( 'pchipinterp' );
+opts = fitoptions( ft );
+opts.Normalize = 'on';
+Fit = fit( xData, yData, ft, opts );
 
 
 function PlotBlade(blade)
@@ -345,21 +354,21 @@ if ~isempty(blade.y)
     scatter(blade.axes,blade.Radius,blade.Chord);
     hold(blade.axes,'on');
     if (exist('blade.n1') && exist('blade.n2'))
-    plot(blade.axes,blade.Radius(blade.n2),blade.Chord(blade.n2),'o','LineWidth',2,...
-        'MarkerEdgeColor','k',...
-        'MarkerFaceColor','none',...
-        'MarkerSize',10)
-    
-    plot(blade.axes,blade.Radius(blade.n1),blade.Chord(blade.n1),'o','LineWidth',2,...
-        'MarkerEdgeColor','k',...
-        'MarkerFaceColor','none',...
-        'MarkerSize',10)
+        plot(blade.axes,blade.Radius(blade.n2),blade.Chord(blade.n2),'o','LineWidth',2,...
+            'MarkerEdgeColor','k',...
+            'MarkerFaceColor','none',...
+            'MarkerSize',10)
+        
+        plot(blade.axes,blade.Radius(blade.n1),blade.Chord(blade.n1),'o','LineWidth',2,...
+            'MarkerEdgeColor','k',...
+            'MarkerFaceColor','none',...
+            'MarkerSize',10)
     end
 end
 if ~isempty(blade.THICKNESS)
     plot(blade.axes,blade.RADIUS,blade.THICKNESS/100);
     
-   
+    
     hold(blade.axes,'on');
 end
 plotyy(blade.axes,blade.RADIUS,blade.CHORD,blade.RADIUS,blade.THETA);
