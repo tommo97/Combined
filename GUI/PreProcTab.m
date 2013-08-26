@@ -114,8 +114,9 @@ handles.Span.Cutout.Root = 0;
 handles.Span.Cutout.Tip = 0;
 set(handles.Span.DistPanel.bell_param,'enable','off')
 handles.Span.DistPanel.x = [];
-handles.Span.type = 'NREL UAE';
-
+handles.Span.type = 'NREL Phase VI';
+handles.Span.LoadFile = false;
+handles.Span.LoadFileBox = handles.load_file_name;
 
 handles.Span.axes = handles.blade_geom_axes;
 
@@ -853,3 +854,157 @@ if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgro
     set(source,'BackgroundColor','white');
 end
 guidata(source, handles);
+
+
+
+function CEr_R_Callback(hObject, eventdata, handles)
+% hObject    handle to CEr_R (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of CEr_R as text
+%        str2double(get(hObject,'String')) returns contents of CEr_R as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function CEr_R_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CEr_R (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function CEthickness_Callback(hObject, eventdata, handles)
+% hObject    handle to CEthickness (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of CEthickness as text
+%        str2double(get(hObject,'String')) returns contents of CEthickness as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function CEthickness_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CEthickness (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function CEsweep_Callback(hObject, eventdata, handles)
+% hObject    handle to CEsweep (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of CEsweep as text
+%        str2double(get(hObject,'String')) returns contents of CEsweep as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function CEsweep_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CEsweep (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function CEtwist_Callback(hObject, eventdata, handles)
+% hObject    handle to CEtwist (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of CEtwist as text
+%        str2double(get(hObject,'String')) returns contents of CEtwist as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function CEtwist_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CEtwist (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function CEchord_Callback(hObject, eventdata, handles)
+% hObject    handle to CEchord (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of CEchord as text
+%        str2double(get(hObject,'String')) returns contents of CEchord as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function CEchord_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CEchord (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function load_file_name_Callback(source, eventdata, handles)
+cla(handles.blade_surf_axes,'reset');
+cla(handles.blade_geom_axes,'reset');
+if ~handles.Span.LoadFile
+set(handles.load_file_name,'enable','off');
+end
+handles.Span = UpdateSpan(handles.Span);
+% hObject    handle to load_file_name (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of load_file_name as text
+%        str2double(get(hObject,'String')) returns contents of load_file_name as a double
+guidata(source, handles);
+
+% --- Executes during object creation, after setting all properties.
+function load_file_name_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to load_file_name (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% 
+% function root_thickness_edit_text_CreateFcn(source, eventdata, handles)
+% if ispc && isequal(get(source,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(source,'BackgroundColor','white');
+% end
+% function root_thickness_edit_text_Callback(source, eventdata, handles)
+% handles.Chord.Root = Text2Slider(handles.Chord.Root);
+% handles.Chord = UpdateFoil(handles.Chord);
+% guidata(source, handles);

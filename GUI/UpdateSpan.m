@@ -1,7 +1,7 @@
 function Span = UpdateSpan(Span)
 Span.y = [];
 Span = SetBladeData(Span);
-Span.DistPanel = PanelDistButtonsParam(Span.DistPanel);
+Span.DistPanel = HalfPanelDistButtonsParam(Span.DistPanel);
 Span.y = Span.DistPanel.x;
 
 

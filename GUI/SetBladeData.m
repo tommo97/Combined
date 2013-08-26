@@ -6,8 +6,42 @@ blade.isSOTON = false;  %   for transisition piece
 blade.isBarltrop = false;
 blade.TransitionPiece = [];
 blade.SWEEP = [];
+disp(blade.type);
+blade.LoadFile = false;
+
+if (~strcmp('Load From File',blade.type))
+    set(blade.LoadFileBox,'enable','off','string','e.g. data.mat');
+end
 switch blade.type;
-    case 'NREL UAE' % User selects Peaks.
+    case 'Load From File'
+        
+        blade.LoadFile = true;
+        set(blade.LoadFileBox,'enable','on');
+        fname = get(blade.LoadFileBox,'string');
+        
+        try
+            BladeSpec = load(fname);
+            blade.RADIUS = BladeSpec.Radius;
+            blade.CHORD = BladeSpec.Chord;
+            blade.THETA = BladeSpec.Twist;
+            blade.THICKNESS = BladeSpec.Thickness;
+            try
+                blade.SWEEP = BladeSpec.Sweep;
+            catch
+                blade.SWEEP = BladeSpec.Skew;
+                
+            end
+            try
+                blade.Rake = BladeSpec.Rake;
+            catch
+                blade.Rake = [];
+            end
+            
+        catch
+            disp(['File ' fname ' not found']);
+        end
+        
+    case 'NREL Phase VI' % User selects Peaks.
         %%  NRELBlade -- NREL data
         blade.RADIUS=[0.508;0.66;0.883;1.008;1.067;1.133;1.257;1.343;1.51;1.648;1.9520;2.257;...
             2.343;2.562;2.867;3.172;3.185;3.476;3.781;4.023;4.086;4.391;4.696;4.78;5;5.305;5.532];
@@ -27,7 +61,7 @@ switch blade.type;
         blade.THETA = TwistFit(blade.RADIUS);
         blade.isNREL = true;
         blade.THICKNESS = [];
-    case 'SOTON' % User selects Membrane.
+    case 'Southampton Rotor' % User selects Membrane.
         
         bahaj = [20 0.03 15 24
             30 0.03 15 24
@@ -62,7 +96,7 @@ switch blade.type;
         blade.isSOTON = true;
         
         
-    case 'ESRU PoC 1' % User selects Sinc.
+    case 'ESRU PoC 1 ''05' % User selects Sinc.
         R =[ 0.1  0.112917  0.125833  0.13875  0.151667  0.164583  0.1775  0.190417  0.203333  0.21625  0.229167  0.242083  0.255  0.267917  0.280833  0.29375  0.306667  0.319583  0.3325  0.345417  0.358333  0.37125  0.384167  0.397083  0.41];
         C =[70.3215  68.8429  67.153  65.183  63.2333  61.4796  59.8027  58.1888  56.6188  55.015  53.3909  51.7565  50.1151  48.47  46.8245  45.1818  43.5448  41.9095  40.2746  38.6401  37.0059  35.3721  33.7386  32.1055  30.4729];
         T =[30.8046  27.4344  24.0086  20.9988  18.1984  15.489  13.3731  11.4029  10.2671  9.15221  8.16945  7.40376  6.64244  6.23712  5.86305  5.50817  5.15678  4.76766  4.40474  4.1555  4.03983  3.96066  3.87216  3.77521  3.67576];
@@ -70,7 +104,7 @@ switch blade.type;
         blade.CHORD = C/1000;% blade.CHORD=1.7*[0.100,0.0965,0.0930,0.0895,0.0860,0.0825,0.0790,0.0755,0.0720,0.0685,0.0650,0.0615,0.0580,0.0545,0.0510,0.0475,0.0440,0.0405,0.0370,0.0335,0.0300;];
         blade.THETA = T;% blade.THETA=[35.48354,30.66771,26.60373,23.19068,20.33544,17.95276,15.96524,14.30328,12.90517,11.71700,10.69272,9.794129,8.990847,8.260345,7.587935,6.966768,6.397837,5.889976,5.459857,5.131995,4.938747;];
         blade.THICKNESS = [];
-    case 'ESRU PoC 2' % User selects Sinc.
+    case 'ESRU PoC 2 ''05' % User selects Sinc.
         R =[ 0.1  0.112917  0.125833  0.13875  0.151667  0.164583  0.1775  0.190417  0.203333  0.21625  0.229167  0.242083  0.255  0.267917  0.280833  0.29375  0.306667  0.319583  0.3325  0.345417  0.358333  0.37125  0.384167  0.397083  0.41];
         C =[43.0174  41.348  40.0282  39.0337  38.1981  36.2351  33.6698  31.1398  28.772  26.6954  24.8896  23.3257  22.3308  21.6894  20.9814  20.0424  19.0982  18.3801  17.7797  16.9415  15.6329  14.1218  12.321  10.2511  8.01775];
         T =[22.4457  20.0551  17.5885  15.0617  12.9736  11.3141  9.4275  7.51059  5.97481  4.96882  3.93159  2.98391  2.64092  2.41224  1.97246  1.61796  1.20832  0.964359  0.91954  0.832386  0.382052  0.00485497 -0.918604 -2.21871 -3.29319];
@@ -82,12 +116,7 @@ switch blade.type;
         %blade.THETA= [26.40;23.25;20.50;18;15.80;13.75;12;10.55;9.550;8.700;8;7.400;6.850;6.350;5.800;5.250;4.600;4;3.400;2.800;2.200;];
         blade.THICKNESS = [];
         
-    case 'Elliptic'
-        blade.RADIUS = 0.1*linspace(-0.5,0.5);
-        blade.THETA = 10*zeros(size(blade.RADIUS));
-        blade.CHORD = sqrt(0.125*0.125 - linspace(-0.125,0.125));
-        blade.THICKNESS = [];
-        
+    case 'Barltrop ''05'
         ChordData = [ 0.05 10
             0.075 10
             0.125 20
@@ -130,7 +159,14 @@ switch blade.type;
         blade.CHORD = ChordFit(blade.RADIUS)/1000;%interp1(ChordData(:,1),ChordData(:,2),blade.RADIUS)/1000;
         blade.RADIUS = 0.175*linspace(0.05,1.0,10000);
         blade.THICKNESS = [];
-    case 'Straight'
+    case 'Elliptic Wing'
+        blade.RADIUS = linspace(-5,5);
+        blade.THETA = 10*zeros(size(blade.RADIUS));
+        blade.CHORD = sqrt(sin(linspace(0,pi))) + .2;
+        blade.THICKNESS = [];
+        
+        
+    case 'Straight Wing'
         
         
         US = [0.05 0.018761
@@ -168,6 +204,33 @@ switch blade.type;
         blade.THICKNESS = [];
         
         
+        
+    case 'BERP Helicopter'
+        
+        
+        US = [0.05 0.018761
+            0.251040	0.018761
+            0.814147	0.018761
+            0.843273	0.020177
+            0.889043	0.034336
+            0.908460	0.035752
+            0.947295	0.020177
+            0.968100	0.007434
+            1.000000	-0.023717];
+        LS = [
+            1.000000	-0.097345
+            0.990291	-0.087434
+            0.911234	-0.053451
+            0.251040	-0.053451
+            0.05         -0.025];
+        rr = linspace(0.05,1);
+        uz = interp1(US(:,1),US(:,2),rr,'cubic');
+        lz = interp1(LS(:,1),LS(:,2),rr,'cubic');
+        
+        swp = 0.5*(uz + lz);
+        
+        
+        
         th = linspace(0,pi/2);
         
         x = cos(th);
@@ -187,8 +250,7 @@ switch blade.type;
         blade.CHORD =  7.5*(uz-lz);%1*ones(size(blade.RADIUS));
         blade.SWEEP =  -7.5*swp;
         blade.THICKNESS = [];
-        
-    case 'Wing'
+    case 'A380 Type Planform'
         blade.RADIUS = linspace(-10,10)/5;
         blade.THETA =   [linspace(5,0,50) linspace(0,5,50)];
         
