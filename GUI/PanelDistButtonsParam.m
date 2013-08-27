@@ -14,4 +14,7 @@ if lin
 elseif bel
     set(DistPanel.bell_param,'enable','on');
     DistPanel.x = BellShape(minx,maxx,num+1,par);
+else
+    disp('AAArgh');
+    DistPanel.x = linspace(minx,maxx,num+1);
 end

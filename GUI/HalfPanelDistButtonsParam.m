@@ -16,4 +16,7 @@ elseif bel
    
     set(DistPanel.bell_param,'enable','on');
     DistPanel.x = HalfBellShape(minx,maxx,num+1,par);
+    
+else
+    DistPanel.x = linspace(minx,maxx,num+1);
 end

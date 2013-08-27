@@ -68,9 +68,9 @@ end
 
 
 
-if Blade.isSOTON
-    RootBlendCoefft = repmat((Blade.Thickness - Blade.Thickness(end)), [1 Blade.NChord])/(Blade.Thickness(1) - Blade.Thickness(end));
-end
+% if Blade.isSOTON
+%     RootBlendCoefft = repmat((Blade.Thickness - Blade.Thickness(end)), [1 Blade.NChord])/(Blade.Thickness(1) - Blade.Thickness(end));
+% end
 
 if (~isempty(Blade.Thickness))
     RootBlendCoefft = repmat((Blade.Thickness - Blade.Thickness(end)), [1 Blade.NChord])/(Blade.Thickness(1) - Blade.Thickness(end));

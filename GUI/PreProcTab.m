@@ -90,6 +90,8 @@ handles.Chord.DistPanel.lin_button = handles.chord_linear;
 handles.Chord.DistPanel.bell_button = handles.chord_bell;
 handles.Chord.DistPanel.num_panels = handles.chord_pan_count;
 handles.Chord.DistPanel.bell_param = handles.chord_bell_param;
+set(handles.foil_constant_ds, 'visible','off');
+set(handles.span_constant_ds, 'visible','off');
 handles.Chord.DistPanel.NumPanels = handles.chord_pan_count;
 handles.Chord.DistPanel.x = linspace(0,1,16);
 handles.Chord.DistPanel.minx = 0;
@@ -101,8 +103,11 @@ set(handles.span_pans_buttongroup,'SelectionChangeFcn',@span_pans_buttongroup_Se
 
 
 set(handles.Chord.DistPanel.bell_param,'enable','off')
+handles.Span.FileNotFound = handles.FileNotFound;
+handles.Span.ScaleFactorNotice = handles.ScaleFactorNotice;
 handles.Span.DistPanel.lin_button = handles.span_linear;
 handles.Span.DistPanel.bell_button = handles.span_bell;
+handles.Span.DistPanel.constant_ds = handles.span_constant_ds;
 handles.Span.DistPanel.num_panels = handles.span_pan_count;
 handles.Span.DistPanel.bell_param = handles.span_bell_param;
 handles.Span.DistPanel.NumPanels = handles.span_pan_count;
@@ -111,8 +116,10 @@ handles.Span.DistPanel.NumPanels = handles.span_pan_count;
 handles.Span.tip_pan_count = handles.tip_pan_count;
 handles.Span.RoundTips = false;
 handles.Span.Cutout.Root = 0;
+handles.Span.SuggestedScaleFactor = 1;
 handles.Span.Cutout.Tip = 0;
 set(handles.Span.DistPanel.bell_param,'enable','off')
+set(handles.FileNotFound,'visible','off')
 handles.Span.DistPanel.x = [];
 handles.Span.type = 'NREL Phase VI';
 handles.Span.LoadFile = false;
@@ -168,6 +175,7 @@ function blade_menu_Callback(source, eventdata, handles)
     handles.Span.type = str{get(source,'Value')};
     handles.Span = UpdateSpan(handles.Span);
     handles = ResetSpanCutouts(handles);
+    handles.Span = UpdateSpan(handles.Span);
     handles.Span.DistPanel = PanelDistButtonsParam(handles.Span.DistPanel);
     handles.Span = UpdateSpan(handles.Span);
     guidata(source, handles);
@@ -975,6 +983,8 @@ end
 function load_file_name_Callback(source, eventdata, handles)
 cla(handles.blade_surf_axes,'reset');
 cla(handles.blade_geom_axes,'reset');
+handles.Span.FileNotFound = handles.FileNotFound;
+set(handles.FileNotFound,'visible','on')
 if ~handles.Span.LoadFile
 set(handles.load_file_name,'enable','off');
 end
@@ -1008,3 +1018,12 @@ end
 % handles.Chord.Root = Text2Slider(handles.Chord.Root);
 % handles.Chord = UpdateFoil(handles.Chord);
 % guidata(source, handles);
+
+
+% --- Executes on button press in constant_ds.
+function constant_ds_Callback(hObject, eventdata, handles)
+% hObject    handle to constant_ds (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of constant_ds

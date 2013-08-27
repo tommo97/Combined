@@ -13,6 +13,7 @@ if (~strcmp('Load From File',blade.type))
     set(blade.LoadFileBox,'enable','off','string','e.g. data.mat');
 end
 
+    set(blade.ScaleFactorNotice,'string',['Suggested Max Scale N/A'],'visible','off');
 
 
 blade.SKEW = [];
@@ -26,14 +27,32 @@ switch blade.type;
         blade.LoadFile = true;
         set(blade.LoadFileBox,'enable','on');
         fname = get(blade.LoadFileBox,'string');
-        
+        set(blade.FileNotFound,'String','File not found','visible','off')
+
         try
-            BladeSpec = load(fname);
-            blade.RADIUS = BladeSpec.Radius;
-            blade.CHORD = BladeSpec.Chord;
-            blade.THETA = BladeSpec.Twist;
+            error = false;
             try
-            blade.THICKNESS = BladeSpec.Thickness;
+            BladeSpec = load(fname);
+            catch
+                error = true;
+            end
+            try
+                blade.RADIUS = BladeSpec.Radius;
+            catch
+                error = true;
+            end
+            try
+                blade.CHORD = BladeSpec.Chord;
+            catch
+                error = true;
+            end
+            try
+                blade.THETA = BladeSpec.Twist;
+            catch
+                error = true;
+            end
+            try
+                blade.THICKNESS = BladeSpec.Thickness;
             end
             try
                 blade.SKEW = BladeSpec.Skew;
@@ -41,243 +60,44 @@ switch blade.type;
             try
                 blade.RAKE = BladeSpec.Rake;
             end
-            
+            if (~error)
+                set(blade.FileNotFound,'visible','off')
+            else
+                set(blade.FileNotFound,'string','Error in file','visible','on');
+            end
         catch
             disp(['File ' fname ' not found']);
+            set(blade.FileNotFound,'String','File not found','visible','on')
+            
         end
         
     case 'Marine Prop'
-        Chord = [0.31137 0.33935 0.36716 0.39353 0.41727 0.43735 0.45275 0.46196 0.46438 0.46074 0.45066 0.43281 0.40868 0.38089 0.3494 0.30696 0.24844 0.1842 0.12022 0.058477 0.002];
-        Radius = [0.18 0.24434 0.30828 0.37143 0.43339 0.4938 0.55227 0.60845 0.66198 0.71255 0.75983 0.80353 0.84339 0.87916 0.91063 0.93758 0.95987 0.97734 0.9899 0.99747 1];
-        Rake = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0];
-        Skew = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0];
-        Thickness = [0.36751 0.34485 0.32753 0.31573 0.30752 0.3012 0.29554 0.28918 0.28137 0.2719 0.2601 0.24547 0.22892 0.21142 0.19309 0.17062 0.13879 0.10148 0.064866 0.030588 0.0010299];
-        Twist = [59.7436 51.7835 45.3881 40.2892 36.1709 32.8085 30.0398 27.7454 25.8358 24.2415 22.9098 21.8002 20.8778 20.1137 19.4857 18.9861 18.6049 18.3258 18.1368 18.0278 17.9923];
-        Skew =  sind(53.5)*Radius;
-        Rake = sind(5)*Radius;
- % Set up chord fit and options.
-        ChordFit = FitData(Radius, Chord);
-        TwistFit = FitData(Radius, Twist);
-        ThickFit = FitData(Radius, Thickness);
-        SkewFit = FitData(Radius,Skew);
-        RakeFit = FitData(Radius,Rake);
-        
-        % Fit model to data.
-        blade.RADIUS = linspace(min(Radius),max(Radius),10000);
-        blade.CHORD = ChordFit(blade.RADIUS);
-        blade.THETA = TwistFit(blade.RADIUS);
-        blade.THICKNESS = ThickFit(blade.RADIUS);
-        blade.SKEW = SkewFit(blade.RADIUS);
-        blade.RAKE = RakeFit(blade.RADIUS);
+        blade = BladeFromBladeSpec('../GeomInputMatFiles/DMTP4119Approximation.mat', blade);
     case 'NREL Phase VI' % User selects Peaks.
-        %%  NRELBlade -- NREL data
-        blade.RADIUS=[0.508;0.66;0.883;1.008;1.067;1.133;1.257;1.343;1.51;1.648;1.9520;2.257;...
-            2.343;2.562;2.867;3.172;3.185;3.476;3.781;4.023;4.086;4.391;4.696;4.78;5;5.305;5.532];
-        blade.CHORD=[0.218;0.218;0.183;0.349;0.441;0.544;0.737;0.728;0.711;0.697;0.6660;0.636;0.627;0.605;0.574;0.543;0.542;0.512;0.482;0.457;0.451;0.42;0.389;0.381;0.358;0.328;0.305];
-        
-        blade.THETA=[0;0;0;6.7;9.9;13.4;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
-            3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-2.191;-2.5];
-        %blade.THETA=[20.04;20.04;20.04;20.04;20.04;20.04;20.04;18.074;14.292;11.909;7.979;5.308;4.715;...
-        %    3.425;2.083;1.15;1.115;0.494;-0.015;-0.381;-0.475;-0.92;-1.352;-1.469;-1.775;-2.191;-2.5];
-        % Set up chord fit and options.
-        ChordFit = FitData(blade.RADIUS, blade.CHORD);
-        TwistFit = FitData(blade.RADIUS, blade.THETA);
-        
-        % Fit model to data.
-        blade.RADIUS = linspace(min(blade.RADIUS),max(blade.RADIUS),10000);
-        blade.CHORD = ChordFit(blade.RADIUS);
-        blade.THETA = TwistFit(blade.RADIUS);
+        blade = BladeFromBladeSpec('../GeomInputMatFiles/NRELPhaseVI.mat', blade);
         blade.isNREL = true;
     case 'Southampton Rotor' % User selects Membrane.
-        
-        bahaj = [20 0.03 15 24
-            30 0.03 15 24
-            80.0000    0.1250   15.0000   24.0000
-            120.0000    0.1156    9.5000   20.7000
-            160.0000    0.1063    6.1000   18.7000
-            200.0000    0.0969    3.9000   17.6000
-            240.0000    0.0875    2.4000   16.6000
-            280.0000    0.0781    1.5000   15.6000
-            320.0000    0.0688    0.9000   14.6000
-            360.0000    0.0594    0.4000   13.6000
-            400.0000    0.0500         0   12.6000];
-        
-        blade.RADIUS = bahaj(:,1)/1000;
-        blade.CHORD = bahaj(:,2)*0.4;
-        blade.THETA = bahaj(:,3);
-        blade.THICKNESS = bahaj(:,4);
-        
-        
-        
-        % Set up chord fit and options.
-        ChordFit = FitData(blade.RADIUS, blade.CHORD);
-        TwistFit = FitData(blade.RADIUS, blade.THETA);
-        ThickFit = FitData(blade.RADIUS, blade.THICKNESS);
-        
-        
-        % Fit model to data.
-        blade.RADIUS = linspace(min(blade.RADIUS),max(blade.RADIUS),10000);
-        blade.CHORD = ChordFit(blade.RADIUS);
-        blade.THETA = TwistFit(blade.RADIUS);
-        blade.THICKNESS = ThickFit(blade.RADIUS);
+        blade = BladeFromBladeSpec('../GeomInputMatFiles/SOTON.mat', blade);
         blade.isSOTON = true;
-        
-        
     case 'ESRU PoC 1 ''05' % User selects Sinc.
-        R =[ 0.1  0.112917  0.125833  0.13875  0.151667  0.164583  0.1775  0.190417  0.203333  0.21625  0.229167  0.242083  0.255  0.267917  0.280833  0.29375  0.306667  0.319583  0.3325  0.345417  0.358333  0.37125  0.384167  0.397083  0.41];
-        C =[70.3215  68.8429  67.153  65.183  63.2333  61.4796  59.8027  58.1888  56.6188  55.015  53.3909  51.7565  50.1151  48.47  46.8245  45.1818  43.5448  41.9095  40.2746  38.6401  37.0059  35.3721  33.7386  32.1055  30.4729];
-        T =[30.8046  27.4344  24.0086  20.9988  18.1984  15.489  13.3731  11.4029  10.2671  9.15221  8.16945  7.40376  6.64244  6.23712  5.86305  5.50817  5.15678  4.76766  4.40474  4.1555  4.03983  3.96066  3.87216  3.77521  3.67576];
-        blade.RADIUS = R;% blade.RADIUS=[0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1,1.050000,1.1,1.150000,1.2,1.250000;];
-        blade.CHORD = C/1000;% blade.CHORD=1.7*[0.100,0.0965,0.0930,0.0895,0.0860,0.0825,0.0790,0.0755,0.0720,0.0685,0.0650,0.0615,0.0580,0.0545,0.0510,0.0475,0.0440,0.0405,0.0370,0.0335,0.0300;];
-        blade.THETA = T;% blade.THETA=[35.48354,30.66771,26.60373,23.19068,20.33544,17.95276,15.96524,14.30328,12.90517,11.71700,10.69272,9.794129,8.990847,8.260345,7.587935,6.966768,6.397837,5.889976,5.459857,5.131995,4.938747;];
+        blade = BladeFromBladeSpec('../GeomInputMatFiles/ESRUpoc1.mat', blade);
     case 'ESRU PoC 2 ''05' % User selects Sinc.
-        R =[ 0.1  0.112917  0.125833  0.13875  0.151667  0.164583  0.1775  0.190417  0.203333  0.21625  0.229167  0.242083  0.255  0.267917  0.280833  0.29375  0.306667  0.319583  0.3325  0.345417  0.358333  0.37125  0.384167  0.397083  0.41];
-        C =[43.0174  41.348  40.0282  39.0337  38.1981  36.2351  33.6698  31.1398  28.772  26.6954  24.8896  23.3257  22.3308  21.6894  20.9814  20.0424  19.0982  18.3801  17.7797  16.9415  15.6329  14.1218  12.321  10.2511  8.01775];
-        T =[22.4457  20.0551  17.5885  15.0617  12.9736  11.3141  9.4275  7.51059  5.97481  4.96882  3.93159  2.98391  2.64092  2.41224  1.97246  1.61796  1.20832  0.964359  0.91954  0.832386  0.382052  0.00485497 -0.918604 -2.21871 -3.29319];
-        blade.RADIUS = R;
-        blade.CHORD = C/1000;
-        blade.THETA = T;
-        %blade.RADIUS=[0.2500;0.3000;0.3500;0.4000;0.4500;0.5000;0.5500;0.6000;0.6500;0.7000;0.7500;0.8000;0.8500;0.9000;0.9500;1;1.050;1.100;1.150;1.200;1.250;];
-        %blade.CHORD=0.01*[23.30;20.60;18.05;15.85;13.90;12.30;10.90;10;9.200;8.550;8;7.600;7.250;6.850;6.450;6.050;5.550;5;4.400;3.800;3.200;];
-        %blade.THETA= [26.40;23.25;20.50;18;15.80;13.75;12;10.55;9.550;8.700;8;7.400;6.850;6.350;5.800;5.250;4.600;4;3.400;2.800;2.200;];        
+        blade = BladeFromBladeSpec('../GeomInputMatFiles/ESRUpoc2.mat', blade);
     case 'Barltrop ''05'
-        ChordData = [ 0.05 10
-            0.075 10
-            0.125 20
-            0.15	43.910256
-            0.200913	42.948718
-            0.248858	41.346154
-            0.301370	40.064103
-            0.351598	38.461538
-            0.401826	36.858974
-            0.447489	35.576923
-            0.500000	34.134615
-            0.598174	31.410256
-            0.698630	28.525641
-            0.801370	25.801282
-            0.904110	22.916667
-            1.000000	20.192308];
-        TwistData = [0.025 32.211
-            0.05 32.211
-            0.15	32.211538
-            0.198630	27.083333
-            0.248858	20.032051
-            0.301370	15.224359
-            0.349315	11.057692
-            0.399543	7.532051
-            0.449772	5.608974
-            0.502283	4.166667
-            0.600457	2.243590
-            0.698630	0.641026
-            0.799087	-0.320513
-            0.899543	-1.282051
-            1.000	-1.762821];
-        
-        ChordFit = FitData(ChordData(:,1), ChordData(:,2));
-        TwistFit = FitData(TwistData(:,1), TwistData(:,2));
-        
+        blade = BladeFromBladeSpec('../GeomInputMatFiles/Barltrop05.mat', blade);
         blade.isBarltrop = true;
-        % Fit model to data.
-        blade.RADIUS = linspace(0.05,1.0,10000);
-        blade.THETA = TwistFit(blade.RADIUS);%interp1(TwistData(:,1),TwistData(:,2),blade.RADIUS);
-        blade.CHORD = ChordFit(blade.RADIUS)/1000;%interp1(ChordData(:,1),ChordData(:,2),blade.RADIUS)/1000;
-        blade.RADIUS = 0.175*linspace(0.05,1.0,10000);
     case 'Elliptic Wing'
         blade.RADIUS = linspace(-5,5);
         blade.THETA = 10*zeros(size(blade.RADIUS));
         blade.CHORD = sqrt(sin(linspace(0,pi))) + .2;
-    case 'Straight Wing'
-        
-        
-        US = [0.05 0.018761
-            0.251040	0.018761
-            0.814147	0.018761
-            0.843273	0.020177
-            0.889043	0.034336
-            0.908460	0.035752
-            0.947295	0.020177
-            0.968100	0.007434
-            1.000000	-0.023717];
-        LS = [
-            1.000000	-0.097345
-            0.990291	-0.087434
-            0.911234	-0.053451
-            0.251040	-0.053451
-            0.05         -0.025];
-        rr = linspace(0.05,1);
-        uz = interp1(US(:,1),US(:,2),rr,'cubic');
-        lz = interp1(LS(:,1),LS(:,2),rr,'cubic');
-        
-        
-        
-        
+    case 'Straight Wing'    
         blade.RADIUS = linspace(-20,20);
         blade.THETA = 10*zeros(size(blade.RADIUS));
-        blade.CHORD = 1*ones(size(blade.RADIUS));
-        
-        
+        blade.CHORD = 1*ones(size(blade.RADIUS));     
     case 'BERP Helicopter'
-        
-        
-        US = [0.05 0.018761
-            0.251040	0.018761
-            0.814147	0.018761
-            0.843273	0.020177
-            0.889043	0.034336
-            0.908460	0.035752
-            0.947295	0.020177
-            0.968100	0.007434
-            1.000000	-0.023717];
-        LS = [
-            1.000000	-0.097345
-            0.990291	-0.087434
-            0.911234	-0.053451
-            0.251040	-0.053451
-            0.05         -0.025];
-        rr = linspace(0.05,1);
-        uz = interp1(US(:,1),US(:,2),rr,'cubic');
-        lz = interp1(LS(:,1),LS(:,2),rr,'cubic');
-        
-        swp = 0.5*(uz + lz);
-        
-        
-        
-        th = linspace(0,pi/2);
-        
-        x = cos(th);
-        y = sin(th);
-        
-        x = 1-x;
-        
-        x = [x linspace(1,4)];
-        
-        y = [y ones(size(y))];
-        
-        % x = [x fliplr(4-x)];
-        % y = [y fliplr(y)];
-        
-        blade.RADIUS = rr*7.5;%linspace(-10,10);
-        blade.THETA =   0*ones(size(blade.RADIUS));
-        blade.CHORD =  7.5*(uz-lz);%1*ones(size(blade.RADIUS));
-        blade.RAKE =  -7.5*swp;
+        blade = BladeFromBladeSpec('../GeomInputMatFiles/BERPapprox.mat', blade);
     case 'A380 Type Planform'
-        blade.RADIUS = linspace(-10,10)/5;
-        blade.THETA =   [linspace(5,0,50) linspace(0,5,50)];
-        
-        theta = [4.4  4.3 3.8 3.5 3 2.9 2.5 2 1.9 1.5 0.6 0.1 -0.6 -2 -5.5];
-        
-        r = linspace(0.1, 0.975,numel(theta))*max(blade.RADIUS);
-        theta = -[fliplr(theta) theta];
-        r = [fliplr(-r) r];
-        
-        blade.THETA = interp1(r,theta,blade.RADIUS,'linear','extrap');
-        r = blade.RADIUS;
-        rmin = r(20);
-        rmax = r(40);
-        blade.THETA(boolean(1-((abs(r)>=abs(rmin)) + (abs(r)<=abs(rmax))))) = blade.THETA(boolean(1-((abs(r)>=abs(rmin)) + (abs(r)<=abs(rmax)))))-10;
-        
-        blade.CHORD =  [linspace(3.983,17.7,50)/17.7 linspace(17.7,3.983,50)/17.7];
-        blade.RAKE =  sind(33.5)*[linspace(10,0,50) linspace(0,10,50)]/5;
+       blade = BladeFromBladeSpec('../GeomInputMatFiles/A380approx.mat', blade);
 end
 
 
@@ -290,7 +110,8 @@ blade.DistPanel.minx = max(minrad,max(blade.Cutout.Root, minrad));
 if ~isempty(blade.y)
     
     blade.Radius = blade.y;
-    
+    blade.SuggestedScaleFactor = 1/max(diff(blade.y));
+    set(blade.ScaleFactorNotice,'string',['Suggested Max Scale ' num2str(blade.SuggestedScaleFactor)],'visible','on');
     blade.Chord = interp1(blade.RADIUS,blade.CHORD,blade.Radius,'cubic');
     blade.Theta = interp1(blade.RADIUS,blade.THETA,blade.Radius,'cubic');
     blade.Thickness = [];
@@ -310,38 +131,10 @@ if ~isempty(blade.y)
     else
         blade.Rake = zeros(size(blade.Radius));
     end
-    
+else
+        set(blade.ScaleFactorNotice,'visible','off');
 end
 
-
-
-
-% if blade.isNREL || blade.isSOTON || blade.isBarltrop
-%     bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
-%     if blade.isSOTON
-%         shoulder = 0.315;
-%     elseif blade.isNREL
-%         shoulder = 0.66;
-%     else
-%         shoulder = 0.024;
-%     end
-%     if ~isempty(blade.y) && (blade.Cutout.Root < bcR) && (blade.Cutout.Root >= min(blade.RADIUS))
-%         if (blade.Cutout.Root <= shoulder)
-%             blade.n1 = interp1(blade.y,1:length(blade.y),shoulder,'nearest');
-%             blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
-%             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
-%             blade.y(1:blade.n1) = linspace(blade.Cutout.Root,shoulder,blade.n1);
-%             blade.y(blade.n1:blade.n2) = linspace(max(blade.Cutout.Root,shoulder),bcR,1+blade.n2-blade.n1);
-%
-%
-%             blade.TransitionPiece = zeros(size(blade.y));
-%             blade.TransitionPiece(1:blade.n1) = 1;
-%             if (blade.n2-blade.n1) > 1
-%                 blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
-%             end
-%         end
-%     end
-% end
 
 if blade.isNREL || blade.isSOTON || blade.isBarltrop
     bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
@@ -373,58 +166,43 @@ if blade.isNREL || blade.isSOTON || blade.isBarltrop
     end
 end
 
-% if blade.isSOTON
-%     bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
-%     shoulder = 0.315;
-%
-%     if ~isempty(blade.y) && (blade.Cutout.Root < bcR) && (blade.Cutout.Root >= min(blade.RADIUS))
-%
-%         if (blade.Cutout.Root < bcR)
-%             blade.n1 = interp1(blade.y,1:length(blade.y),0.0315,'nearest');
-%             blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
-%             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
-%             %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
-%             blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,0.02),bcR,blade.n2+1);
-%
-%             blade.y(blade.n2+1:end) = linspace(bcR,0.4,numel(blade.y(blade.n2+1:end)));
-%             blade.TransitionPiece = zeros(size(blade.y));
-%             blade.TransitionPiece(1:blade.n2) = 1;
-%             blade.CircTrans = 1:blade.n2;
-%             %     if (blade.n2-blade.n1) > 1
-%             %     blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
-%             %     end
-%         end
-%     end
-% end
-%
-% if blade.isBarltrop
-%     bcR = (blade.RADIUS(find(blade.CHORD==max(blade.CHORD))));
-%     if ~isempty(blade.y) && (blade.Cutout.Root < bcR) && (blade.Cutout.Root >= 0.0175)
-%         if (blade.Cutout.Root < bcR)
-%             blade.n1 = interp1(blade.y,1:length(blade.y),0.024,'nearest');
-%             blade.n2 = interp1(blade.y,1:length(blade.y),blade.RADIUS(find(blade.CHORD==max(blade.CHORD))),'nearest');
-%             disp(blade.RADIUS(find(blade.CHORD==max(blade.CHORD))))
-%
-%             %blade.y(1:blade.n1) = linspace(blade.Cutout.Root,0.05,blade.n1);
-%             blade.y(1:blade.n2+1) = linspace(max(blade.Cutout.Root,0.0175),bcR,blade.n2+1);
-%
-%             blade.y(blade.n2+1:end) = linspace(bcR,0.4,numel(blade.y(blade.n2+1:end)));
-%             blade.TransitionPiece = zeros(size(blade.y));
-%             blade.TransitionPiece(1:blade.n2) = 1;
-%             blade.CircTrans = 1:blade.n2;
-%             %     if (blade.n2-blade.n1) > 1
-%             %     blade.TransitionPiece(blade.n1:blade.n2) = [logspace(0,-1,blade.n2-blade.n1) 0];
-%             %     end
-%         end
-%     end
-% end
-
 
 
 
 PlotBlade(blade);
-disp(blade);
+%disp(blade);
 
+function blade = BladeFromBladeSpec(infname, blade)
+BladeSpec = load(infname);
+
+blade.RADIUS = linspace(min(BladeSpec.Radius),max(BladeSpec.Radius),10000);
+blade.Thickness = [];
+blade.SKEW = zeros(size(blade.RADIUS));
+blade.RAKE = blade.SKEW;
+
+
+ChordFit = FitData(BladeSpec.Radius, BladeSpec.Chord);
+TwistFit = FitData(BladeSpec.Radius, BladeSpec.Twist);
+blade.CHORD = ChordFit(blade.RADIUS);
+blade.THETA = TwistFit(blade.RADIUS);
+if ~isempty(BladeSpec.Thickness)
+    ThickFit = FitData(BladeSpec.Radius, BladeSpec.Thickness);
+    blade.THICKNESS = ThickFit(blade.RADIUS);
+end
+if ~isempty(BladeSpec.Skew)
+    SkewFit  = FitData(BladeSpec.Radius, BladeSpec.Skew);
+    blade.SKEW = SkewFit(blade.RADIUS);
+end
+if ~isempty(BladeSpec.Rake)
+    RakeFit  = FitData(BladeSpec.Radius, BladeSpec.Rake);
+    blade.RAKE = RakeFit(blade.RADIUS);
+end
+
+
+
+
+        
+        
 function Fit = FitData(xdata,ydata)
 % Set up chord fit and options.
 [xData, yData] = prepareCurveData(xdata, ydata);
@@ -437,9 +215,12 @@ Fit = fit( xData, yData, ft, opts );
 function PlotBlade(blade)
 cla(blade.axes,'reset');
 hold(blade.axes,'off')
+
 if ~isempty(blade.y)
-    scatter(blade.axes,blade.Radius,blade.Chord);
+    plotyy(blade.axes,blade.RADIUS,blade.CHORD,blade.RADIUS,blade.THETA);
     hold(blade.axes,'on');
+    scatter(blade.axes,blade.Radius,blade.Chord);
+    
     if (exist('blade.n1') && exist('blade.n2'))
         plot(blade.axes,blade.Radius(blade.n2),blade.Chord(blade.n2),'o','LineWidth',2,...
             'MarkerEdgeColor','k',...
@@ -451,6 +232,7 @@ if ~isempty(blade.y)
             'MarkerFaceColor','none',...
             'MarkerSize',10)
     end
+
 end
 if ~isempty(blade.THICKNESS)
     plot(blade.axes,blade.RADIUS,blade.THICKNESS/100);
@@ -458,6 +240,6 @@ if ~isempty(blade.THICKNESS)
     
     hold(blade.axes,'on');
 end
-plotyy(blade.axes,blade.RADIUS,blade.CHORD,blade.RADIUS,blade.THETA);
+
 
 set(blade.axes,'XGrid','on','YGrid','on','box','on')
