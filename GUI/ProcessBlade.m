@@ -93,7 +93,13 @@ LowerS.m = RootBlendCoefft.*RLowerS.m + TipBlendCoefft.*TLowerS.m;
 
 
 
-
+if ~isempty(Blade.Thickness)
+    chords = 1;
+    LocalThicknesses = repmat(max(UpperS.z' - LowerS.z')',[1 Blade.NChord]);
+    DesiredThicknesses = repmat(Blade.Thickness,[1 Blade.NChord]);
+    LowerS.z = LowerS.z.*DesiredThicknesses./LocalThicknesses;
+    UpperS.z = UpperS.z.*DesiredThicknesses./LocalThicknesses;
+end
 
 
 
@@ -238,11 +244,13 @@ else
 end
 
 
-sweeps = zeros(size(UpperS.x));
-thetas = sweeps;
-chords = sweeps;
+rakes = zeros(size(UpperS.x));
+skews = rakes;
+thetas = rakes;
+chords = rakes;
 
-sweeps(:) = interp1(Blade.Radius,Blade.Sweep,UpperS.y(:),'cubic','extrap');
+skews(:) = interp1(Blade.Radius,Blade.Skew,UpperS.y(:),'cubic','extrap');
+rakes(:) = interp1(Blade.Radius,Blade.Rake,UpperS.y(:),'cubic','extrap');
 thetas(:) = interp1(Blade.Radius,Blade.Theta,UpperS.y(:),'cubic','extrap');
 chords(:) = interp1(Blade.Radius,Blade.Chord,UpperS.y(:),'cubic','extrap');
 
@@ -331,37 +339,61 @@ end
 
 %UpperS.z(1,:)./sqrt(UpperS.x(1,:).^2 + UpperS.z(1,:).^2);
 %LowerS.z(1,:)./sqrt(LowerS.x(1,:).^2 + LowerS.z(1,:).^2);
+   
+            
+utx = (UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
+utz = (UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas)) - 0.0;%414;
+uty = UpperS.y;
+
+ltx = (LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
+ltz = (LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas)) - 0.0;%414;
+lty = LowerS.y;
 
 
-tx = (UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
-tz = (UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas)) - 0.0414;
-UpperS.x = sweeps + 1.*tx;
-UpperS.y = UpperS.y;
-UpperS.z = 1.*tz;
-
-tx = (LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
-tz = (LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas)) - 0.0414;
-LowerS.x = sweeps + 1.*tx;
-LowerS.y = LowerS.y;
-LowerS.z = 1.*tz;
 
 
+
+%%  Put points into attitude specified by Skew angles
+
+
+cosphi = cos(0); costhe = cos(0); cospsi = cos(skews);
+sinphi = sin(0); sinthe = sin(0); sinpsi = sin(skews);
+a1 = costhe*cospsi;
+a2 = costhe*sinpsi;
+a3 = -sinthe;
+b1 = sinphi*sinthe*cospsi - cosphi*sinpsi;
+b2 = sinphi*sinthe*sinpsi + cosphi*cospsi;
+b3 = sinphi*costhe;
+c1 = cosphi*sinthe*cospsi + sinphi*sinpsi;
+c2 = cosphi*sinthe*sinpsi - sinphi*cospsi;
+c3 = cosphi*costhe;
+
+
+UpperS.x = utx.*a1 + uty.*a2 + utz.*a3;
+UpperS.y = utx.*b1 + uty.*b2 + utz.*b3;
+UpperS.z = utx.*c1 + uty.*c2 + utz.*c3;
+
+LowerS.x = ltx.*a1 + lty.*a2 + ltz.*a3;
+LowerS.y = ltx.*b1 + lty.*b2 + ltz.*b3;
+LowerS.z = ltx.*c1 + lty.*c2 + ltz.*c3;
 
 Blade.Upper = UpperS;
 Blade.US.Local = UpperS;
 Blade.Lower = LowerS;
 Blade.LS.Local = LowerS;
 
-%%  Put into attitude specified by Euler angles
+clear Blade.Upper Blade.Lower Blade.US.Local Blade.LS.Local
+
+
 Blade.US.Global.x = Blade.US.Local.x;
 Blade.US.Global.y = Blade.US.Local.y;
-Blade.US.Global.z = Blade.US.Local.z;
+Blade.US.Global.z = rakes + Blade.US.Local.z;
 Blade.US.Global.n = Blade.US.Local.n;
 Blade.US.Global.m = Blade.US.Local.m;
 
 Blade.LS.Global.x = Blade.LS.Local.x;
 Blade.LS.Global.y = Blade.LS.Local.y;
-Blade.LS.Global.z = Blade.LS.Local.z;
+Blade.LS.Global.z = rakes + Blade.LS.Local.z;
 Blade.LS.Global.n = Blade.LS.Local.n;
 Blade.LS.Global.m = Blade.LS.Local.m;
 

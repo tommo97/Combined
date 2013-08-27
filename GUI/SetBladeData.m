@@ -5,13 +5,21 @@ blade.isNREL = false;   %   for transisition piece
 blade.isSOTON = false;  %   for transisition piece
 blade.isBarltrop = false;
 blade.TransitionPiece = [];
-blade.SWEEP = [];
+
 disp(blade.type);
 blade.LoadFile = false;
 
 if (~strcmp('Load From File',blade.type))
     set(blade.LoadFileBox,'enable','off','string','e.g. data.mat');
 end
+
+
+
+blade.SKEW = [];
+blade.CHORD = [];
+blade.RAKE = [];
+blade.THETA = [];
+blade.THICKNESS = [];
 switch blade.type;
     case 'Load From File'
         
@@ -24,23 +32,43 @@ switch blade.type;
             blade.RADIUS = BladeSpec.Radius;
             blade.CHORD = BladeSpec.Chord;
             blade.THETA = BladeSpec.Twist;
-            blade.THICKNESS = BladeSpec.Thickness;
             try
-                blade.SWEEP = BladeSpec.Sweep;
-            catch
-                blade.SWEEP = BladeSpec.Skew;
-                
+            blade.THICKNESS = BladeSpec.Thickness;
             end
             try
-                blade.Rake = BladeSpec.Rake;
-            catch
-                blade.Rake = [];
+                blade.SKEW = BladeSpec.Skew;
+            end
+            try
+                blade.RAKE = BladeSpec.Rake;
             end
             
         catch
             disp(['File ' fname ' not found']);
         end
         
+    case 'Marine Prop'
+        Chord = [0.31137 0.33935 0.36716 0.39353 0.41727 0.43735 0.45275 0.46196 0.46438 0.46074 0.45066 0.43281 0.40868 0.38089 0.3494 0.30696 0.24844 0.1842 0.12022 0.058477 0.002];
+        Radius = [0.18 0.24434 0.30828 0.37143 0.43339 0.4938 0.55227 0.60845 0.66198 0.71255 0.75983 0.80353 0.84339 0.87916 0.91063 0.93758 0.95987 0.97734 0.9899 0.99747 1];
+        Rake = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0];
+        Skew = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0];
+        Thickness = [0.36751 0.34485 0.32753 0.31573 0.30752 0.3012 0.29554 0.28918 0.28137 0.2719 0.2601 0.24547 0.22892 0.21142 0.19309 0.17062 0.13879 0.10148 0.064866 0.030588 0.0010299];
+        Twist = [59.7436 51.7835 45.3881 40.2892 36.1709 32.8085 30.0398 27.7454 25.8358 24.2415 22.9098 21.8002 20.8778 20.1137 19.4857 18.9861 18.6049 18.3258 18.1368 18.0278 17.9923];
+        Skew =  sind(53.5)*Radius;
+        Rake = sind(5)*Radius;
+ % Set up chord fit and options.
+        ChordFit = FitData(Radius, Chord);
+        TwistFit = FitData(Radius, Twist);
+        ThickFit = FitData(Radius, Thickness);
+        SkewFit = FitData(Radius,Skew);
+        RakeFit = FitData(Radius,Rake);
+        
+        % Fit model to data.
+        blade.RADIUS = linspace(min(Radius),max(Radius),10000);
+        blade.CHORD = ChordFit(blade.RADIUS);
+        blade.THETA = TwistFit(blade.RADIUS);
+        blade.THICKNESS = ThickFit(blade.RADIUS);
+        blade.SKEW = SkewFit(blade.RADIUS);
+        blade.RAKE = RakeFit(blade.RADIUS);
     case 'NREL Phase VI' % User selects Peaks.
         %%  NRELBlade -- NREL data
         blade.RADIUS=[0.508;0.66;0.883;1.008;1.067;1.133;1.257;1.343;1.51;1.648;1.9520;2.257;...
@@ -60,7 +88,6 @@ switch blade.type;
         blade.CHORD = ChordFit(blade.RADIUS);
         blade.THETA = TwistFit(blade.RADIUS);
         blade.isNREL = true;
-        blade.THICKNESS = [];
     case 'Southampton Rotor' % User selects Membrane.
         
         bahaj = [20 0.03 15 24
@@ -103,7 +130,6 @@ switch blade.type;
         blade.RADIUS = R;% blade.RADIUS=[0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1,1.050000,1.1,1.150000,1.2,1.250000;];
         blade.CHORD = C/1000;% blade.CHORD=1.7*[0.100,0.0965,0.0930,0.0895,0.0860,0.0825,0.0790,0.0755,0.0720,0.0685,0.0650,0.0615,0.0580,0.0545,0.0510,0.0475,0.0440,0.0405,0.0370,0.0335,0.0300;];
         blade.THETA = T;% blade.THETA=[35.48354,30.66771,26.60373,23.19068,20.33544,17.95276,15.96524,14.30328,12.90517,11.71700,10.69272,9.794129,8.990847,8.260345,7.587935,6.966768,6.397837,5.889976,5.459857,5.131995,4.938747;];
-        blade.THICKNESS = [];
     case 'ESRU PoC 2 ''05' % User selects Sinc.
         R =[ 0.1  0.112917  0.125833  0.13875  0.151667  0.164583  0.1775  0.190417  0.203333  0.21625  0.229167  0.242083  0.255  0.267917  0.280833  0.29375  0.306667  0.319583  0.3325  0.345417  0.358333  0.37125  0.384167  0.397083  0.41];
         C =[43.0174  41.348  40.0282  39.0337  38.1981  36.2351  33.6698  31.1398  28.772  26.6954  24.8896  23.3257  22.3308  21.6894  20.9814  20.0424  19.0982  18.3801  17.7797  16.9415  15.6329  14.1218  12.321  10.2511  8.01775];
@@ -113,9 +139,7 @@ switch blade.type;
         blade.THETA = T;
         %blade.RADIUS=[0.2500;0.3000;0.3500;0.4000;0.4500;0.5000;0.5500;0.6000;0.6500;0.7000;0.7500;0.8000;0.8500;0.9000;0.9500;1;1.050;1.100;1.150;1.200;1.250;];
         %blade.CHORD=0.01*[23.30;20.60;18.05;15.85;13.90;12.30;10.90;10;9.200;8.550;8;7.600;7.250;6.850;6.450;6.050;5.550;5;4.400;3.800;3.200;];
-        %blade.THETA= [26.40;23.25;20.50;18;15.80;13.75;12;10.55;9.550;8.700;8;7.400;6.850;6.350;5.800;5.250;4.600;4;3.400;2.800;2.200;];
-        blade.THICKNESS = [];
-        
+        %blade.THETA= [26.40;23.25;20.50;18;15.80;13.75;12;10.55;9.550;8.700;8;7.400;6.850;6.350;5.800;5.250;4.600;4;3.400;2.800;2.200;];        
     case 'Barltrop ''05'
         ChordData = [ 0.05 10
             0.075 10
@@ -158,14 +182,10 @@ switch blade.type;
         blade.THETA = TwistFit(blade.RADIUS);%interp1(TwistData(:,1),TwistData(:,2),blade.RADIUS);
         blade.CHORD = ChordFit(blade.RADIUS)/1000;%interp1(ChordData(:,1),ChordData(:,2),blade.RADIUS)/1000;
         blade.RADIUS = 0.175*linspace(0.05,1.0,10000);
-        blade.THICKNESS = [];
     case 'Elliptic Wing'
         blade.RADIUS = linspace(-5,5);
         blade.THETA = 10*zeros(size(blade.RADIUS));
         blade.CHORD = sqrt(sin(linspace(0,pi))) + .2;
-        blade.THICKNESS = [];
-        
-        
     case 'Straight Wing'
         
         
@@ -188,21 +208,12 @@ switch blade.type;
         uz = interp1(US(:,1),US(:,2),rr,'cubic');
         lz = interp1(LS(:,1),LS(:,2),rr,'cubic');
         
-        swp = 0.5*(uz + lz);
-        %         close all
-        %         plot(rr,lz)
-        %         hold all
-        %         plot(rr,uz)
-        %         plot(rr,swp);
-        %         axis equal tight
         
         
         
         blade.RADIUS = linspace(-20,20);
         blade.THETA = 10*zeros(size(blade.RADIUS));
         blade.CHORD = 1*ones(size(blade.RADIUS));
-        blade.THICKNESS = [];
-        
         
         
     case 'BERP Helicopter'
@@ -248,8 +259,7 @@ switch blade.type;
         blade.RADIUS = rr*7.5;%linspace(-10,10);
         blade.THETA =   0*ones(size(blade.RADIUS));
         blade.CHORD =  7.5*(uz-lz);%1*ones(size(blade.RADIUS));
-        blade.SWEEP =  -7.5*swp;
-        blade.THICKNESS = [];
+        blade.RAKE =  -7.5*swp;
     case 'A380 Type Planform'
         blade.RADIUS = linspace(-10,10)/5;
         blade.THETA =   [linspace(5,0,50) linspace(0,5,50)];
@@ -267,7 +277,7 @@ switch blade.type;
         blade.THETA(boolean(1-((abs(r)>=abs(rmin)) + (abs(r)<=abs(rmax))))) = blade.THETA(boolean(1-((abs(r)>=abs(rmin)) + (abs(r)<=abs(rmax)))))-10;
         
         blade.CHORD =  [linspace(3.983,17.7,50)/17.7 linspace(17.7,3.983,50)/17.7];
-        blade.SWEEP =  sind(33.5)*[linspace(10,0,50) linspace(0,10,50)]/5;
+        blade.RAKE =  sind(33.5)*[linspace(10,0,50) linspace(0,10,50)]/5;
 end
 
 
@@ -275,6 +285,35 @@ minrad = min(blade.RADIUS);
 maxrad = max(blade.RADIUS);
 blade.DistPanel.maxx = min(maxrad,min(maxrad, blade.Cutout.Tip));
 blade.DistPanel.minx = max(minrad,max(blade.Cutout.Root, minrad));
+
+
+if ~isempty(blade.y)
+    
+    blade.Radius = blade.y;
+    
+    blade.Chord = interp1(blade.RADIUS,blade.CHORD,blade.Radius,'cubic');
+    blade.Theta = interp1(blade.RADIUS,blade.THETA,blade.Radius,'cubic');
+    blade.Thickness = [];
+    
+    if ~isempty(blade.THICKNESS)
+        blade.Thickness = interp1(blade.RADIUS,blade.THICKNESS,blade.Radius,'cubic');
+    end
+    
+    if ~isempty(blade.SKEW)
+        blade.Skew = interp1(blade.RADIUS,blade.SKEW,blade.Radius,'cubic');
+    else
+        blade.Skew = zeros(size(blade.Radius));
+    end
+    
+    if ~isempty(blade.RAKE)
+        blade.Rake = interp1(blade.RADIUS,blade.RAKE,blade.Radius,'cubic');
+    else
+        blade.Rake = zeros(size(blade.Radius));
+    end
+    
+end
+
+
 
 
 % if blade.isNREL || blade.isSOTON || blade.isBarltrop
@@ -381,25 +420,10 @@ end
 % end
 
 
-if ~isempty(blade.y)
-    blade.Radius = blade.y;
-    
-    blade.Chord = interp1(blade.RADIUS,blade.CHORD,blade.Radius,'linear');
-    blade.Theta = interp1(blade.RADIUS,blade.THETA,blade.Radius,'linear');
-    blade.Thickness = [];
-    if ~isempty(blade.THICKNESS)
-        blade.Thickness = interp1(blade.RADIUS,blade.THICKNESS,blade.Radius,'cubic');
-    end
-    if ~isempty(blade.SWEEP)
-        blade.Sweep = interp1(blade.RADIUS,blade.SWEEP,blade.Radius,'cubic');
-    else
-        blade.Sweep = zeros(size(blade.Radius));
-    end
-    
-end
+
 
 PlotBlade(blade);
-
+disp(blade);
 
 function Fit = FitData(xdata,ydata)
 % Set up chord fit and options.
@@ -411,6 +435,7 @@ Fit = fit( xData, yData, ft, opts );
 
 
 function PlotBlade(blade)
+cla(blade.axes,'reset');
 hold(blade.axes,'off')
 if ~isempty(blade.y)
     scatter(blade.axes,blade.Radius,blade.Chord);

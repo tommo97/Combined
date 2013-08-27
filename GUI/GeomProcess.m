@@ -5,9 +5,10 @@ function Blade = GeomProcess(handles)
 Blade.Radius = handles.Span.Radius';
 Blade.Chord = handles.Span.Chord';
 Blade.Theta = handles.Span.Theta';
-Blade.Sweep = handles.Span.Sweep';
+Blade.Skew = handles.Span.Skew';
 Blade.RoundTips = handles.Span.RoundTips;
-
+Blade.Rake = handles.Span.Rake';
+Blade.Thickness = handles.Span.Thickness';
 
 if Blade.RoundTips
     Blade.num_tip_pans = handles.Span.num_tip_pans;
@@ -27,7 +28,7 @@ end
 
 Blade.TransitionPiece = handles.Span.TransitionPiece;
 
-Blade.Thickness = handles.Span.Thickness';
+
 
 Blade.Attitude = [0 0 0];
 Blade.Origin = [0 0 0];
