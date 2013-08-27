@@ -349,8 +349,20 @@ ltx = (LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
 ltz = (LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas)) - 0.0;%414;
 lty = LowerS.y;
 
+%%  Now, if a prop then need to bend around the hub - this might wreck the 
+%   skew and rake angles, so check carefully the correct order of this. For
+%   the 4119 prop there is no skew nor rake so is ok
 
 
+R = repmat(Blade.Radius([1 1:end end]),[1 size(utx,2)])
+thta = atan(utx./(uty + 1e-16));
+utx = R.*cos(thta);
+uty = R.*sin(thta);
+
+R = repmat(Blade.Radius([1 1:end end]),[1 size(ltx,2)])
+thta = atan(ltx./(lty + 1e-16));
+ltx = R.*cos(thta);
+lty = R.*sin(thta);
 
 
 %%  Put points into attitude specified by Skew angles

@@ -4,6 +4,7 @@ blade.REVERSE = false;
 blade.isNREL = false;   %   for transisition piece
 blade.isSOTON = false;  %   for transisition piece
 blade.isBarltrop = false;
+blade.isProp = false;
 blade.TransitionPiece = [];
 
 disp(blade.type);
