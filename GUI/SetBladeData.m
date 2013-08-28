@@ -73,6 +73,7 @@ switch blade.type;
         end
         
     case 'Marine Prop'
+        blade.isProp = true;
         blade = BladeFromBladeSpec('../GeomInputMatFiles/DMTP4119Approximation.mat', blade);
     case 'NREL Phase VI' % User selects Peaks.
         blade = BladeFromBladeSpec('../GeomInputMatFiles/NRELPhaseVI.mat', blade);

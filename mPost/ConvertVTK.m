@@ -16,7 +16,6 @@ maxy = max(CellPos(:,2));
 maxz = max(CellPos(:,3));
   
 
-NumTransVars = 2;
 for i = 1:NumTransVars
 
     Domain = zeros(1 + maxx-minx,1 + maxy-miny,1 + maxz-minz);

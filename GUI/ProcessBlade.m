@@ -353,17 +353,17 @@ lty = LowerS.y;
 %   skew and rake angles, so check carefully the correct order of this. For
 %   the 4119 prop there is no skew nor rake so is ok
 
-
-R = repmat(Blade.Radius([1 1:end end]),[1 size(utx,2)])
-thta = atan(utx./(uty + 1e-16));
-utx = R.*cos(thta);
-uty = R.*sin(thta);
-
-R = repmat(Blade.Radius([1 1:end end]),[1 size(ltx,2)])
-thta = atan(ltx./(lty + 1e-16));
-ltx = R.*cos(thta);
-lty = R.*sin(thta);
-
+if (Blade.isProp)
+    R = repmat(Blade.Radius([1 1:end end]),[1 size(utx,2)]);
+    thta = atan(utx./(uty + 1e-16));
+    utx = R.*sin(thta);
+    uty = R.*cos(thta);
+    
+    R = repmat(Blade.Radius([1 1:end end]),[1 size(ltx,2)]);
+    thta = atan(ltx./(lty + 1e-16));
+    ltx = R.*sin(thta);
+    lty = R.*cos(thta);
+end
 
 %%  Put points into attitude specified by Skew angles
 

@@ -8,6 +8,7 @@ Blade.Theta = handles.Span.Theta';
 Blade.Skew = handles.Span.Skew';
 Blade.RoundTips = handles.Span.RoundTips;
 Blade.Rake = handles.Span.Rake';
+Blade.isProp = handles.Span.isProp;
 Blade.Thickness = handles.Span.Thickness';
 
 if Blade.RoundTips
