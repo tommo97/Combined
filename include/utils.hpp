@@ -157,6 +157,7 @@ public:
     static Array <PANEL> Pans;
     static Array <Vect3> globalLinspace(Vect3 start, Vect3 end, int n);
     static Vect3 globalDirectVel(Vect3 diff, Vect3 omega);
+    static Vect3 globalDirectVel(Vect3 diff, Vect3 omega, REAL del2);
     static Vect3 globalCubicDirectVel(Vect3 diff, Vect3 omega);
     static void globalDirectVelGrads(Vect3 diff, Vect3 omega, Array <Vect3> &Grads);
     static void globalCubicDirectVelGrads(Vect3 diff, Vect3 omega, Array <Vect3> &Grads);

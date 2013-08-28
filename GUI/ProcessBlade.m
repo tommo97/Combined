@@ -4,38 +4,40 @@ function Blade = ProcessBlade(Blade)
 %   .n is the chordwise position between 0(leading edge) and 1(trailing
 %   edge);
 clc
+
+closeTips = true;
 disp(Blade);
 
 
+SpanRepSize = [Blade.NSpan 1];
+ChordRepSize = [1 Blade.NChord];
+TUpperS.x = repmat(Blade.Section.Tip.X,SpanRepSize) - Blade.PitchAxis;
+TUpperS.y = repmat(Blade.Radius,ChordRepSize);
+TUpperS.z = repmat(Blade.Section.Tip.US,SpanRepSize);
+TUpperS.n = repmat(Blade.Section.Tip.X,SpanRepSize);
+TUpperS.m = repmat(Blade.Radius,ChordRepSize)./max(Blade.Radius(:));
+
+RUpperS.x = repmat(Blade.Section.Root.X,SpanRepSize) - Blade.PitchAxis;
+RUpperS.y = repmat(Blade.Radius,ChordRepSize);
+RUpperS.z = repmat(Blade.Section.Root.US,SpanRepSize);
+RUpperS.n = repmat(Blade.Section.Root.X,SpanRepSize);
+RUpperS.m = repmat(Blade.Radius,ChordRepSize)./max(Blade.Radius(:));
 
 
-TUpperS.x = repmat(Blade.Section.Tip.X,[Blade.NSpan 1]) - Blade.PitchAxis;
-TUpperS.y = repmat(Blade.Radius,[1 Blade.NChord]);
-TUpperS.z = repmat(Blade.Section.Tip.US,[Blade.NSpan 1]);
-TUpperS.n = repmat(Blade.Section.Tip.X,[Blade.NSpan 1]);
-TUpperS.m = repmat(Blade.Radius,[1 Blade.NChord])./max(Blade.Radius(:));
-
-RUpperS.x = repmat(Blade.Section.Root.X,[Blade.NSpan 1]) - Blade.PitchAxis;
-RUpperS.y = repmat(Blade.Radius,[1 Blade.NChord]);
-RUpperS.z = repmat(Blade.Section.Root.US,[Blade.NSpan 1]);
-RUpperS.n = repmat(Blade.Section.Root.X,[Blade.NSpan 1]);
-RUpperS.m = repmat(Blade.Radius,[1 Blade.NChord])./max(Blade.Radius(:));
 
 
+TLowerS.x = repmat(Blade.Section.Tip.X,SpanRepSize) - Blade.PitchAxis;
+TLowerS.y = repmat(Blade.Radius,ChordRepSize);
+TLowerS.z = repmat(Blade.Section.Tip.LS,SpanRepSize);
+TLowerS.n = repmat(Blade.Section.Tip.X,SpanRepSize);
+TLowerS.m = repmat(Blade.Radius,ChordRepSize)./max(Blade.Radius(:));
 
 
-TLowerS.x = repmat(Blade.Section.Tip.X,[Blade.NSpan 1]) - Blade.PitchAxis;
-TLowerS.y = repmat(Blade.Radius,[1 Blade.NChord]);
-TLowerS.z = repmat(Blade.Section.Tip.LS,[Blade.NSpan 1]);
-TLowerS.n = repmat(Blade.Section.Tip.X,[Blade.NSpan 1]);
-TLowerS.m = repmat(Blade.Radius,[1 Blade.NChord])./max(Blade.Radius(:));
-
-
-RLowerS.x = repmat(Blade.Section.Root.X,[Blade.NSpan 1]) - Blade.PitchAxis;
-RLowerS.y = repmat(Blade.Radius,[1 Blade.NChord]);
-RLowerS.z = repmat(Blade.Section.Root.LS,[Blade.NSpan 1]);
-RLowerS.n = repmat(Blade.Section.Root.X,[Blade.NSpan 1]);
-RLowerS.m = repmat(Blade.Radius,[1 Blade.NChord])./max(Blade.Radius(:));
+RLowerS.x = repmat(Blade.Section.Root.X,SpanRepSize) - Blade.PitchAxis;
+RLowerS.y = repmat(Blade.Radius,ChordRepSize);
+RLowerS.z = repmat(Blade.Section.Root.LS,SpanRepSize);
+RLowerS.n = repmat(Blade.Section.Root.X,SpanRepSize);
+RLowerS.m = repmat(Blade.Radius,ChordRepSize)./max(Blade.Radius(:));
 
 
 % if (Blade.Reverse)
@@ -49,18 +51,18 @@ RLowerS.m = repmat(Blade.Radius,[1 Blade.NChord])./max(Blade.Radius(:));
 
 
 
-RootBlendCoefft = repmat(linspace(1,0,Blade.NSpan)', [1 Blade.NChord]);
+RootBlendCoefft = repmat(linspace(1,0,Blade.NSpan)', ChordRepSize);
 
 if ~isempty(Blade.Thickness)
     th = Blade.Thickness - min(Blade.Thickness);
-    RootBlendCoefft = repmat(th./max(th)', [1 Blade.NChord]);
+    RootBlendCoefft = repmat(th./max(th)', ChordRepSize);
 end
 
 
 if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
-    %RootBlendCoefft = repmat(Blade.TransitionPiece', [1 Blade.NChord]);
+    %RootBlendCoefft = repmat(Blade.TransitionPiece', ChordRepSize);
     if isempty(RootBlendCoefft)
-        RootBlendCoefft = repmat(linspace(1,0,Blade.NSpan)', [1 Blade.NChord]);
+        RootBlendCoefft = repmat(linspace(1,0,Blade.NSpan)', ChordRepSize);
     end
     
   
@@ -69,11 +71,11 @@ end
 
 
 % if Blade.isSOTON
-%     RootBlendCoefft = repmat((Blade.Thickness - Blade.Thickness(end)), [1 Blade.NChord])/(Blade.Thickness(1) - Blade.Thickness(end));
+%     RootBlendCoefft = repmat((Blade.Thickness - Blade.Thickness(end)), ChordRepSize)/(Blade.Thickness(1) - Blade.Thickness(end));
 % end
 
 if (~isempty(Blade.Thickness))
-    RootBlendCoefft = repmat((Blade.Thickness - Blade.Thickness(end)), [1 Blade.NChord])/(Blade.Thickness(1) - Blade.Thickness(end));
+    RootBlendCoefft = repmat((Blade.Thickness - Blade.Thickness(end)), ChordRepSize)/(Blade.Thickness(1) - Blade.Thickness(end));
 end
 
 
@@ -95,8 +97,8 @@ LowerS.m = RootBlendCoefft.*RLowerS.m + TipBlendCoefft.*TLowerS.m;
 
 if ~isempty(Blade.Thickness)
     chords = 1;
-    LocalThicknesses = repmat(max(UpperS.z' - LowerS.z')',[1 Blade.NChord]);
-    DesiredThicknesses = repmat(Blade.Thickness,[1 Blade.NChord]);
+    LocalThicknesses = repmat(max(UpperS.z' - LowerS.z')',ChordRepSize);
+    DesiredThicknesses = repmat(Blade.Thickness,ChordRepSize);
     LowerS.z = LowerS.z.*DesiredThicknesses./LocalThicknesses;
     UpperS.z = UpperS.z.*DesiredThicknesses./LocalThicknesses;
 end
@@ -130,17 +132,39 @@ if ~Blade.RoundTips
     % xo = [xo(1) xo(1)+1.25*(xo(2)-xo(1)) xo(3:end-2) xo(end)+1.25*(xo(end-1)-xo(end)) xo(end)];
     %
     
-    UpperS.x = [xi;UpperS.x;xo];
-    UpperS.y = [yi;UpperS.y;yo];
-    UpperS.z = [zi;UpperS.z;zo];
-    UpperS.n = [xin;UpperS.n;xon];
-    UpperS.m = [xim;UpperS.m;xom];
+    if (isempty(Blade.Thickness)) || (Blade.Thickness(end) > 0) %%  If outer thickness is > 0 then use caps
+        UpperS.x = [xi;UpperS.x;xo];
+        UpperS.y = [yi;UpperS.y;yo];
+        UpperS.z = [zi;UpperS.z;zo];
+        UpperS.n = [xin;UpperS.n;xon];
+        UpperS.m = [xim;UpperS.m;xom];
+        
+        LowerS.x = [xi;LowerS.x;xo];
+        LowerS.y = [yi;LowerS.y;yo];
+        LowerS.z = [zi;LowerS.z;zo];
+        LowerS.n = [xin;LowerS.n;xon];
+        LowerS.m = [xim;LowerS.m;xom];
+    else     %    just seal edge
+        closeTips = false;
+        UpperS.x = [xi;UpperS.x];
+        UpperS.y = [yi;UpperS.y];
+        UpperS.z = [zi;UpperS.z];
+        UpperS.n = [xin;UpperS.n];
+        UpperS.m = [xim;UpperS.m];
+        
+        LowerS.x = [xi;LowerS.x];
+        LowerS.y = [yi;LowerS.y];
+        LowerS.z = [zi;LowerS.z];
+        LowerS.n = [xin;LowerS.n];
+        LowerS.m = [xim;LowerS.m];
+    end
+
     
-    LowerS.x = [xi;LowerS.x;xo];
-    LowerS.y = [yi;LowerS.y;yo];
-    LowerS.z = [zi;LowerS.z;zo];
-    LowerS.n = [xin;LowerS.n;xon];
-    LowerS.m = [xim;LowerS.m;xom];
+    
+    
+    
+    
+    
 else
     
     
@@ -305,13 +329,13 @@ LowerS.z(1,:) = Zs;
 UpperS.z(1,:) = Zs;
 end
 % 
-% CircLower.z = -repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]);
-% CircUpper.z = repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),[Blade.NSpan 1]) ;
+% CircLower.z = -repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),SpanRepSize);
+% CircUpper.z = repmat(sqrt(0.25 - (Blade.Section.Root.X - 0.5).^2),SpanRepSize) ;
 % if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
 %     Blade.CircSection = zeros(size(Blade.TransitionPiece));
 %     Blade.CircSection(Blade.n1:Blade.n2) = linspace(1,0,Blade.n2 - Blade.n1 +1);
 %     Blade.CircSection(1:Blade.n1) = 1;
-%     CircSectionBlendCoefft = repmat(Blade.CircSection', [1 Blade.NChord]);
+%     CircSectionBlendCoefft = repmat(Blade.CircSection', ChordRepSize);
 %     
 %     NRELscaleR = [0 0.508 0.660 0.883 1.008  1.067 1.133 1.257 1.343 5.532];
 %     NRELscaleS = [0.218/0.218 0.218/0.218 0.218/0.218 0.183/0.183 0.163/0.349 0.154/0.442 0.154/0.544 0.154/0.738 0.2095 0.2095];%/0.2095;
@@ -354,12 +378,20 @@ lty = LowerS.y;
 %   the 4119 prop there is no skew nor rake so is ok
 
 if (Blade.isProp)
-    R = repmat(Blade.Radius([1 1:end end]),[1 size(utx,2)]);
+    if (closeTips)
+        R = repmat(Blade.Radius([1 1:end end]),[1 size(utx,2)]);
+    else
+        R = repmat(Blade.Radius([1 1:end]),[1 size(utx,2)]);
+    end
     thta = atan(utx./(uty + 1e-16));
     utx = R.*sin(thta);
     uty = R.*cos(thta);
     
-    R = repmat(Blade.Radius([1 1:end end]),[1 size(ltx,2)]);
+    if (closeTips)
+        R = repmat(Blade.Radius([1 1:end end]),[1 size(ltx,2)]);
+    else
+        R = repmat(Blade.Radius([1 1:end]),[1 size(ltx,2)]);
+    end
     thta = atan(ltx./(lty + 1e-16));
     ltx = R.*sin(thta);
     lty = R.*cos(thta);

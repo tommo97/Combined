@@ -39,6 +39,13 @@ switch type;
         data.US = Data.N638xx.US;
         data.LS = Data.N638xx.LS;
         data.X = Data.N638xx.X;
+    case 'NACA 65A010'
+        foil.US = Foil.N65A010.US;
+        foil.LS = Foil.N65A010.LS;
+        foil.X = Foil.N65A010.X;
+        data.US = Data.N65A010.US;
+        data.LS = Data.N65A010.LS;
+        data.X = Data.N65A010.X;
     otherwise
         foil.US = Foil.N0012.US;
         foil.LS = Foil.N0012.LS;

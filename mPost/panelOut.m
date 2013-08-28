@@ -34,7 +34,7 @@ load Output.mat
 
 
 
-
+Cp(Cp < -4) = -4;
 
 %return
 C1 = [BodyPointsX(:,1) BodyPointsY(:,1) BodyPointsZ(:,1)];
@@ -46,7 +46,7 @@ BodyPanPts = [C1;C2;C3;C4];
 PtIDS = 1:4*length(C1);
 PtIDS = reshape(PtIDS,length(C1),4);
 p = patch('Vertices',BodyPanPts,...
-'Faces',PtIDS,'FaceVertexCData',1,...
+'Faces',PtIDS,'FaceVertexCData',Cp,...
 'FaceColor','flat','EdgeColor','w');
 set(gcf,'Renderer','OpenGL')
 hold all
@@ -56,9 +56,9 @@ WakePanC3_x WakePanC3_y WakePanC3_z;
 WakePanC4_x WakePanC4_y WakePanC4_z];
 PtIDS = 1:4*length(WakePanC1_x);
 PtIDS = reshape(PtIDS,length(WakePanC1_x),4);
-p2 = patch('Vertices',WakePanPts,...
-'Faces',PtIDS,'FaceVertexCData',WakePanGamma(:),...
-'FaceColor','flat','EdgeColor','k');
+%p2 = patch('Vertices',WakePanPts,...
+%'Faces',PtIDS,'FaceVertexCData',WakePanGamma(:),...
+%'FaceColor','flat','EdgeColor','k');
 % ProtoWakePanPts = [ProtoWakePointsX(:,1) ProtoWakePointsY(:,1) ProtoWakePointsZ(:,1);
 %     ProtoWakePointsX(:,2) ProtoWakePointsY(:,2) ProtoWakePointsZ(:,2);
 %     ProtoWakePointsX(:,3) ProtoWakePointsY(:,3) ProtoWakePointsZ(:,3);

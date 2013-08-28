@@ -73,6 +73,14 @@ void UTIL::GetCellPans() {
     }
 }
 /**************************************************************/
+Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega, REAL del2) {
+
+    REAL mult, nrm;
+    nrm = sqrt(del2+ diff.Dot(diff));
+    mult = -1. / (four_pi * nrm * nrm * nrm);
+    return mult * diff.Cross(omega);
+}
+/**************************************************************/
 Vect3 UTIL::globalDirectVel(Vect3 diff, Vect3 omega) {
 
     REAL mult, nrm;

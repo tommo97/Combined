@@ -1,12 +1,12 @@
 0
 3                        % FMM maximum expansion order
 0.0316                   % FMM smoothing parameter radius
-24                       % Scale factor
+35                       % Scale factor
 24                       % Number of quadrature points
 2                        % M'4 interpolation radius
 10                       % Initial number of sub-time-steps
 0.25                     % Data sample period
-0.3                      % Fraction of timestep for protowake length
+1                        % Fraction of timestep for protowake length
 4                        % Flux limiter
 0                        % Wave model?
 1                        % Number of bodies
@@ -19,12 +19,12 @@
 1027                     % Fluid density
 0                        % Use IPKC? no=0, yes=1
 1                        % Make log? no=0, yes=1
-NeuFiles/3blade_prop.neu % Neutral file
+NeuFiles/4119_med.neu    % Neutral file
 1                        % Geometry scale
 0                        % Mirror/flip geometry? no=0, yes=1
 2                        % Translation[0]/rotation[1]/both[2] for protowake
-5                        % # panels before conversion to particles
-0.3                      % Min distance before binning particle into tree
+10                       % # panels before conversion to particles
+0.05                      % Min distance before binning particle into tree
 0 0 0                    % Displacement of origin [dx,dy,dz]
 0 0 0                    % CG position [x,y,z]
 -1 0 0                   % CG velocity [u,v,w]

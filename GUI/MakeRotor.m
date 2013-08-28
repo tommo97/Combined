@@ -103,14 +103,14 @@ for i = 1:Rotor.NumBlades
 end
 axis(ax,'equal','tight');
 Rotor.Split = get(handles.blades_as_bodies,'Value') ;
-material shiny
+material dull
 lighting phong
 camlight(90,0)
 camlight(-90,0)
 hold(ax,'off');
 
 axis(ax2,'equal','tight');
-material shiny
+material dull
 lighting phong
 camlight(90,0)
 camlight(-90,0)

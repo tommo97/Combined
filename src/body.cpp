@@ -382,7 +382,7 @@ void BODY::SplitUpLinearAlgebra() {
         REAL PhiWake = 0.0;
 
         for (int j = 0; j < BODY::VortexPositions.size(); ++j)
-            VWake += 1.0 * UTIL::globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j]);
+            VWake += 1.0 * UTIL::globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j], 0.25);
 
         /*        for (int j = 0; j < FVMCell::AllCells.size(); ++j)
                     VWake += 2.0*globalDirectVel(trg->CollocationPoint - FVMCell::AllCells[j]->Position,

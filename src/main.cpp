@@ -656,7 +656,7 @@ void UTIL::PreAmble() {
     BODY::PollFaces();
     globalSystem->dtInit = TIME_STEPPER::MaxTime / globalSystem->NumSubSteps;
     if (!SYSTEM::PanelOnly)
-        globalSystem->dtInit /= 1000.;
+        globalSystem->dtInit /= 100.;
 
     BODY::SetUpProtoWakes(globalSystem->dtInit);
     Array < Array <REAL> > TRANS1, TRANS2, TRANS3, TmpPtsx, TmpPtsy, TmpPtsz, TmpPWPtsx, TmpPWPtsy, TmpPWPtsz, PhiPrev;

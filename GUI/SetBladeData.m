@@ -111,6 +111,7 @@ blade.DistPanel.minx = max(minrad,max(blade.Cutout.Root, minrad));
 
 if ~isempty(blade.y)
     
+
     blade.Radius = blade.y;
     blade.SuggestedScaleFactor = 1/max(diff(blade.y));
     set(blade.ScaleFactorNotice,'string',['Suggested Max Scale ' num2str(blade.SuggestedScaleFactor)],'visible','on');
@@ -118,6 +119,20 @@ if ~isempty(blade.y)
     blade.Theta = interp1(blade.RADIUS,blade.THETA,blade.Radius,'cubic');
     blade.Thickness = [];
     
+    
+    if (blade.isProp)
+        s = cumsum([0 sqrt((diff(blade.Chord).^2) + (diff(blade.Radius).^2))]);
+        s = s./max(s);
+        sdesired = (blade.y-min(blade.y))/(max(blade.y) - min(blade.y));
+        blade.Radius = interp1(s,blade.y,sdesired,'cubic');
+        blade.SuggestedScaleFactor = 1/max(diff(blade.y));
+        set(blade.ScaleFactorNotice,'string',['Suggested Max Scale ' num2str(blade.SuggestedScaleFactor)],'visible','on');
+        blade.Chord = interp1(blade.RADIUS,blade.CHORD,blade.Radius,'cubic');
+        blade.Theta = interp1(blade.RADIUS,blade.THETA,blade.Radius,'cubic');
+        blade.Thickness = [];
+    end
+    
+        
     if ~isempty(blade.THICKNESS)
         blade.Thickness = interp1(blade.RADIUS,blade.THICKNESS,blade.Radius,'cubic');
     end
