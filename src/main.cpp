@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     system("clear");
     system("rm Output.mat");
 
-    BODY::OutputSubStepCollocationPoints = SYSTEM::PanelOnly = false;
+    BODY::OutputSubStepCollocationPoints = SYSTEM::PanelOnly = true;
     PANEL::Initialise();
     UTIL::GetCellPans();
 

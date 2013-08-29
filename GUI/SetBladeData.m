@@ -22,6 +22,7 @@ blade.CHORD = [];
 blade.RAKE = [];
 blade.THETA = [];
 blade.THICKNESS = [];
+blade.CAMBER = [];
 switch blade.type;
     case 'Load From File'
         
@@ -38,28 +39,28 @@ switch blade.type;
                 error = true;
             end
             try
-                blade.RADIUS = BladeSpec.Radius;
+                blade.RADIUS = Radius;
             catch
                 error = true;
             end
             try
-                blade.CHORD = BladeSpec.Chord;
+                blade.CHORD = Chord;
             catch
                 error = true;
             end
             try
-                blade.THETA = BladeSpec.Twist;
+                blade.THETA = Twist;
             catch
                 error = true;
             end
             try
-                blade.THICKNESS = BladeSpec.Thickness;
+                blade.THICKNESS = Thickness;
             end
             try
-                blade.SKEW = BladeSpec.Skew;
+                blade.SKEW = Skew;
             end
             try
-                blade.RAKE = BladeSpec.Rake;
+                blade.RAKE = Rake;
             end
             if (~error)
                 set(blade.FileNotFound,'visible','off')
@@ -108,6 +109,8 @@ maxrad = max(blade.RADIUS);
 blade.DistPanel.maxx = min(maxrad,min(maxrad, blade.Cutout.Tip));
 blade.DistPanel.minx = max(minrad,max(blade.Cutout.Root, minrad));
 
+disp(blade);
+
 
 if ~isempty(blade.y)
     
@@ -133,6 +136,12 @@ if ~isempty(blade.y)
     end
     
         
+    if ~isempty(blade.CAMBER)
+        blade.Camber = interp1(blade.RADIUS,blade.CAMBER,blade.Radius,'cubic');
+    else
+        blade.Camber = [];
+    end
+    
     if ~isempty(blade.THICKNESS)
         blade.Thickness = interp1(blade.RADIUS,blade.THICKNESS,blade.Radius,'cubic');
     end
@@ -190,31 +199,38 @@ PlotBlade(blade);
 %disp(blade);
 
 function blade = BladeFromBladeSpec(infname, blade)
-BladeSpec = load(infname);
+load(infname);
 
-blade.RADIUS = linspace(min(BladeSpec.Radius),max(BladeSpec.Radius),10000);
+blade.RADIUS = linspace(min(Radius),max(Radius),10000);
 blade.Thickness = [];
 blade.SKEW = zeros(size(blade.RADIUS));
 blade.RAKE = blade.SKEW;
+blade.CAMBER = blade.SKEW;
 
-
-ChordFit = FitData(BladeSpec.Radius, BladeSpec.Chord);
-TwistFit = FitData(BladeSpec.Radius, BladeSpec.Twist);
+ChordFit = FitData(Radius, Chord);
+TwistFit = FitData(Radius, Twist);
 blade.CHORD = ChordFit(blade.RADIUS);
 blade.THETA = TwistFit(blade.RADIUS);
-if ~isempty(BladeSpec.Thickness)
-    ThickFit = FitData(BladeSpec.Radius, BladeSpec.Thickness);
+if ~isempty(Thickness)
+    ThickFit = FitData(Radius, Thickness);
     blade.THICKNESS = ThickFit(blade.RADIUS);
 end
-if ~isempty(BladeSpec.Skew)
-    SkewFit  = FitData(BladeSpec.Radius, BladeSpec.Skew);
+if ~isempty(Skew)
+    SkewFit  = FitData(Radius, Skew);
     blade.SKEW = SkewFit(blade.RADIUS);
 end
-if ~isempty(BladeSpec.Rake)
-    RakeFit  = FitData(BladeSpec.Radius, BladeSpec.Rake);
+if ~isempty(Rake)
+    RakeFit  = FitData(Radius, Rake);
     blade.RAKE = RakeFit(blade.RADIUS);
 end
 
+try 
+    C = Camber;
+    CamberFit  = FitData(Radius, C);
+    blade.CAMBER = CamberFit(blade.RADIUS);
+catch
+    blade.CAMBER = [];
+end
 
 
 

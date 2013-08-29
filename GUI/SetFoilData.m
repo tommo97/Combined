@@ -13,7 +13,7 @@ switch type;
         data.US = Data.S809.US;
         data.LS = Data.S809.LS;
         data.X = Data.S809.X;
-        
+        data.Camber = [];
     case 'NREL S814' % User selects Membrane.
         foil.US = Foil.S814.US;
         foil.LS = Foil.S814.LS;
@@ -21,6 +21,7 @@ switch type;
         data.US = Data.S814.US;
         data.LS = Data.S814.LS;
         data.X = Data.S814.X;
+        data.Camber = [];
     case 'NACA 00xx' % User selects Membrane.
         set(foil.thickness_slider,'enable','on');
         set(foil.thickness_edit_text,'enable','on');
@@ -30,6 +31,7 @@ switch type;
         data.US = Data.N00xx.US;
         data.LS = Data.N00xx.LS;
         data.X = Data.N00xx.X;
+        data.Camber = [];
     case 'NACA 638xx'
         set(foil.thickness_slider,'enable','on');
         set(foil.thickness_edit_text,'enable','on');
@@ -39,6 +41,7 @@ switch type;
         data.US = Data.N638xx.US;
         data.LS = Data.N638xx.LS;
         data.X = Data.N638xx.X;
+        data.Camber = [];
     case 'NACA 65A010'
         foil.US = Foil.N65A010.US;
         foil.LS = Foil.N65A010.LS;
@@ -46,6 +49,7 @@ switch type;
         data.US = Data.N65A010.US;
         data.LS = Data.N65A010.LS;
         data.X = Data.N65A010.X;
+        data.Camber = Data.N65A010.Camber;
     otherwise
         foil.US = Foil.N0012.US;
         foil.LS = Foil.N0012.LS;
@@ -53,7 +57,9 @@ switch type;
         data.US = Data.N0012.US;
         data.LS = Data.N0012.LS;
         data.X = Data.N0012.X;
+        data.Camber = [];
 end
+
 s_in = DistPanel.x;
 %s_in = cumsum(s_in)/sum(s_in);
 
@@ -64,6 +70,9 @@ data.X = 0.5*(interp1([0 sU],foil.X,s_in,'cubic') + interp1([0 sL],foil.X,s_in,'
 data.US = interp1([0 sU],foil.US,s_in,'cubic');
 data.LS = interp1([0 sL],foil.LS,s_in,'cubic');
     
+if isempty(data.Camber)
+    data.Camber = zeros(size(data.X));
+end
 foil.SectionShape = data;
 
 

@@ -19,15 +19,23 @@ toc = [0    0.007650000000000   0.009280000000000   0.011830000000000 ...
     0.008960000000000   0.007499530848329   0.006623639691517   0.006040000000000 ...
     0.004049015364794   0.0];
 
-Foil.N65A010.LS.x = xoc;
-Foil.N65A010.LS.z = -toc/2;
-Foil.N65A010.US.x = fliplr(xoc);
-Foil.N65A010.US.z = fliplr(toc/2);
+data2x = [0 0.005 0.0075 0.0125 0.025 0.05 0.075 0.1 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 0.975 1 1.0192]/1.0192;
+data2y = [0 0.0665 0.0812 0.1044 0.1466 0.2066 0.2525 0.2907 0.3521 0.4 0.4363 0.4637 0.4832 0.4952 0.5 0.4962 0.4846 0.4653 0.4383 0.4035 0.3612 0.3110  0.2532 0.1877 0.1143 0.0748 0.0333 0];
+data2yc = [0 0.0423 0.0595 0.0907 0.1586 0.2712 0.3657 0.4482 0.5869 0.6993 0.7905 0.8635 0.9202 0.9615 0.9881 1.0 0.9971 0.9786 0.9434 0.8892 0.8121 0.7027 0.5425 0.3586 0.1713 0.0823 0 0];
+data2 = [data2x' data2y' data2yc']
+
+
+Foil.N65A010.LS.x = data2x;
+Foil.N65A010.LS.z = -data2y*0.1;
+Foil.N65A010.US.x = fliplr(data2x);
+Foil.N65A010.US.z = fliplr(data2y*0.1);
+Foil.N65A010.Camber =data2yc;
 %%  NACA 63-215
 Foil.N63215.LS.x = [0,0.00601000000000000,0.00863000000000000,0.0138000000000000,0.0265200000000000,0.0517100000000000,0.0767700000000000,0.101770000000000,0.151660000000000,0.201480000000000,0.251250000000000,0.301000000000000,0.350740000000000,0.400480000000000,0.450230000000000,0.500000000000000,0.549810000000000,0.599650000000000,0.649530000000000,0.699470000000000,0.749450000000000,0.799490000000000,0.849570000000000,0.899700000000000,0.949860000000000,1;];
 Foil.N63215.LS.z = [0,-0.0115000000000000,-0.0138800000000000,-0.0176600000000000,-0.0242000000000000,-0.0332800000000000,-0.0399900000000000,-0.0453500000000000,-0.0533600000000000,-0.0589500000000000,-0.0625900000000000,-0.0644800000000000,-0.0647000000000000,-0.0631500000000000,-0.0600400000000000,-0.0556200000000000,-0.0501300000000000,-0.0438200000000000,-0.0369100000000000,-0.0296200000000000,-0.0222400000000000,-0.0151300000000000,-0.00867000000000000,-0.00334000000000000,0.000160000000000000,0;];
 Foil.N63215.US.x = [1,0.950140000000000,0.900300000000000,0.850430000000000,0.800510000000000,0.750550000000000,0.700530000000000,0.650470000000000,0.600350000000000,0.550190000000000,0.500000000000000,0.449770000000000,0.399520000000000,0.349260000000000,0.299000000000000,0.248750000000000,0.198520000000000,0.148340000000000,0.0982300000000000,0.0732300000000000,0.0482900000000000,0.0234800000000000,0.0112000000000000,0.00637000000000000,0.00399000000000000,0;];
 Foil.N63215.US.z = [0,0.00616000000000000,0.0136800000000000,0.0221300000000000,0.0310500000000000,0.0401400000000000,0.0490600000000000,0.0575100000000000,0.0652400000000000,0.0720300000000000,0.0776800000000000,0.0819400000000000,0.0845700000000000,0.0853000000000000,0.0839200000000000,0.0804900000000000,0.0748700000000000,0.0668200000000000,0.0556900000000000,0.0484700000000000,0.0396000000000000,0.0279200000000000,0.0198000000000000,0.0152800000000000,0.0125000000000000,0;];
+Foil.N63215.Camber = [];      %zeros(size(Foil.N63215.US.z));
 %%  S814 Geometry
 Foil.S814.US.x = [0,...
     0.00116,0.0083,0.02064,0.03771,0.05918,0.08475,0.11409,0.14685,...
@@ -49,7 +57,7 @@ Foil.S814.LS.Data = [0,...
     -0.10412,-0.11545,-0.12425,-0.12971,-0.13079,-0.12736,-0.1199,...
     -0.10887,-0.09511,-0.07962,-0.06328,-0.04703,-0.03173,-0.01818,...
     -0.00701,0.00134,0.00671,0.00917,0.0091,0.00701,0.00377,0.00102,0];
-
+Foil.S814.Camber = [];      %zeros(size(Foil.S814.LS.x));
 %%  S809 Geometry
 
 
@@ -67,7 +75,7 @@ Foil.S809.LS.Data = [0,-0.005,-0.0127,-0.0216,-0.0314,-0.042,-0.053,-0.0641,-0.0
     -0.0933,-0.1006,-0.1059,-0.1087,-0.1084,-0.1048,-0.0976,-0.087,-0.0744,...
     -0.0611,-0.0479,-0.0356,-0.0247,-0.0156,-0.0086,-0.0037,-0.0008,0.0005,...
     0.0006,0.0002,0,];
-
+Foil.S809.Camber = [];      %zeros(size(Foil.S809.LS.Data));
 
 %%  NACA 00xx Geometry
 x = fzero(@N00xx,[.5 1.5]);
@@ -76,11 +84,12 @@ Foil.N0012.US.x = linspace(0,1,1000);
 Foil.N0012.US.Data = .12*N00xx(linspace(0,x,1000));
 Foil.N0012.LS.x = linspace(0,1,1000);
 Foil.N0012.LS.Data = - Foil.N0012.US.Data;
+Foil.N0012.Camber = [];      %zeros(size(Foil.N0012.LS.Data));
 Foil.N00xx.US.x = linspace(0,1,1000);
 Foil.N00xx.US.Data = t*N00xx(linspace(0,x,1000));
 Foil.N00xx.LS.x = linspace(0,1,1000);
 Foil.N00xx.LS.Data = - Foil.N00xx.US.Data;
-
+Foil.N00xx.Camber = [];      %zeros(size(Foil.N00xx.LS.Data));
 if t==1
     th = linspace(0,pi);
     
@@ -95,31 +104,37 @@ if t==1
 end
 
 if t==0
-
+    
     Foil.N00xx.US.Data(2:end-1) = 0.01;
-
+    
     Foil.N00xx.LS.Data(2:end-1) = -0.01;
 end
 
 Aerofoil.N0012.X = linspace(0,1,1000);
 Aerofoil.N0012.US = interp1(Foil.N0012.US.x,Foil.N0012.US.Data,Aerofoil.N0012.X,'cubic');
 Aerofoil.N0012.LS = interp1(Foil.N0012.LS.x,Foil.N0012.LS.Data,Aerofoil.N0012.X,'cubic');
+Aerofoil.N0012.Camber = [];      %interp1(Foil.N0012.LS.x,Foil.N0012.Camber,Aerofoil.N0012.X,'cubic');
 Aerofoil.N00xx.X = linspace(0,1,1000);
 Aerofoil.N00xx.US = interp1(Foil.N00xx.US.x,Foil.N00xx.US.Data,Aerofoil.N00xx.X,'cubic');
 Aerofoil.N00xx.LS = interp1(Foil.N00xx.LS.x,Foil.N00xx.LS.Data,Aerofoil.N00xx.X,'cubic');
+Aerofoil.N00xx.Camber = [];      %interp1(Foil.N00xx.LS.x,Foil.N00xx.Camber,Aerofoil.N00xx.X,'cubic');
 Aerofoil.S814.X = linspace(0,1,1000);
 Aerofoil.S814.US = interp1(Foil.S814.US.x,Foil.S814.US.Data,Aerofoil.S814.X,'cubic');
 Aerofoil.S814.LS = interp1(Foil.S814.LS.x,Foil.S814.LS.Data,Aerofoil.S814.X,'cubic');
+Aerofoil.S814.Camber = [];      %interp1(Foil.S814.LS.x,Foil.S814.Camber,Aerofoil.S814.X,'cubic');
 Aerofoil.S809.X = linspace(0,1,1000);
 Aerofoil.S809.US = interp1(Foil.S809.US.x,Foil.S809.US.Data,Aerofoil.S809.X,'cubic');
 Aerofoil.S809.LS = interp1(Foil.S809.LS.x,Foil.S809.LS.Data,Aerofoil.S809.X,'cubic');
+Aerofoil.S809.Camber = [];      %interp1(Foil.S809.LS.x,Foil.S809.Camber,Aerofoil.S809.X,'cubic');
 %%  NACA 65A010
 Aerofoil.N65A010.X = linspace(0,1,1000);
 Aerofoil.N65A010.US = interp1(Foil.N65A010.US.x,Foil.N65A010.US.z,Aerofoil.N65A010.X,'cubic');
 Aerofoil.N65A010.LS = interp1(Foil.N65A010.LS.x,Foil.N65A010.LS.z,Aerofoil.N65A010.X,'cubic');
+Aerofoil.N65A010.Camber =interp1(Foil.N65A010.LS.x,Foil.N65A010.Camber,Aerofoil.N65A010.X,'cubic');
 %%  NACA 638xx
 Aerofoil.N638xx.X = linspace(0,1,1000);
 [Aerofoil.N638xx.US Aerofoil.N638xx.LS] = NACA638xx(linspace(0,1,1000), t);
+Aerofoil.N638xx.Camber = [];      %zeros(size(Aerofoil.N638xx.X));
 %%  output
 Data = [];
 
@@ -131,28 +146,33 @@ if ~isempty(xin)
     Data.N0012.US = interp1(Foil.N0012.US.x,Foil.N0012.US.Data,xin,'cubic');
     Data.N0012.LS = interp1(Foil.N0012.LS.x,Foil.N0012.LS.Data,xin,'cubic');
     Data.N0012.X = xin;
-    
-    
-    
-    
+    Data.N0012.Camber = [];      %interp1(Foil.N0012.US.x,Foil.N0012.Camber,xin,'cubic');
     
     
     Data.N00xx.US = interp1(Foil.N00xx.US.x,Foil.N00xx.US.Data,xin,'cubic');
     Data.N00xx.LS = interp1(Foil.N00xx.LS.x,Foil.N00xx.LS.Data,xin,'cubic');
     Data.N00xx.X = xin;
+    Data.N00xx.US.Camber = [];      %interp1(Foil.N00xx.US.x,Foil.N00xx.Camber,xin,'cubic');
     
     Data.S814.US = interp1(Foil.S814.US.x,Foil.S814.US.Data,xin,'cubic');
     Data.S814.LS = interp1(Foil.S814.LS.x,Foil.S814.LS.Data,xin,'cubic');
+    Data.S814.Camber = [];      %interp1(Foil.S814.US.x,Foil.S814.Camber,xin,'cubic');
+    
     Data.S814.X = xin;
     Data.S809.US = interp1(Foil.S809.US.x,Foil.S809.US.Data,xin,'cubic');
     Data.S809.LS = interp1(Foil.S809.LS.x,Foil.S809.LS.Data,xin,'cubic');
+    Data.S809.Camber = [];      %interp1(Foil.S809.US.x,Foil.S809.Camber,xin,'cubic');
+    
     Data.S809.X = xin;
     Data.N638xx.X = xin;
     [Data.N638xx.US Data.N638xx.LS] = NACA638xx(xin, t);
+    Data.N638xx.Camber = [];      %interp1(Foil.N638xx.US.x,Foil.N638xx.Camber,xin,'cubic');
     
     Data.N65A010.X = linspace(0,1,1000);
     Data.N65A010.US = interp1(Foil.N65A010.US.x,Foil.N65A010.US.z,xin,'cubic');
     Data.N65A010.LS = interp1(Foil.N65A010.LS.x,Foil.N65A010.LS.z,xin,'cubic');
+    Data.N65A010.Camber =interp1(Foil.N65A010.US.x,Foil.N65A010.Camber,xin,'cubic');
+    
 end
 
 function y = N00xx(x)

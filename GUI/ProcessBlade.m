@@ -11,6 +11,7 @@ disp(Blade);
 
 SpanRepSize = [Blade.NSpan 1];
 ChordRepSize = [1 Blade.NChord];
+
 TUpperS.x = repmat(Blade.Section.Tip.X,SpanRepSize) - Blade.PitchAxis;
 TUpperS.y = repmat(Blade.Radius,ChordRepSize);
 TUpperS.z = repmat(Blade.Section.Tip.US,SpanRepSize);
@@ -104,7 +105,13 @@ if ~isempty(Blade.Thickness)
 end
 
 
-
+if ~isempty(Blade.Camber)
+    MeanLineTip = 0.5*(UpperS.z + LowerS.z) + Blade.Camber  * Blade.Section.Tip.Camber;
+    MeanLineRoot = 0.5*(UpperS.z + LowerS.z) + Blade.Camber  * Blade.Section.Root.Camber;
+    ThicknessDist = (UpperS.z - LowerS.z);
+    UpperS.z = (RootBlendCoefft.*MeanLineRoot + TipBlendCoefft.*MeanLineTip) + 0.5*ThicknessDist;
+    LowerS.z = (RootBlendCoefft.*MeanLineRoot + TipBlendCoefft.*MeanLineTip) - 0.5*ThicknessDist;
+end
 
 %%  Close ends - make some caps
 if ~Blade.RoundTips

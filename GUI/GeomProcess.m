@@ -10,6 +10,7 @@ Blade.RoundTips = handles.Span.RoundTips;
 Blade.Rake = handles.Span.Rake';
 Blade.isProp = handles.Span.isProp;
 Blade.Thickness = handles.Span.Thickness';
+Blade.Camber = handles.Span.Camber';
 
 if Blade.RoundTips
     Blade.num_tip_pans = handles.Span.num_tip_pans;
@@ -41,12 +42,13 @@ Blade.NSpan = length(Blade.Radius);
 Blade.Section.Tip.US = handles.Chord.Tip.SectionShape.US;
 Blade.Section.Tip.LS = handles.Chord.Tip.SectionShape.LS;
 Blade.Section.Tip.X = handles.Chord.Tip.SectionShape.X;
-
+Blade.Section.Tip.Camber = handles.Chord.Tip.SectionShape.Camber;
 
 
 Blade.Section.Root.US = handles.Chord.Root.SectionShape.US;
 Blade.Section.Root.LS = handles.Chord.Root.SectionShape.LS;
 Blade.Section.Root.X = handles.Chord.Root.SectionShape.X;
+Blade.Section.Root.Camber = handles.Chord.Root.SectionShape.Camber;
 
 Blade.NChord = length(Blade.Section.Root.X);
 Blade.Axes = handles.blade_surf_axes;
