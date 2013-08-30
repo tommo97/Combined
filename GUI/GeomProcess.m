@@ -62,16 +62,16 @@ end
 ax = Blade.Axes;
 surf(ax,Blade.X(Blade.N.Local),Blade.Y(Blade.N.Local),Blade.Z(Blade.N.Local),S,'facecolor',[0.75 0.75 1],'edgecolor','w');
 hold(ax,'on');
-surf(ax,Blade.X(Blade.Tip.Inboard.US.N.Local),Blade.Y(Blade.Tip.Inboard.US.N.Local),Blade.Z(Blade.Tip.Inboard.US.N.Local),'facecolor',[0.75 0.75 1],'edgecolor','w');
-surf(ax,Blade.X(Blade.Tip.Inboard.LS.N.Local),Blade.Y(Blade.Tip.Inboard.LS.N.Local),Blade.Z(Blade.Tip.Inboard.LS.N.Local),'facecolor',[0.75 0.75 1],'edgecolor','w');
-surf(ax,Blade.X(Blade.Tip.Outboard.US.N.Local),Blade.Y(Blade.Tip.Outboard.US.N.Local),Blade.Z(Blade.Tip.Outboard.US.N.Local),'facecolor',[0.75 0.75 1],'edgecolor','w');
-surf(ax,Blade.X(Blade.Tip.Outboard.LS.N.Local),Blade.Y(Blade.Tip.Outboard.LS.N.Local),Blade.Z(Blade.Tip.Outboard.LS.N.Local),'facecolor',[0.75 0.75 1],'edgecolor','w');
+surf(ax,Blade.X(Blade.Tip.Inboard.US.N.Local),Blade.Y(Blade.Tip.Inboard.US.N.Local),Blade.Z(Blade.Tip.Inboard.US.N.Local),'facecolor',[0.75 0.75 1],'edgecolor','b');
+surf(ax,Blade.X(Blade.Tip.Inboard.LS.N.Local),Blade.Y(Blade.Tip.Inboard.LS.N.Local),Blade.Z(Blade.Tip.Inboard.LS.N.Local),'facecolor',[0.75 0.75 1],'edgecolor','b');
+surf(ax,Blade.X(Blade.Tip.Outboard.US.N.Local),Blade.Y(Blade.Tip.Outboard.US.N.Local),Blade.Z(Blade.Tip.Outboard.US.N.Local),'facecolor',[0.75 0.75 1],'edgecolor','b');
+surf(ax,Blade.X(Blade.Tip.Outboard.LS.N.Local),Blade.Y(Blade.Tip.Outboard.LS.N.Local),Blade.Z(Blade.Tip.Outboard.LS.N.Local),'facecolor',[0.75 0.75 1],'edgecolor','b');
 
-surf(ax,Blade.X(Blade.N.Local),Blade.Y(Blade.N.Local),Blade.Z(Blade.N.Local),S,'facecolor','none','edgecolor','w');
-surf(ax,Blade.X(Blade.Tip.Inboard.US.N.Local),Blade.Y(Blade.Tip.Inboard.US.N.Local),Blade.Z(Blade.Tip.Inboard.US.N.Local),'facecolor','none','edgecolor','w');
-surf(ax,Blade.X(Blade.Tip.Inboard.LS.N.Local),Blade.Y(Blade.Tip.Inboard.LS.N.Local),Blade.Z(Blade.Tip.Inboard.LS.N.Local),'facecolor','none','edgecolor','w');
-surf(ax,Blade.X(Blade.Tip.Outboard.US.N.Local),Blade.Y(Blade.Tip.Outboard.US.N.Local),Blade.Z(Blade.Tip.Outboard.US.N.Local),'facecolor','none','edgecolor','w');
-surf(ax,Blade.X(Blade.Tip.Outboard.LS.N.Local),Blade.Y(Blade.Tip.Outboard.LS.N.Local),Blade.Z(Blade.Tip.Outboard.LS.N.Local),'facecolor','none','edgecolor','w');
+surf(ax,Blade.X(Blade.N.Local),Blade.Y(Blade.N.Local),Blade.Z(Blade.N.Local),S,'facecolor','none','edgecolor','b');
+surf(ax,Blade.X(Blade.Tip.Inboard.US.N.Local),Blade.Y(Blade.Tip.Inboard.US.N.Local),Blade.Z(Blade.Tip.Inboard.US.N.Local),'facecolor','none','edgecolor','b');
+surf(ax,Blade.X(Blade.Tip.Inboard.LS.N.Local),Blade.Y(Blade.Tip.Inboard.LS.N.Local),Blade.Z(Blade.Tip.Inboard.LS.N.Local),'facecolor','none','edgecolor','b');
+surf(ax,Blade.X(Blade.Tip.Outboard.US.N.Local),Blade.Y(Blade.Tip.Outboard.US.N.Local),Blade.Z(Blade.Tip.Outboard.US.N.Local),'facecolor','none','edgecolor','b');
+surf(ax,Blade.X(Blade.Tip.Outboard.LS.N.Local),Blade.Y(Blade.Tip.Outboard.LS.N.Local),Blade.Z(Blade.Tip.Outboard.LS.N.Local),'facecolor','none','edgecolor','b');
 %shading interp
 %surf(ax,Blade.X(Blade.N.Local),Blade.Y(Blade.N.Local),Blade.Z(Blade.N.Local),S,'facecolor','none');
 %surf(ax,Blade.X(Blade.Tip.Inboard.US.N.Local),Blade.Y(Blade.Tip.Inboard.US.N.Local),Blade.Z(Blade.Tip.Inboard.US.N.Local),'facecolor','none');
