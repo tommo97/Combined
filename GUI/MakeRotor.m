@@ -37,6 +37,17 @@ for i = 1:Rotor.NumBlades
     Rotor.Blade{i}.X = Rotor.Origin(1) + x2*TRANS2(1,1) + y2*TRANS2(1,2) + z2*TRANS2(1,3);
     Rotor.Blade{i}.Y = Rotor.Origin(2) + x2*TRANS2(2,1) + y2*TRANS2(2,2) + z2*TRANS2(2,3);
     Rotor.Blade{i}.Z = Rotor.Origin(3) + x2*TRANS2(3,1) + y2*TRANS2(3,2) + z2*TRANS2(3,3);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     Rotor.Blade{i}.Faces.C1.Body = [Rotor.Blade{i}.X(Rotor.Blade{i}.Panels.c1.Local) Rotor.Blade{i}.Y(Rotor.Blade{i}.Panels.c1.Local) Rotor.Blade{i}.Z(Rotor.Blade{i}.Panels.c1.Local)];
     Rotor.Blade{i}.Faces.C2.Body = [Rotor.Blade{i}.X(Rotor.Blade{i}.Panels.c2.Local) Rotor.Blade{i}.Y(Rotor.Blade{i}.Panels.c2.Local) Rotor.Blade{i}.Z(Rotor.Blade{i}.Panels.c2.Local)];
     Rotor.Blade{i}.Faces.C3.Body = [Rotor.Blade{i}.X(Rotor.Blade{i}.Panels.c3.Local) Rotor.Blade{i}.Y(Rotor.Blade{i}.Panels.c3.Local) Rotor.Blade{i}.Z(Rotor.Blade{i}.Panels.c3.Local)];
@@ -100,7 +111,17 @@ for i = 1:Rotor.NumBlades
     surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),'facecolor','none','edgecolor','w');
     view(ax2,3);
     
+    
+    Xhub{i} = Rotor.Blade{i}.X(Rotor.Blade{i}.N.Local(1,:));
+    Yhub{i} = Rotor.Blade{i}.Y(Rotor.Blade{i}.N.Local(1,:));
+    Zhub{i} = Rotor.Blade{i}.Z(Rotor.Blade{i}.N.Local(1,:));
+    
+
+    
+    
 end
+makeHub(Xhub, Yhub, Zhub);
+
 axis(ax,'equal','tight');
 Rotor.Split = get(handles.blades_as_bodies,'Value') ;
 material dull

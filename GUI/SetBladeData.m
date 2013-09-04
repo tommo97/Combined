@@ -76,6 +76,7 @@ switch blade.type;
     case 'Marine Prop'
         blade.isProp = true;
         blade = BladeFromBladeSpec('../GeomInputMatFiles/DMTP4119Approximation.mat', blade);
+        blade.THICKNESS(end) = 0;
     case 'NREL Phase VI' % User selects Peaks.
         blade = BladeFromBladeSpec('../GeomInputMatFiles/NRELPhaseVI.mat', blade);
         blade.isNREL = true;
@@ -83,9 +84,9 @@ switch blade.type;
         blade = BladeFromBladeSpec('../GeomInputMatFiles/SOTON.mat', blade);
         blade.isSOTON = true;
     case 'ESRU PoC 1 ''05' % User selects Sinc.
-        blade = BladeFromBladeSpec('../GeomInputMatFiles/ESRUpoc1.mat', blade);
+        blade = BladeFromBladeSpec('../GeomInputMatFiles/ESRUPoc1.mat', blade);
     case 'ESRU PoC 2 ''05' % User selects Sinc.
-        blade = BladeFromBladeSpec('../GeomInputMatFiles/ESRUpoc2.mat', blade);
+        blade = BladeFromBladeSpec('../GeomInputMatFiles/ESRUPoc2.mat', blade);
     case 'Barltrop ''05'
         blade = BladeFromBladeSpec('../GeomInputMatFiles/Barltrop05.mat', blade);
         blade.isBarltrop = true;

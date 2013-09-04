@@ -50,7 +50,7 @@ int BODY::BodyPanelIDCounter = 0, BODY::BodyPointIDCounter = 0, BODY::SubStep = 
 Array <Vect3> BODY::TorqueHist;
 Array <Vect3> BODY::ForceHist;
 Array < BODY*> BODY::Bodies;
-Array <PANEL*> BODY::AllBodyFaces;
+Array <PANEL*> BODY::AllBodyFaces, BODY::AllWakePanels;
 Array < Array < Array < Vect3 > > > BODY::SubStepCollocPts, BODY::SubStepCollocPtNrms;
 Array < Array < Array < int > > > BODY::Surfaces;
 Array < Array < Array < PANEL* > > > BODY::ptSurfaces;
@@ -545,33 +545,93 @@ void BODY::SplitUpLinearAlgebra() {
 /**************************************************************/
 void BODY::LinAlg() {
 
-    Array <REAL> dCP0, dCP1, dPHITE0, dPHITE1;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        PANEL *trg = BODY::AllBodyFaces[i];
+
+        Vect3 Pos = trg->CollocationPoint - trg->Owner->CG;
+        // 	Get point kinematic velocity - rotational part first
+        Vect3 Vrot = trg->Owner->BodyRates.Cross(Pos);
+        // 	Add to translational velocity....
+        Vect3 Vkin = trg->Owner->Velocity + Vrot;
+        // 	Include freestream and FMM wake interpolation
+        Vect3 V = globalSystem->unscaledVinf - Vkin; // + trg->Vfmm; //trg->VelInterp[SubStep];       //  Substep counting starts at 1
+
+        Vect3 VWake = 0.0;
+
+        REAL PhiWake = 0.0;
+
+        for (int j = 0; j < BODY::VortexPositions.size(); ++j)
+            VWake += 1.0 * UTIL::globalDirectVel(trg->CollocationPoint - BODY::VortexPositions[j], BODY::VortexOmegas[j], 0.25);
+
+        /*        for (int j = 0; j < FVMCell::AllCells.size(); ++j)
+                    VWake += 2.0*globalDirectVel(trg->CollocationPoint - FVMCell::AllCells[j]->Position,
+                        FVMCell::AllCells[j]->Omega);
+         */
+        VWake += 1.0 * trg->Vfmm;
+
+        //        REAL a = 0.150/2.0, om = 2.0*pi, d = 2.4, g = 9.80665, k = 4.0257;
+        REAL t = TIME_STEPPER::SimTime;
+        //        REAL PhiWave = (a * g / om) * cosh(k * (d + (trg->CollocationPoint.z - 0.8))) * cos(om*t - k*trg->CollocationPoint.x)/cosh(k*d);
+        //        REAL UWave = -(a*g*k*sin(trg->CollocationPoint.x*k - om*t)*cosh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
+        //        REAL VWave = (a*g*k*cos(trg->CollocationPoint.x*k - om*t)*sinh(k*((trg->CollocationPoint.z - 0.8) + d)))/(om*cosh(d*k));
+        //      Wave velocities are already included in VFMM due to being calculated at cells during FMM Collapse
+        //        Vect3 WaveVel = WaveField::Cnoidal.CnoidalVelocity(trg->CollocationPoint/SYSTEM::GambitScale  - Vect3(0.,0.,0.250), TIME_STEPPER::SimTime);
+        //        VWake += 0WaveVel*SYSTEM::GambitScale;
+        //        VWake.x += UWave*SYSTEM::GambitScale;
+        //        VWake.z += VWave*SYSTEM::GambitScale;
+        for (int j = 0; j < BODY::AllWakePanels.size(); ++j) {
+            BODY::AllWakePanels[j]->Mu = BODY::AllWakePanels[j]->Gamma;
+            //            PhiWake -= srcs[j]->GetTriTesselatedDoubletPhi(trg->CollocationPoint);
+            PhiWake += BODY::AllWakePanels[j]->HyperboloidDoubletPhi(trg->CollocationPoint);
+        }
+        //            PhiWake += srcs[j]->WakePanelPotential(trg->CollocationPoint);
+
+
+        trg->Phi = PhiWake + trg->PhiWakePrev; // + WaveField::Cnoidal.CnoidalPerturbationPotential(trg->CollocationPoint  - Vect3(0.,0.,0.250), t+0.739 );// + 0.0*PhiWave;// + trg->PhiWakePrev;
+        trg->Vkin = Vkin;
+        trg->VWake = VWake;
+        trg->VCentroid = globalSystem->unscaledVinf - Vkin + VWake;
+
+        V = trg->VCentroid;
+
+        REAL Vn = trg->Vn = V.Dot(trg->TRANS[2]);
+
+        trg->Sigma = Vn;
+
+
+    }
+
 
     for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i) {
         BODY::AllBodyFaces[i]->MuPrev = BODY::AllBodyFaces[i]->GammaPrev = BODY::AllBodyFaces[i]->Mu;
     }
 
-#ifdef USE_MATRIX_INVERSE     
-    Array <REAL> t(BODY::Mu.size(), 0.0);
 
-    if (!BODY::IPKC) {
-        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
-            for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
-                t[i] += BODY::A[i][j] * BODY::RHS[j];
-            }
-        //    } else {
-        //        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
-        //            for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
-        //                t[i] += BODY::C[i][j] * BODY::RHS[j];
-        //            }
+
+    Array <REAL> RHS = Array <REAL> (BODY::AllBodyFaces.size(), 0.0);
+
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        RHS[i] = BODY::AllBodyFaces[i]->Phi;
+        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j)
+            RHS[i] += (B[i][j] * BODY::AllBodyFaces[j]->Sigma);
     }
 
-    BODY::Mu = t;
+    Array <REAL> Mu = Array <REAL> (BODY::AllBodyFaces.size(), 0.0);
+#ifdef USE_MATRIX_INVERSE 
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
+        for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
+            Mu[i] += A[i][j] * RHS[j];
+        }
 #else
-
-    BODY::Mu = pgesv(BODY::A, BODY::RHS);
-
+    Mu = pgesv(A, RHS);
 #endif
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
+        BODY::AllBodyFaces[i]->Mu = Mu[i];
+    
+
 
 
     for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i) {
@@ -579,23 +639,26 @@ void BODY::LinAlg() {
         BODY::AllBodyFaces[i]->PhiPrev[2] = BODY::AllBodyFaces[i]->PhiPrev[1];
         BODY::AllBodyFaces[i]->PhiPrev[1] = BODY::AllBodyFaces[i]->PhiPrev[0];
         BODY::AllBodyFaces[i]->PhiPrev[0] = BODY::AllBodyFaces[i]->Mu;
-
-        BODY::AllBodyFaces[i]->Gamma = BODY::AllBodyFaces[i]->Mu = BODY::Mu[i];
-
     }
 
-
-    REAL Lift = 0.0;
+    /*  This is when we use the direct face vel calc
+    for (int I = 0; I < BODY::Bodies.size(); ++I)
+        BODY::Bodies[I]->GetPanelVels();
+     */
+    REAL Lift = 0.0, incrementalCp = 0.0;
     Vect3 Torque(0.), Force(0.);
     for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i) {
         REAL Cp = BODY::AllBodyFaces[i]->GetCp();
+        BODY::CpHistory[BODY::SubStep - 1][i] = Cp;
+        Cp = 0; //BODY::AllBodyFaces[i]->GetCpD();
+        BODY::CpHistoryD[BODY::SubStep - 1][i] = Cp;
         Vect3 F = Cp * BODY::AllBodyFaces[i]->Area * BODY::AllBodyFaces[i]->TRANS[2];
         Lift += F.z;
-
+        Vect3 dQ = BODY::AllBodyFaces[i]->dF.Cross(BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG);
 
         Force += Vect3(BODY::AllBodyFaces[i]->dF.Dot(Vect3(1, 0, 0)), BODY::AllBodyFaces[i]->dF.Dot(Vect3(0, 1, 0)), BODY::AllBodyFaces[i]->dF.Dot(Vect3(0, 0, 1)));
-        Torque += BODY::AllBodyFaces[i]->dF.Cross(BODY::AllBodyFaces[i]->CollocationPoint - BODY::AllBodyFaces[i]->Owner->CG);
-
+        Torque += dQ;
+        incrementalCp += dQ.x * BODY::Bodies[0]->BodyRates.x / (0.5 * BODY::RHO * globalSystem->unscaledVinf.Mag() * globalSystem->unscaledVinf.Mag() * globalSystem->unscaledVinf.Mag() * pi * BODY::Radius * BODY::Radius);
     }
 
     BODY::ForceHist.push_back(Force);
@@ -618,117 +681,9 @@ void BODY::LinAlg() {
             BODY::dDeltaCp_dDeltaPhi[i] = dCp / dPhi;
         }
     }
-
-
-
-    if (BODY::IPKC) {
-
-        REAL NRM = 0;
-        dCP1 = Array <REAL > (BODY::AllProtoWakes.size());
-
-        for (int i = 0; i < BODY::AllProtoWakes.size(); ++i) {
-            dCP1[i] = BODY::AllProtoWakes[i]->SheddingSurface->GetCp() - BODY::AllProtoWakes[i]->SheddingSurface->OtherBoundarySurface->GetCp();
-            NRM = max(NRM, dCP1[i] * dCP1[i]);
-        }
-
-
-
-        int cnt = 0, maxits = 50;
-        REAL alpha = 0.5; //  underrelaxation factor
-        REAL dlta = 1e-9;
-        REAL tol = 1e-3;
-        while (NRM > tol) {
-
-
-            //  Get new CPs
-            //  Get TE pressure difference.
-            dCP0 = Array <REAL > (BODY::AllProtoWakes.size());
-            dPHITE0 = Array <REAL > (BODY::AllProtoWakes.size());
-            for (int i = 0; i < BODY::AllProtoWakes.size(); ++i) {
-                dCP0[i] = BODY::AllProtoWakes[i]->SheddingSurface->GetCp() - BODY::AllProtoWakes[i]->SheddingSurface->OtherBoundarySurface->GetCp();
-                dPHITE0[i] = BODY::AllProtoWakes[i]->Gamma;
-            }
-
-
-            //  Modify wake strength
-
-            for (int i = 0; i < BODY::AllProtoWakes.size(); ++i)
-                BODY::AllProtoWakes[i]->Gamma += dlta;
-
-            BODY::GetNonLinearRHS();
-#ifdef USE_MATRIX_INVERSE
-            Array <REAL> Soln(BODY::Mu.size(), 0.0);
-
-            for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
-                for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
-                    Soln[i] += BODY::C[i][j] * BODY::RHS[j];
-                }
-
-            BODY::Mu = Soln;
-#else
-            BODY::Mu = pgesv(BODY::C, BODY::RHS);
-#endif
-            for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
-                BODY::AllBodyFaces[i]->Gamma = BODY::AllBodyFaces[i]->Mu = Mu[i];
-
-            //  Get new CPs
-            //  Get TE pressure difference.
-            NRM = 0;
-            dCP1 = Array <REAL > (BODY::AllProtoWakes.size());
-            dPHITE1 = Array <REAL > (BODY::AllProtoWakes.size());
-            for (int i = 0; i < BODY::AllProtoWakes.size(); ++i) {
-                dCP1[i] = BODY::AllProtoWakes[i]->SheddingSurface->GetCp() - BODY::AllProtoWakes[i]->SheddingSurface->OtherBoundarySurface->GetCp();
-                dPHITE1[i] = BODY::AllProtoWakes[i]->Gamma;
-                NRM = max(NRM, dCP1[i] * dCP1[i]);
-            }
-            NRM = sqrt(NRM);
-            //  Modify wake strength
-
-            if (NRM > tol) {
-
-
-                for (int i = 0; i < BODY::AllProtoWakes.size(); ++i)
-                    BODY::AllProtoWakes[i]->Gamma -= alpha * (dCP0[i] / ((dCP1[i] - dCP0[i]) / dlta)) + dlta;
-
-                BODY::GetNonLinearRHS();
-#ifdef USE_MATRIX_INVERSE
-                Soln = 0.0;
-                for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
-                    for (int j = 0; j < BODY::AllBodyFaces.size(); ++j) {
-                        Soln[i] += BODY::C[i][j] * BODY::RHS[j];
-                    }
-
-                BODY::Mu = Soln;
-#else
-                BODY::Mu = pgesv(BODY::C, BODY::RHS);
-#endif
-                for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
-                    BODY::AllBodyFaces[i]->Gamma = BODY::AllBodyFaces[i]->Mu = Mu[i];
-
-
-                cnt++;
-
-                cout << "%\tIteration: " << cnt << " residual " << NRM << endl;
-
-
-                if (cnt > maxits) {
-
-                    //                    BODY::Mu = pgesv(BODY::A, BODY::RHS);
-                    //
-                    //                    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i)
-                    //                        BODY::AllBodyFaces[i]->Gamma = BODY::AllBodyFaces[i]->Mu = Mu[i];
-                    //                    for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i)
-                    //                        if (BODY::AllBodyFaces[i]->isBound && !BODY::AllBodyFaces[i]->isTop)
-                    //                            BODY::AllBodyFaces[i]->AttachedProtoWake->Gamma -= BODY::AllBodyFaces[i]->Gamma;
-                    //
-
-                    NRM = 1e-6;
-                }
-
-            }
-
-        }
-    }
+    
+    
+    
 
 }
 
@@ -786,7 +741,7 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
         BODY::Time = TIME_STEPPER::SimTime;
         BODY::Times.push_back(BODY::Time);
 
-        SplitUpLinearAlgebra();
+        LinAlg();
 
         if (BODY::OutputSubStepCollocationPoints) {
             for (int i = 0; i < BODY::Bodies.size(); ++i) {
@@ -922,11 +877,15 @@ void BODY::BodySubStep(REAL delta_t, int n_steps) {
             BODY::VortexPositions[i] += dx;
 
 
-
-        for (int i = 0; i < NumBodies; ++i)
-            BODY::Bodies[i]->MakeWake();
-
-
+        BODY::AllWakePanels.clear();
+        for (int I = 0; I < NumBodies; ++I) {
+            BODY::Bodies[I]->MakeWake();
+            for (int J = 0; J < BODY::Bodies[I]->WakePanels.size(); ++J)
+                for (int j = 0; j < BODY::Bodies[I]->WakePanels[J].size(); ++j)
+                    for (int k = 0; k < BODY::Bodies[I]->WakePanels[J][j].size(); ++k) {
+                        BODY::AllWakePanels.push_back(BODY::Bodies[I]->WakePanels[J][j][k]);
+                    }
+        }
     }
 
 
@@ -975,68 +934,60 @@ void BODY::SetUpInfluenceMatrices() {
 void BODY::UpdateGlobalInfluenceMatrices() {
     long int t = ticks();
     cout << "%\tCalculating influence coefficients..." << endl;
-    /*    Array <Array <Vect3> > tmp(1);
-        for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
-            BODY::AllBodyFaces[i]->GetNormal();
-            if (BODY::AllBodyFaces[i]->isBound)
-                BODY::AllBodyFaces[i]->AttachedProtoWake->GetNormal();
-        }
-
-            for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i) {
-                tmp[0].push_back(BODY::AllBodyFaces[i]->TRANS[2]);
-                BODY::AllBodyFaces[i]->GetNormal();
-                PANEL *trg = BODY::AllBodyFaces[i];
-        #pragma omp parallel for
-                for (int j = 0; j < (int) BODY::AllBodyFaces.size(); ++j) {
-                    REAL a = 0, b = 0, c = 0;
-                    REAL PhiS = 0.0, PhiD = 0.0;
-                    PANEL *src = BODY::AllBodyFaces[j];
-                    PANEL::SourceDoubletPotential(src, trg, PhiD, PhiS, i, j);
-
-                    //            Vect3 V = 0.0;
-                    //            PhiS = 0.0, PhiD = 0.0;
-                    //            src->SubPan(100, trg->CollocationPoint, 1, 0, PhiD, PhiS, V);
-                    a = PhiD;
+    Array <Array <Vect3> > tmp(1);
+    for (int i = 0; i < BODY::AllBodyFaces.size(); ++i) {
+        BODY::AllBodyFaces[i]->GetNormal();
+        if (BODY::AllBodyFaces[i]->isBound)
+            BODY::AllBodyFaces[i]->AttachedProtoWake->GetNormal();
+    }
 
 
-                    //            V = 0.0;
-                    //            PhiS = 0.0, PhiD = 0.0;
-                    //            src->SubPan(100, trg->CollocationPoint, 0, 1, PhiD, PhiS, V);
-                    b = PhiS;
+    A = UTIL::zeros(BODY::AllBodyFaces.size(), BODY::AllBodyFaces.size());
+    B = UTIL::zeros(BODY::AllBodyFaces.size(), BODY::AllBodyFaces.size());
 
+    for (int i = 0; i < (int) BODY::AllBodyFaces.size(); ++i) {
+        tmp[0].push_back(BODY::AllBodyFaces[i]->TRANS[2]);
+        BODY::AllBodyFaces[i]->GetNormal();
+        PANEL *trg = BODY::AllBodyFaces[i];
+#pragma omp parallel for
+        for (int j = 0; j < (int) BODY::AllBodyFaces.size(); ++j) {
+            REAL a = 0, b = 0, c = 0;
+            REAL PhiS = 0.0, PhiD = 0.0;
+            PANEL *src = BODY::AllBodyFaces[j];
+            PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
 
-
-                    c = PhiD;
-                    if (BODY::AllBodyFaces[j]->isBound) {
-                        PhiS = 0.0, PhiD = 0.0;
-                        src = BODY::AllBodyFaces[j]->AttachedProtoWake;
-
-                        PANEL::SourceDoubletPotential(src, trg, PhiD, PhiS, 1, 2);
-                        a += (BODY::AllBodyFaces[j]->isTop) ? PhiD : -PhiD;
-                        //                V = 0.0;
-                        //                PhiS = 0.0, PhiD = 0.0;
-                        //                src->SubPan(100, trg->CollocationPoint, 1, 0, PhiD, PhiS, V);
-                        //                a += (BODY::AllBodyFaces[j]->isTop) ? PhiD : -PhiD;
-                    }
-
-
-                    A[i][j] = a;
-                    B[i][j] = b;
-                    if (BODY::IPKC)
-                        C[i][j] = c;
-
-                }
+            a = PhiD;
+            b = PhiS;
+//            c = PhiD;
+            if (BODY::AllBodyFaces[j]->isBound) {
+                PhiS = 0.0, PhiD = 0.0;
+                src = BODY::AllBodyFaces[j]->AttachedProtoWake;
+                PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, 1, 2);
+                a += (BODY::AllBodyFaces[j]->isTop) ? PhiD : -PhiD;
+                //                V = 0.0;
+                //                PhiS = 0.0, PhiD = 0.0;
+                //                src->SubPan(100, trg->CollocationPoint, 1, 0, PhiD, PhiS, V);
+                //                a += (BODY::AllBodyFaces[j]->isTop) ? PhiD : -PhiD;
             }
-            cout << "%\tTime elapsed: " << ticks() - t << ". Inverting " << A.size() << "x" << A[0].size() << " matrices: " << endl;
-            t = ticks();
-        #ifdef USE_MATRIX_INVERSE
-            inverse(A);
-            if (BODY::IPKC)
-                inverse(C);
-        #endif
-            cout << "%\tTime elapsed: " << ticks() - t << endl;
- 
-     */
+
+
+            A[i][j] = a;
+            B[i][j] = b;
+//            if (BODY::IPKC)
+//                C[i][j] = c;
+
+        }
+    }
+    cout << "%\tTime elapsed: " << ticks() - t << ". Inverting " << A.size() << "x" << A[0].size() << " matrices: " << endl;
+    t = ticks();
+#ifdef USE_MATRIX_INVERSE
+    inverse(A);
+//    if (BODY::IPKC)
+//        inverse(C);
+#endif
+    cout << "%\tTime elapsed: " << ticks() - t << endl;
+
+    
 
     //        UTIL::WriteMATLABMatrix2D("A","Output.mat", A);
     //        UTIL::WriteMATLABMatrix2D("B","Output.mat", B);
@@ -1062,11 +1013,11 @@ void BODY::UpdateGlobalInfluenceMatrices() {
             for (int j = 0; j < n; ++j) {
                 REAL PhiS = 0.0, PhiD = 0.0;
                 PANEL *src = &BODY::Bodies[I]->Faces[j];
-                    PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
-                
+                PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, i, j);
+
                 REAL a = PhiD;
-               
-                
+
+
                 REAL b = PhiS;
 
  
@@ -1084,13 +1035,14 @@ void BODY::UpdateGlobalInfluenceMatrices() {
                 if (BODY::Bodies[I]->Faces[j].isBound) {
                     PhiS = 0.0, PhiD = 0.0;
                     src = BODY::Bodies[I]->Faces[j].AttachedProtoWake;
+                    if (src) {
+                        PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, 1, 2);
+                        a += (BODY::Bodies[I]->Faces[j].isTop) ? PhiD : -PhiD;
 
-                    PANEL::SourceDoubletPotential(src, trg->CollocationPoint, PhiD, PhiS, 1, 2);
-                    a += (BODY::Bodies[I]->Faces[j].isTop) ? PhiD : -PhiD;
-
-                    src->Gamma = 1.0;
-                    Vect3 VD = VectMultMatrix(trg->TRANS, src->VortexPanelVelocity(trg->CollocationPoint));
-                    //BODY::Bodies[I]->localVD[i][j] += (BODY::Bodies[I]->Faces[j].isTop) ? VD : -VD;
+                        src->Gamma = 1.0;
+                        Vect3 VD = VectMultMatrix(trg->TRANS, src->VortexPanelVelocity(trg->CollocationPoint));
+                        //BODY::Bodies[I]->localVD[i][j] += (BODY::Bodies[I]->Faces[j].isTop) ? VD : -VD;
+                    }
                 }
 
 

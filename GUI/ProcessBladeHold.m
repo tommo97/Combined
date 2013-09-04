@@ -3,6 +3,12 @@ function Blade = ProcessBlade(Blade)
 %
 %   .n is the chordwise position between 0(leading edge) and 1(trailing
 %   edge);
+
+Nhub = 4;
+
+
+
+
 clc
 
 closeTips = true;
@@ -120,12 +126,17 @@ if ~Blade.RoundTips
     xi = .5*(UpperS.x(1,:) + LowerS.x(1,:));
     yi = .5*(UpperS.y(1,:) + LowerS.y(1,:));% - 0.1*sin(linspace(0,pi,Blade.NChord));
     zi = .5*(UpperS.z(1,:) + LowerS.z(1,:));
+    
+    
+    
     xin = .5*(UpperS.n(1,:) + LowerS.n(1,:));
     xim = .5*(UpperS.m(1,:) + LowerS.m(1,:));
     
     xo = .5*(UpperS.x(end,:) + LowerS.x(end,:));
     yo = .5*(UpperS.y(end,:) + LowerS.y(end,:));% + 0.1*sin(linspace(0,pi,Blade.NChord));
     zo = .5*(UpperS.z(end,:) + LowerS.z(end,:));
+    
+    
     xon = .5*(UpperS.n(end,:) + LowerS.n(end,:));
     xom = .5*(UpperS.m(end,:) + LowerS.m(end,:));
     
@@ -138,7 +149,7 @@ if ~Blade.RoundTips
     % xi = [xi(1) xi(1)+1.25*(xi(2)-xi(1)) xi(3:end-2) xi(end)+1.25*(xi(end-1)-xi(end)) xi(end)];
     % xo = [xo(1) xo(1)+1.25*(xo(2)-xo(1)) xo(3:end-2) xo(end)+1.25*(xo(end-1)-xo(end)) xo(end)];
     %
-    
+    if ~Blade.isProp
     if (isempty(Blade.Thickness)) || (Blade.Thickness(end) > 0) %%  If outer thickness is > 0 then use caps
         UpperS.x = [xi;UpperS.x;xo];
         UpperS.y = [yi;UpperS.y;yo];
@@ -153,31 +164,33 @@ if ~Blade.RoundTips
         LowerS.m = [xim;LowerS.m;xom];
     else     %    just seal edge
         closeTips = false;
+        UpperS.x = [xi;UpperS.x];
+        UpperS.y = [yi;UpperS.y];
+        UpperS.z = [zi;UpperS.z];
+        UpperS.n = [xin;UpperS.n];
+        UpperS.m = [xim;UpperS.m];
         
-        xi = UpperS.x(1,:) ;
-        yi = UpperS.y(1,:) ;% - 0.1*sin(linspace(0,pi,Blade.NChord));
-        zi = UpperS.z(1,:) ;
-        xin = UpperS.n(1,:);
-        xim = UpperS.m(1,:);
-        
-        UpperS.x = [xi;xi;xi;UpperS.x];
-        UpperS.y = [yi;yi;yi;UpperS.y];
-        UpperS.z = [zi;zi;zi;UpperS.z];
-        UpperS.n = [xin;xin;xin;UpperS.n];
-        UpperS.m = [xim;xim;xim;UpperS.m];
-        
-        xi = LowerS.x(1,:) ;
-        yi = LowerS.y(1,:) ;% - 0.1*sin(linspace(0,pi,Blade.NChord));
-        zi = LowerS.z(1,:) ;
-        xin = LowerS.n(1,:);
-        xim = LowerS.m(1,:);
-        LowerS.x = [xi;xi;xi;LowerS.x];
-        LowerS.y = [yi;yi;yi;LowerS.y];
-        LowerS.z = [zi;zi;zi;LowerS.z];
-        LowerS.n = [xin;xin;xin;LowerS.n];
-        LowerS.m = [xim;xim;xim;LowerS.m];
+        LowerS.x = [xi;LowerS.x];
+        LowerS.y = [yi;LowerS.y];
+        LowerS.z = [zi;LowerS.z];
+        LowerS.n = [xin;LowerS.n];
+        LowerS.m = [xim;LowerS.m];
     end
-
+    else
+        xn = xin;
+        xm = xim;
+        for i = 1:Nhub
+            xin = [xn;xin];
+            xim = [xm;xim];
+        end
+        UpperS.n = [xin;UpperS.n];
+        UpperS.m = [xim;UpperS.m];
+        
+     
+        LowerS.n = [xin;LowerS.n];
+        LowerS.m = [xim;LowerS.m];
+        
+    end
     
     
     
@@ -270,7 +283,8 @@ else
     
     LowerS.x = [XMI;XI;LowerS.x;XO;XMO];
     LowerS.y = [YMI;YI;LowerS.y;YO;YMO];
-    LowerS.z = [ZMI;repmat(ZMI,[sz,1])-ZI;LowerS.z;repmat(ZMO,[sz,1])-ZO;ZMO];
+    LowerS.z = [ZMI;repmat(ZMI,[sz,1])-ZI;
+    LowerS.z;repmat(ZMO,[sz,1])-ZO;ZMO];
     
     
     
@@ -297,8 +311,6 @@ rakes(:) = interp1(Blade.Radius,Blade.Rake,UpperS.y(:),'cubic','extrap');
 thetas(:) = interp1(Blade.Radius,Blade.Theta,UpperS.y(:),'cubic','extrap');
 chords(:) = interp1(Blade.Radius,Blade.Chord,UpperS.y(:),'cubic','extrap');
 
-
-
 UpperS.x = chords.*UpperS.x;
 UpperS.y = UpperS.y;
 UpperS.z = chords.*UpperS.z;
@@ -307,9 +319,6 @@ LowerS.x = chords.*LowerS.x;
 LowerS.y = LowerS.y;
 LowerS.z = chords.*LowerS.z;
 
-if (Blade.isProp)
-   
-end
 
 %   A circle of same chord as root, centered at the root
 if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
@@ -387,8 +396,22 @@ end
 
 %UpperS.z(1,:)./sqrt(UpperS.x(1,:).^2 + UpperS.z(1,:).^2);
 %LowerS.z(1,:)./sqrt(LowerS.x(1,:).^2 + LowerS.z(1,:).^2);
-   
+
+
+
+
+
+
+%UpperS.x = [UpperS.x(1,:);UpperS.x];
+%LowerS.x = [LowerS.x(1,:);LowerS.x];
+
+%UpperS.y = [UpperS.y(1,:);UpperS.y];
+%LowerS.y = [LowerS.y(1,:);LowerS.y];
+
+%UpperS.z = [UpperS.z(1,:);UpperS.z];
+%LowerS.z = [LowerS.z(1,:);LowerS.z];
             
+
 utx = (UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
 utz = (UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas)) - 0.0;%414;
 uty = UpperS.y;
@@ -399,29 +422,84 @@ lty = LowerS.y;
 
 
 
+
+
+
+
+
 %%  Now, if a prop then need to bend around the hub - this might wreck the 
 %   skew and rake angles, so check carefully the correct order of this. For
 %   the 4119 prop there is no skew nor rake so is ok
 
 if (Blade.isProp)
     if (closeTips)
-        R = repmat(Blade.Radius([1 1:end end]),[1 size(utx,2)]);
+        R = repmat(Blade.Radius([1:end ]),[1 size(utx,2)]);
     else
-        R = repmat(Blade.Radius([1 1 1 1:end]),[1 size(utx,2)]);
+        R = repmat(Blade.Radius([1:end]),[1 size(utx,2)]);
     end
     thta = atan(utx./(uty + 1e-16));
     utx = R.*sin(thta);
     uty = R.*cos(thta);
     
     if (closeTips)
-        R = repmat(Blade.Radius([1 1:end end]),[1 size(ltx,2)]);
+        R = repmat(Blade.Radius([1:end]),[1 size(ltx,2)]);
     else
-        R = repmat(Blade.Radius([1 1 1 1:end]),[1 size(ltx,2)]);
+        R = repmat(Blade.Radius([1:end]),[1 size(ltx,2)]);
     end
     thta = atan(ltx./(lty + 1e-16));
     ltx = R.*sin(thta);
     lty = R.*cos(thta);
 end
+
+
+
+%   get bottom of blade in cylindrical coordinates
+
+
+
+
+
+ty = uty(1,:);
+tx = utx(1,:);
+thta1 = atan(tx./ty);
+rs1 = sqrt(tx.*tx + ty.*ty);
+
+ty = lty(1,:);
+tx = ltx(1,:);
+thta2 = atan(tx./ty);
+rs2 = sqrt(tx.*tx + ty.*ty);
+thta_mean = 0.5*(thta1 + thta2);
+rs = repmat(0.5*(rs1 + rs2), [Nhub 1]);
+
+mult = repmat(linspace(0,1,Nhub + 1)',[1 size(thta1,2) ]);
+mult = mult(1:Nhub,:);
+
+thta = repmat(thta1,[Nhub 1]).*mult + (1-mult).*(repmat(thta_mean,[Nhub 1])-pi/3);
+
+
+utx = [rs .* sin(thta);utx];
+uty = [rs .* cos(thta);uty];
+
+thta = repmat(thta2,[Nhub 1]).*mult + (1-mult).*(repmat(thta_mean,[Nhub 1]) + pi/3);
+ltx = [rs .* sin(thta);ltx];
+lty = [rs .* cos(thta);lty];
+
+tz = 0.5*(utz(1,:) + ltz(1,:));
+
+tzu = repmat(utz(1,:),[Nhub 1]).*mult + (1-mult).*(repmat(tz,[Nhub 1]));
+utz = [tzu;utz];
+tzl = repmat(ltz(1,:),[Nhub 1]).*mult + (1-mult).*(repmat(tz,[Nhub 1]));
+ltz = [tzl;ltz];
+
+
+thetas = zeros(size(utx));
+skews = thetas;
+rakes = thetas;
+thetas(:) = interp1(Blade.Radius,Blade.Theta,uty,'cubic','extrap');
+ty = [repmat(UpperS.y(1,:),[Nhub 1]);UpperS.y];
+skews(:) = interp1(Blade.Radius,Blade.Skew,ty,'cubic','extrap');
+rakes(:) = interp1(Blade.Radius,Blade.Rake,ty,'cubic','extrap');
+
 
 %%  Put points into attitude specified by Skew angles
 
@@ -467,7 +545,11 @@ Blade.LS.Global.z = rakes + Blade.LS.Local.z;
 Blade.LS.Global.n = Blade.LS.Local.n;
 Blade.LS.Global.m = Blade.LS.Local.m;
 
-
+figure
+surf(Blade.LS.Global.x,Blade.LS.Global.y,Blade.LS.Global.z)
+hold all
+surf(Blade.US.Global.x,Blade.US.Global.y,Blade.US.Global.z)
+axis equal
 %%  Weld seams together -- points first
 %   These are the indices
 US.N = zeros(size(Blade.US.Global.x));
@@ -495,23 +577,24 @@ LS.UN = zeros(size(Blade.LS.Global.x));
 LS.UN(:) = ind2(LS.N(:));
 
 
-if (~Blade.RoundTips) && (~Blade.isProp)
-    US.UN(1,1) = LS.UN(2,2);
-    LS.UN(1,1) = US.UN(2,2);
-    
-    US.UN(end,1) = LS.UN(end-1,2);
-    LS.UN(end,1) = US.UN(end-1,2);
-    
-    
-    US.UN(1,end) = LS.UN(2,end-1);
-    LS.UN(1,end) = US.UN(2,end-1);
-    
-    US.UN(end,end) = LS.UN(end-1,end-1);
-    LS.UN(end,end) = US.UN(end-1,end-1);
-    Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
-else
+% if ~Blade.RoundTips
+%     US.UN(1,1) = LS.UN(2,2);
+%     LS.UN(1,1) = US.UN(2,2);
+%     
+%     US.UN(end,1) = LS.UN(end-1,2);
+%     LS.UN(end,1) = US.UN(end-1,2);
+%     
+%     
+%     US.UN(1,end) = LS.UN(2,end-1);
+%     LS.UN(1,end) = US.UN(2,end-1);
+%     
+%     US.UN(end,end) = LS.UN(end-1,end-1);
+%     LS.UN(end,end) = US.UN(end-1,end-1);
+%     Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
+% else
     Blade.N.Local = [fliplr(LS.UN(:,2:end)) US.UN(:,:)];
-end
+    Blade.N.Local = [(LS.UN(1:end-1,:)') fliplr(US.UN(:,:)')];
+%end
 Blade.X = X(m,1);
 Blade.Y = X(m,2);
 Blade.Z = X(m,3);
@@ -521,46 +604,45 @@ Blade.m = Q(m);
 %%  Prepare for export
 
 %   Tips
-if ~Blade.RoundTips
-    Blade.Tip.Inboard.US.N.Local = US.UN(1:2,:);
-    Blade.Tip.Outboard.US.N.Local = US.UN(end-1:end,:);
-    Blade.Tip.Inboard.LS.N.Local = LS.UN(1:2,2:end-1);
-    Blade.Tip.Outboard.LS.N.Local = LS.UN(end-1:end,2:end-1);
-else
+% if ~Blade.RoundTips
+%     Blade.Tip.Inboard.US.N.Local = US.UN(1:2,:);
+%     Blade.Tip.Outboard.US.N.Local = US.UN(end-1:end,:);
+%     Blade.Tip.Inboard.LS.N.Local = LS.UN(1:2,2:end-1);
+%     Blade.Tip.Outboard.LS.N.Local = LS.UN(end-1:end,2:end-1);
+% else
     Blade.Tip.Inboard.US.N.Local = [];
     Blade.Tip.Outboard.US.N.Local = [];
     Blade.Tip.Inboard.LS.N.Local = [];
     Blade.Tip.Outboard.LS.N.Local = [];
-end
+%end
 %   Now mini closure panel bit
 
 MainPans = zeros(size(Blade.N.Local) - 1);
 
 MainPans(:) = 1:numel(MainPans);
-[tc1 tc2 tc3 tc4] = fcorner(Blade.N.Local);
-if ~Blade.RoundTips
-    
-    [tiu1 tiu2 tiu3 tiu4] = fcorner(Blade.Tip.Inboard.US.N.Local);
-    [til4 til3 til2 til1] = fcorner(Blade.Tip.Inboard.LS.N.Local);
-    [tou1 tou2 tou3 tou4] = fcorner(Blade.Tip.Outboard.US.N.Local);
-    [tol4 tol3 tol2 tol1] = fcorner(Blade.Tip.Outboard.LS.N.Local);
-end
+[tc1, tc2, tc3, tc4] = fcorner(Blade.N.Local);
+%if ~Blade.RoundTips
+ %   [tiu1 tiu2 tiu3 tiu4] = fcorner(Blade.Tip.Inboard.US.N.Local);
+ %   [til4 til3 til2 til1] = fcorner(Blade.Tip.Inboard.LS.N.Local);
+ %   [tou1 tou2 tou3 tou4] = fcorner(Blade.Tip.Outboard.US.N.Local);
+ %   [tol4 tol3 tol2 tol1] = fcorner(Blade.Tip.Outboard.LS.N.Local);
+%end
 
 
 Blade.Panels.MainPans = MainPans;
-if ~Blade.RoundTips
-    Blade.Panels.c1.Local = [tc1(:);tiu1(:);til1(:);tou1(:);tol1(:)];
-    Blade.Panels.c2.Local = [tc2(:);tiu2(:);til2(:);tou2(:);tol2(:)];
-    Blade.Panels.c3.Local = [tc3(:);tiu3(:);til3(:);tou3(:);tol3(:)];
-    Blade.Panels.c4.Local = [tc4(:);tiu4(:);til4(:);tou4(:);tol4(:)];
-else
+% if ~Blade.RoundTips
+%     Blade.Panels.c1.Local = [tc1(:);tiu1(:);til1(:);tou1(:);tol1(:)];
+%     Blade.Panels.c2.Local = [tc2(:);tiu2(:);til2(:);tou2(:);tol2(:)];
+%     Blade.Panels.c3.Local = [tc3(:);tiu3(:);til3(:);tou3(:);tol3(:)];
+%     Blade.Panels.c4.Local = [tc4(:);tiu4(:);til4(:);tou4(:);tol4(:)];
+% else
     
     Blade.Panels.c1.Local = tc1(:);
     Blade.Panels.c2.Local = tc2(:);
     Blade.Panels.c3.Local = tc3(:);
     Blade.Panels.c4.Local = tc4(:);
     
-end
+%end
 
 
 % [n1 n2 n3 n4] = fcorner(Blade.N.Local);
@@ -573,18 +655,18 @@ end
 
 Blade.nPnls = numel(Blade.Panels.c1.Local);
 Blade.nPts = numel(Blade.X);
-Blade.Panels.WakeShedders.LS.Local = MainPans(:,1);
-Blade.Panels.WakeShedders.US.Local = MainPans(:,end);
+Blade.Panels.WakeShedders.LS.Local = MainPans(1,:);
+Blade.Panels.WakeShedders.US.Local = MainPans(end,:);
 
-if Blade.RoundTips
-    n = Blade.num_tip_pans+1;
+%if Blade.RoundTips
+    n = Nhub+1;
     Blade.Panels.WakeShedders.LS.Local = MainPans(n:(end-n),1);
     Blade.Panels.WakeShedders.US.Local = MainPans(n:(end-n),end);
     if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
             Blade.Panels.WakeShedders.LS.Local = MainPans((n+Blade.n2):(end-n),1);
         Blade.Panels.WakeShedders.US.Local = MainPans((n+Blade.n2):(end-n),end);
     end
-end
+%end
     
 if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
     Blade.Panels.WakeShedders.LS.Local = MainPans(Blade.n2:end,1);
@@ -592,24 +674,28 @@ if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
 end
 Mp = zeros(size(Blade.N.Local) - 1);
 Mp(:) = 1:numel(Mp);
-if ~Blade.RoundTips
-    t1 = zeros(size(Blade.Tip.Inboard.US.N.Local) - 1); t1(:) = 1:numel(t1); t1 = t1 + max(Mp(:));
-    t2 = zeros(size(Blade.Tip.Inboard.LS.N.Local) - 1); t2(:) = 1:numel(t2); t2 = t2 + max(t1(:));
-    t3 = zeros(size(Blade.Tip.Outboard.US.N.Local) - 1); t3(:) = 1:numel(t3); t3 = t3 + max(t2(:));
-    t4 = zeros(size(Blade.Tip.Outboard.LS.N.Local) - 1); t4(:) = 1:numel(t4); t4 = t4 + max(t3(:));
-end
+% if ~Blade.RoundTips
+%     t1 = zeros(size(Blade.Tip.Inboard.US.N.Local) - 1); t1(:) = 1:numel(t1); t1 = t1 + max(Mp(:));
+%     t2 = zeros(size(Blade.Tip.Inboard.LS.N.Local) - 1); t2(:) = 1:numel(t2); t2 = t2 + max(t1(:));
+%     t3 = zeros(size(Blade.Tip.Outboard.US.N.Local) - 1); t3(:) = 1:numel(t3); t3 = t3 + max(t2(:));
+%     t4 = zeros(size(Blade.Tip.Outboard.LS.N.Local) - 1); t4(:) = 1:numel(t4); t4 = t4 + max(t3(:));
+% end
 Blade.Panels.MainSurf = Mp;
-if ~Blade.RoundTips
-    Blade.Panels.TipInnerUS = t1;
-    Blade.Panels.TipInnerLS = t2;
-    Blade.Panels.TipOuterUS = t3;
-    Blade.Panels.TipOuterLS = t4;
-else
+% if ~Blade.RoundTips
+%     Blade.Panels.TipInnerUS = t1;
+%     Blade.Panels.TipInnerLS = t2;
+%     Blade.Panels.TipOuterUS = t3;
+%     Blade.Panels.TipOuterLS = t4;
+% else
     Blade.Panels.TipInnerUS = [];
     Blade.Panels.TipInnerLS = [];
     Blade.Panels.TipOuterUS = [];
     Blade.Panels.TipOuterLS = [];
-end
+%end
+
+
+
+
 
 function [Corner1 Corner2 Corner3 Corner4] = fcorner(Pans)
 Corner1 = Pans(1:end-1,1:end-1);

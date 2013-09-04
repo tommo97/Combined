@@ -5,6 +5,7 @@ dirname = [infname(1:(length(infname) - 4)) '_VTKdata'];
 system(['rm -rf ' dirname]);
 system(['mkdir ' dirname]);
 load(fname,'CellPos','CellOms','GambitScale','Time','NBodies','NumTransVars', 'TransVars_x','TransVars_y','TransVars_z');
+try
 Origin = min(CellPos)/GambitScale;
 
 minx = min(CellPos(:,1));
@@ -25,11 +26,14 @@ for i = 1:NumTransVars
     inds = sub2ind(size(Domain),subs(:,1),subs(:,2),subs(:,3));
         
     Domain(inds) = sqrt(TransVars_x(:,i).^2 + TransVars_y(:,i).^2 + TransVars_z(:,i).^2);
-    
+    Domain(Domain > 5*std(Domain(:))) =  5*std(Domain(:));
     wakeVTKname = [dirname '/Wake_Scale=' num2str(GambitScale) '_Time=' num2str(Time) '_' num2str(i) '_' vtkname];
     
     
     writeDomainVTK(Domain,wakeVTKname,1/GambitScale,Origin);
+end
+catch
+    GambitScale = 1;
 end
 load(fname,'Cp','NParts','AllBodyPoints_x','AllBodyPoints_y','AllBodyPoints_z');
 

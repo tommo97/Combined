@@ -103,7 +103,7 @@ public:
     static int NumFaces;
     static Array <BODY*> Bodies;
     static bool LiftingLineMode;
-    static Array <PANEL*> AllBodyFaces;
+    static Array <PANEL*> AllBodyFaces, AllWakePanels;
     static int BodyPanelIDCounter, BodyPointIDCounter;
     static void BodySubStep(REAL delta_t, int n_steps);
     
