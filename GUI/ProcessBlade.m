@@ -111,9 +111,12 @@ if ~isempty(Blade.Camber)
     ThicknessDist = (UpperS.z - LowerS.z);
     UpperS.z = (RootBlendCoefft.*MeanLineRoot + TipBlendCoefft.*MeanLineTip) + 0.5*ThicknessDist;
     LowerS.z = (RootBlendCoefft.*MeanLineRoot + TipBlendCoefft.*MeanLineTip) - 0.5*ThicknessDist;
-end
+    
+    
 
-%%  Close ends - make some caps
+ end
+% 
+% %%  Close ends - make some caps
 if ~Blade.RoundTips
     d = cos(linspace(0,pi,Blade.NChord-1));
     
@@ -152,32 +155,24 @@ if ~Blade.RoundTips
         LowerS.n = [xin;LowerS.n;xon];
         LowerS.m = [xim;LowerS.m;xom];
     else     %    just seal edge
+        
+        
+        
+        
         closeTips = false;
+        UpperS.x = [xi;UpperS.x];
+        UpperS.y = [yi;UpperS.y];
+        UpperS.z = [zi;UpperS.z];
+        UpperS.n = [xin;UpperS.n];
+        UpperS.m = [xim;UpperS.m];
         
-        xi = UpperS.x(1,:) ;
-        yi = UpperS.y(1,:) ;% - 0.1*sin(linspace(0,pi,Blade.NChord));
-        zi = UpperS.z(1,:) ;
-        xin = UpperS.n(1,:);
-        xim = UpperS.m(1,:);
-        
-        UpperS.x = [xi;xi;xi;UpperS.x];
-        UpperS.y = [yi;yi;yi;UpperS.y];
-        UpperS.z = [zi;zi;zi;UpperS.z];
-        UpperS.n = [xin;xin;xin;UpperS.n];
-        UpperS.m = [xim;xim;xim;UpperS.m];
-        
-        xi = LowerS.x(1,:) ;
-        yi = LowerS.y(1,:) ;% - 0.1*sin(linspace(0,pi,Blade.NChord));
-        zi = LowerS.z(1,:) ;
-        xin = LowerS.n(1,:);
-        xim = LowerS.m(1,:);
-        LowerS.x = [xi;xi;xi;LowerS.x];
-        LowerS.y = [yi;yi;yi;LowerS.y];
-        LowerS.z = [zi;zi;zi;LowerS.z];
-        LowerS.n = [xin;xin;xin;LowerS.n];
-        LowerS.m = [xim;xim;xim;LowerS.m];
+        LowerS.x = [xi;LowerS.x];
+        LowerS.y = [yi;LowerS.y];
+        LowerS.z = [zi;LowerS.z];
+        LowerS.n = [xin;LowerS.n];
+        LowerS.m = [xim;LowerS.m];
     end
-
+    
     
     
     
@@ -279,11 +274,11 @@ else
     LowerS.m = [repmat(LowerS.m(1,:),[sz+1,1]); LowerS.m; repmat(LowerS.m(end,:),[sz+1,1])];
     LowerS.n = [repmat(LowerS.n(1,:),[sz+1,1]); LowerS.n; repmat(LowerS.n(end,:),[sz+1,1])];
     
-%     figure; surf(UpperS.x, UpperS.y, UpperS.z); axis equal; view(3)
-%     hold all
-%     surf(LowerS.x, LowerS.y, LowerS.z); axis equal; view(3)
+    %     figure; surf(UpperS.x, UpperS.y, UpperS.z); axis equal; view(3)
+    %     hold all
+    %     surf(LowerS.x, LowerS.y, LowerS.z); axis equal; view(3)
     
-
+    
 end
 
 
@@ -297,8 +292,6 @@ rakes(:) = interp1(Blade.Radius,Blade.Rake,UpperS.y(:),'cubic','extrap');
 thetas(:) = interp1(Blade.Radius,Blade.Theta,UpperS.y(:),'cubic','extrap');
 chords(:) = interp1(Blade.Radius,Blade.Chord,UpperS.y(:),'cubic','extrap');
 
-
-
 UpperS.x = chords.*UpperS.x;
 UpperS.y = UpperS.y;
 UpperS.z = chords.*UpperS.z;
@@ -307,10 +300,7 @@ LowerS.x = chords.*LowerS.x;
 LowerS.y = LowerS.y;
 LowerS.z = chords.*LowerS.z;
 
-if (Blade.isProp)
    
-end
-
 %   A circle of same chord as root, centered at the root
 if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
 LXs = LowerS.x(1,:);
@@ -388,7 +378,13 @@ end
 %UpperS.z(1,:)./sqrt(UpperS.x(1,:).^2 + UpperS.z(1,:).^2);
 %LowerS.z(1,:)./sqrt(LowerS.x(1,:).^2 + LowerS.z(1,:).^2);
    
-            
+
+% if Blade.isProp
+%     UpperS.x([1 2],:) = 1.25*UpperS.x([1 2],:);
+%     LowerS.x([1 2],:) = 1.25*LowerS.x([1 2],:);
+%     UpperS.z([1 2],:) = 1.25*UpperS.z([1 2],:);
+%     LowerS.z([1 2],:) = 1.25*LowerS.z([1 2],:);
+% end
 utx = (UpperS.x.*cosd(thetas) - UpperS.z.*sind(thetas));
 utz = (UpperS.x.*sind(thetas) + UpperS.z.*cosd(thetas)) - 0.0;%414;
 uty = UpperS.y;
@@ -397,18 +393,21 @@ ltx = (LowerS.x.*cosd(thetas) - LowerS.z.*sind(thetas));
 ltz = (LowerS.x.*sind(thetas) + LowerS.z.*cosd(thetas)) - 0.0;%414;
 lty = LowerS.y;
 
-
-
 %%  Now, if a prop then need to bend around the hub - this might wreck the 
 %   skew and rake angles, so check carefully the correct order of this. For
 %   the 4119 prop there is no skew nor rake so is ok
 
 if (Blade.isProp)
+    
+    
+    
+
     if (closeTips)
         R = repmat(Blade.Radius([1 1:end end]),[1 size(utx,2)]);
     else
-        R = repmat(Blade.Radius([1 1 1 1:end]),[1 size(utx,2)]);
+        R = repmat(Blade.Radius([1 1:end]),[1 size(utx,2)]);
     end
+    R([1 2],:) = Blade.Radius(1);
     thta = atan(utx./(uty + 1e-16));
     utx = R.*sin(thta);
     uty = R.*cos(thta);
@@ -416,11 +415,123 @@ if (Blade.isProp)
     if (closeTips)
         R = repmat(Blade.Radius([1 1:end end]),[1 size(ltx,2)]);
     else
-        R = repmat(Blade.Radius([1 1 1 1:end]),[1 size(ltx,2)]);
+        R = repmat(Blade.Radius([1 1:end]),[1 size(ltx,2)]);
     end
     thta = atan(ltx./(lty + 1e-16));
     ltx = R.*sin(thta);
     lty = R.*cos(thta);
+    
+    
+    
+    
+    
+    
+    
+    
+    %   Check to make sure that LE and TE at the root have the highest and
+    %   lowest z values
+    
+    uminz = min(utz(2,:));
+    lminz = min(ltz(2,:));
+    
+    txu = utx(2,:); tyu = uty(2,:); tzu = utz(2,:);
+    txl = ltx(2,:); tyl = lty(2,:); tzl = ltz(2,:);
+    dsu = [0 cumsum(sqrt(diff(txu).^2 + diff(tyu).^2 + diff(tzu).^2))]; dsu = dsu/dsu(end);
+    dsl = [0 cumsum(sqrt(diff(txl).^2 + diff(tyl).^2 + diff(tzl).^2))]; dsl = dsl/dsl(end);
+    
+   
+    rtx =  [fliplr(txl) txu(2:end)];
+    rty =  [fliplr(tyl) tyu(2:end)];
+    rtz =  [fliplr(tzl) tzu(2:end)];
+    
+ 
+    ds = [0 cumsum(sqrt(diff(rtx).^2 + diff(rty).^2 + diff(rtz).^2))];
+    
+    indx = find(rtz==min(rtz));
+    
+    lrtx = fliplr(rtx(1:indx));
+    lrty = fliplr(rty(1:indx));
+    lrtz = fliplr(rtz(1:indx));
+    dslrt = [0 cumsum(sqrt(diff(lrtx).^2 + diff(lrty).^2 + diff(lrtz).^2))]; dslrt = dslrt/dslrt(end);
+    
+    urtx = rtx(indx:end);
+    urty = rty(indx:end);
+    urtz = rtz(indx:end);
+    dsurt = [0 cumsum(sqrt(diff(urtx).^2 + diff(urty).^2 + diff(urtz).^2))]; dsurt = dsurt/dsurt(end);
+    
+    ltx(2,:) = interp1(dslrt,lrtx,dsl,'cubic');
+    lty(2,:) = interp1(dslrt,lrty,dsl,'cubic');
+    ltz(2,:) = interp1(dslrt,lrtz,dsl,'cubic');
+    
+    utx(2,:) = interp1(dsurt,urtx,dsu,'cubic');
+    uty(2,:) = interp1(dsurt,urty,dsu,'cubic');
+    utz(2,:) = interp1(dsurt,urtz,dsu,'cubic');
+    
+    
+    mlx = (ltx(2,:) + utx(2,:))/2;
+    mly = (lty(2,:) + uty(2,:))/2;
+    mlz = (ltz(2,:) + utz(2,:))/2;
+    
+    utx(1,:) = mlx;
+    uty(1,:) = mly;
+    utz(1,:) = mlz;
+    ltx(1,:) = mlx;
+    lty(1,:) = mly;
+    ltz(1,:) = mlz;
+    
+    %   Check to make sure that LE and TE at the root have the highest and
+    %   lowest z values
+    
+   
+    
+    txu = utx(2,:); tyu = uty(2,:); tzu = utz(2,:);
+    txl = ltx(2,:); tyl = lty(2,:); tzl = ltz(2,:);
+    dsu = [0 cumsum(sqrt(diff(txu).^2 + diff(tyu).^2 + diff(tzu).^2))]; dsu = dsu/dsu(end);
+    dsl = [0 cumsum(sqrt(diff(txl).^2 + diff(tyl).^2 + diff(tzl).^2))]; dsl = dsl/dsl(end);
+    
+   
+    rtx =  [txl fliplr(txu(1:end-1))];
+    rty =  [tyl fliplr(tyu(1:end-1))];
+    rtz =  [tzl fliplr(tzu(1:end-1))];
+    
+ 
+    ds = [0 cumsum(sqrt(diff(rtx).^2 + diff(rty).^2 + diff(rtz).^2))];
+    
+    indx = find(rtz==max(rtz));
+    
+    lrtx = rtx(1:indx);
+    lrty = rty(1:indx);
+    lrtz = rtz(1:indx);
+    dslrt = [0 cumsum(sqrt(diff(lrtx).^2 + diff(lrty).^2 + diff(lrtz).^2))]; dslrt = dslrt/dslrt(end);
+    
+    urtx = fliplr(rtx(indx:end));
+    urty = fliplr(rty(indx:end));
+    urtz = fliplr(rtz(indx:end));
+    dsurt = [0 cumsum(sqrt(diff(urtx).^2 + diff(urty).^2 + diff(urtz).^2))]; dsurt = dsurt/dsurt(end);
+    
+    ltx(2,:) = interp1(dslrt,lrtx,dsl,'cubic');
+    lty(2,:) = interp1(dslrt,lrty,dsl,'cubic');
+    ltz(2,:) = interp1(dslrt,lrtz,dsl,'cubic');
+    
+    utx(2,:) = interp1(dsurt,urtx,dsu,'cubic');
+    uty(2,:) = interp1(dsurt,urty,dsu,'cubic');
+    utz(2,:) = interp1(dsurt,urtz,dsu,'cubic');
+    
+    
+    mlx = (ltx(2,:) + utx(2,:))/2;
+    mly = (lty(2,:) + uty(2,:))/2;
+    mlz = (ltz(2,:) + utz(2,:))/2;
+    
+    utx(1,:) = mlx;
+    uty(1,:) = mly;
+    utz(1,:) = mlz;
+    ltx(1,:) = mlx;
+    lty(1,:) = mly;
+    ltz(1,:) = mlz;
+    
+    
+    
+    
 end
 
 %%  Put points into attitude specified by Skew angles
@@ -447,6 +558,7 @@ LowerS.x = ltx.*a1 + lty.*a2 + ltz.*a3;
 LowerS.y = ltx.*b1 + lty.*b2 + ltz.*b3;
 LowerS.z = ltx.*c1 + lty.*c2 + ltz.*c3;
 
+
 Blade.Upper = UpperS;
 Blade.US.Local = UpperS;
 Blade.Lower = LowerS;
@@ -454,18 +566,22 @@ Blade.LS.Local = LowerS;
 
 clear Blade.Upper Blade.Lower Blade.US.Local Blade.LS.Local
 
+if Blade.isProp
+    nstart = 2;
+else
+    nstart = 1;
+end
+Blade.US.Global.x = Blade.US.Local.x(nstart:end,:);
+Blade.US.Global.y = Blade.US.Local.y(nstart:end,:);
+Blade.US.Global.z = rakes(nstart:end,:) + Blade.US.Local.z(nstart:end,:);
+Blade.US.Global.n = Blade.US.Local.n(nstart:end,:);
+Blade.US.Global.m = Blade.US.Local.m(nstart:end,:);
 
-Blade.US.Global.x = Blade.US.Local.x;
-Blade.US.Global.y = Blade.US.Local.y;
-Blade.US.Global.z = rakes + Blade.US.Local.z;
-Blade.US.Global.n = Blade.US.Local.n;
-Blade.US.Global.m = Blade.US.Local.m;
-
-Blade.LS.Global.x = Blade.LS.Local.x;
-Blade.LS.Global.y = Blade.LS.Local.y;
-Blade.LS.Global.z = rakes + Blade.LS.Local.z;
-Blade.LS.Global.n = Blade.LS.Local.n;
-Blade.LS.Global.m = Blade.LS.Local.m;
+Blade.LS.Global.x = Blade.LS.Local.x(nstart:end,:);
+Blade.LS.Global.y = Blade.LS.Local.y(nstart:end,:);
+Blade.LS.Global.z = rakes(nstart:end,:) + Blade.LS.Local.z(nstart:end,:);
+Blade.LS.Global.n = Blade.LS.Local.n(nstart:end,:);
+Blade.LS.Global.m = Blade.LS.Local.m(nstart:end,:);
 
 
 %%  Weld seams together -- points first
@@ -611,6 +727,7 @@ else
     Blade.Panels.TipOuterLS = [];
 end
 
+disp(size(MainPans))
 function [Corner1 Corner2 Corner3 Corner4] = fcorner(Pans)
 Corner1 = Pans(1:end-1,1:end-1);
 Corner2 = Pans(1:end-1,2:end);

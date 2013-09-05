@@ -84,6 +84,7 @@ switch blade.type;
         blade = BladeFromBladeSpec('../GeomInputMatFiles/SOTON.mat', blade);
         blade.isSOTON = true;
     case 'ESRU PoC 1 ''05' % User selects Sinc.
+        
         blade = BladeFromBladeSpec('../GeomInputMatFiles/ESRUPoc1.mat', blade);
     case 'ESRU PoC 2 ''05' % User selects Sinc.
         blade = BladeFromBladeSpec('../GeomInputMatFiles/ESRUPoc2.mat', blade);

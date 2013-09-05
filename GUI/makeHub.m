@@ -36,16 +36,7 @@ for B = 1:NBlades
     ThetaLS = atan2(ZhubLower, YhubLower);
     ThetaMean = 0.5*(ThetaUS+ThetaLS);
     
-    TwistFit = FitData(MeanX,ThetaMean);
-    
-    dxfront = MeanX(end - 1) - MeanX(end);
-    dxback = MeanX(1) - MeanX(2);
-    
-    Thtaback = TwistFit(MeanX(1) + dxback);
-    Thtafront = TwistFit( MeanX(end) - dxfront);
     clear THETA RHO Z XH;
-    
-    
     for i = 1:l
         THETA(i,:) = linspace(ThetaUS(i), ThetaLS(i) + Angle,n)';
         XH(i,:) = linspace(XhubUpper(i), XhubLower(i),n)';

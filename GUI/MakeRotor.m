@@ -88,12 +88,12 @@ for i = 1:Rotor.NumBlades
     surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.US.N.Local),'facecolor',colr,'edgecolor','none');
     surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),'facecolor',colr,'edgecolor','none');
     
-       surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.N.Local),'facecolor','none','edgecolor','w');
+       surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
 
-    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.US.N.Local),'facecolor','none','edgecolor','w');
-    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),'facecolor','none','edgecolor','w');
-    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.US.N.Local),'facecolor','none','edgecolor','w');
-    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),'facecolor','none','edgecolor','w');
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.US.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.US.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
+    surf(ax,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
     view(ax,3);
     
     surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.N.Local),'facecolor',colr,'edgecolor','none');
@@ -103,12 +103,12 @@ for i = 1:Rotor.NumBlades
     surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.US.N.Local),'facecolor',colr,'edgecolor','none');
     surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),'facecolor',colr,'edgecolor','none');
     
-       surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.N.Local),'facecolor','none','edgecolor','w');
+       surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
 
-    surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.US.N.Local),'facecolor','none','edgecolor','w');
-    surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),'facecolor','none','edgecolor','w');
-    surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.US.N.Local),'facecolor','none','edgecolor','w');
-    surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),'facecolor','none','edgecolor','w');
+    surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.US.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
+    surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Inboard.LS.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
+    surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.US.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.US.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
+    surf(ax2,Rotor.Blade{i}.X(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Y(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),Rotor.Blade{i}.Z(Rotor.Blade{i}.Tip.Outboard.LS.N.Local),'facecolor','none','edgecolor',[0.5 0.5 0.5]);
     view(ax2,3);
     
     
@@ -120,8 +120,9 @@ for i = 1:Rotor.NumBlades
     
     
 end
-makeHub(Xhub, Yhub, Zhub);
-
+if (handles.Blade.isProp)
+    makeHub(Xhub, Yhub, Zhub);
+end
 axis(ax,'equal','tight');
 Rotor.Split = get(handles.blades_as_bodies,'Value') ;
 material dull

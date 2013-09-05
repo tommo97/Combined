@@ -16,8 +16,8 @@ maxx = max(CellPos(:,1));
 maxy = max(CellPos(:,2));
 maxz = max(CellPos(:,3));
   
-
-for i = 1:NumTransVars
+TVs = find(sum(abs(TransVars_x)) + sum(abs(TransVars_y)) + sum(abs(TransVars_z)));
+for i = TVs
 
     Domain = zeros(1 + maxx-minx,1 + maxy-miny,1 + maxz-minz);
     
