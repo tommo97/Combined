@@ -8,7 +8,6 @@ clc
 closeTips = true;
 disp(Blade);
 
-
 SpanRepSize = [Blade.NSpan 1];
 ChordRepSize = [1 Blade.NChord];
 
@@ -558,30 +557,33 @@ LowerS.x = ltx.*a1 + lty.*a2 + ltz.*a3;
 LowerS.y = ltx.*b1 + lty.*b2 + ltz.*b3;
 LowerS.z = ltx.*c1 + lty.*c2 + ltz.*c3;
 
-
-Blade.Upper = UpperS;
-Blade.US.Local = UpperS;
-Blade.Lower = LowerS;
-Blade.LS.Local = LowerS;
-
-clear Blade.Upper Blade.Lower Blade.US.Local Blade.LS.Local
+LowerS.z = rakes + LowerS.z;
+UpperS.z = rakes + UpperS.z;
 
 if Blade.isProp
     nstart = 2;
 else
     nstart = 1;
 end
-Blade.US.Global.x = Blade.US.Local.x(nstart:end,:);
-Blade.US.Global.y = Blade.US.Local.y(nstart:end,:);
-Blade.US.Global.z = rakes(nstart:end,:) + Blade.US.Local.z(nstart:end,:);
-Blade.US.Global.n = Blade.US.Local.n(nstart:end,:);
-Blade.US.Global.m = Blade.US.Local.m(nstart:end,:);
 
-Blade.LS.Global.x = Blade.LS.Local.x(nstart:end,:);
-Blade.LS.Global.y = Blade.LS.Local.y(nstart:end,:);
-Blade.LS.Global.z = rakes(nstart:end,:) + Blade.LS.Local.z(nstart:end,:);
-Blade.LS.Global.n = Blade.LS.Local.n(nstart:end,:);
-Blade.LS.Global.m = Blade.LS.Local.m(nstart:end,:);
+UpperS.x = UpperS.x(nstart:end,:);
+UpperS.y = UpperS.y(nstart:end,:);
+UpperS.z = UpperS.z(nstart:end,:);
+
+LowerS.x = LowerS.x(nstart:end,:);
+LowerS.y = LowerS.y(nstart:end,:);
+LowerS.z = LowerS.z(nstart:end,:);
+
+Blade.Upper = UpperS;
+Blade.US.Local = UpperS;
+Blade.Lower = LowerS;
+Blade.LS.Local = LowerS;
+
+
+Blade.US.Global = Blade.US.Local;
+Blade.LS.Global = Blade.LS.Local;
+
+
 
 
 %%  Weld seams together -- points first
@@ -611,20 +613,24 @@ LS.UN = zeros(size(Blade.LS.Global.x));
 LS.UN(:) = ind2(LS.N(:));
 
 
-if (~Blade.RoundTips) && (~Blade.isProp)
-    US.UN(1,1) = LS.UN(2,2);
-    LS.UN(1,1) = US.UN(2,2);
-    
+if (~Blade.RoundTips) && (closeTips)
     US.UN(end,1) = LS.UN(end-1,2);
     LS.UN(end,1) = US.UN(end-1,2);
     
-    
-    US.UN(1,end) = LS.UN(2,end-1);
-    LS.UN(1,end) = US.UN(2,end-1);
-    
     US.UN(end,end) = LS.UN(end-1,end-1);
     LS.UN(end,end) = US.UN(end-1,end-1);
-    Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];
+
+    if  (~Blade.isProp)
+        US.UN(1,1) = LS.UN(2,2);
+        LS.UN(1,1) = US.UN(2,2);
+    
+        US.UN(1,end) = LS.UN(2,end-1);
+        LS.UN(1,end) = US.UN(2,end-1);
+        
+        Blade.N.Local = [fliplr(LS.UN(2:end-1,2:end)) US.UN(2:end-1,:)];       
+    else
+        Blade.N.Local = [fliplr(LS.UN(1:end-1,2:end)) US.UN(1:end-1,:)];     
+    end
 else
     Blade.N.Local = [fliplr(LS.UN(:,2:end)) US.UN(:,:)];
 end
@@ -637,7 +643,7 @@ Blade.m = Q(m);
 %%  Prepare for export
 
 %   Tips
-if ~Blade.RoundTips
+if (~Blade.RoundTips) && (closeTips)
     Blade.Tip.Inboard.US.N.Local = US.UN(1:2,:);
     Blade.Tip.Outboard.US.N.Local = US.UN(end-1:end,:);
     Blade.Tip.Inboard.LS.N.Local = LS.UN(1:2,2:end-1);
@@ -654,7 +660,7 @@ MainPans = zeros(size(Blade.N.Local) - 1);
 
 MainPans(:) = 1:numel(MainPans);
 [tc1 tc2 tc3 tc4] = fcorner(Blade.N.Local);
-if ~Blade.RoundTips
+if (~Blade.RoundTips) && (closeTips)
     
     [tiu1 tiu2 tiu3 tiu4] = fcorner(Blade.Tip.Inboard.US.N.Local);
     [til4 til3 til2 til1] = fcorner(Blade.Tip.Inboard.LS.N.Local);
@@ -664,7 +670,7 @@ end
 
 
 Blade.Panels.MainPans = MainPans;
-if ~Blade.RoundTips
+if (~Blade.RoundTips) && (closeTips)
     Blade.Panels.c1.Local = [tc1(:);tiu1(:);til1(:);tou1(:);tol1(:)];
     Blade.Panels.c2.Local = [tc2(:);tiu2(:);til2(:);tou2(:);tol2(:)];
     Blade.Panels.c3.Local = [tc3(:);tiu3(:);til3(:);tou3(:);tol3(:)];
@@ -692,7 +698,7 @@ Blade.nPts = numel(Blade.X);
 Blade.Panels.WakeShedders.LS.Local = MainPans(:,1);
 Blade.Panels.WakeShedders.US.Local = MainPans(:,end);
 
-if Blade.RoundTips
+if Blade.RoundTips && (closeTips)
     n = Blade.num_tip_pans+1;
     Blade.Panels.WakeShedders.LS.Local = MainPans(n:(end-n),1);
     Blade.Panels.WakeShedders.US.Local = MainPans(n:(end-n),end);
@@ -708,14 +714,14 @@ if Blade.isNREL || Blade.isSOTON || Blade.isBarltrop
 end
 Mp = zeros(size(Blade.N.Local) - 1);
 Mp(:) = 1:numel(Mp);
-if ~Blade.RoundTips
+if ~Blade.RoundTips && (closeTips)
     t1 = zeros(size(Blade.Tip.Inboard.US.N.Local) - 1); t1(:) = 1:numel(t1); t1 = t1 + max(Mp(:));
     t2 = zeros(size(Blade.Tip.Inboard.LS.N.Local) - 1); t2(:) = 1:numel(t2); t2 = t2 + max(t1(:));
     t3 = zeros(size(Blade.Tip.Outboard.US.N.Local) - 1); t3(:) = 1:numel(t3); t3 = t3 + max(t2(:));
     t4 = zeros(size(Blade.Tip.Outboard.LS.N.Local) - 1); t4(:) = 1:numel(t4); t4 = t4 + max(t3(:));
 end
 Blade.Panels.MainSurf = Mp;
-if ~Blade.RoundTips
+if (~Blade.RoundTips) && (closeTips)
     Blade.Panels.TipInnerUS = t1;
     Blade.Panels.TipInnerLS = t2;
     Blade.Panels.TipOuterUS = t3;

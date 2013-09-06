@@ -70,7 +70,8 @@ int main(int argc, char *argv[]) {
     system("clear");
     system("rm Output.mat");
 
-    BODY::OutputSubStepCollocationPoints = SYSTEM::PanelOnly = false;
+    BODY::OutputSubStepCollocationPoints = false;
+    SYSTEM::PanelOnly = false;
     PANEL::Initialise();
     UTIL::GetCellPans();
 
@@ -130,6 +131,114 @@ int main(int argc, char *argv[]) {
 /**************************************************************/
 void UTIL::PostAmble(string fname) {
 
+    
+    //  Minimal PostAmble as seemed to take too much time
+
+
+    {
+        int n = BODY::AllBodyFaces.size();
+
+        Array < Array <REAL> > TmpPtsx, TmpPtsy, TmpPtsz;
+        TmpPtsx = UTIL::zeros(n, 4);
+        TmpPtsy = UTIL::zeros(n, 4);
+        TmpPtsz = UTIL::zeros(n, 4);
+        Array <REAL> CPs(n), Areas(n), Sigmas(n), Mus(n);
+
+        for (int i = 0; i < n; ++i) {
+            TmpPtsx[i][0] = BODY::AllBodyFaces[i]->C1.x;
+            TmpPtsy[i][0] = BODY::AllBodyFaces[i]->C1.y;
+            TmpPtsz[i][0] = BODY::AllBodyFaces[i]->C1.z;
+
+            TmpPtsx[i][1] = BODY::AllBodyFaces[i]->C2.x;
+            TmpPtsy[i][1] = BODY::AllBodyFaces[i]->C2.y;
+            TmpPtsz[i][1] = BODY::AllBodyFaces[i]->C2.z;
+
+            TmpPtsx[i][2] = BODY::AllBodyFaces[i]->C3.x;
+            TmpPtsy[i][2] = BODY::AllBodyFaces[i]->C3.y;
+            TmpPtsz[i][2] = BODY::AllBodyFaces[i]->C3.z;
+
+            TmpPtsx[i][3] = BODY::AllBodyFaces[i]->C4.x;
+            TmpPtsy[i][3] = BODY::AllBodyFaces[i]->C4.y;
+            TmpPtsz[i][3] = BODY::AllBodyFaces[i]->C4.z;
+
+            CPs[i] = BODY::AllBodyFaces[i]->GetCp();
+            Mus[i] = BODY::AllBodyFaces[i]->Mu;
+            Areas[i] = BODY::AllBodyFaces[i]->Area;
+            Sigmas[i] = BODY::AllBodyFaces[i]->Sigma;
+
+        }
+
+        n = BODY::AllWakePanels.size();
+        Array <Vect3> C1(n), C2(n), C3(n), C4(n);
+        Array <REAL> GMA(n);
+
+        for (int i = 0; i < n; ++i) {
+            C1[i] = BODY::AllWakePanels[i]->C1;
+            C2[i] = BODY::AllWakePanels[i]->C2;
+            C3[i] = BODY::AllWakePanels[i]->C3;
+            C4[i] = BODY::AllWakePanels[i]->C4;
+            GMA[i] = BODY::AllWakePanels[i]->Gamma;
+        }
+
+
+
+        WriteMATLABMatrix2D("BodyPointsX", fname, TmpPtsx);
+        WriteMATLABMatrix2D("BodyPointsY", fname, TmpPtsy);
+        WriteMATLABMatrix2D("BodyPointsZ", fname, TmpPtsz);
+        WriteMATLABMatrix1D("Cp", fname, CPs);
+        WriteMATLABMatrix1D("Mu", fname, Mus);
+        WriteMATLABMatrix1D("Area", fname, Areas);
+        WriteMATLABMatrix1D("Sigma", fname, Sigmas);
+        WriteMATLABMatrix1DVect3("WakePanC1", fname, C1);
+        WriteMATLABMatrix1DVect3("WakePanC2", fname, C2);
+        WriteMATLABMatrix1DVect3("WakePanC3", fname, C3);
+        WriteMATLABMatrix1DVect3("WakePanC4", fname, C4);
+        WriteMATLABMatrix1D("WakePanGamma", fname, GMA);
+
+
+        for (int i = 0; i < BODY::Bodies.size(); ++i) {
+            UTIL::WriteMATLABMatrix1DVect3("BodyCG" + UTIL::toString(i), fname, BODY::Bodies[i]->CG);
+        }
+
+        for (int i = 0; i < BODY::Surfaces.size(); ++i) {
+            UTIL::WriteMATLABMatrix2D("BodySurface" + UTIL::toString(i), fname, BODY::Surfaces[i]);
+            UTIL::WriteMATLABMatrix2D("BodyMainPointIDS" + UTIL::toString(i), fname, BODY::PtIDS[i]);
+        }
+
+        Array <Vect3> AllBodyPoints;
+        for (int i = 0; i < BODY::AllBodyPoints0.size(); ++i) {
+            Vect3 X0 = BODY::AllBodyPoints0[i]; // nb: already relative to cg0
+            Vect3 CG0 = BODY::AllBodyPointCG0[i];
+            Vect3 Rates = BODY::AllBodyPointRates0[i];
+            Vect3 Angles0 = BODY::AllBodyPointEulerAngles0[i];
+            Vect3 Vels0 = BODY::AllBodyPointCGVels0[i];
+
+            Vect3 EulerAngles = UTIL::ODE4Final(BODY::EulerDot, 0.0, BODY::Time, 0.001, Angles0, Rates);
+
+            Vect3 CG = CG0 + BODY::Time * Vels0;
+            Array <Vect3> TRANS = BODY::ReturnTrans(EulerAngles);
+            Vect3 X = CG + VectMultMatrix(TRANS, X0);
+            AllBodyPoints.push_back(X);
+        }
+        UTIL::WriteMATLABMatrix1DVect3("AllBodyPoints", fname, AllBodyPoints);
+        WriteMATLABMatrix1D("Time", fname, BODY::Time);
+        WriteMATLABMatrix1D("NBodies", fname, BODY::Bodies.size());
+        WriteMATLABMatrix1D("NParts", fname, BODY::Surfaces.size());
+        WriteMATLABMatrix1D("GambitScale", fname, SYSTEM::GambitScale);
+
+    }
+    
+
+    
+    
+    return;
+    
+    
+    
+    
+    
+    
+    
     WriteMATLABMatrix1DVect3("PointsAsRead", fname, BODY::PointsAsRead);
     WriteMATLABMatrix1D("AlphaHistory", fname, BODY::AlphaHistory);
     WriteMATLABMatrix1D("AlphaDotHistory", fname, BODY::AlphaDotHistory);

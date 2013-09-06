@@ -124,7 +124,7 @@ void BODY::MakeWake() {
 
     }
 
-    int n = 2;  // also try 2...
+    int n = 4;  // also try 2...
     Array <Vect3> Pts, tPts;
     Array <Vect3> Oms, tOms;
     Array <Vect3*> Origins, tOrigins;
@@ -932,6 +932,7 @@ void BODY::SetUpInfluenceMatrices() {
 
 /**************************************************************/
 void BODY::UpdateGlobalInfluenceMatrices() {
+#define USE_GLOBAL_MATRIX
     long int t = ticks();
     cout << "%\tCalculating influence coefficients..." << endl;
     Array <Array <Vect3> > tmp(1);
@@ -940,8 +941,10 @@ void BODY::UpdateGlobalInfluenceMatrices() {
         if (BODY::AllBodyFaces[i]->isBound)
             BODY::AllBodyFaces[i]->AttachedProtoWake->GetNormal();
     }
-
-
+    REAL TempFarField = PANEL::FarField;
+    PANEL::FarField = 1e32;
+    
+#ifdef USE_GLOBAL_MATRIX
     A = UTIL::zeros(BODY::AllBodyFaces.size(), BODY::AllBodyFaces.size());
     B = UTIL::zeros(BODY::AllBodyFaces.size(), BODY::AllBodyFaces.size());
 
@@ -958,6 +961,11 @@ void BODY::UpdateGlobalInfluenceMatrices() {
 
             a = PhiD;
             b = PhiS;
+
+            if (src->Area < _TOL)
+            {
+                a = b = 0.0;
+            }
 //            c = PhiD;
             if (BODY::AllBodyFaces[j]->isBound) {
                 PhiS = 0.0, PhiD = 0.0;
@@ -988,7 +996,7 @@ void BODY::UpdateGlobalInfluenceMatrices() {
     cout << "%\tTime elapsed: " << ticks() - t << endl;
 
     
-
+#else
     //        UTIL::WriteMATLABMatrix2D("A","Output.mat", A);
     //        UTIL::WriteMATLABMatrix2D("B","Output.mat", B);
     //        UTIL::WriteMATLABMatrix2D("C","Output.mat", C);
@@ -996,8 +1004,7 @@ void BODY::UpdateGlobalInfluenceMatrices() {
 
     cout << "\tCalculating local A and B matrices... " << endl;
     t = ticks();
-    REAL TempFarField = PANEL::FarField;
-    PANEL::FarField = 1e32;
+
     for (int I = 0; I < BODY::Bodies.size(); ++I) {
         cout << "\t Body " << I + 1 << endl;
         int n = BODY::Bodies[I]->Faces.size();
@@ -1061,6 +1068,7 @@ void BODY::UpdateGlobalInfluenceMatrices() {
 #endif
 
     }
+#endif
     PANEL::FarField = TempFarField;
     cout << "%\tTime elapsed: " << ticks() - t << endl;
 }

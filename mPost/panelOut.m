@@ -1,8 +1,8 @@
 clear all
 close all
-
 clc
-load Output.mat
+
+load('Output.mat','BodyPointsX','BodyPointsY','BodyPointsZ','BodyCG0_x','BodyCG0_y','BodyCG0_z','Cp');
 
 C1 = [BodyPointsX(:,1) BodyPointsY(:,1) BodyPointsZ(:,1)];
 C2 = [BodyPointsX(:,2) BodyPointsY(:,2) BodyPointsZ(:,2)];
@@ -17,12 +17,15 @@ p = patch('Vertices',BodyPanPts,...
 'FaceColor','flat','EdgeColor','none');
 set(gcf,'Renderer','OpenGL')
 hold all
-
+axis equal tight
 view(3)
 scatter3(BodyCG0_x,BodyCG0_y,BodyCG0_z)
 
 
-
+load('Output.mat','WakePanC1_x','WakePanC1_y','WakePanC1_z','WakePanGamma');
+load('Output.mat','WakePanC2_x','WakePanC2_y','WakePanC2_z');
+load('Output.mat','WakePanC3_x','WakePanC3_y','WakePanC3_z');
+load('Output.mat','WakePanC4_x','WakePanC4_y','WakePanC4_z');
 WakePanPts = [WakePanC1_x WakePanC1_y WakePanC1_z;
 WakePanC2_x WakePanC2_y WakePanC2_z;
 WakePanC3_x WakePanC3_y WakePanC3_z;
