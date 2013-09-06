@@ -124,7 +124,7 @@ void BODY::MakeWake() {
 
     }
 
-    int n = 4;  // also try 2...
+    int n = 2;  // also try 2...
     Array <Vect3> Pts, tPts;
     Array <Vect3> Oms, tOms;
     Array <Vect3*> Origins, tOrigins;
