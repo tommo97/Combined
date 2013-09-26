@@ -114,8 +114,11 @@ Further documentation is found in the ./docs directory. After cd'ing to docs,
 compiling the latex source is performed by
 
 `pdflatex readme.tex`
+
 `bibtex readme.bib`
+
 `pdflatex readme.tex`
+
 `pdflatex readme.tex`
 
 and results in readme.pdf which contains this file and instructions for running
