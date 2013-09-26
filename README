@@ -10,15 +10,16 @@ on heirarchal domain decomposition via octrees. This facilitates vorticity
 tracking in an arbitrary Eulerian/Lagrangian manner. The boundary conditions are
 via a boundary-element mesh.
 
-Further information and refereces to the theoretical material associated with this work are in the readme.pdf file in the ./docs directory.
+Further information and refereces to the theoretical material associated with 
+this work are in the readme.pdf file in the ./docs directory.
 
 
 ![Wake Prediction for NREL Phase IV Rotor](http://upload.wikimedia.org/wikipedia/commons/f/f4/NREL_10secs.jpg)
 
 # Obtaining & Compiling the Latest Version of the Code
 
-The GIT repository can be accessed by issuing the following command in the shell of your
-choice:
+The GIT repository can be accessed by issuing the following command in the 
+shell of your choice:
 
 `git clone git@github.com:esru/V3D.git`
 
@@ -34,8 +35,8 @@ The dependencies of this code are:
 * Either the GNU GCC g++ (v.>4.4.x) or SunCC (v.>12) compilers;
 * A linker e.g. the GCC linker works for both g++ and sunCC.
 The following libraries:
-* matio: MAT File I/O Library – v.1.5.0 (tested on linux and OSX Mountain Lion – config-
-ure using the “--without-hdf5” flag)
+* matio: MAT File I/O Library – v.1.5.0 (tested on linux and OSX Mountain 
+Lion – configure using the “--without-hdf5” flag)
 * libpng: PNG Reference Library deprecated
 * ncurses: The Ncurses (new curses) library
 * pngwriter: An easy to use C++ graphics library - deprecated
@@ -45,9 +46,10 @@ ure using the “--without-hdf5” flag)
 some form of:
 * lapack: Linear Algebra PACKage
 * blas: Basic Linear Algebra Subprograms
-* ATLAS: Automatically Tuned Linear Algebra Software (To compile ATLAS, obtain ATLAS
-and Netlib Lapack source. The following configure command seems to work reasonably
-well when run from the build directory on a 3 GHz machine:
+* ATLAS: Automatically Tuned Linear Algebra Software (To compile ATLAS, 
+obtain ATLAS and Netlib Lapack source. The following configure command 
+seems to work reasonably well when run from the build directory on a 
+3 GHz machine:
 
 `../configure -b 64 -Fa alg -fPIC --shared -D c \
 -DPentiumCPS=3000 -Si latune 1 --prefix=/usr/local \ 
@@ -65,17 +67,19 @@ This will clone the latest version into the directory ./Combined
 
 
 ##  Building
-After cd’ing into the V3D directory, the V3D code can be compiled using the included makefile
-and default (GCC) compiler. Optional flags in parenthesis. The -j option uses multi-threaded
-building:
+After cd’ing into the V3D directory, the V3D code can be compiled using
+the included makefile and default (GCC) compiler. Optional flags in 
+parenthesis. The -j option uses multi-threaded building:
 
 `make (-j)`
 
-It may be necessary to specify the OSTYPE environmental variable if the output of
+It may be necessary to specify the OSTYPE environmental variable if 
+the output of
 
 `echo $OSTYPE`
 
-is blank. On Mac OSX (Mountain) Lion issue the following command after logging into a shell:
+is blank. On Mac OSX (Mountain) Lion issue the following command after 
+logging into a shell:
 
 `export OSTYPE=darwin10.0`
 
@@ -83,7 +87,8 @@ Previous OSX versions (tested on Leopard/Snow Leopard) issue:
 
 `export OSTYPE=darwin9.0`
 
-Linux variants (tested on openSuSE 10/11/12, various Red Hats, Scientific Linux 6 and CentOS release 5.9) issue:
+Linux variants (tested on openSuSE 10/11/12, various Red Hats, Scientific 
+Linux 6 and CentOS release 5.9) issue:
 
 `export OSTYPE=linux`
 
@@ -101,8 +106,8 @@ To build to run in non-multithreaded (non-openMP) mode:
 
 `make OMP_FLAG=`
 
-this works with both GCC and sunCC.To build in debug mode (not optimised) but still multi-
-threaded (unless empty OMP_FLAG is used):
+this works with both GCC and sunCC.To build in debug mode (not optimised) 
+but still multi-threaded (unless empty OMP_FLAG is used):
 
 `make debug (OMP_FLAG=) (-j)`
 
@@ -116,5 +121,5 @@ docs, compiling the latex source is performed by
 `pdflatex readme.tex`
 `pdflatex readme.tex`
 
-and results in readme.pdf which contains this file and instructions for running
-the V3D code.
+and results in readme.pdf which contains this file and instructions for 
+running the V3D code.
