@@ -10,21 +10,34 @@ on heirarchal domain decomposition via octrees. This facilitates vorticity
 tracking in an arbitrary Eulerian/Lagrangian manner. The boundary conditions are
 via a boundary-element mesh.
 
-The theoretical background of this code is described briefly in \cite{McCombes2011} and fully in the PhD thesis \cite{McCombes2013a}. This document is an appendix to the PhD thesis and briefly outlines how to obtain, build and run the code. It describes
-the usage of the text and graphical user interfaces of the \textsc{V3D} and
-pre-processor tools, respectively.
+Further information and refereces to the theoretical material associated with this work
+are in the readme.pdf file in the ./docs directory.
+
+
 ![Wake Prediction for NREL Phase IV Rotor](http://upload.wikimedia.org/wikipedia/commons/f/f4/NREL_10secs.jpg)
 
-# Dependancies
+# Obtaining & Compiling the Latest Version of the Code
+
+The GIT repository can be accessed by issuing the following command in the shell of your
+choice:
+
+`git clone git@github.com:esru/V3D.git`
+
+This will clone the latest version into the directory ./V3D
+
+
+## Dependancies
+
 
 The dependancies of this code are:
+The dependencies of this code are:
 * GNU Make
-* Either the GNU GCC g++ (v>4.4.x) or SunCC (v>12) compilers;
+* Either the GNU GCC g++ (v.>4.4.x) or SunCC (v.>12) compilers;
 * A linker e.g. the GCC linker works for both g++ and sunCC.
-
 The following libraries:
-* matio: MAT File I/O Library - v1.5.0 (tested on linux and OSX Mountain Lion -- configure with "--without-hdf5" flag)
-* libpng: PNG Reference Library  deprecated
+* matio: MAT File I/O Library – v.1.5.0 (tested on linux and OSX Mountain Lion – config-
+ure using the “--without-hdf5” flag)
+* libpng: PNG Reference Library deprecated
 * ncurses: The Ncurses (new curses) library
 * pngwriter: An easy to use C++ graphics library - deprecated
 * libz: A Massively Spiffy Yet Delicately Unobtrusive Compression Library
@@ -33,11 +46,16 @@ The following libraries:
 some form of:
 * lapack: Linear Algebra PACKage
 * blas: Basic Linear Algebra Subprograms
-* ATLAS: Automatically Tuned Linear Algebra Software
-(To compile ATLAS, obtain ATLAS and Netlib Lapack source. The following configure command seems to work reasonably well 
-../configure -b 64 -Fa alg -fPIC --shared -D c -DPentiumCPS=3000 -Si latune 1 --prefix=/usr/local --with-netlib-lapack-tarfile=/path/to/lapack-3.4.2.tgz 
-)
-* gfortran libraries if Fortran varients of blas are used.
+* ATLAS: Automatically Tuned Linear Algebra Software (To compile ATLAS, obtain ATLAS
+and Netlib Lapack source. The following configure command seems to work reasonably
+well when run from the build directory on a 3 GHz machine:
+
+`../configure -b 64 -Fa alg -fPIC --shared -D c \
+-DPentiumCPS=3000 -Si latune 1 --prefix=/usr/local \ 
+--with-netlib-lapack-tarfile=/path/to/lapack-3.4.2.tgz`
+
+* gfortran libraries if Fortran variants of blas are used.
+
 
 # Obtaining the latest version of the code
 The GIT repository can be accessed by issuing the following command:
@@ -47,39 +65,36 @@ The GIT repository can be accessed by issuing the following command:
 This will clone the latest version into the directory ./Combined
 
 
-
-# Building
-Optional flags in parenthesis.
-
-## Quick build
-Useing the included makefile and default (GCC) compiler. The -j option uses
-multithreaded building:
+##  Building
+After cd’ing into the V3D directory, the V3D code can be compiled using the included makefile
+and default (GCC) compiler. Optional flags in parenthesis. The -j option uses multi-threaded
+building:
 
 `make (-j)`
 
-It may be necissary to specify the OSTYPE environmental variable if the output of
+It may be necessary to specify the OSTYPE environmental variable if the output of
 
 `echo $OSTYPE`
 
-is blank
-On Mac OSX Lion issue the following command after logging into a shell:
+is blank. On Mac OSX (Mountain) Lion issue the following command after logging into a shell:
 
 `export OSTYPE=darwin10.0`
 
-Previous OSX versions issue:
+Previous OSX versions (tested on Leopard/Snow Leopard) issue:
 
 `export OSTYPE=darwin9.0`
 
-Linux variants issue:
+Linux variants (tested on openSuSE 10/11/12, various Red Hats, Scientific Linux 6 and CentOS release 5.9) issue:
 
 `export OSTYPE=linux`
 
-## Cleaning
+### Cleaning
 
 `make clean`
 
-## Option flags
-To use Oracle compilers:
+will remove binaries and executables ready for re-compiling.
+
+### Option flags To use Oracle compilers:
 
 `make CC=sunCC`
 
@@ -87,33 +102,20 @@ To build to run in non-multithreaded (non-openMP) mode:
 
 `make OMP_FLAG=`
 
-this works with both GCC and sunCC.
-
-To build in debug mode (not optimised). Still multithreaded unless OMP_FLAG=
-used:
+this works with both GCC and sunCC.To build in debug mode (not optimised) but still multi-
+threaded (unless empty OMP_FLAG is used):
 
 `make debug (OMP_FLAG=) (-j)`
 
-# Running
 
-Build output is executable binary "main." Run using the following command
+# Documentation
+Further documentation is found in the ./docs directory. After cd'ing to
+docs, compiling the latex source is performed by
 
-`./main`
+`pdflatex readme.tex`
+`bibtex readme.bib`
+`pdflatex readme.tex`
+`pdflatex readme.tex`
 
-A Text User Interface (TUI) will guide you through the problem specification.
-Alternatively to the TUI, a case file might be used. Examples are included in
-the ./case_files folder. Run
-
-`./main < case_files/nrel.cas`
-
-for example.
-
-#GUI
-A MATLAB based Graphical User Interface GUI is available in the ./GUI directory.
-Use this to generate boundary element meshes for use with this code. The GUI can
-be used by changing to the ./GUI directory in MATLAB (or adding to the path) and
-issueing the command:
-
-`preproctab`
-
-from the MATLAB command line.
+and results in readme.pdf which contains this file and instructions for running
+the V3D code.
