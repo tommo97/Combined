@@ -10,8 +10,7 @@ on heirarchal domain decomposition via octrees. This facilitates vorticity
 tracking in an arbitrary Eulerian/Lagrangian manner. The boundary conditions are
 via a boundary-element mesh.
 
-Further information and refereces to the theoretical material associated with this work
-are in the readme.pdf file in the ./docs directory.
+Further information and refereces to the theoretical material associated with this work are in the readme.pdf file in the ./docs directory.
 
 
 ![Wake Prediction for NREL Phase IV Rotor](http://upload.wikimedia.org/wikipedia/commons/f/f4/NREL_10secs.jpg)
